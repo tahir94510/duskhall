@@ -1,6 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="KABAL icon">
-  <rect width="256" height="256" rx="56" fill="#050505"/>
-  <circle cx="128" cy="128" r="82" fill="none" stroke="#d8b762" stroke-width="4" opacity=".72"/>
-  <path d="M128 38v180M38 128h180M74 74l108 108M182 74 74 182" stroke="#f4f1e8" stroke-width="3" stroke-linecap="round" opacity=".28"/>
-  <text x="128" y="151" text-anchor="middle" font-family="Georgia,serif" font-size="88" font-weight="700" fill="#d8b762">K</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#050505"/>
+  <circle cx="256" cy="256" r="176" fill="none" stroke="#d8b762" stroke-width="16" opacity=".75"/>
+  <circle cx="256" cy="256" r="96" fill="none" stroke="#f5f1e8" stroke-width="6" opacity=".22"/>
+  <path d="M256 90v332M90 256h332M138 138l236 236M374 138 138 374" stroke="#d8b762" stroke-width="10" stroke-linecap="round" opacity=".38"/>
+  <text x="256" y="305" text-anchor="middle" font-family="Georgia,serif" font-size="168" font-weight="800" fill="#d8b762">K</text>
 </svg>

@@ -1,46 +1,33 @@
-# GitHub + Vercel Yayınlama Notu
+# Vercel Deploy
 
-Bu proje framework bağımlılığı olmadan hazırlanmıştır. Amaç, hızlı ve düşük riskli MVP yayınlamaktır.
+Bu paket bağımlılıksızdır. `package.json`, `engines`, `npm install`, `pnpm install`, `next build` veya `vite build` yoktur.
 
-## GitHub'a yükleme
+## Kurulum
 
-```bash
-git init
-git add .
-git commit -m "Initial KABAL MVP"
-git branch -M main
-git remote add origin https://github.com/KULLANICI_ADIN/kabal-mvp-vercel.git
-git push -u origin main
-```
-
-## Vercel ayarı
-
-- New Project -> GitHub reposunu seç.
+- GitHub'a yükle.
+- Vercel > New Project > Import.
 - Framework Preset: Other.
-- Build Command: boş bırak.
-- Output Directory: boş bırak.
-- Install Command: boş bırakılabilir.
+- Build Command: boş.
+- Output Directory: boş veya `.`.
 
-## Ortam değişkenleri
+## ENV
 
-Vercel -> Project -> Settings -> Environment Variables:
+Gerekli ENV değerleri:
 
 ```text
-SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_KEY
-SUPPORT_URL=https://destek-linkin.com
-NEXT_PUBLIC_APP_URL=https://senin-projen.vercel.app
+SUPABASE_URL
+SUPABASE_ANON_KEY
+SUPPORT_URL
+NEXT_PUBLIC_APP_URL
 ```
 
-Sonra Redeploy yap.
+`/api/config` bu değerleri frontend'e güvenli biçimde public config olarak döndürür. Service role key kullanma; sadece public anon key kullan.
 
-## Oda sistemi
+## Kontrol
 
-- Site açılınca otomatik oda oluşur.
-- Linkteki `?room=KBL-XXXXXX` odanın kimliğidir.
-- Invite butonu oda linkini kopyalar.
-- Leave butonu kullanıcıyı yeni, temiz bir odaya taşır.
+Deploy sonrası:
 
-## Neden hafif yapı?
-
-Bu sürümde Next/Vite/Tailwind build zinciri yok. Böylece npm kilitlenmesi, lockfile uyumsuzluğu, Node sürümü veya Vercel build uyarısı riski en aza iner. MVP için gereken masa, kart, modal, oda ve realtime davranışları doğrudan tarayıcıda çalışır.
+- `/api/config` JSON dönmeli.
+- Ana sayfa açıldığında oda linki otomatik oluşmalı.
+- Invite butonu linki kopyalamalı.
+- İki farklı tarayıcıda aynı oda linki açıldığında imleçler ve kart hareketleri senkron çalışmalı.

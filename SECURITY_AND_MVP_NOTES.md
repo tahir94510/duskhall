@@ -1,27 +1,19 @@
-# Güvenlik ve MVP Notları
+# Security & MVP Notes
 
-Bu paket bilinçli olarak hafif MVP şeklinde tasarlanmıştır.
+Bu sürüm, arkadaşlarla oynanacak serbest masa MVP'sidir. Ağır ve kırılgan backend yerine Supabase Realtime Broadcast + Presence kullanır.
 
-## Güvenli olan taraflar
+## Güvenlik yaklaşımı
 
 - Service role key kullanılmaz.
-- Supabase public anon key dışında gizli bilgi frontend'e verilmez.
-- Oda verisi database'e yazılmaz; kalıcı veri biriktirme yoktur.
-- Rakip alanlarına doğrudan kart bırakma UI düzeyinde engellenir.
-- Remote hand kartları diğer oyuncularda kapalı ve kilitli görünür.
-- Vercel ENV okuma işlemi `/api/config` fonksiyonuyla yapılır.
+- Frontend'e yalnızca public anon key gönderilir.
+- Oda state'i kalıcı veritabanına yazılmaz; herkes odadan çıkınca veri doğal olarak kaybolur.
+- Broadcast mesajları kart id, konum, flip ve oyuncu imleci gibi masa verileriyle sınırlıdır.
+- Vercel `/api/config` endpoint'i `no-store` ile çalışır.
 
-## MVP sınırları
+## MVP sınırı
 
-Bu sürüm server-authoritative değildir. Yani rekabetçi/ödüllü bir ürün için hileye karşı nihai güvenlik sağlamaz. Arkadaşlarla oynanacak sosyal masa MVP'si için yeterli hafifliktedir.
+Bu sürümde otomatik kural hakemliği yoktur. Dağıtım, sıra takibi, hedefleme ve kazanma kontrolü oyuncuların anlaşmasına bırakılır. Amaç masa etkileşimlerini hızlı, temiz, stabil ve düşük maliyetli sunmaktır.
 
-Tam güvenlik istenirse ikinci fazda şunlar eklenebilir:
+## İleri seviye öneriler
 
-- Supabase Auth veya anonymous auth.
-- Server-side oda sahibi ve oyuncu yetki modeli.
-- Database-backed room state ve RLS politikaları.
-- Gizli eller için server-side doğrulama veya şifrelenmiş payload.
-- Rate limit ve abuse koruması.
-- Oda TTL cleanup cron'u.
-
-Bu fazlar MVP'yi ağırlaştıracağı için bu pakete dahil edilmemiştir.
+Daha sonra ranked oda, kullanıcı hesabı, kalıcı geçmiş, anti-spam rate limit ve moderation istenirse Supabase Edge Functions veya küçük bir authoritative server eklenebilir.

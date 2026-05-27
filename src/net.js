@@ -6,24 +6,18 @@ const DEFAULT_CONFIG = {
 };
 
 export async function loadConfig() {
-  try {
-    const response = await fetch("/api/config", { cache: "no-store" });
-    if (response.ok) {
-      return { ...DEFAULT_CONFIG, ...(await response.json()) };
+  const sources = ["/api/config", "/config.local.json"];
+  for (const url of sources) {
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (response.ok) {
+        const json = await response.json();
+        return { ...DEFAULT_CONFIG, ...json };
+      }
+    } catch {
+      // Local/static fallback continues silently.
     }
-  } catch {
-    // Static local server fallback below.
   }
-
-  try {
-    const response = await fetch("/config.local.json", { cache: "no-store" });
-    if (response.ok) {
-      return { ...DEFAULT_CONFIG, ...(await response.json()) };
-    }
-  } catch {
-    // No local config is fine; the game still works as an offline table.
-  }
-
   return { ...DEFAULT_CONFIG };
 }
 
@@ -39,10 +33,12 @@ export class RealtimeBus {
     this.client = null;
     this.channel = null;
     this.connected = false;
+    this.closed = false;
   }
 
   async connect() {
-    const { supabaseUrl, supabaseAnonKey } = this.config;
+    const supabaseUrl = String(this.config?.supabaseUrl || "").trim();
+    const supabaseAnonKey = String(this.config?.supabaseAnonKey || "").trim();
     if (!supabaseUrl || !supabaseAnonKey) {
       this.onStatus?.("offline", "local table");
       this.onPresence?.([]);
@@ -51,9 +47,10 @@ export class RealtimeBus {
 
     try {
       const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+      if (this.closed) return false;
       this.client = createClient(supabaseUrl, supabaseAnonKey, {
-        realtime: { params: { eventsPerSecond: 25 } },
-        auth: { persistSession: false, autoRefreshToken: false }
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+        realtime: { params: { eventsPerSecond: 35 } }
       });
 
       this.channel = this.client.channel(`kabal:${this.roomId}`, {
@@ -70,17 +67,20 @@ export class RealtimeBus {
         .on("presence", { event: "join" }, () => this.emitPresence())
         .on("presence", { event: "leave" }, () => this.emitPresence());
 
-      await new Promise((resolve) => {
+      const subscribed = await new Promise((resolve) => {
+        const timer = window.setTimeout(() => resolve(false), 8500);
         this.channel.subscribe(async (status) => {
           if (status === "SUBSCRIBED") {
+            window.clearTimeout(timer);
             this.connected = true;
             this.onStatus?.("online", "realtime ready");
             await this.channel.track({ ...this.player, onlineAt: Date.now() });
             this.emitPresence();
-            this.sendGame({ kind: "hello", player: this.player, version: 0, sentAt: Date.now() });
+            this.sendGame({ kind: "hello", player: this.player, version: 0, sentAt: Date.now(), from: this.player.id });
             resolve(true);
           }
           if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+            window.clearTimeout(timer);
             this.connected = false;
             this.onStatus?.("offline", "local table");
             resolve(false);
@@ -88,18 +88,20 @@ export class RealtimeBus {
         });
       });
 
-      return this.connected;
+      if (!subscribed) this.onStatus?.("offline", "local table");
+      return Boolean(subscribed);
     } catch (error) {
       console.warn("Realtime disabled:", error);
+      this.connected = false;
       this.onStatus?.("offline", "local table");
       return false;
     }
   }
 
   emitPresence() {
-    if (!this.channel) return;
-    const presenceState = this.channel.presenceState();
-    const players = Object.values(presenceState)
+    if (!this.channel || !this.connected) return;
+    const state = this.channel.presenceState();
+    const players = Object.values(state)
       .flat()
       .map((entry) => ({
         id: entry.id,
@@ -112,30 +114,23 @@ export class RealtimeBus {
   }
 
   sendGame(payload) {
-    if (!this.channel || !this.connected) return;
+    if (!this.channel || !this.connected || this.closed) return;
     this.channel.send({ type: "broadcast", event: "game", payload });
   }
 
   sendCursor(payload) {
-    if (!this.channel || !this.connected) return;
+    if (!this.channel || !this.connected || this.closed) return;
     this.channel.send({ type: "broadcast", event: "cursor", payload });
   }
 
   async disconnect() {
+    this.closed = true;
     if (this.channel) {
-      try {
-        await this.channel.untrack();
-        await this.channel.unsubscribe();
-      } catch {
-        // Ignore disconnect race conditions.
-      }
+      try { await this.channel.untrack(); } catch {}
+      try { await this.channel.unsubscribe(); } catch {}
     }
     if (this.client) {
-      try {
-        await this.client.removeAllChannels();
-      } catch {
-        // Ignore cleanup race conditions.
-      }
+      try { await this.client.removeAllChannels(); } catch {}
     }
     this.connected = false;
   }

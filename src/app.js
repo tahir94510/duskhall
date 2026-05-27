@@ -2,12 +2,14 @@ import { expandDeck, iconSvg, TYPE_META } from "./cards.js";
 import { RULES_HTML, supportHtml, leaveConfirmHtml } from "./rules.js";
 import { RealtimeBus, loadConfig } from "./net.js";
 
-const PLAYER_COLORS = ["#d8b762", "#80a7ff", "#61c58a", "#d66f8f"];
-const STACK_RADIUS = 120;
-const SNAP_OFFSET = 0.004;
+const PLAYER_COLORS = ["#d8b762", "#7fa6ff", "#62c889", "#d56d8e"];
+const STACK_RADIUS = 132;
 const CURSOR_THROTTLE_MS = 55;
+const DRAG_BROADCAST_MS = 90;
+const STORAGE_PLAYER_KEY = "kabal-mvp-player-v2";
 
 const els = {
+  app: document.getElementById("app"),
   board: document.getElementById("board"),
   cursorLayer: document.getElementById("cursorLayer"),
   roomCode: document.getElementById("roomCode"),
@@ -20,6 +22,9 @@ const els = {
   modalContent: document.getElementById("modalContent"),
   modalClose: document.getElementById("modalClose"),
   toast: document.getElementById("toast"),
+  deckSlot: document.getElementById("deckSlot"),
+  openSlot: document.getElementById("openSlot"),
+  voidSlot: document.getElementById("voidSlot"),
   zones: {
     bottom: document.getElementById("zoneBottom"),
     top: document.getElementById("zoneTop"),
@@ -45,7 +50,10 @@ const app = {
   tooltipTimer: null,
   longPressTimer: null,
   lastCursorSent: 0,
-  snapshotTimer: null
+  lastDragBroadcast: 0,
+  snapshotTimer: null,
+  resizeTimer: null,
+  reduceMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || false
 };
 
 bootstrap();
@@ -73,14 +81,44 @@ async function bootstrap() {
     }
   });
 
-  await app.bus.connect();
-  showToast(app.bus.connected ? "Realtime ready. Link paylaşarak arkadaşlarını çağırabilirsin." : "Local mode. Supabase ENV eklenirse linkler gerçek zamanlı çalışır.");
+  const online = await app.bus.connect();
+  showToast(online ? "Realtime ready. Invite linkiyle arkadaşlarını çağırabilirsin." : "Local table. Supabase ENV aktif olunca linkli multiplayer çalışır.");
+}
+
+function attachEvents() {
+  window.addEventListener("resize", handleResize, { passive: true });
+  window.addEventListener("pointermove", handlePointerMove, { passive: false });
+  window.addEventListener("pointerup", handlePointerUp, { passive: false });
+  window.addEventListener("pointercancel", handlePointerUp, { passive: false });
+  window.addEventListener("blur", () => stopDragging(true));
+  document.addEventListener("contextmenu", (event) => event.preventDefault());
+  document.addEventListener("keydown", handleKeyDown);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopDragging(true);
+  });
+
+  els.copyLinkBtn.addEventListener("click", copyInviteLink);
+  els.rulesBtn.addEventListener("click", () => openModal(RULES_HTML));
+  els.supportBtn.addEventListener("click", () => openModal(supportHtml(app.config?.supportUrl)));
+  els.leaveBtn.addEventListener("click", () => openModal(leaveConfirmHtml(), wireLeaveConfirm));
+  els.modalClose.addEventListener("click", closeModal);
+  els.modalLayer.addEventListener("pointerdown", (event) => {
+    if (event.target === els.modalLayer) closeModal();
+  });
+}
+
+function handleResize() {
+  window.clearTimeout(app.resizeTimer);
+  app.resizeTimer = window.setTimeout(() => {
+    normalizeLooseCardsIntoViewport();
+    renderCards(false);
+  }, 80);
 }
 
 function getOrCreateRoomId() {
   const url = new URL(window.location.href);
   const existing = url.searchParams.get("room");
-  if (existing && /^[a-z0-9-]{4,28}$/i.test(existing)) return existing.toUpperCase();
+  if (existing && /^[a-z0-9-]{4,32}$/i.test(existing)) return existing.toUpperCase();
   const room = `KBL-${makeId(6)}`;
   url.searchParams.set("room", room);
   window.history.replaceState({}, "", url.toString());
@@ -88,32 +126,30 @@ function getOrCreateRoomId() {
 }
 
 function getOrCreatePlayer() {
-  const storageKey = "kabal-mvp-player-v1";
   let saved = null;
   try {
-    saved = JSON.parse(sessionStorage.getItem(storageKey) || "null");
+    saved = JSON.parse(sessionStorage.getItem(STORAGE_PLAYER_KEY) || "null");
   } catch {
     saved = null;
   }
   if (saved?.id) return saved;
 
+  const color = PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
   const player = {
     id: `p_${makeId(10).toLowerCase()}`,
     name: `Player ${makeId(2)}`,
-    color: PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)],
+    color,
     joinedAt: Date.now()
   };
-  sessionStorage.setItem(storageKey, JSON.stringify(player));
+  sessionStorage.setItem(STORAGE_PLAYER_KEY, JSON.stringify(player));
   return player;
 }
 
 function makeId(length) {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let id = "";
-  crypto.getRandomValues(new Uint8Array(length)).forEach((n) => {
-    id += alphabet[n % alphabet.length];
-  });
-  return id;
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (n) => alphabet[n % alphabet.length]).join("");
 }
 
 function createInitialCards(roomId) {
@@ -124,19 +160,35 @@ function createInitialCards(roomId) {
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
 
-  const deckX = 0.5 - getCardWidthRatio() - 0.016;
-  const deckY = 0.5 - getCardHeightRatio() / 2;
+  const anchor = getDeckAnchor();
+  const offset = Math.max(0.65, getCardWidth() * 0.006);
   return deck.map((card, index) => ({
     ...card,
-    x: clamp01(deckX + index * 0.00022),
-    y: clamp01(deckY - index * 0.00022),
+    x: clamp01((anchor.x + index * offset) / window.innerWidth),
+    y: clamp01((anchor.y - index * offset) / window.innerHeight),
     rx: 0.5,
     ry: 0.5,
     ownerId: null,
     faceUp: false,
-    z: index + 1,
-    angle: (rng() - 0.5) * 1.5
+    z: index + 10,
+    angle: (rng() - 0.5) * 1.4
   }));
+}
+
+function getDeckAnchor() {
+  const rect = els.deckSlot?.getBoundingClientRect();
+  const cardW = getCardWidth();
+  const cardH = getCardHeight();
+  if (rect?.width) {
+    return {
+      x: rect.left + (rect.width - cardW) / 2,
+      y: rect.top + (rect.height - cardH) / 2
+    };
+  }
+  return {
+    x: window.innerWidth / 2 - cardW - 18,
+    y: window.innerHeight / 2 - cardH / 2
+  };
 }
 
 function hashString(value) {
@@ -157,27 +209,6 @@ function mulberry32(seed) {
   };
 }
 
-function attachEvents() {
-  window.addEventListener("resize", () => renderCards(false));
-  window.addEventListener("pointermove", handlePointerMove, { passive: false });
-  window.addEventListener("pointerup", handlePointerUp, { passive: false });
-  window.addEventListener("pointercancel", handlePointerUp, { passive: false });
-  document.addEventListener("contextmenu", (event) => event.preventDefault());
-  document.addEventListener("keydown", handleKeyDown);
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) stopDragging();
-  });
-
-  els.copyLinkBtn.addEventListener("click", copyInviteLink);
-  els.rulesBtn.addEventListener("click", () => openModal(RULES_HTML));
-  els.supportBtn.addEventListener("click", () => openModal(supportHtml(app.config?.supportUrl)));
-  els.leaveBtn.addEventListener("click", () => openModal(leaveConfirmHtml(), wireLeaveConfirm));
-  els.modalClose.addEventListener("click", closeModal);
-  els.modalLayer.addEventListener("pointerdown", (event) => {
-    if (event.target === els.modalLayer) closeModal();
-  });
-}
-
 function renderCards(createMissing = false) {
   for (const card of app.cards) {
     let el = app.elements.get(card.id);
@@ -186,8 +217,7 @@ function renderCards(createMissing = false) {
       app.elements.set(card.id, el);
       els.board.appendChild(el);
     }
-    if (!el) continue;
-    syncCardElement(el, card);
+    if (el) syncCardElement(el, card);
   }
 }
 
@@ -200,6 +230,7 @@ function createCardElement(card) {
   el.innerHTML = `
     <span class="card-inner">
       <span class="card-face card-front">
+        <span class="card-border"></span>
         <span class="card-topline">
           <span class="card-type-icon" data-tip="type">${iconSvg(card.typeIcon)}</span>
           <span class="card-seal-icon" data-tip="seal">${iconSvg("seal")}</span>
@@ -210,7 +241,11 @@ function createCardElement(card) {
         </span>
         <span class="card-footer">${escapeHtml(TYPE_META[card.type].en)}</span>
       </span>
-      <span class="card-face card-back"><span class="back-mark">K</span></span>
+      <span class="card-face card-back">
+        <span class="back-ring"></span>
+        <span class="back-mark">K</span>
+        <span class="back-title">KABAL</span>
+      </span>
     </span>
   `;
 
@@ -223,34 +258,42 @@ function createCardElement(card) {
 }
 
 function syncCardElement(el, card) {
-  const isConcealed = card.ownerId && card.ownerId !== app.player.id;
+  const concealed = Boolean(card.ownerId && card.ownerId !== app.player.id);
   const pos = getCardScreenPosition(card);
   el.style.left = `${pos.x}px`;
   el.style.top = `${pos.y}px`;
-  el.style.zIndex = String(card.z);
+  el.style.zIndex = String(card.z || 1);
   el.style.setProperty("--type-color", card.typeColor);
   el.style.setProperty("--accent-color", card.accent);
   el.style.transform = `rotate(${card.angle || 0}deg)`;
   el.classList.toggle("is-face-down", !card.faceUp);
-  el.classList.toggle("is-concealed", Boolean(isConcealed));
-  el.classList.toggle("is-locked", Boolean(isConcealed));
+  el.classList.toggle("is-concealed", concealed);
+  el.classList.toggle("is-locked", concealed);
   el.classList.toggle("is-selected", app.selectedIds.has(card.id));
-  el.setAttribute("aria-label", isConcealed ? "Concealed card" : card.name);
+  el.setAttribute("aria-label", concealed ? "Concealed card" : card.name);
 }
 
 function getCardScreenPosition(card) {
+  const cardW = getCardWidth();
+  const cardH = getCardHeight();
   if (card.ownerId) {
     const zone = getZoneForOwner(card.ownerId);
     const rect = zone.getBoundingClientRect();
-    const cardW = getCardWidth();
-    const cardH = getCardHeight();
-    const x = rect.left + clamp01(card.rx) * Math.max(0, rect.width - cardW);
-    const y = rect.top + clamp01(card.ry) * Math.max(0, rect.height - cardH);
-    return { x, y };
+    return {
+      x: rect.left + clamp01(card.rx) * Math.max(0, rect.width - cardW),
+      y: rect.top + clamp01(card.ry) * Math.max(0, rect.height - cardH)
+    };
   }
+  return clampPosition(card.x * window.innerWidth, card.y * window.innerHeight);
+}
+
+function clampPosition(left, top) {
+  const margin = 8;
+  const maxX = Math.max(margin, window.innerWidth - getCardWidth() - margin);
+  const maxY = Math.max(margin, window.innerHeight - getCardHeight() - margin);
   return {
-    x: card.x * window.innerWidth,
-    y: card.y * window.innerHeight
+    x: Math.min(maxX, Math.max(margin, left)),
+    y: Math.min(maxY, Math.max(margin, top))
   };
 }
 
@@ -264,8 +307,8 @@ function getRemoteSeat(playerId) {
   const remotes = Array.from(app.players.values())
     .filter((player) => player.id !== app.player.id)
     .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
-  const idx = Math.max(0, remotes.findIndex((player) => player.id === playerId));
-  return ["top", "left", "right"][idx] || "top";
+  const idx = remotes.findIndex((player) => player.id === playerId);
+  return ["top", "left", "right"][Math.max(0, idx)] || "top";
 }
 
 function renderZones() {
@@ -305,14 +348,13 @@ function handleCardPointerDown(event) {
     flipCards([card.id]);
     return;
   }
-
   if (event.button !== 0) return;
 
   clearTimeout(app.longPressTimer);
-  app.longPressTimer = setTimeout(() => {
+  app.longPressTimer = window.setTimeout(() => {
     if (!app.drag || app.drag.moved) return;
     flipCards([card.id]);
-    stopDragging();
+    stopDragging(true);
   }, 560);
 
   const activeIds = (event.ctrlKey || event.metaKey) ? findStackIds(card) : [card.id];
@@ -327,11 +369,16 @@ function startDragging(event, ids) {
   if (!uniqueIds.length) return;
 
   app.selectedIds = new Set(uniqueIds);
+  uniqueIds.forEach((id, index) => {
+    const card = getCard(id);
+    card.z = nextZ() + index;
+  });
+
   const starts = uniqueIds.map((id) => {
     const card = getCard(id);
     const pos = getCardScreenPosition(card);
     const el = app.elements.get(id);
-    el.classList.add("is-dragging");
+    el?.classList.add("is-dragging");
     return {
       id,
       x: pos.x,
@@ -345,9 +392,10 @@ function startDragging(event, ids) {
     startX: event.clientX,
     startY: event.clientY,
     moved: false,
-    starts
+    starts,
+    captureEl: event.currentTarget
   };
-  event.currentTarget.setPointerCapture?.(event.pointerId);
+  try { event.currentTarget.setPointerCapture?.(event.pointerId); } catch {}
   renderCards(false);
 }
 
@@ -364,9 +412,12 @@ function handlePointerMove(event) {
   for (const item of app.drag.starts) {
     const el = app.elements.get(item.id);
     if (!el) continue;
-    el.style.left = `${item.x + dx}px`;
-    el.style.top = `${item.y + dy}px`;
+    const pos = clampPosition(item.x + dx, item.y + dy);
+    el.style.left = `${pos.x}px`;
+    el.style.top = `${pos.y}px`;
   }
+
+  broadcastDragPreview();
 }
 
 function handlePointerUp(event) {
@@ -374,14 +425,14 @@ function handlePointerUp(event) {
   if (!app.drag) return;
   event.preventDefault();
 
-  const patches = [];
   const dx = event.clientX - app.drag.startX;
   const dy = event.clientY - app.drag.startY;
+  const patches = [];
   const ownZone = els.zones.bottom.getBoundingClientRect();
-  const opponentSeat = getOpponentSeatAt(event.clientX, event.clientY);
+  const rejectedSeat = getOpponentSeatForDrag(dx, dy);
 
-  if (opponentSeat) {
-    rejectZone(opponentSeat);
+  if (rejectedSeat) {
+    rejectZone(rejectedSeat);
     for (const item of app.drag.starts) {
       const el = app.elements.get(item.id);
       if (el) {
@@ -389,7 +440,7 @@ function handlePointerUp(event) {
         el.style.top = `${item.y}px`;
       }
     }
-    showToast("Rakip alanına doğrudan kart bırakılamaz. Sınırına bırak; oyuncu kendisi içeri alsın.");
+    showToast("Rakip alanına doğrudan bırakılamaz. Kartı sınırına bırak; oyuncu kendisi içeri alsın.");
     stopDragging(false);
     return;
   }
@@ -397,20 +448,19 @@ function handlePointerUp(event) {
   for (const item of app.drag.starts) {
     const card = getCard(item.id);
     if (!card) continue;
-    const newLeft = item.x + dx;
-    const newTop = item.y + dy;
-    const centerX = newLeft + getCardWidth() / 2;
-    const centerY = newTop + getCardHeight() / 2;
+    const pos = clampPosition(item.x + dx, item.y + dy);
+    const centerX = pos.x + getCardWidth() / 2;
+    const centerY = pos.y + getCardHeight() / 2;
 
     card.z = nextZ();
     if (pointInRect(centerX, centerY, ownZone)) {
       card.ownerId = app.player.id;
-      card.rx = clamp01((newLeft - ownZone.left) / Math.max(1, ownZone.width - getCardWidth()));
-      card.ry = clamp01((newTop - ownZone.top) / Math.max(1, ownZone.height - getCardHeight()));
+      card.rx = clamp01((pos.x - ownZone.left) / Math.max(1, ownZone.width - getCardWidth()));
+      card.ry = clamp01((pos.y - ownZone.top) / Math.max(1, ownZone.height - getCardHeight()));
     } else {
       card.ownerId = null;
-      card.x = clamp01(newLeft / window.innerWidth);
-      card.y = clamp01(newTop / window.innerHeight);
+      card.x = clamp01(pos.x / window.innerWidth);
+      card.y = clamp01(pos.y / window.innerHeight);
     }
     patches.push(compactCardPatch(card));
   }
@@ -419,12 +469,23 @@ function handlePointerUp(event) {
   commitPatches(patches, "move");
 }
 
+function getOpponentSeatForDrag(dx, dy) {
+  if (!app.drag) return null;
+  for (const item of app.drag.starts) {
+    const pos = clampPosition(item.x + dx, item.y + dy);
+    const cx = pos.x + getCardWidth() / 2;
+    const cy = pos.y + getCardHeight() / 2;
+    const seat = getOpponentSeatAt(cx, cy);
+    if (seat) return seat;
+  }
+  return null;
+}
+
 function stopDragging(clearSelection = true) {
   clearTimeout(app.longPressTimer);
   if (app.drag) {
-    for (const item of app.drag.starts) {
-      app.elements.get(item.id)?.classList.remove("is-dragging");
-    }
+    for (const item of app.drag.starts) app.elements.get(item.id)?.classList.remove("is-dragging");
+    try { app.drag.captureEl?.releasePointerCapture?.(app.drag.pointerId); } catch {}
   }
   app.drag = null;
   if (clearSelection) app.selectedIds.clear();
@@ -434,21 +495,24 @@ function stopDragging(clearSelection = true) {
 function handleKeyDown(event) {
   if (event.key === "Escape") {
     closeModal();
-    stopDragging();
+    stopDragging(true);
     return;
   }
+  if (event.target && ["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName)) return;
 
   const target = getTopCardAtPoint(app.pointer.x, app.pointer.y);
   if (!target || isLocked(target)) return;
-
   const key = event.key.toLowerCase();
+
   if (key === "f") {
     event.preventDefault();
     flipCards([target.id]);
+    return;
   }
   if ((event.ctrlKey || event.metaKey) && key === "g") {
     event.preventDefault();
     gatherStack(target);
+    return;
   }
   if ((event.ctrlKey || event.metaKey) && key === "m") {
     event.preventDefault();
@@ -469,17 +533,17 @@ function flipCards(ids) {
 }
 
 function gatherStack(target) {
-  const ids = findStackIds(target, STACK_RADIUS * 1.15);
+  const ids = findStackIds(target, STACK_RADIUS * 1.2);
   const base = getCardScreenPosition(target);
   const patches = [];
   ids.forEach((id, index) => {
     const card = getCard(id);
     if (!card || isLocked(card)) return;
-    const left = base.x + index * 0.35;
-    const top = base.y - index * 0.35;
+    const left = base.x + index * 0.42;
+    const top = base.y - index * 0.42;
     applyScreenPosition(card, left, top, target.ownerId === app.player.id);
     card.angle = 0;
-    card.z = nextZ();
+    card.z = nextZ() + index;
     patches.push(compactCardPatch(card));
   });
   commitPatches(patches, "gather");
@@ -494,10 +558,10 @@ function mixStack(target) {
   ids.forEach((id, index) => {
     const card = getCard(id);
     if (!card || isLocked(card)) return;
-    const left = center.x + (rng() - 0.5) * 18;
-    const top = center.y + (rng() - 0.5) * 18;
+    const left = center.x + (rng() - 0.5) * Math.min(22, getCardWidth() * 0.24);
+    const top = center.y + (rng() - 0.5) * Math.min(22, getCardHeight() * 0.18);
     applyScreenPosition(card, left, top, target.ownerId === app.player.id);
-    card.angle = (rng() - 0.5) * 9;
+    card.angle = (rng() - 0.5) * 10;
     card.z = nextZ() + index;
     patches.push(compactCardPatch(card));
   });
@@ -506,14 +570,15 @@ function mixStack(target) {
 }
 
 function applyScreenPosition(card, left, top, keepOwned) {
+  const pos = clampPosition(left, top);
   if (keepOwned && card.ownerId === app.player.id) {
     const rect = els.zones.bottom.getBoundingClientRect();
-    card.rx = clamp01((left - rect.left) / Math.max(1, rect.width - getCardWidth()));
-    card.ry = clamp01((top - rect.top) / Math.max(1, rect.height - getCardHeight()));
+    card.rx = clamp01((pos.x - rect.left) / Math.max(1, rect.width - getCardWidth()));
+    card.ry = clamp01((pos.y - rect.top) / Math.max(1, rect.height - getCardHeight()));
   } else {
     card.ownerId = null;
-    card.x = clamp01(left / window.innerWidth);
-    card.y = clamp01(top / window.innerHeight);
+    card.x = clamp01(pos.x / window.innerWidth);
+    card.y = clamp01(pos.y / window.innerHeight);
   }
 }
 
@@ -526,14 +591,14 @@ function findStackIds(target, radius = STACK_RADIUS) {
 
   return app.cards
     .filter((card) => !isLocked(card))
+    .filter((card) => card.ownerId === target.ownerId)
     .filter((card) => {
-      if (target.ownerId !== card.ownerId) return false;
       const pos = getCardScreenPosition(card);
       const cx = pos.x + getCardWidth() / 2;
       const cy = pos.y + getCardHeight() / 2;
       return Math.hypot(cx - targetCenter.x, cy - targetCenter.y) <= radius;
     })
-    .sort((a, b) => a.z - b.z)
+    .sort((a, b) => (a.z || 0) - (b.z || 0))
     .map((card) => card.id);
 }
 
@@ -560,7 +625,7 @@ function compactCardPatch(card) {
     rx: round(card.rx),
     ry: round(card.ry),
     ownerId: card.ownerId,
-    faceUp: card.faceUp,
+    faceUp: Boolean(card.faceUp),
     z: card.z,
     angle: round(card.angle || 0, 3)
   };
@@ -570,12 +635,24 @@ function commitPatches(patches, kind) {
   if (!patches.length) return;
   app.version += 1;
   renderCards(false);
-  app.bus?.sendGame({ kind, patches, version: app.version, from: app.player.id, sentAt: Date.now() });
+  app.bus?.sendGame({ kind, patches, version: app.version, from: app.player.id, player: app.player, sentAt: Date.now() });
+}
+
+function broadcastDragPreview() {
+  const now = Date.now();
+  if (!app.drag || now - app.lastDragBroadcast < DRAG_BROADCAST_MS) return;
+  app.lastDragBroadcast = now;
+  const dx = app.pointer.x - app.drag.startX;
+  const dy = app.pointer.y - app.drag.startY;
+  const previews = app.drag.starts.map((item) => {
+    const pos = clampPosition(item.x + dx, item.y + dy);
+    return { id: item.id, left: round(pos.x / window.innerWidth), top: round(pos.y / window.innerHeight) };
+  });
+  app.bus?.sendGame({ kind: "preview", from: app.player.id, previews, sentAt: now });
 }
 
 function handleRemoteGame(message) {
   if (!message || message.from === app.player.id) return;
-
   if (message.player) {
     app.players.set(message.player.id, message.player);
     renderZones();
@@ -583,7 +660,7 @@ function handleRemoteGame(message) {
 
   if (message.kind === "hello") {
     clearTimeout(app.snapshotTimer);
-    app.snapshotTimer = setTimeout(() => {
+    app.snapshotTimer = window.setTimeout(() => {
       app.bus?.sendGame({
         kind: "snapshot",
         from: app.player.id,
@@ -601,6 +678,17 @@ function handleRemoteGame(message) {
       applyPatches(message.cards || []);
       app.version = message.version ?? app.version;
       renderCards(false);
+    }
+    return;
+  }
+
+  if (message.kind === "preview" && Array.isArray(message.previews)) {
+    for (const item of message.previews) {
+      const card = getCard(item.id);
+      const el = app.elements.get(item.id);
+      if (!card || !el || card.ownerId === app.player.id) continue;
+      el.style.left = `${item.left * window.innerWidth}px`;
+      el.style.top = `${item.top * window.innerHeight}px`;
     }
     return;
   }
@@ -670,11 +758,8 @@ function handleRemoteCursor(payload) {
   el.style.top = `${payload.y * window.innerHeight}px`;
   el.querySelector("span").textContent = payload.name || "Player";
   el.style.opacity = "1";
-
   clearTimeout(el._hideTimer);
-  el._hideTimer = setTimeout(() => {
-    el.style.opacity = "0";
-  }, 1800);
+  el._hideTimer = window.setTimeout(() => { el.style.opacity = "0"; }, 1800);
 }
 
 function createTooltip() {
@@ -685,15 +770,13 @@ function createTooltip() {
 }
 
 function handleTipPointerEnter(event, cardId) {
-  const tipTarget = event.currentTarget;
   const card = getCard(cardId);
   if (!card || isLocked(card)) return;
-
+  const tipTarget = event.currentTarget;
   clearTimeout(app.tooltipTimer);
-  app.tooltipTimer = setTimeout(() => {
-    const kind = tipTarget.dataset.tip;
-    showTooltipFor(card, kind, event.clientX, event.clientY);
-  }, 360);
+  app.tooltipTimer = window.setTimeout(() => {
+    showTooltipFor(card, tipTarget.dataset.tip, event.clientX, event.clientY);
+  }, 340);
 }
 
 function showTooltipFor(card, kind, x, y) {
@@ -747,7 +830,16 @@ function getOpponentSeatAt(x, y) {
 function rejectZone(seat) {
   const zone = els.zones[seat];
   zone.classList.add("is-reject");
-  setTimeout(() => zone.classList.remove("is-reject"), 260);
+  window.setTimeout(() => zone.classList.remove("is-reject"), 280);
+}
+
+function normalizeLooseCardsIntoViewport() {
+  for (const card of app.cards) {
+    if (card.ownerId) continue;
+    const pos = clampPosition(card.x * window.innerWidth, card.y * window.innerHeight);
+    card.x = clamp01(pos.x / window.innerWidth);
+    card.y = clamp01(pos.y / window.innerHeight);
+  }
 }
 
 function getCard(id) {
@@ -755,27 +847,25 @@ function getCard(id) {
 }
 
 function nextZ() {
-  return Math.max(...app.cards.map((card) => card.z || 1)) + 1;
+  let max = 1;
+  for (const card of app.cards) max = Math.max(max, card.z || 1);
+  return max + 1;
 }
 
 function getCardWidth() {
   const first = document.querySelector(".card");
-  if (first) return first.getBoundingClientRect().width || 72;
-  return Math.max(52, Math.min(94, window.innerWidth * 0.074, window.innerHeight * 0.074));
+  if (first) return first.getBoundingClientRect().width || fallbackCardWidth();
+  return fallbackCardWidth();
 }
 
 function getCardHeight() {
   const first = document.querySelector(".card");
-  if (first) return first.getBoundingClientRect().height || getCardWidth() * 1.42;
-  return getCardWidth() * 1.42;
+  if (first) return first.getBoundingClientRect().height || fallbackCardWidth() * 1.45;
+  return fallbackCardWidth() * 1.45;
 }
 
-function getCardWidthRatio() {
-  return Math.min(0.16, getCardWidth() / Math.max(1, window.innerWidth));
-}
-
-function getCardHeightRatio() {
-  return Math.min(0.22, getCardHeight() / Math.max(1, window.innerHeight));
+function fallbackCardWidth() {
+  return Math.max(54, Math.min(118, Math.min(window.innerWidth * 0.078, window.innerHeight * 0.124)));
 }
 
 function pointInRect(x, y, rect) {
@@ -828,6 +918,7 @@ function wireLeaveConfirm() {
   document.getElementById("cancelLeave")?.addEventListener("click", closeModal);
   document.getElementById("confirmLeave")?.addEventListener("click", async () => {
     await app.bus?.disconnect();
+    sessionStorage.removeItem(`kabal-room-${app.roomId}`);
     const url = new URL(window.location.href);
     url.searchParams.set("room", `KBL-${makeId(6)}`);
     window.location.href = url.toString();
@@ -838,5 +929,5 @@ function showToast(message) {
   els.toast.textContent = message;
   els.toast.classList.add("is-visible");
   clearTimeout(els.toast._timer);
-  els.toast._timer = setTimeout(() => els.toast.classList.remove("is-visible"), 2800);
+  els.toast._timer = window.setTimeout(() => els.toast.classList.remove("is-visible"), 2800);
 }

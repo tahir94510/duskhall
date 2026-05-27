@@ -1,64 +1,54 @@
-import { CARD_DEFINITIONS } from "./cards.js";
-
-const cardRows = CARD_DEFINITIONS.map((card) => `
-  <div class="rule-pill">
-    <strong>${card.name}</strong><br />
-    <small>${card.type} · ${card.count} adet</small>
-    <p>${card.text}</p>
-  </div>
-`).join("");
-
 export const RULES_HTML = `
   <div class="modal-copy">
-    <h1 id="modalTitle">KABAL: Eterin Varisleri</h1>
-    <p>Bu MVP, oyunu otomatik yönetmez. Arkadaşlarınla fiziksel masa gibi oynarsın: kart çekersin, sürüklersin, çevirirsin, kendi alanına saklarsın ve kural kitabına göre hamleleri siz yürütürsünüz.</p>
+    <p class="eyebrow">KABAL · Eterin Varisleri</p>
+    <h1>Rules</h1>
+    <p>KABAL, otomatik kural motoru olmayan serbest bir kart masasıdır. Kartları kural kitapçığına göre siz oynar, taşır, çevirir, toplar ve karıştırırsınız.</p>
 
-    <h2>Temel Amaç</h2>
-    <p>Oyunu kazanmak için kendi oyun alanına pasif güç sağlayan <strong>Mühür</strong> kartlarını kurmalısın. Aynı anda en fazla 4 Mühür bulunabilir. En az 3 Mühür varken Yükseliş ilan edilir; sıra tekrar sana geldiğinde hâlâ 3 Mühürün varsa kazanırsın.</p>
-
-    <h2>Alanlar</h2>
     <div class="rule-grid">
-      <div class="rule-pill"><strong>El</strong><p>Kendi blur alanına koyduğun kartlardır. Rakipler yalnızca kapalı görüntü görür.</p></div>
-      <div class="rule-pill"><strong>Masa</strong><p>Ortak açık alandır. Kartlar burada herkes tarafından görülebilir ve taşınabilir.</p></div>
-      <div class="rule-pill"><strong>Kayıp Alanı</strong><p>Oynanan büyüler ve yok edilen kartlar için masa üzerinde dilediğiniz bir yığın oluşturabilirsiniz.</p></div>
+      <div class="rule-pill"><strong>Goal</strong><span>3 Mühür kur, Yükseliş ilan et ve sıra tekrar sana gelene kadar dayan.</span></div>
+      <div class="rule-pill"><strong>Table limit</strong><span>En fazla 4 Mühür ve 3 Hizmetkâr.</span></div>
+      <div class="rule-pill"><strong>Hand limit</strong><span>Tur sonunda elde en fazla 7 kart.</span></div>
+      <div class="rule-pill"><strong>Free table</strong><span>Dağıtım, hedefleme ve sıra takibi oyuncuların kontrolünde.</span></div>
     </div>
 
-    <h2>Tur Akışı</h2>
+    <h2>Turn flow</h2>
     <ol>
-      <li><strong>Odaklanma:</strong> Kapalı desteden 2 kart çek.</li>
-      <li><strong>Aksiyon:</strong> 2 Hamle Puanını Oluştur, Araştır veya Arın için kullan.</li>
-      <li><strong>Kapanış:</strong> Mühür etkilerini çöz, sonra el limitini 7 karta indir.</li>
+      <li><strong>Focus:</strong> Kapalı desteden 2 kart çek.</li>
+      <li><strong>Action:</strong> 2 Hamle Puanı kullan. Oluştur, Araştır veya Arın.</li>
+      <li><strong>Closing:</strong> Mühür etkilerini çöz ve el limitini kontrol et.</li>
     </ol>
 
-    <h2>Kart Tipleri</h2>
-    <div class="rule-grid">
-      <div class="rule-pill"><strong>Mühür</strong><p>Pasif güç kaynağı. Zafer koşulunun merkezidir.</p></div>
-      <div class="rule-pill"><strong>Büyü</strong><p>Saldırı ve manipülasyon hamleleri. Genelde oynandıktan sonra çöpe gider.</p></div>
-      <div class="rule-pill"><strong>Müdahale</strong><p>Hamle puanı harcamaz. Zincire cevap vermek için anlık oynanır.</p></div>
-      <div class="rule-pill"><strong>Hizmetkâr</strong><p>Canlı kalkan. Rakipler Mühürden önce Hizmetkârı hedef almalıdır.</p></div>
-    </div>
-
-    <h2>Kısayollar</h2>
+    <h2>Card types</h2>
     <ul>
-      <li><strong>Sol tık / dokun-sürükle:</strong> Kart taşı.</li>
-      <li><strong>Sağ tık veya F:</strong> İmlecin altındaki kartı çevir.</li>
-      <li><strong>Ctrl + sürükle:</strong> Aynı yığındaki kartları birlikte taşı.</li>
+      <li><strong>Mühür / Seal:</strong> Pasif güç. En az 3 Mühür ile Yükseliş ilan edilir.</li>
+      <li><strong>Büyü / Spell:</strong> Saldırı ve manipülasyon kartları. Genelde oynandıktan sonra çöpe gider.</li>
+      <li><strong>Müdahale / Intervention:</strong> Sıra kimde olursa olsun tepki olarak oynanabilir.</li>
+      <li><strong>Hizmetkâr / Servant:</strong> Canlı kalkan. Rakip önce Hizmetkârı yok etmeden Mühürlere saldıramaz.</li>
+    </ul>
+
+    <h2>Controls</h2>
+    <ul>
+      <li><strong>Drag:</strong> Kartı taşı.</li>
+      <li><strong>Right click / F:</strong> Kartı çevir.</li>
+      <li><strong>Long press:</strong> Mobilde kartı çevir.</li>
+      <li><strong>Ctrl + drag:</strong> Aynı yığındaki kartları birlikte taşı.</li>
       <li><strong>Ctrl + G:</strong> İmlecin altındaki yığını toparla.</li>
       <li><strong>Ctrl + M:</strong> İmlecin altındaki yığını karıştır.</li>
     </ul>
 
-    <h2>72 Kartlık Deste</h2>
-    <div class="rule-grid">${cardRows}</div>
+    <h2>Privacy</h2>
+    <p>Kendi el alanındaki kartları yalnızca sen açıp görebilirsin. Rakip el alanındaki kartlar kilitlenir ve kapalı görünür. Rakip alanının içine doğrudan kart bırakılamaz; kartı sınırına bırakıp ilgili oyuncunun kendisinin içeri alması gerekir.</p>
   </div>
 `;
 
-export function supportHtml(supportUrl) {
-  const safeUrl = supportUrl || "";
+export function supportHtml(supportUrl = "") {
+  const safeUrl = String(supportUrl || "").trim();
   return `
     <div class="modal-copy">
-      <h1 id="modalTitle">Support</h1>
-      <p>Bu MVP destek alanı hafif tutuldu. Vercel ortam değişkenine <strong>SUPPORT_URL</strong> eklersen bu buton Patreon, Buy Me a Coffee, Discord, form veya istediğin bağlantıya yönlenebilir.</p>
-      ${safeUrl ? `<p><a class="ui-button" href="${safeUrl}" target="_blank" rel="noreferrer">Open support link</a></p>` : `<p>Şimdilik destek bağlantısı tanımlı değil.</p>`}
+      <p class="eyebrow">Support</p>
+      <h1>Destek</h1>
+      <p>Bu MVP, arkadaşlarla oynanabilen hafif ve gerçek zamanlı bir kart masası olarak hazırlandı. Destek linkini Vercel ENV üzerinden ayarlayabilirsin.</p>
+      ${safeUrl ? `<p><a class="modal-link" href="${escapeAttr(safeUrl)}" target="_blank" rel="noopener noreferrer">Support sayfasını aç</a></p>` : `<p class="soft-note">SUPPORT_URL env değeri eklenmediği için destek linki pasif.</p>`}
     </div>
   `;
 }
@@ -66,12 +56,17 @@ export function supportHtml(supportUrl) {
 export function leaveConfirmHtml() {
   return `
     <div class="modal-copy">
-      <h1 id="modalTitle">Leave room?</h1>
-      <p>Bu odadan çıkarsan yeni ve temiz bir masa linkine geçersin. Mevcut odadaki kart düzeni bu sekme için bırakılır.</p>
+      <p class="eyebrow">Leave room</p>
+      <h1>Odadan çıkılsın mı?</h1>
+      <p>Bu odadan çıkınca yeni ve temiz bir masa linkine geçersin. Mevcut odadaki kart düzeni senin tarafında sıfırlanır.</p>
       <div class="confirm-actions">
-        <button id="confirmLeave" class="ui-button danger" type="button">Leave and reset</button>
         <button id="cancelLeave" class="ui-button" type="button">Stay</button>
+        <button id="confirmLeave" class="ui-button danger" type="button">Leave and reset</button>
       </div>
     </div>
   `;
+}
+
+function escapeAttr(value) {
+  return String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
