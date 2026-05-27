@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="50%" r="70%">
+      <stop offset="0" stop-color="#1b1b1d"/>
+      <stop offset="1" stop-color="#030303"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#g)"/>
+  <circle cx="600" cy="315" r="160" fill="none" stroke="#d8b762" stroke-width="5" opacity=".55"/>
+  <path d="M600 130v370M415 315h370M490 205l220 220M710 205 490 425" stroke="#f4f1e8" stroke-width="3" opacity=".18"/>
+  <text x="600" y="300" text-anchor="middle" font-family="Georgia,serif" font-size="120" font-weight="700" fill="#d8b762">KABAL</text>
+  <text x="600" y="374" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" letter-spacing="8" fill="#f4f1e8" opacity=".78">ETERİN VARİSLERİ</text>
+</svg>

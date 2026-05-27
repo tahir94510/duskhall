@@ -1,0 +1,14 @@
+{
+  "name": "kabal-mvp-vercel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "KABAL: Eterin Varisleri için hafif, statik, Vercel uyumlu multiplayer kart masası MVP'si.",
+  "scripts": {
+    "start": "python3 -m http.server 5173",
+    "check": "node --check src/app.js && node --check src/cards.js && node --check src/net.js && node --check src/rules.js && node --check api/config.js"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}
