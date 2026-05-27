@@ -1,18 +1,14 @@
-# Vercel Deploy
+# Vercel Kurulum Notu
 
-Bu paket bağımlılıksızdır. `package.json`, `engines`, `npm install`, `pnpm install`, `next build` veya `vite build` yoktur.
+Bu paket bağımlılıksızdır. `package.json`, `engines`, `npm install`, `pnpm install`, `next build` veya `vite build` yoktur. Repo içeriğini bu klasördeki dosyalarla güncellediğinde Vercel statik olarak yayınlar.
 
-## Kurulum
+## Vercel ayarı
 
-- GitHub'a yükle.
-- Vercel > New Project > Import.
-- Framework Preset: Other.
-- Build Command: boş.
-- Output Directory: boş veya `.`.
+- Framework Preset: `Other`
+- Build Command: boş
+- Output Directory: boş veya `.`
 
-## ENV
-
-Gerekli ENV değerleri:
+## Ortam değişkenleri
 
 ```text
 SUPABASE_URL
@@ -21,13 +17,14 @@ SUPPORT_URL
 NEXT_PUBLIC_APP_URL
 ```
 
-`/api/config` bu değerleri frontend'e güvenli biçimde public config olarak döndürür. Service role key kullanma; sadece public anon key kullan.
+`SUPABASE_URL` ve `SUPABASE_ANON_KEY` girilirse linkli eş zamanlı masa çalışır. Girilmezse oyun yerel masa olarak yine açılır.
 
-## Kontrol
+## Deploy sonrası hızlı kontrol
 
-Deploy sonrası:
-
-- `/api/config` JSON dönmeli.
-- Ana sayfa açıldığında oda linki otomatik oluşmalı.
-- Invite butonu linki kopyalamalı.
-- İki farklı tarayıcıda aynı oda linki açıldığında imleçler ve kart hareketleri senkron çalışmalı.
+- Oyun Türkçe açılmalı.
+- Deste, Açık ve Kayıp sayaçları görünmeli.
+- Davet butonu oda linkini kopyalamalı.
+- Kart sağ tık veya F ile çevrilmeli.
+- Kart kendi el alanına bırakıldığında yalnızca o oyuncuda görünmeli.
+- Rakip alanındaki kartlar görünmemeli, sadece kart sayısı görünmeli.
+- Ctrl + G yığını çapraza kaydırmadan toparlamalı.

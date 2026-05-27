@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>KABAL: Eterin Varisleri | Multiplayer Card Table</title>
-    <meta name="description" content="KABAL: Eterin Varisleri için hafif, Vercel uyumlu, gerçek zamanlı kart masası MVP'si." />
+    <title>KABAL: Eterin Varisleri | Türkçe Kart Masası</title>
+    <meta name="description" content="KABAL: Eterin Varisleri için hafif, Vercel uyumlu, gerçek zamanlı Türkçe kart masası MVP'si." />
     <meta name="theme-color" content="#050505" />
     <meta name="robots" content="index, follow" />
     <meta property="og:title" content="KABAL: Eterin Varisleri" />
@@ -24,49 +24,49 @@
           <span class="brand-text">KABAL</span>
         </div>
         <div class="top-actions">
-          <button id="copyLinkBtn" class="ui-button" type="button">Invite</button>
-          <button id="rulesBtn" class="ui-button" type="button">Rules</button>
-          <button id="supportBtn" class="ui-button" type="button">Support</button>
-          <button id="leaveBtn" class="ui-button danger" type="button">Leave</button>
+          <button id="copyLinkBtn" class="ui-button" type="button">Davet</button>
+          <button id="rulesBtn" class="ui-button" type="button">Kurallar</button>
+          <button id="supportBtn" class="ui-button" type="button">Destek</button>
+          <button id="leaveBtn" class="ui-button danger" type="button">Çıkış</button>
         </div>
       </section>
 
       <aside id="roomBadge" class="room-badge" aria-live="polite">
-        <span class="room-label">Room</span>
+        <span class="room-label">Oda</span>
         <strong id="roomCode">...</strong>
-        <small id="syncStatus">local table</small>
+        <small id="syncStatus">yerel masa</small>
       </aside>
 
       <section id="zoneTop" class="player-zone zone-top is-empty" data-seat="top">
-        <span class="zone-label">Waiting</span>
+        <span class="zone-label">Bekleniyor</span>
       </section>
       <section id="zoneLeft" class="player-zone zone-left is-empty" data-seat="left">
-        <span class="zone-label">Waiting</span>
+        <span class="zone-label">Bekleniyor</span>
       </section>
       <section id="zoneRight" class="player-zone zone-right is-empty" data-seat="right">
-        <span class="zone-label">Waiting</span>
+        <span class="zone-label">Bekleniyor</span>
       </section>
       <section id="zoneBottom" class="player-zone zone-bottom is-self" data-seat="bottom">
-        <span class="zone-label">Your hand</span>
+        <span class="zone-label">El alanım</span>
       </section>
 
       <section class="center-dock" aria-hidden="true">
-        <div id="deckSlot" class="dock-slot">Deck</div>
-        <div id="openSlot" class="dock-slot">Open</div>
-        <div id="voidSlot" class="dock-slot">Void</div>
+        <div id="deckSlot" class="dock-slot"><span>Deste</span><strong>72</strong></div>
+        <div id="openSlot" class="dock-slot"><span>Açık</span><strong>0</strong></div>
+        <div id="voidSlot" class="dock-slot"><span>Kayıp</span><strong>0</strong></div>
       </section>
 
       <section id="board" class="board" aria-label="Kart masası"></section>
       <div id="cursorLayer" class="cursor-layer" aria-hidden="true"></div>
 
       <aside class="shortcut-hint" aria-label="Kısayollar">
-        <strong>Controls</strong>
-        <span>Drag: move</span>
-        <span>Right click / F: flip</span>
-        <span>Long press: mobile flip</span>
-        <span>Ctrl + drag: stack move</span>
-        <span>Ctrl + G: gather</span>
-        <span>Ctrl + M: mix</span>
+        <strong>Kısayollar</strong>
+        <span>Sürükle: kartı taşı</span>
+        <span>Sağ tık / F: çevir</span>
+        <span>Uzun bas: mobilde çevir</span>
+        <span>Ctrl + sürükle: yığını taşı</span>
+        <span>Ctrl + G: toparla</span>
+        <span>Ctrl + M: karıştır</span>
       </aside>
 
       <div id="toast" class="toast" role="status" aria-live="polite"></div>

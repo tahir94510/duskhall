@@ -1,42 +1,46 @@
-# KABAL: Eterin Varisleri — Hafif Multiplayer MVP
+# KABAL: Eterin Varisleri — Türkçe Hafif MVP
 
-Bu paket, KABAL için ağır build zinciri olmadan çalışan, Vercel'e doğrudan deploy edilebilen statik kart masası MVP'sidir.
+Bu paket, KABAL için ağır kurulum zinciri olmadan çalışan, GitHub'a yüklenip Vercel'e doğrudan deploy edilebilen statik kart masası MVP'sidir.
 
-## Neler düzeltildi?
+## Bu sürümde düzeltilenler
 
-- `package.json` kaldırıldı. Bu nedenle Vercel'de `engines.node >=20.9.0` uyarısı ve dependency install zinciri tetiklenmez.
-- Kart boyutları, masa hizası, oyuncu alanları ve merkez deste/dış alan yerleşimi yeniden ölçeklendirildi.
-- Kart arka yüzü daha görünür, ön yüz ikonları daha okunabilir hale getirildi.
-- Topbar, oda bilgisi, oyuncu alanları ve mobil yerleşim çakışmayacak şekilde düzenlendi.
-- Drag/drop, sağ tık/F ile çevirme, mobil long press, Ctrl + drag, Ctrl + G ve Ctrl + M akışları sadeleştirildi.
-- Supabase Realtime opsiyonel hale getirildi; ENV yoksa oyun local table olarak kırılmadan çalışır.
+- Oyun arayüzündeki bütün görünen metinler Türkçeleştirildi.
+- Kartlarda kalan gereksiz İngilizce tip ifadeleri kaldırıldı; Mühür, Büyü, Müdahale ve Hizmetkâr adları Türkçe gösteriliyor.
+- Merkez deste çevresindeki gereksiz koyu karartı ve ağır panel görünümü temizlendi.
+- Kart toplama işleminde yığının sağ çapraza kayması düzeltildi; kartlar doğrudan aynı merkezde toparlanır.
+- Oyuncu el alanı gizliliği güçlendirildi: kendi alanındaki kartları sen görürsün, rakiplerin alanındaki kartlar sende tamamen görünmez; yalnızca kart sayısı görünür.
+- Kart alandan çıkarıldığında yeniden masada görünür hale gelir.
+- Her oyuncu alanında kart sayısı gösterilir.
+- Deste, açık alan ve kayıp alanı için sayaçlar eklendi.
+- Mobil ve küçük ekran yerleşimleri yeniden düzenlendi; sayfa scroll tetiklemeden sabit masa olarak çalışır.
+- `package.json` yoktur. Bu nedenle Vercel'de `engines.node >=20.9.0`, npm, pnpm veya build uyarı zinciri tetiklenmez.
 
-## Local çalıştırma
+## Yerelde çalıştırma
 
 ```bash
 python3 -m http.server 5173
 ```
 
-Tarayıcıda:
+Tarayıcıda aç:
 
 ```text
 http://localhost:5173
 ```
 
-Local Supabase config kullanmak için `config.local.example.json` dosyasını `config.local.json` olarak kopyala ve değerleri gir.
+Yerel Supabase ayarı kullanmak için `config.local.example.json` dosyasını `config.local.json` olarak kopyala ve değerleri gir.
 
 ## Vercel deploy
 
-Bu projede npm install veya build komutu yoktur.
+Bu projede kurulum ve build komutu yoktur.
 
-1. Bu klasörü GitHub repo olarak yükle.
+1. Klasörü GitHub repo olarak yükle.
 2. Vercel'de projeyi import et.
-3. Framework Preset: `Other`
-4. Build Command: boş bırak.
-5. Output Directory: boş bırak veya `.` kullan.
-6. ENV değişkenlerini gir.
+3. Framework Preset alanında `Other` seç.
+4. Build Command alanını boş bırak.
+5. Output Directory alanını boş bırak veya `.` kullan.
+6. Ortam değişkenlerini gir.
 
-## ENV değişkenleri
+## Ortam değişkenleri
 
 ```text
 SUPABASE_URL=https://YOUR_PROJECT.supabase.co
@@ -45,7 +49,7 @@ SUPPORT_URL=https://destek-linkin.com
 NEXT_PUBLIC_APP_URL=https://senin-projen.vercel.app
 ```
 
-Alternatif olarak şu değişken adları da desteklenir:
+Alternatif adlar da desteklenir:
 
 ```text
 NEXT_PUBLIC_SUPABASE_URL
@@ -57,13 +61,13 @@ NEXT_PUBLIC_SUPPORT_URL
 
 ## Oynanış kısayolları
 
-- Drag: Kart taşı.
-- Right click / F: Kart çevir.
-- Long press: Mobilde kart çevir.
-- Ctrl + drag: Aynı yığındaki kartları birlikte taşı.
+- Sürükle: Kartı taşı.
+- Sağ tık / F: Kartı çevir.
+- Uzun bas: Mobilde kartı çevir.
+- Ctrl + sürükle: Aynı yığındaki kartları birlikte taşı.
 - Ctrl + G: Yığını toparla.
 - Ctrl + M: Yığını karıştır.
 
 ## Supabase notu
 
-MVP, database tablosuna muhtaç değildir. Supabase Realtime Broadcast + Presence kullanır. Bu sayede oda kapandığında kalıcı veri bırakılmaz. `supabase/optional_room_events.sql` sadece ileride kalıcı log/analitik istersen kullanılabilecek opsiyonel şemadır.
+MVP, veritabanı tablosuna muhtaç değildir. Supabase Realtime Broadcast + Presence kullanır. Bu sayede oda kapandığında kalıcı veri bırakılmaz. `supabase/optional_room_events.sql` sadece ileride kalıcı log veya analitik istersen kullanılabilecek opsiyonel şemadır.

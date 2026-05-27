@@ -82,7 +82,7 @@ async function bootstrap() {
   });
 
   const online = await app.bus.connect();
-  showToast(online ? "Realtime ready. Invite linkiyle arkadaşlarını çağırabilirsin." : "Local table. Supabase ENV aktif olunca linkli multiplayer çalışır.");
+  showToast(online ? "Eş zamanlı masa hazır. Davet linkiyle arkadaşlarını çağırabilirsin." : "Yerel masa açık. Supabase değerleri aktif olunca linkli oyun çalışır.");
 }
 
 function attachEvents() {
@@ -137,7 +137,7 @@ function getOrCreatePlayer() {
   const color = PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
   const player = {
     id: `p_${makeId(10).toLowerCase()}`,
-    name: `Player ${makeId(2)}`,
+    name: `Oyuncu ${makeId(2)}`,
     color,
     joinedAt: Date.now()
   };
@@ -161,7 +161,7 @@ function createInitialCards(roomId) {
   }
 
   const anchor = getDeckAnchor();
-  const offset = Math.max(0.65, getCardWidth() * 0.006);
+  const offset = 0;
   return deck.map((card, index) => ({
     ...card,
     x: clamp01((anchor.x + index * offset) / window.innerWidth),
@@ -171,7 +171,7 @@ function createInitialCards(roomId) {
     ownerId: null,
     faceUp: false,
     z: index + 10,
-    angle: (rng() - 0.5) * 1.4
+    angle: 0
   }));
 }
 
@@ -219,6 +219,7 @@ function renderCards(createMissing = false) {
     }
     if (el) syncCardElement(el, card);
   }
+  updateCounters();
 }
 
 function createCardElement(card) {
@@ -239,7 +240,7 @@ function createCardElement(card) {
           <span class="card-name-icon" data-tip="power">${iconSvg(card.icon)}</span>
           <span class="card-title">${escapeHtml(card.name)}</span>
         </span>
-        <span class="card-footer">${escapeHtml(TYPE_META[card.type].en)}</span>
+        <span class="card-footer">${escapeHtml(card.type)}</span>
       </span>
       <span class="card-face card-back">
         <span class="back-ring"></span>
@@ -270,7 +271,9 @@ function syncCardElement(el, card) {
   el.classList.toggle("is-concealed", concealed);
   el.classList.toggle("is-locked", concealed);
   el.classList.toggle("is-selected", app.selectedIds.has(card.id));
-  el.setAttribute("aria-label", concealed ? "Concealed card" : card.name);
+  el.style.pointerEvents = concealed ? "none" : "auto";
+  el.setAttribute("aria-hidden", concealed ? "true" : "false");
+  el.setAttribute("aria-label", concealed ? "Gizli kart" : card.name);
 }
 
 function getCardScreenPosition(card) {
@@ -314,7 +317,7 @@ function getRemoteSeat(playerId) {
 function renderZones() {
   els.zones.bottom.style.setProperty("--seat-color", app.player.color);
   els.zones.bottom.classList.remove("is-empty");
-  els.zones.bottom.querySelector(".zone-label").textContent = "Your hand";
+  els.zones.bottom.querySelector(".zone-label").textContent = "El alanım";
 
   const remoteSeats = { top: null, left: null, right: null };
   for (const player of app.players.values()) {
@@ -328,13 +331,69 @@ function renderZones() {
     if (player) {
       zone.style.setProperty("--seat-color", player.color);
       zone.classList.remove("is-empty");
-      zone.querySelector(".zone-label").textContent = player.name || "Player";
+      zone.querySelector(".zone-label").textContent = player.name || "Oyuncu";
     } else {
       zone.style.setProperty("--seat-color", "rgba(255,255,255,0.14)");
       zone.classList.add("is-empty");
-      zone.querySelector(".zone-label").textContent = "Waiting";
+      zone.querySelector(".zone-label").textContent = "Bekleniyor";
     }
   }
+}
+
+
+function updateCounters() {
+  if (!app.cards?.length) return;
+  const selfCount = app.cards.filter((card) => card.ownerId === app.player.id).length;
+  els.zones.bottom.querySelector(".zone-label").textContent = `El alanım · ${selfCount} kart`;
+
+  const remoteBySeat = { top: null, left: null, right: null };
+  for (const player of app.players.values()) {
+    if (player.id === app.player.id) continue;
+    remoteBySeat[getRemoteSeat(player.id)] = player;
+  }
+
+  for (const seat of ["top", "left", "right"]) {
+    const zone = els.zones[seat];
+    const player = remoteBySeat[seat];
+    if (!player) {
+      zone.querySelector(".zone-label").textContent = "Bekleniyor · 0 kart";
+      continue;
+    }
+    const count = app.cards.filter((card) => card.ownerId === player.id).length;
+    zone.querySelector(".zone-label").textContent = `${player.name || "Oyuncu"} · ${count} kart`;
+  }
+
+  updateDockCounter(els.deckSlot, "Deste", countCardsInSlot(els.deckSlot));
+  updateDockCounter(els.openSlot, "Açık", countCardsInSlot(els.openSlot));
+  updateDockCounter(els.voidSlot, "Kayıp", countCardsInSlot(els.voidSlot));
+}
+
+function updateDockCounter(slot, label, count) {
+  if (!slot) return;
+  let labelEl = slot.querySelector("span");
+  let countEl = slot.querySelector("strong");
+  if (!labelEl) {
+    labelEl = document.createElement("span");
+    slot.appendChild(labelEl);
+  }
+  if (!countEl) {
+    countEl = document.createElement("strong");
+    slot.appendChild(countEl);
+  }
+  labelEl.textContent = label;
+  countEl.textContent = String(count);
+}
+
+function countCardsInSlot(slot) {
+  const rect = slot?.getBoundingClientRect();
+  if (!rect?.width) return 0;
+  return app.cards.filter((card) => {
+    if (card.ownerId) return false;
+    const pos = getCardScreenPosition(card);
+    const cx = pos.x + getCardWidth() / 2;
+    const cy = pos.y + getCardHeight() / 2;
+    return pointInRect(cx, cy, rect);
+  }).length;
 }
 
 function handleCardPointerDown(event) {
@@ -440,7 +499,7 @@ function handlePointerUp(event) {
         el.style.top = `${item.y}px`;
       }
     }
-    showToast("Rakip alanına doğrudan bırakılamaz. Kartı sınırına bırak; oyuncu kendisi içeri alsın.");
+    showToast("Rakip alanına doğrudan bırakılamaz. Kartı sınırına bırak; ilgili oyuncu kendisi içeri alsın.");
     stopDragging(false);
     return;
   }
@@ -539,8 +598,8 @@ function gatherStack(target) {
   ids.forEach((id, index) => {
     const card = getCard(id);
     if (!card || isLocked(card)) return;
-    const left = base.x + index * 0.42;
-    const top = base.y - index * 0.42;
+    const left = base.x;
+    const top = base.y;
     applyScreenPosition(card, left, top, target.ownerId === app.player.id);
     card.angle = 0;
     card.z = nextZ() + index;
@@ -727,6 +786,7 @@ function handlePresence(players) {
   }
   renderZones();
   renderCards(false);
+  updateCounters();
 }
 
 function sendCursorThrottled(x, y) {
@@ -756,7 +816,7 @@ function handleRemoteCursor(payload) {
   el.style.setProperty("--cursor-color", payload.color || "#fff");
   el.style.left = `${payload.x * window.innerWidth}px`;
   el.style.top = `${payload.y * window.innerHeight}px`;
-  el.querySelector("span").textContent = payload.name || "Player";
+  el.querySelector("span").textContent = payload.name || "Oyuncu";
   el.style.opacity = "1";
   clearTimeout(el._hideTimer);
   el._hideTimer = window.setTimeout(() => { el.style.opacity = "0"; }, 1800);
@@ -786,15 +846,15 @@ function showTooltipFor(card, kind, x, y) {
   let color = card.accent;
 
   if (kind === "type") {
-    title = `${TYPE_META[card.type].en} / ${card.type}`;
-    label = "Card type";
+    title = card.type;
+    label = "Kart tipi";
     text = card.typeHelp;
     color = card.typeColor;
   }
   if (kind === "seal") {
-    title = "KABAL Seal";
-    label = "Deck mark";
-    text = "Every card carries the Kabal seal. It marks the card as part of the Eterin Varisleri deck.";
+    title = "KABAL Mührü";
+    label = "Deste işareti";
+    text = "Her kart KABAL mührünü taşır. Bu işaret, kartın Eterin Varisleri destesine ait olduğunu gösterir.";
     color = "#d8b762";
   }
 

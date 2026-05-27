@@ -40,7 +40,7 @@ export class RealtimeBus {
     const supabaseUrl = String(this.config?.supabaseUrl || "").trim();
     const supabaseAnonKey = String(this.config?.supabaseAnonKey || "").trim();
     if (!supabaseUrl || !supabaseAnonKey) {
-      this.onStatus?.("offline", "local table");
+      this.onStatus?.("offline", "yerel masa");
       this.onPresence?.([]);
       return false;
     }
@@ -73,7 +73,7 @@ export class RealtimeBus {
           if (status === "SUBSCRIBED") {
             window.clearTimeout(timer);
             this.connected = true;
-            this.onStatus?.("online", "realtime ready");
+            this.onStatus?.("online", "eş zamanlı hazır");
             await this.channel.track({ ...this.player, onlineAt: Date.now() });
             this.emitPresence();
             this.sendGame({ kind: "hello", player: this.player, version: 0, sentAt: Date.now(), from: this.player.id });
@@ -82,18 +82,18 @@ export class RealtimeBus {
           if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
             window.clearTimeout(timer);
             this.connected = false;
-            this.onStatus?.("offline", "local table");
+            this.onStatus?.("offline", "yerel masa");
             resolve(false);
           }
         });
       });
 
-      if (!subscribed) this.onStatus?.("offline", "local table");
+      if (!subscribed) this.onStatus?.("offline", "yerel masa");
       return Boolean(subscribed);
     } catch (error) {
-      console.warn("Realtime disabled:", error);
+      console.warn("Eş zamanlı bağlantı kapalı:", error);
       this.connected = false;
-      this.onStatus?.("offline", "local table");
+      this.onStatus?.("offline", "yerel masa");
       return false;
     }
   }

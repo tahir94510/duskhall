@@ -1,180 +1,180 @@
 export const TYPE_META = {
   "Mühür": {
-    en: "Seal",
+    label: "Mühür",
     color: "#d8b762",
     icon: "seal",
-    help: "Passive power. Build at least 3 and survive one full round after declaring Ascension."
+    help: "Pasif güç kartıdır. En az 3 Mühür kurup Yükseliş ilan ederek bir tam tur dayanmak oyunun ana zafer yoludur."
   },
   "Büyü": {
-    en: "Spell",
+    label: "Büyü",
     color: "#b74444",
     icon: "flame",
-    help: "Aggressive action. Usually played on your turn and then discarded."
+    help: "Saldırı ve manipülasyon kartıdır. Genelde kendi sıranızda oynanır, etkisi çözüldükten sonra kayıp alanına gider."
   },
   "Müdahale": {
-    en: "Intervention",
+    label: "Müdahale",
     color: "#5c83d8",
     icon: "counter",
-    help: "Instant response. Can interrupt spells or protect your own area depending on the card."
+    help: "Anlık tepki kartıdır. Sıra kimde olursa olsun doğru anda oynanabilir ve zinciri değiştirebilir."
   },
   "Hizmetkâr": {
-    en: "Servant",
+    label: "Hizmetkâr",
     color: "#4ea06b",
     icon: "guard",
-    help: "Living shield. Opponents must remove servants before attacking your seals."
+    help: "Canlı kalkan kartıdır. Rakipler Mühürlerinize saldırmadan önce Hizmetkârlarınızı aşmak zorundadır."
   }
 };
 
 export const CARD_DEFINITIONS = [
   {
-    key: "time-rift",
+    key: "zaman-catlagi",
     name: "Zaman Çatlağı",
     type: "Mühür",
     count: 4,
     icon: "rift",
     accent: "#d7c073",
     text: "Odaklanma aşamasında desteden 2 yerine 3 kart çekersiniz.",
-    short: "Draw 3 instead of 2 at focus."
+    short: "Odaklanmada 3 kart çek."
   },
   {
-    key: "void-veil",
+    key: "hiclik-ortusu",
     name: "Hiçlik Örtüsü",
     type: "Mühür",
     count: 4,
     icon: "veil",
     accent: "#a98ee8",
     text: "Masanızdaki diğer Mühürler ve elinizdeki kartlar hedef alınamaz; kendisi korumasızdır.",
-    short: "Other seals and hand cannot be targeted."
+    short: "Diğer Mühürleri ve eli korur."
   },
   {
-    key: "red-monolith",
+    key: "kizil-monolit",
     name: "Kızıl Monolit",
     type: "Mühür",
     count: 4,
     icon: "monolith",
     accent: "#d45f52",
     text: "Her tur 2 yerine 3 Hamle Puanınız olur.",
-    short: "Gain 3 action points instead of 2."
+    short: "Her tur 3 Hamle Puanı."
   },
   {
-    key: "necromancer-eye",
+    key: "olucagiranin-gozu",
     name: "Ölüçağıranın Gözü",
     type: "Mühür",
     count: 4,
     icon: "eye",
     accent: "#73c8a6",
     text: "Tur biterken çöplüğün en üstündeki 1 kartı mecburen elinize alırsınız.",
-    short: "Take top discard at turn end."
+    short: "Tur sonunda çöplükten kart al."
   },
   {
-    key: "etheric-impact",
+    key: "eterik-carpma",
     name: "Eterik Çarpma",
     type: "Büyü",
     count: 8,
     icon: "impact",
     accent: "#f06b56",
     text: "Rakibin masasındaki 1 hedefi yok edin. Hizmetkâr varsa önce onu seçmelisiniz.",
-    short: "Destroy one valid enemy target."
+    short: "Geçerli hedefi yok eder."
   },
   {
-    key: "shadow-theft",
+    key: "golge-hirsizligi",
     name: "Gölge Hırsızlığı",
     type: "Büyü",
     count: 6,
     icon: "hand",
     accent: "#8b6be8",
     text: "Rakibin elinden rastgele 1 kart seçin ve elinize alın.",
-    short: "Steal one random card from a hand."
+    short: "Rakibin elinden 1 kart çal."
   },
   {
-    key: "ancient-vision",
+    key: "kadim-goru",
     name: "Kadim Görü",
     type: "Büyü",
     count: 4,
     icon: "vision",
     accent: "#f0bb68",
     text: "Kapalı desteden anında 3 kart çekin.",
-    short: "Draw 3 from the deck."
+    short: "Desteden 3 kart çek."
   },
   {
-    key: "mind-parasite",
+    key: "zihin-paraziti",
     name: "Zihin Paraziti",
     type: "Büyü",
     count: 4,
     icon: "parasite",
     accent: "#d96bd1",
     text: "Bir rakibin Hizmetkârının kontrolünü alın ve kendi masanıza yerleştirin.",
-    short: "Take control of a servant."
+    short: "Hizmetkâr kontrolünü al."
   },
   {
-    key: "twist-of-fate",
+    key: "kaderin-cilvesi",
     name: "Kaderin Cilvesi",
     type: "Büyü",
     count: 2,
     icon: "swap",
     accent: "#68d8ce",
     text: "Elinizdeki tüm kartları, seçtiğiniz rakibin elindeki tüm kartlarla takas edin.",
-    short: "Swap entire hands with one rival."
+    short: "Eldeki kartları takas et."
   },
   {
-    key: "silence",
+    key: "sustur",
     name: "Sustur!",
     type: "Müdahale",
     count: 8,
     icon: "mute",
     accent: "#7fa2ff",
     text: "Oynanan herhangi bir Büyü veya Müdahale kartının etkisini iptal edin.",
-    short: "Cancel a spell or intervention."
+    short: "Büyü veya Müdahaleyi iptal et."
   },
   {
-    key: "karmic-reflection",
+    key: "karmik-yansima",
     name: "Karmik Yansıma",
     type: "Müdahale",
     count: 4,
     icon: "mirror",
     accent: "#90c7ff",
     text: "Size veya kartlarınıza yapılan saldırıyı iptal edin ve saldırana geri çevirin.",
-    short: "Reflect an attack back."
+    short: "Saldırıyı geri yansıtır."
   },
   {
-    key: "blood-atonement",
+    key: "kan-kefareti",
     name: "Kan Kefareti",
     type: "Müdahale",
     count: 4,
     icon: "blood",
     accent: "#e06c87",
     text: "Mührünüz yok edilmek üzereyken, elinizden rastgele 2 kart atarak onu kurtarın.",
-    short: "Discard 2 random cards to save a seal."
+    short: "2 kart at, Mührü kurtar."
   },
   {
-    key: "runic-warden",
+    key: "runik-bekci",
     name: "Rünik Bekçi",
     type: "Hizmetkâr",
     count: 8,
     icon: "warden",
     accent: "#66c384",
     text: "Masada olduğu sürece kimse Mühürlerinize saldıramaz.",
-    short: "Protects seals while in play."
+    short: "Mühürleri korur."
   },
   {
-    key: "glacial-brute",
+    key: "buzul-ucube",
     name: "Buzul Ucube",
     type: "Hizmetkâr",
     count: 4,
     icon: "ice",
     accent: "#8bd7e8",
     text: "Bu kartı yok eden oyuncu, kendi sırası geldiğinde turunu tamamen pas geçer.",
-    short: "Destroyer skips their next turn."
+    short: "Yok edeni turdan düşürür."
   },
   {
-    key: "shadow-killer",
+    key: "golge-katili",
     name: "Gölge Katili",
     type: "Hizmetkâr",
     count: 4,
     icon: "dagger",
     accent: "#8bd184",
     text: "Masaya koyulduğunda bir rakibin Hizmetkârını seçip yok eder.",
-    short: "Kills an enemy servant on entry."
+    short: "Rakip Hizmetkârı yok eder."
   }
 ];
 

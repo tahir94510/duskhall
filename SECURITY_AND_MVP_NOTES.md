@@ -1,19 +1,11 @@
-# Security & MVP Notes
+# Güvenlik ve MVP Notu
 
-Bu sürüm, arkadaşlarla oynanacak serbest masa MVP'sidir. Ağır ve kırılgan backend yerine Supabase Realtime Broadcast + Presence kullanır.
+Bu sürüm, arkadaşlarla oynanacak serbest masa MVP'sidir. Ağır ve kırılgan bir veritabanı akışı yerine Supabase Realtime Broadcast + Presence kullanır.
 
-## Güvenlik yaklaşımı
+- Sunucuda gizli servis anahtarı kullanılmaz.
+- Oyuncular oda linkiyle aynı kanala bağlanır.
+- Kart hareketleri kısa ve hafif mesajlarla yayınlanır.
+- Rakip el alanına ait kartlar istemcide görünmez hale getirilir; yalnızca kart sayısı gösterilir.
+- Kalıcı veri zorunlu değildir; oda kapandığında arka tarafta kart düzeni bırakılmaz.
 
-- Service role key kullanılmaz.
-- Frontend'e yalnızca public anon key gönderilir.
-- Oda state'i kalıcı veritabanına yazılmaz; herkes odadan çıkınca veri doğal olarak kaybolur.
-- Broadcast mesajları kart id, konum, flip ve oyuncu imleci gibi masa verileriyle sınırlıdır.
-- Vercel `/api/config` endpoint'i `no-store` ile çalışır.
-
-## MVP sınırı
-
-Bu sürümde otomatik kural hakemliği yoktur. Dağıtım, sıra takibi, hedefleme ve kazanma kontrolü oyuncuların anlaşmasına bırakılır. Amaç masa etkileşimlerini hızlı, temiz, stabil ve düşük maliyetli sunmaktır.
-
-## İleri seviye öneriler
-
-Daha sonra ranked oda, kullanıcı hesabı, kalıcı geçmiş, anti-spam rate limit ve moderation istenirse Supabase Edge Functions veya küçük bir authoritative server eklenebilir.
+Daha ileri sürümde hesap sistemi, oda sahibi yetkisi, sunucu taraflı doğrulama ve kalıcı maç kaydı eklenebilir.
