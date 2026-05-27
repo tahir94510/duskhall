@@ -1,11 +1,24 @@
-# Güvenlik ve MVP Notu
+# Güvenlik, telif ve MVP notları
 
-Bu sürüm, arkadaşlarla oynanacak serbest masa MVP'sidir. Ağır ve kırılgan bir veritabanı akışı yerine Supabase Realtime Broadcast + Presence kullanır.
+Bu paket KABAL: Eterin Varisleri için hafif, Vercel uyumlu ve Supabase Realtime destekli bir dijital kart masasıdır.
 
-- Sunucuda gizli servis anahtarı kullanılmaz.
-- Oyuncular oda linkiyle aynı kanala bağlanır.
-- Kart hareketleri kısa ve hafif mesajlarla yayınlanır.
-- Rakip el alanına ait kartlar istemcide görünmez hale getirilir; yalnızca kart sayısı gösterilir.
-- Kalıcı veri zorunlu değildir; oda kapandığında arka tarafta kart düzeni bırakılmaz.
+## Uygulanan güvenlik önlemleri
 
-Daha ileri sürümde hesap sistemi, oda sahibi yetkisi, sunucu taraflı doğrulama ve kalıcı maç kaydı eklenebilir.
+- Bağımlılıksız statik ön yüz: npm/pnpm install zinciri yoktur.
+- Vercel güvenlik başlıkları: CSP, X-Content-Type-Options, Referrer-Policy, X-Frame-Options ve Permissions-Policy.
+- Supabase bağlantısı yalnızca `SUPABASE_URL` ve `SUPABASE_ANON_KEY` girildiğinde çalışır.
+- Realtime mesajları istemci tarafında sınırlandırılır; çok büyük patch ve preview paketleri yok sayılır.
+- İmleç ve sürükleme yayınları throttle edilir.
+- Oda sistemi kalıcı veritabanı kaydı gerektirmez; Broadcast + Presence mantığı gereksiz veri birikimini azaltır.
+- Kart gizliliği istemci arayüzünde korunur: rakip el alanındaki kartlar görünmez, yalnızca kart sayısı görünür.
+
+## Telif ve marka koruma notu
+
+- Kart adları, kurallar ve oyun metinleri projeye özel tutulmuştur.
+- `COPYRIGHT_NOTICE.md` dosyası temel telif ve kullanım notlarını içerir.
+- Web üzerinde yayınlanan hiçbir istemci kodu yüzde yüz çalınamaz hale getirilemez. Gerçek hukuki koruma için marka tescili, tasarım tescili, telif kayıtları ve gerektiğinde lisans sözleşmesi gerekir.
+- Bu paket teknik tarafta makul koruma sağlar; hukuki garanti veya saldırılara karşı mutlak dokunulmazlık iddiası taşımaz.
+
+## DDoS ve ölçek notu
+
+Vercel ve Supabase altyapısı temel ölçeklenebilirlik sağlar. Gerçek yüksek trafik / DDoS direnci için domain seviyesinde WAF, rate limit, bot koruması, Supabase kota yönetimi ve gerektiğinde ücretli koruma katmanı kullanılmalıdır.

@@ -1,19 +1,27 @@
-# KABAL: Eterin Varisleri — Türkçe Hafif MVP
+# KABAL: Eterin Varisleri — Türkçe Dijital Kart Masası
 
-Bu paket, KABAL için ağır kurulum zinciri olmadan çalışan, GitHub'a yüklenip Vercel'e doğrudan deploy edilebilen statik kart masası MVP'sidir.
+Bu paket, KABAL: Eterin Varisleri için hazırlanmış hafif, bağımlılıksız ve Vercel uyumlu MVP/tam masa sürümüdür. Oyuncular kuralları dokümantasyondan takip eder; masa ise kartları sürükleme, çevirme, yığın taşıma, yığın toparlama, yığın karıştırma, gizli el alanı ve oda linkiyle arkadaşlarla oynama deneyimini sağlar.
 
-## Bu sürümde düzeltilenler
+## Temel özellikler
 
-- Oyun arayüzündeki bütün görünen metinler Türkçeleştirildi.
-- Kartlarda kalan gereksiz İngilizce tip ifadeleri kaldırıldı; Mühür, Büyü, Müdahale ve Hizmetkâr adları Türkçe gösteriliyor.
-- Merkez deste çevresindeki gereksiz koyu karartı ve ağır panel görünümü temizlendi.
-- Kart toplama işleminde yığının sağ çapraza kayması düzeltildi; kartlar doğrudan aynı merkezde toparlanır.
-- Oyuncu el alanı gizliliği güçlendirildi: kendi alanındaki kartları sen görürsün, rakiplerin alanındaki kartlar sende tamamen görünmez; yalnızca kart sayısı görünür.
-- Kart alandan çıkarıldığında yeniden masada görünür hale gelir.
-- Her oyuncu alanında kart sayısı gösterilir.
-- Deste, açık alan ve kayıp alanı için sayaçlar eklendi.
-- Mobil ve küçük ekran yerleşimleri yeniden düzenlendi; sayfa scroll tetiklemeden sabit masa olarak çalışır.
-- `package.json` yoktur. Bu nedenle Vercel'de `engines.node >=20.9.0`, npm, pnpm veya build uyarı zinciri tetiklenmez.
+- Tamamen Türkçe arayüz.
+- 72 kartlık V8 deste yapısı.
+- 5 oyuncuya kadar masa yerleşimi: kendi alanın + 4 rakip alanı.
+- Rakip el alanındaki kartlar görünmez; yalnızca kart sayısı görünür.
+- Kart kendi alanından çıkınca tekrar masada görünür.
+- Deste, Açık ve Kayıp alanlarında kart sayaçları.
+- Sağ tık / `F` ile kart çevirme.
+- `Ctrl + sürükle` ile yığın taşıma.
+- `Ctrl + G` ile yığın toparlama.
+- `Ctrl + M` ile yığın karıştırma.
+- `Shift + A` ile yığını açma, `Shift + K` ile yığını kapatma.
+- Mobilde uzun bas ile çevirme ve seçili karta özel küçük işlem paneli.
+- Kurallar modalında V8 tam kural kitabı.
+- Destek paneli ve bildirim rozetli destek butonu.
+- Oda açılış süresi sayacı.
+- Supabase Realtime Broadcast + Presence desteği.
+- Supabase ENV yoksa yerel masa olarak bozulmadan çalışır.
+- `package.json` yoktur; npm/pnpm install ve Node engines uyarısı tetiklemez.
 
 ## Yerelde çalıştırma
 
@@ -21,26 +29,24 @@ Bu paket, KABAL için ağır kurulum zinciri olmadan çalışan, GitHub'a yükle
 python3 -m http.server 5173
 ```
 
-Tarayıcıda aç:
+Sonra tarayıcıdan aç:
 
 ```text
 http://localhost:5173
 ```
 
-Yerel Supabase ayarı kullanmak için `config.local.example.json` dosyasını `config.local.json` olarak kopyala ve değerleri gir.
+## Vercel kurulumu
 
-## Vercel deploy
+Vercel'de framework seçimi:
 
-Bu projede kurulum ve build komutu yoktur.
+```text
+Framework Preset: Other
+Build Command: boş bırak
+Output Directory: .
+Install Command: boş bırak
+```
 
-1. Klasörü GitHub repo olarak yükle.
-2. Vercel'de projeyi import et.
-3. Framework Preset alanında `Other` seç.
-4. Build Command alanını boş bırak.
-5. Output Directory alanını boş bırak veya `.` kullan.
-6. Ortam değişkenlerini gir.
-
-## Ortam değişkenleri
+Ortam değişkenleri:
 
 ```text
 SUPABASE_URL=https://YOUR_PROJECT.supabase.co
@@ -49,25 +55,10 @@ SUPPORT_URL=https://destek-linkin.com
 NEXT_PUBLIC_APP_URL=https://senin-projen.vercel.app
 ```
 
-Alternatif adlar da desteklenir:
+## Supabase
 
-```text
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-VITE_SUPABASE_URL
-VITE_SUPABASE_ANON_KEY
-NEXT_PUBLIC_SUPPORT_URL
-```
+Bu MVP kalıcı tabloya ihtiyaç duymaz. Realtime Broadcast ve Presence kullanır. Supabase projesinde Realtime kapalıysa oyun yine yerel masa olarak açılır; bağlantı kurulunca oda linki üzerinden senkron çalışır.
 
-## Oynanış kısayolları
+## Güvenlik ve telif
 
-- Sürükle: Kartı taşı.
-- Sağ tık / F: Kartı çevir.
-- Uzun bas: Mobilde kartı çevir.
-- Ctrl + sürükle: Aynı yığındaki kartları birlikte taşı.
-- Ctrl + G: Yığını toparla.
-- Ctrl + M: Yığını karıştır.
-
-## Supabase notu
-
-MVP, veritabanı tablosuna muhtaç değildir. Supabase Realtime Broadcast + Presence kullanır. Bu sayede oda kapandığında kalıcı veri bırakılmaz. `supabase/optional_room_events.sql` sadece ileride kalıcı log veya analitik istersen kullanılabilecek opsiyonel şemadır.
+`SECURITY_AND_MVP_NOTES.md` ve `COPYRIGHT_NOTICE.md` dosyalarını okuyun. Web istemcisi yüzde yüz çalınamaz hale getirilemez; teknik koruma hukuki korumanın yerine geçmez. Bu paket makul güvenlik başlıkları, throttle ve istemci doğrulamaları içerir.

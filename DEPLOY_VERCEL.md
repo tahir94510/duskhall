@@ -1,14 +1,10 @@
-# Vercel Kurulum Notu
+# Vercel Deploy Notları
 
-Bu paket bağımlılıksızdır. `package.json`, `engines`, `npm install`, `pnpm install`, `next build` veya `vite build` yoktur. Repo içeriğini bu klasördeki dosyalarla güncellediğinde Vercel statik olarak yayınlar.
-
-## Vercel ayarı
-
-- Framework Preset: `Other`
-- Build Command: boş
-- Output Directory: boş veya `.`
-
-## Ortam değişkenleri
+1. Paketi GitHub reposuna yükle.
+2. Vercel'de yeni proje aç ve repoyu import et.
+3. Framework Preset olarak `Other` seç.
+4. Build Command, Install Command ve Output Directory alanlarını boş bırak veya Output Directory için `.` kullan.
+5. Ortam değişkenlerini ekle:
 
 ```text
 SUPABASE_URL
@@ -17,14 +13,6 @@ SUPPORT_URL
 NEXT_PUBLIC_APP_URL
 ```
 
-`SUPABASE_URL` ve `SUPABASE_ANON_KEY` girilirse linkli eş zamanlı masa çalışır. Girilmezse oyun yerel masa olarak yine açılır.
+6. Deploy et.
 
-## Deploy sonrası hızlı kontrol
-
-- Oyun Türkçe açılmalı.
-- Deste, Açık ve Kayıp sayaçları görünmeli.
-- Davet butonu oda linkini kopyalamalı.
-- Kart sağ tık veya F ile çevrilmeli.
-- Kart kendi el alanına bırakıldığında yalnızca o oyuncuda görünmeli.
-- Rakip alanındaki kartlar görünmemeli, sadece kart sayısı görünmeli.
-- Ctrl + G yığını çapraza kaydırmadan toparlamalı.
+Bu pakette `package.json` bulunmadığı için Vercel dependency install aşaması çalıştırmaz; `engines.node` uyarısı, pnpm lockfile uyarısı veya npm install hatası tetiklenmez.

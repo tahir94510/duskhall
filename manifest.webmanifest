@@ -1,12 +1,12 @@
 {
   "name": "KABAL: Eterin Varisleri",
   "short_name": "KABAL",
-  "description": "Hafif gerçek zamanlı KABAL kart masası.",
+  "description": "Türkçe dijital kart masası.",
   "start_url": "/",
   "display": "fullscreen",
-  "background_color": "#020203",
-  "theme_color": "#050505",
+  "background_color": "#050506",
+  "theme_color": "#050506",
   "icons": [
-    { "src": "/assets/icon.svg", "sizes": "512x512", "type": "image/svg+xml" }
+    { "src": "/assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }

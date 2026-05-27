@@ -1,19 +1,19 @@
-# Supabase Setup
+# Supabase Kullanımı
 
-Bu MVP için tablo oluşturmak şart değildir.
+Bu sürüm Supabase tarafında tablo zorunluluğu gerektirmez. Oyun, Supabase Realtime Broadcast ve Presence ile çalışır.
 
-Kullanılan özellikler:
-
-- Realtime Broadcast: kart hareketleri ve flip olayları.
-- Presence: oyuncu listesi ve imleçler.
-
-Vercel ENV olarak yalnızca şu iki değer yeterlidir:
+Gerekli ENV değerleri:
 
 ```text
 SUPABASE_URL
 SUPABASE_ANON_KEY
 ```
 
-Service role key kullanmayın.
+Realtime bağlantısı kurulduğunda:
 
-`optional_room_events.sql` dosyası sadece ileride kalıcı oda geçmişi veya analitik istenirse kullanılabilecek opsiyonel bir başlangıç şemasıdır.
+- Oyuncu varlığı odaya yansır.
+- İmleçler görünür.
+- Kart hareketi, çevirme, yığın açma/kapatma, toparlama ve karıştırma yayınlanır.
+- Rakip el alanındaki kartlar istemci arayüzünde görünmez; yalnızca sayı görünür.
+
+Ücretsiz MVP için kalıcı oda tablosu kullanılmaz. Daha ileri sürümde oda geçmişi, kullanıcı hesabı, moderasyon ve replay istenirse tablo yapısı eklenebilir.

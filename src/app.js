@@ -2,7 +2,10 @@ import { expandDeck, iconSvg, TYPE_META } from "./cards.js";
 import { RULES_HTML, supportHtml, leaveConfirmHtml } from "./rules.js";
 import { RealtimeBus, loadConfig } from "./net.js";
 
-const PLAYER_COLORS = ["#d8b762", "#7fa6ff", "#62c889", "#d56d8e"];
+const PLAYER_COLORS = ["#d8b762", "#7fa6ff", "#62c889", "#d56d8e", "#58ad72"];
+const REMOTE_SEATS = ["topLeft", "topRight", "left", "right"];
+const MAX_PLAYERS = 5;
+const DRAG_Z_BOOST = 100000;
 const STACK_RADIUS = 132;
 const CURSOR_THROTTLE_MS = 55;
 const DRAG_BROADCAST_MS = 90;
@@ -22,12 +25,15 @@ const els = {
   modalContent: document.getElementById("modalContent"),
   modalClose: document.getElementById("modalClose"),
   toast: document.getElementById("toast"),
+  mobileTools: document.getElementById("mobileTools"),
+  roomTimer: document.getElementById("roomTimer"),
   deckSlot: document.getElementById("deckSlot"),
   openSlot: document.getElementById("openSlot"),
   voidSlot: document.getElementById("voidSlot"),
   zones: {
     bottom: document.getElementById("zoneBottom"),
-    top: document.getElementById("zoneTop"),
+    topLeft: document.getElementById("zoneTopLeft"),
+    topRight: document.getElementById("zoneTopRight"),
     left: document.getElementById("zoneLeft"),
     right: document.getElementById("zoneRight")
   }
@@ -53,6 +59,9 @@ const app = {
   lastDragBroadcast: 0,
   snapshotTimer: null,
   resizeTimer: null,
+  focusedCardId: null,
+  roomStartedAt: Date.now(),
+  roomTimerId: null,
   reduceMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || false
 };
 
@@ -68,6 +77,7 @@ async function bootstrap() {
   renderZones();
   renderCards(true);
   attachEvents();
+  startRoomTimer();
 
   app.bus = new RealtimeBus({
     roomId: app.roomId,
@@ -97,14 +107,39 @@ function attachEvents() {
     if (document.hidden) stopDragging(true);
   });
 
-  els.copyLinkBtn.addEventListener("click", copyInviteLink);
-  els.rulesBtn.addEventListener("click", () => openModal(RULES_HTML));
-  els.supportBtn.addEventListener("click", () => openModal(supportHtml(app.config?.supportUrl)));
-  els.leaveBtn.addEventListener("click", () => openModal(leaveConfirmHtml(), wireLeaveConfirm));
-  els.modalClose.addEventListener("click", closeModal);
+  bindUiButton(els.copyLinkBtn, copyInviteLink);
+  bindUiButton(els.rulesBtn, () => openModal(RULES_HTML));
+  bindUiButton(els.supportBtn, () => openModal(supportHtml(app.config?.supportUrl)));
+  bindUiButton(els.leaveBtn, () => openModal(leaveConfirmHtml(), wireLeaveConfirm));
+  bindUiButton(els.modalClose, closeModal);
+  els.mobileTools?.querySelectorAll("button[data-action]").forEach((button) => bindUiButton(button, () => handleMobileAction(button.dataset.action)));
   els.modalLayer.addEventListener("pointerdown", (event) => {
     if (event.target === els.modalLayer) closeModal();
   });
+}
+
+function bindUiButton(button, handler) {
+  if (!button) return;
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    handler?.(event);
+  });
+}
+
+function startRoomTimer() {
+  const tick = () => {
+    const elapsed = Math.max(0, Math.floor((Date.now() - app.roomStartedAt) / 1000));
+    const minutes = String(Math.floor(elapsed / 60)).padStart(2, "0");
+    const seconds = String(elapsed % 60).padStart(2, "0");
+    if (els.roomTimer) els.roomTimer.textContent = `${minutes}:${seconds}`;
+  };
+  tick();
+  app.roomTimerId = window.setInterval(tick, 1000);
 }
 
 function handleResize() {
@@ -233,19 +268,17 @@ function createCardElement(card) {
       <span class="card-face card-front">
         <span class="card-border"></span>
         <span class="card-topline">
-          <span class="card-type-icon" data-tip="type">${iconSvg(card.typeIcon)}</span>
-          <span class="card-seal-icon" data-tip="seal">${iconSvg("seal")}</span>
+          <span class="card-type-icon" data-tip="type" aria-label="${escapeHtml(card.type)}">${iconSvg(card.typeIcon)}</span>
         </span>
         <span class="card-body">
-          <span class="card-name-icon" data-tip="power">${iconSvg(card.icon)}</span>
-          <span class="card-title">${escapeHtml(card.name)}</span>
+          <span class="card-name-icon" data-tip="power" aria-label="${escapeHtml(card.name)}">${iconSvg(card.icon)}</span>
+          <span class="card-title" data-tip="power">${escapeHtml(card.name)}</span>
         </span>
-        <span class="card-footer">${escapeHtml(card.type)}</span>
+        <span class="card-footer" aria-hidden="true"></span>
       </span>
       <span class="card-face card-back">
         <span class="back-ring"></span>
-        <span class="back-mark">K</span>
-        <span class="back-title">KABAL</span>
+        <span class="back-mark">${iconSvg("mark")}</span>
       </span>
     </span>
   `;
@@ -263,7 +296,7 @@ function syncCardElement(el, card) {
   const pos = getCardScreenPosition(card);
   el.style.left = `${pos.x}px`;
   el.style.top = `${pos.y}px`;
-  el.style.zIndex = String(card.z || 1);
+  el.style.zIndex = String(100 + (card.z || 1));
   el.style.setProperty("--type-color", card.typeColor);
   el.style.setProperty("--accent-color", card.accent);
   el.style.transform = `rotate(${card.angle || 0}deg)`;
@@ -303,7 +336,7 @@ function clampPosition(left, top) {
 function getZoneForOwner(ownerId) {
   if (ownerId === app.player.id) return els.zones.bottom;
   const seat = getRemoteSeat(ownerId);
-  return els.zones[seat] || els.zones.top;
+  return els.zones[seat] || els.zones.topLeft;
 }
 
 function getRemoteSeat(playerId) {
@@ -311,7 +344,7 @@ function getRemoteSeat(playerId) {
     .filter((player) => player.id !== app.player.id)
     .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
   const idx = remotes.findIndex((player) => player.id === playerId);
-  return ["top", "left", "right"][Math.max(0, idx)] || "top";
+  return REMOTE_SEATS[Math.max(0, idx)] || "topLeft";
 }
 
 function renderZones() {
@@ -319,13 +352,13 @@ function renderZones() {
   els.zones.bottom.classList.remove("is-empty");
   els.zones.bottom.querySelector(".zone-label").textContent = "El alanım";
 
-  const remoteSeats = { top: null, left: null, right: null };
+  const remoteSeats = { topLeft: null, topRight: null, left: null, right: null };
   for (const player of app.players.values()) {
     if (player.id === app.player.id) continue;
     remoteSeats[getRemoteSeat(player.id)] = player;
   }
 
-  for (const seat of ["top", "left", "right"]) {
+  for (const seat of REMOTE_SEATS) {
     const zone = els.zones[seat];
     const player = remoteSeats[seat];
     if (player) {
@@ -346,13 +379,13 @@ function updateCounters() {
   const selfCount = app.cards.filter((card) => card.ownerId === app.player.id).length;
   els.zones.bottom.querySelector(".zone-label").textContent = `El alanım · ${selfCount} kart`;
 
-  const remoteBySeat = { top: null, left: null, right: null };
+  const remoteBySeat = { topLeft: null, topRight: null, left: null, right: null };
   for (const player of app.players.values()) {
     if (player.id === app.player.id) continue;
     remoteBySeat[getRemoteSeat(player.id)] = player;
   }
 
-  for (const seat of ["top", "left", "right"]) {
+  for (const seat of REMOTE_SEATS) {
     const zone = els.zones[seat];
     const player = remoteBySeat[seat];
     if (!player) {
@@ -430,7 +463,7 @@ function startDragging(event, ids) {
   app.selectedIds = new Set(uniqueIds);
   uniqueIds.forEach((id, index) => {
     const card = getCard(id);
-    card.z = nextZ() + index;
+    card.z = nextZ() + DRAG_Z_BOOST + index;
   });
 
   const starts = uniqueIds.map((id) => {
@@ -524,7 +557,15 @@ function handlePointerUp(event) {
     patches.push(compactCardPatch(card));
   }
 
-  stopDragging(true);
+  const wasTap = !app.drag?.moved;
+  const focusedId = wasTap && app.drag?.starts?.[0]?.id ? app.drag.starts[0].id : null;
+  stopDragging(!wasTap);
+  if (focusedId) {
+    app.focusedCardId = focusedId;
+    app.selectedIds = new Set([focusedId]);
+    showMobileTools(focusedId);
+    renderCards(false);
+  }
   commitPatches(patches, "move");
 }
 
@@ -547,13 +588,17 @@ function stopDragging(clearSelection = true) {
     try { app.drag.captureEl?.releasePointerCapture?.(app.drag.pointerId); } catch {}
   }
   app.drag = null;
-  if (clearSelection) app.selectedIds.clear();
+  if (clearSelection) {
+    app.selectedIds.clear();
+    hideMobileTools();
+  }
   renderCards(false);
 }
 
 function handleKeyDown(event) {
   if (event.key === "Escape") {
     closeModal();
+    hideMobileTools();
     stopDragging(true);
     return;
   }
@@ -576,6 +621,16 @@ function handleKeyDown(event) {
   if ((event.ctrlKey || event.metaKey) && key === "m") {
     event.preventDefault();
     mixStack(target);
+    return;
+  }
+  if (event.shiftKey && key === "a") {
+    event.preventDefault();
+    setStackFace(target, true);
+    return;
+  }
+  if (event.shiftKey && key === "k") {
+    event.preventDefault();
+    setStackFace(target, false);
   }
 }
 
@@ -626,6 +681,52 @@ function mixStack(target) {
   });
   commitPatches(patches, "mix");
   showToast(`${ids.length} kart karıştırıldı.`);
+}
+
+function setStackFace(target, faceUp) {
+  const ids = findStackIds(target, STACK_RADIUS * 1.35);
+  const patches = [];
+  ids.forEach((id, index) => {
+    const card = getCard(id);
+    if (!card || isLocked(card)) return;
+    card.faceUp = Boolean(faceUp);
+    card.z = nextZ() + index;
+    patches.push(compactCardPatch(card));
+  });
+  commitPatches(patches, faceUp ? "open-stack" : "close-stack");
+  showToast(`${patches.length} kart ${faceUp ? "açıldı" : "kapatıldı"}.`);
+}
+
+function handleMobileAction(action) {
+  const target = app.focusedCardId ? getCard(app.focusedCardId) : getTopCardAtPoint(app.pointer.x, app.pointer.y);
+  if (!target || isLocked(target)) {
+    hideMobileTools();
+    return;
+  }
+  if (action === "flip") flipCards([target.id]);
+  if (action === "gather") gatherStack(target);
+  if (action === "mix") mixStack(target);
+  if (action === "open") setStackFace(target, true);
+  if (action === "close") setStackFace(target, false);
+  app.focusedCardId = target.id;
+  app.selectedIds = new Set([target.id]);
+  showMobileTools(target.id);
+  renderCards(false);
+}
+
+function showMobileTools(cardId) {
+  if (!els.mobileTools) return;
+  const card = getCard(cardId);
+  if (!card || isLocked(card)) return;
+  els.mobileTools.classList.add("is-visible");
+  els.mobileTools.setAttribute("aria-hidden", "false");
+}
+
+function hideMobileTools() {
+  if (!els.mobileTools) return;
+  els.mobileTools.classList.remove("is-visible");
+  els.mobileTools.setAttribute("aria-hidden", "true");
+  app.focusedCardId = null;
 }
 
 function applyScreenPosition(card, left, top, keepOwned) {
@@ -742,7 +843,7 @@ function handleRemoteGame(message) {
   }
 
   if (message.kind === "preview" && Array.isArray(message.previews)) {
-    for (const item of message.previews) {
+    for (const item of message.previews.slice(0, 40)) {
       const card = getCard(item.id);
       const el = app.elements.get(item.id);
       if (!card || !el || card.ownerId === app.player.id) continue;
@@ -760,8 +861,10 @@ function handleRemoteGame(message) {
 }
 
 function applyPatches(patches) {
+  if (!Array.isArray(patches) || patches.length > 160) return;
   const byId = new Map(app.cards.map((card) => [card.id, card]));
   for (const patch of patches) {
+    if (!patch || typeof patch.id !== "string") continue;
     const card = byId.get(patch.id);
     if (!card) continue;
     Object.assign(card, {
@@ -780,8 +883,9 @@ function applyPatches(patches) {
 function handlePresence(players) {
   app.players.clear();
   app.players.set(app.player.id, app.player);
-  for (const player of players) {
+  for (const player of players.slice(0, MAX_PLAYERS)) {
     if (!player?.id) continue;
+    if (app.players.size >= MAX_PLAYERS && !app.players.has(player.id)) continue;
     app.players.set(player.id, player);
   }
   renderZones();
@@ -851,15 +955,10 @@ function showTooltipFor(card, kind, x, y) {
     text = card.typeHelp;
     color = card.typeColor;
   }
-  if (kind === "seal") {
-    title = "KABAL Mührü";
-    label = "Deste işareti";
-    text = "Her kart KABAL mührünü taşır. Bu işaret, kartın Eterin Varisleri destesine ait olduğunu gösterir.";
-    color = "#d8b762";
-  }
+  const note = kind === "type" ? card.typeNote : card.short;
 
   app.tooltip.style.setProperty("--tip-color", color);
-  app.tooltip.innerHTML = `<small>${escapeHtml(label)}</small><strong>${escapeHtml(title)}</strong><p>${escapeHtml(text)}</p>`;
+  app.tooltip.innerHTML = `<small>${escapeHtml(label)}</small><strong>${escapeHtml(title)}</strong><p>${escapeHtml(text)}${note ? `<span class="tip-note">${escapeHtml(note)}</span>` : ""}</p>`;
   app.tooltip.classList.add("is-visible");
 
   requestAnimationFrame(() => {
@@ -880,7 +979,7 @@ function hideTooltip() {
 }
 
 function getOpponentSeatAt(x, y) {
-  for (const seat of ["top", "left", "right"]) {
+  for (const seat of REMOTE_SEATS) {
     const rect = els.zones[seat].getBoundingClientRect();
     if (pointInRect(x, y, rect)) return seat;
   }
