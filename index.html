@@ -1,92 +1,34 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-    <title>KABAL: Eterin Varisleri | Türkçe Kart Masası</title>
-    <meta name="description" content="KABAL: Eterin Varisleri için hafif, hızlı, Türkçe, gerçek zamanlı ve Vercel uyumlu kart masası." />
-    <meta name="theme-color" content="#050506" />
-    <meta name="robots" content="index, follow" />
-    <meta property="og:title" content="KABAL: Eterin Varisleri" />
-    <meta property="og:description" content="Arkadaşlarla oynanabilen özgür ve asil kart masası." />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="/assets/og.svg" />
-    <link rel="icon" href="/assets/icon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/assets/icon.svg" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#070708" />
+    <meta name="color-scheme" content="dark" />
+    <title>KABAL — Heirs of Ether</title>
+    <meta name="description" content="KABAL: Heirs of Ether — a noble, tabletop-style digital card sandbox. Play with friends in a private room, freely move and flip cards, follow the official rulebook." />
+    <link rel="icon" type="image/svg+xml" href="/assets/icon.svg" />
+    <link rel="apple-touch-icon" href="/assets/icon-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="alternate" hreflang="en" href="/?lang=en" />
+    <link rel="alternate" hreflang="tr" href="/?lang=tr" />
+    <link rel="alternate" hreflang="x-default" href="/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="KABAL — Heirs of Ether" />
+    <meta property="og:description" content="A noble digital card sandbox for 2–4 friends. No forced rules, full freedom." />
+    <meta property="og:image" content="/assets/og.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" />
+    <script type="module" src="/src/main.ts"></script>
   </head>
   <body>
-    <main id="app" class="app-shell" aria-label="KABAL kart masası">
-      <header class="hud" aria-label="Oyun menüsü">
-        <div class="brand-mark" aria-label="KABAL işareti">
-          <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 5 51 16v21L32 59 13 37V16L32 5Z"/><path d="M32 14v36M20 22l24 24M44 22 20 46"/><circle cx="32" cy="32" r="8"/></svg>
-        </div>
-        <nav class="hud-actions" aria-label="Oyun aksiyonları">
-          <button id="copyLinkBtn" class="icon-button" type="button" title="Davet linkini kopyala" aria-label="Davet linkini kopyala">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12a4 4 0 0 0 6 3l3-3a4 4 0 0 0-6-6l-1 1"/><path d="M15 12a4 4 0 0 0-6-3l-3 3a4 4 0 0 0 6 6l1-1"/></svg>
-          </button>
-          <button id="rulesBtn" class="icon-button" type="button" title="Kurallar" aria-label="Kurallar">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h9a3 3 0 0 1 3 3v13H8a3 3 0 0 0-3 2V6a2 2 0 0 1 2-2Z"/><path d="M8 8h7M8 12h7M8 16h5"/></svg>
-          </button>
-          <button id="supportBtn" class="icon-button has-badge" type="button" title="Destek" aria-label="Destek">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-9-10a5 5 0 0 1 9-4 5 5 0 0 1 9 4c-2 5.5-9 10-9 10Z"/></svg>
-            <span class="notify-dot">1</span>
-          </button>
-          <button id="leaveBtn" class="icon-button danger" type="button" title="Odadan çık" aria-label="Odadan çık">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M14 8l4 4-4 4M18 12H9"/></svg>
-          </button>
-        </nav>
-      </header>
-
-      <aside id="roomBadge" class="room-badge" aria-live="polite">
-        <span class="room-label">Oda</span>
-        <strong id="roomCode">...</strong>
-        <small><span id="syncStatus">yerel masa</span> · <span id="roomTimer">00:00</span></small>
-      </aside>
-
-      <section id="zoneTopLeft" class="player-zone zone-top-left is-empty" data-seat="topLeft"><span class="zone-label">Bekleniyor · 0 kart</span></section>
-      <section id="zoneTopRight" class="player-zone zone-top-right is-empty" data-seat="topRight"><span class="zone-label">Bekleniyor · 0 kart</span></section>
-      <section id="zoneLeft" class="player-zone zone-left is-empty" data-seat="left"><span class="zone-label">Bekleniyor · 0 kart</span></section>
-      <section id="zoneRight" class="player-zone zone-right is-empty" data-seat="right"><span class="zone-label">Bekleniyor · 0 kart</span></section>
-      <section id="zoneBottom" class="player-zone zone-bottom is-self" data-seat="bottom"><span class="zone-label">El alanım · 0 kart</span></section>
-
-      <section class="center-dock" aria-hidden="true">
-        <div id="deckSlot" class="dock-slot"><span>Deste</span><strong>72</strong></div>
-        <div id="openSlot" class="dock-slot"><span>Açık</span><strong>0</strong></div>
-        <div id="voidSlot" class="dock-slot"><span>Kayıp</span><strong>0</strong></div>
-      </section>
-
-      <section id="board" class="board" aria-label="Kart masası"></section>
-      <div id="cursorLayer" class="cursor-layer" aria-hidden="true"></div>
-
-      <aside class="shortcut-hint" aria-label="Kısayollar">
-        <strong>Kısayollar</strong>
-        <span>Sürükle: taşı</span>
-        <span>Sağ tık / F: çevir</span>
-        <span>Ctrl + sürükle: yığın taşı</span>
-        <span>Ctrl + G: toparla · Ctrl + M: karıştır</span>
-        <span>Shift + A / K: yığını aç / kapat</span>
-      </aside>
-
-      <aside id="mobileTools" class="mobile-tools" aria-label="Mobil kart araçları" aria-hidden="true">
-        <button data-action="flip" type="button">Çevir</button>
-        <button data-action="gather" type="button">Topla</button>
-        <button data-action="mix" type="button">Karıştır</button>
-        <button data-action="open" type="button">Aç</button>
-        <button data-action="close" type="button">Kapat</button>
-      </aside>
-
-      <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    </main>
-
-    <section id="modalLayer" class="modal-layer" aria-hidden="true">
-      <article class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-        <button id="modalClose" class="modal-close" type="button" aria-label="Kapat">×</button>
-        <div id="modalContent"></div>
-      </article>
-    </section>
-
-    <script type="module" src="/src/app.js"></script>
+    <div id="app" aria-live="polite"></div>
+    <noscript>
+      <div style="position:fixed;inset:0;display:grid;place-items:center;background:#070708;color:#f3efe5;font-family:Inter,system-ui,sans-serif;padding:24px;text-align:center;">
+        KABAL requires JavaScript. Please enable it to play.
+      </div>
+    </noscript>
   </body>
 </html>
