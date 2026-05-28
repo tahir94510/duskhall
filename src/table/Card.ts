@@ -5,20 +5,13 @@ import { t } from "../i18n/index.js";
 const DEF_MAP = new Map<string, CardDef>();
 for (const d of CARD_DEFS) DEF_MAP.set(d.id, d);
 
-export interface CardElems {
-  el: HTMLDivElement;
-  type: HTMLDivElement;
-  hero: HTMLDivElement;
-  name: HTMLDivElement;
-}
-
-export function createCardElement(instanceId: string, defId: string): CardElems {
+export function createCardElement(instanceId: string, defId: string): { el: HTMLDivElement } {
   const def = DEF_MAP.get(defId);
   const card = document.createElement("div");
   card.className = "card";
   card.dataset.id = instanceId;
   card.dataset.def = defId;
-  card.setAttribute("role", "button");
+  card.setAttribute("role", "img");
   card.setAttribute("tabindex", "-1");
 
   if (def) {
@@ -32,36 +25,31 @@ export function createCardElement(instanceId: string, defId: string): CardElems 
 
   const back = document.createElement("div");
   back.className = "card__face card__face--back";
-  back.innerHTML = `<div class="card__back-sigil">${BACK_SIGIL}</div>`;
+  back.innerHTML = `<span class="card__back-sigil">${BACK_SIGIL}</span>`;
 
   const front = document.createElement("div");
   front.className = "card__face card__face--front";
 
-  const corner = document.createElement("div");
-  corner.className = "card__corner";
+  const band = document.createElement("div");
+  band.className = "card__type-band";
 
   const type = document.createElement("div");
   type.className = "card__type";
   type.dataset.role = "type";
-  type.setAttribute("aria-label", "Card type");
+  type.setAttribute("aria-label", "Type");
   if (def) type.innerHTML = getIcon(def.typeIconId);
-
-  corner.appendChild(type);
 
   const hero = document.createElement("div");
   hero.className = "card__hero";
-
-  const heroIcon = document.createElement("div");
-  heroIcon.className = "card__hero-icon";
-  heroIcon.dataset.role = "name";
-  heroIcon.setAttribute("aria-label", "Card name");
-  if (def) heroIcon.innerHTML = getIcon(def.nameIconId);
-  hero.appendChild(heroIcon);
+  hero.dataset.role = "name";
+  hero.setAttribute("aria-label", "Card");
+  if (def) hero.innerHTML = getIcon(def.nameIconId);
 
   const name = document.createElement("div");
   name.className = "card__name";
 
-  front.appendChild(corner);
+  front.appendChild(band);
+  front.appendChild(type);
   front.appendChild(hero);
   front.appendChild(name);
 
@@ -70,8 +58,7 @@ export function createCardElement(instanceId: string, defId: string): CardElems 
   card.appendChild(inner);
 
   refreshCardLabel(card, defId);
-
-  return { el: card, type, hero, name };
+  return { el: card };
 }
 
 export function refreshCardLabel(el: HTMLDivElement, defId: string): void {

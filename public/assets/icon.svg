@@ -1,21 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="KABAL sigil">
-  <defs>
-    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
-      <stop offset="0%" stop-color="#1a1a1f"/>
-      <stop offset="100%" stop-color="#070708"/>
-    </radialGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#e5c578"/>
-      <stop offset="100%" stop-color="#9e7a3a"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <g fill="none" stroke="url(#gold)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="256" cy="256" r="172" opacity="0.55"/>
-    <circle cx="256" cy="256" r="138"/>
-    <path d="M256 102 L322 256 L256 410 L190 256 Z"/>
-    <path d="M148 256 L256 188 L364 256 L256 324 Z"/>
-    <circle cx="256" cy="256" r="20" fill="url(#gold)" stroke="none"/>
-    <path d="M256 70 L256 110 M256 402 L256 442 M70 256 L110 256 M402 256 L442 256"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="KABAL">
+  <g fill="none" stroke="#c8a45a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="24" cy="24" r="20" opacity="0.4"/>
+    <path d="M24 6 L34 24 L24 42 L14 24 Z"/>
+    <circle cx="24" cy="24" r="4" fill="#c8a45a"/>
   </g>
 </svg>

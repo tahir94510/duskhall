@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "KABAL — Eterin Vârisleri",
-    "tagline": "Asil bir dijital kart masası"
+    "tagline": ""
   },
   "ui": {
     "rules": "Kurallar",
@@ -19,17 +19,25 @@
     "timer": "Süre",
     "waiting": "Oyuncular bekleniyor…"
   },
+  "table": {
+    "deck": "Deste",
+    "open": "Açık",
+    "discard": "Çöplük",
+    "seatSelf": "Sen",
+    "seatOpponent": "Karşı",
+    "seatLeft": "Sol",
+    "seatRight": "Sağ"
+  },
   "shortcutsList": {
     "title": "Kısayollar",
-    "subtitle": "İmleci kart yığını üstüne getir; hedef imleçtir.",
+    "subtitle": "İmleci yığına götür — hedef imleçtir.",
     "items": [
-      { "keys": "Sol tık · sürükle", "desc": "Tek bir kartı taşı" },
-      { "keys": "Sağ tık · F", "desc": "İmlecin altındaki kartı çevir" },
-      { "keys": "Ctrl + sol tık", "desc": "Yığını toplu sürükle" },
-      { "keys": "Ctrl + G", "desc": "İmlecin altındaki yığını topla" },
-      { "keys": "Ctrl + M", "desc": "İmlecin altındaki yığını karıştır" },
-      { "keys": "Shift + A", "desc": "Yığını (veya desteyi) toplu aç" },
-      { "keys": "Shift + K", "desc": "Yığını (veya desteyi) toplu kapat" },
+      { "keys": "Sol tık · sürükle", "desc": "Tek kartı taşı" },
+      { "keys": "Ctrl + sol tık · sürükle", "desc": "Yığını toplu taşı" },
+      { "keys": "Sağ tık · F", "desc": "Tek kartı çevir" },
+      { "keys": "Ctrl + sağ tık", "desc": "Yığını toplu çevir (karışıksa hepsi kapanır)" },
+      { "keys": "Ctrl + G", "desc": "Yığını topla" },
+      { "keys": "Ctrl + M", "desc": "Yığını karıştır" },
       { "keys": "Esc", "desc": "Açık paneli kapat" }
     ],
     "mobileNote": "Dokunmatik cihazlarda kartın üstüne uzun basarak eylem çubuğunu aç."

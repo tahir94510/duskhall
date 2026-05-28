@@ -63,8 +63,7 @@ export class Game {
       onFlip: (id) => this.flipCard(id),
       onGather: (id) => this.gatherAt(id),
       onMix: (id) => this.shuffleAt(id),
-      onOpenAll: (id) => this.setFaceUpAt(id, true),
-      onCloseAll: (id) => this.setFaceUpAt(id, false)
+      onStackToggleFlip: (id) => this.toggleStackFlip(id)
     });
     this.header = new Header({
       onRules: () => openRulesModal(this.modal),
@@ -110,6 +109,7 @@ export class Game {
         this.scheduleFlush();
       },
       onCardFlipped: (id) => this.flipCard(id),
+      onStackToggleFlip: (id) => this.toggleStackFlip(id),
       setOwnerSeat: (id, seat) => {
         const c = this.state.cards.get(id);
         if (!c) return;
@@ -135,16 +135,29 @@ export class Game {
 
   private initialDealLocal(): void {
     const deck = seededDeck(this.room);
-    const board = this.refs.cardsLayer.getBoundingClientRect();
-    const baseX = board.width / 2 - 50;
-    const baseY = board.height / 2 - 70;
+    // Align the starting pile under the centre Deck slot
+    requestAnimationFrame(() => {
+      const layer = this.refs.cardsLayer.getBoundingClientRect();
+      const slot = this.refs.deckSlot.getBoundingClientRect();
+      const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
+      const cardH = cardW * 1.45;
+      const baseX = slot.left - layer.left + (slot.width - cardW) / 2;
+      const baseY = slot.top - layer.top + (slot.height - cardH) / 2;
+      let i = 0;
+      for (const c of this.state.cards.values()) {
+        c.x = baseX + (i % 6) * 0.4;
+        c.y = baseY - i * 0.2;
+        i++;
+      }
+      this.updateCounts();
+    });
     let z = 1;
     for (const card of deck) {
       const cardState: CardState = {
         id: card.instanceId,
         defId: card.defId,
-        x: baseX + (Math.random() - 0.5) * 6,
-        y: baseY + (Math.random() - 0.5) * 6,
+        x: 0,
+        y: 0,
         z: z++,
         faceUp: false,
         ownerSeat: null,
@@ -192,26 +205,6 @@ export class Game {
           return;
         }
       }
-      if (e.shiftKey) {
-        if (k === "a") {
-          e.preventDefault();
-          if (stack.length) {
-            setStackFaceUp(this.state, stack, true);
-            for (const id of stack) this.dirtyIds.add(id);
-            this.scheduleFlush();
-          }
-          return;
-        }
-        if (k === "k") {
-          e.preventDefault();
-          if (stack.length) {
-            setStackFaceUp(this.state, stack, false);
-            for (const id of stack) this.dirtyIds.add(id);
-            this.scheduleFlush();
-          }
-          return;
-        }
-      }
     });
     window.addEventListener("pointermove", (e) => {
       this.lastPointer = { x: e.clientX, y: e.clientY };
@@ -228,6 +221,23 @@ export class Game {
     this.scheduleFlush();
   }
 
+  private toggleStackFlip(id: string): void {
+    const stack = findStack(this.state, id);
+    if (!stack.length) return;
+    let up = 0;
+    let down = 0;
+    for (const cid of stack) {
+      const c = this.state.cards.get(cid);
+      if (!c) continue;
+      if (c.faceUp) up++; else down++;
+    }
+    // mixed → all face-down; if uniform, toggle to the opposite
+    const targetFaceUp = up === stack.length ? false : up > 0 && down > 0 ? false : true;
+    setStackFaceUp(this.state, stack, targetFaceUp);
+    for (const cid of stack) this.dirtyIds.add(cid);
+    this.scheduleFlush();
+  }
+
   private gatherAt(id: string): void {
     const stack = findStack(this.state, id);
     gatherStack(this.state, stack);
@@ -238,13 +248,6 @@ export class Game {
   private shuffleAt(id: string): void {
     const stack = findStack(this.state, id);
     shuffleStack(this.state, stack);
-    for (const cid of stack) this.dirtyIds.add(cid);
-    this.scheduleFlush();
-  }
-
-  private setFaceUpAt(id: string, faceUp: boolean): void {
-    const stack = findStack(this.state, id);
-    setStackFaceUp(this.state, stack, faceUp);
     for (const cid of stack) this.dirtyIds.add(cid);
     this.scheduleFlush();
   }
@@ -338,10 +341,10 @@ export class Game {
       el = document.createElement("div");
       el.className = "cursor-ghost";
       el.style.setProperty("--cursor-color", SEAT_COLORS[c.seat] ?? "#c8a45a");
-      const label = document.createElement("span");
-      label.className = "cursor-ghost__label";
-      label.textContent = "P" + (c.seat + 1);
-      el.appendChild(label);
+      el.innerHTML = `
+        <span class="cursor-ghost__pointer"></span>
+        <span class="cursor-ghost__label">P${c.seat + 1}</span>
+      `;
       document.body.appendChild(el);
       this.cursorEls.set(c.id, el);
     }
@@ -358,7 +361,7 @@ export class Game {
           el.style.transform = `translate3d(${c.x}px, ${c.y}px, 0)`;
         }
         el.style.zIndex = String(c.z);
-        el.classList.toggle("is-flipped", c.faceUp);
+        el.classList.toggle("is-faceup", c.faceUp);
         const hidden = c.ownerSeat !== null && c.ownerSeat !== this.self.seat && c.faceUp;
         el.classList.toggle("is-concealed", hidden);
       }
@@ -379,7 +382,11 @@ export class Game {
     let deck = 0;
     let open = 0;
     let discard = 0;
+    const zoneCounts = [0, 0, 0, 0];
     for (const c of this.state.cards.values()) {
+      if (c.ownerSeat !== null && c.ownerSeat >= 0 && c.ownerSeat < 4) {
+        zoneCounts[c.ownerSeat]!++;
+      }
       const inDock = this.isOverSlot(c);
       if (inDock === "deck") deck++;
       else if (inDock === "open") open++;
@@ -388,6 +395,10 @@ export class Game {
     this.refs.deckSlot.querySelector<HTMLElement>('[data-role="deck-count"]')!.textContent = String(deck);
     this.refs.openSlot.querySelector<HTMLElement>('[data-role="open-count"]')!.textContent = String(open);
     this.refs.discardSlot.querySelector<HTMLElement>('[data-role="discard-count"]')!.textContent = String(discard);
+    for (let i = 0; i < 4; i++) {
+      const node = this.refs.zones[i]?.querySelector<HTMLElement>(".zone__count");
+      if (node) node.textContent = String(zoneCounts[i]);
+    }
   }
 
   private isOverSlot(c: CardState): "deck" | "open" | "discard" | null {

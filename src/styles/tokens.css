@@ -1,44 +1,46 @@
 :root {
-  /* Palette */
-  --ink: #070708;
-  --ink-2: #0c0c10;
-  --ash: #1a1a1f;
-  --ash-2: #232329;
-  --line: rgba(243, 239, 229, 0.07);
-  --line-2: rgba(243, 239, 229, 0.12);
-  --line-3: rgba(243, 239, 229, 0.22);
+  /* Ink & ivory */
+  --ink: #050507;
+  --ink-2: #0b0b0e;
+  --ash: #15151a;
+  --ash-2: #1f1f25;
+  --line: rgba(243, 239, 229, 0.08);
+  --line-2: rgba(243, 239, 229, 0.16);
+  --line-3: rgba(243, 239, 229, 0.28);
   --ivory: #f3efe5;
-  --ivory-dim: #a8a39a;
-  --ivory-mute: #6b6862;
+  --ivory-dim: #aea99d;
+  --ivory-mute: #76726a;
+
+  /* Single noble accent */
   --gold: #c8a45a;
   --gold-soft: #e5c578;
-  --gold-deep: #9e7a3a;
+  --gold-deep: #8d6c2c;
 
-  /* Category palette */
-  --cat-seal: #7a4ed1;
-  --cat-spell: #c8444a;
-  --cat-intervention: #3c7fc8;
-  --cat-servant: #3c9a6a;
+  /* Card categories — quieter, deeper hues */
+  --cat-seal: #5b3f99;
+  --cat-spell: #a23a3f;
+  --cat-intervention: #2e6396;
+  --cat-servant: #347459;
 
-  /* Player accent palette (seats 0..3 = bottom, top, left, right) */
+  /* Seat accents (4 seats) */
   --seat-0: #c8a45a;
-  --seat-1: #6cb6c0;
+  --seat-1: #6bbac4;
   --seat-2: #c87a9a;
   --seat-3: #9aa86c;
 
   /* Geometry */
-  --r-card: 10px;
-  --r-panel: 14px;
-  --r-zone: 16px;
+  --r-card: 8px;
+  --r-panel: 12px;
+  --r-zone: 14px;
   --r-pill: 999px;
 
   /* Shadow */
-  --shadow-card: 0 6px 18px rgba(0, 0, 0, 0.45);
-  --shadow-card-held: 0 14px 34px rgba(0, 0, 0, 0.55);
-  --shadow-panel: 0 22px 60px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.55);
+  --shadow-card-held: 0 22px 44px rgba(0, 0, 0, 0.65);
+  --shadow-panel: 0 22px 60px rgba(0, 0, 0, 0.6);
 
-  /* Card sizing — clamped for every viewport */
-  --card-w: clamp(56px, 7.4vmin, 102px);
+  /* Card sizing */
+  --card-w: clamp(60px, 7.6vmin, 108px);
   --card-h: calc(var(--card-w) * 1.45);
 
   /* Motion */
@@ -64,9 +66,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root {
-    --dur-fast: 0ms;
-    --dur: 0ms;
-    --dur-slow: 0ms;
-  }
+  :root { --dur-fast: 0ms; --dur: 0ms; --dur-slow: 0ms; }
 }

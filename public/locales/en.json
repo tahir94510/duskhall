@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "KABAL — Heirs of Ether",
-    "tagline": "A noble digital card sandbox"
+    "tagline": ""
   },
   "ui": {
     "rules": "Rules",
@@ -19,17 +19,25 @@
     "timer": "Time",
     "waiting": "Waiting for players…"
   },
+  "table": {
+    "deck": "Deck",
+    "open": "Open",
+    "discard": "Discard",
+    "seatSelf": "You",
+    "seatOpponent": "Opponent",
+    "seatLeft": "Left",
+    "seatRight": "Right"
+  },
   "shortcutsList": {
     "title": "Shortcuts",
-    "subtitle": "Hover any card stack; the cursor target wins.",
+    "subtitle": "Hover a stack — the cursor target wins.",
     "items": [
-      { "keys": "Left-press · drag", "desc": "Move a card" },
-      { "keys": "Right-click · F", "desc": "Flip the card under the cursor" },
-      { "keys": "Ctrl + Left-press", "desc": "Drag a whole stack" },
-      { "keys": "Ctrl + G", "desc": "Gather the stack under the cursor" },
-      { "keys": "Ctrl + M", "desc": "Shuffle the stack under the cursor" },
-      { "keys": "Shift + A", "desc": "Reveal every card in the stack (or deck)" },
-      { "keys": "Shift + K", "desc": "Conceal every card in the stack (or deck)" },
+      { "keys": "Left-press · drag", "desc": "Move a single card" },
+      { "keys": "Ctrl + Left-press · drag", "desc": "Move the whole stack" },
+      { "keys": "Right-click · F", "desc": "Flip one card" },
+      { "keys": "Ctrl + Right-click", "desc": "Flip the whole stack (mixed → all face-down)" },
+      { "keys": "Ctrl + G", "desc": "Gather the stack" },
+      { "keys": "Ctrl + M", "desc": "Shuffle the stack" },
       { "keys": "Esc", "desc": "Close any open panel" }
     ],
     "mobileNote": "On touch devices, long-press a card to open its action bar."

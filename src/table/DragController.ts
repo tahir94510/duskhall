@@ -9,6 +9,7 @@ export interface DragHooks {
   pickStack(centerId: string): string[];
   onCardMoved(ids: string[]): void;
   onCardFlipped(id: string): void;
+  onStackToggleFlip(id: string): void;
   setOwnerSeat(id: string, seat: number | null): void;
   showContextBar(id: string, x: number, y: number): void;
   hideContextBar(): void;
@@ -69,7 +70,8 @@ export class DragController {
     e.preventDefault();
 
     if (e.button === 2) {
-      this.hooks.onCardFlipped(id);
+      if (e.ctrlKey || e.metaKey) this.hooks.onStackToggleFlip(id);
+      else this.hooks.onCardFlipped(id);
       return;
     }
 
