@@ -43,16 +43,18 @@ Cards owned by a seat other than the local one render `visibility: hidden` on th
 
 ## Room lifecycle
 
-- New visitor → fresh `KBL-XXXXXX` slug generated client-side, set via `history.replaceState`.
-- Leaving a room calls `channel.unsubscribe()`, clears local state and starts a new room.
+- New visitor: fresh `XXXXXX` slug generated client-side, set via `history.replaceState`. URL path is `/<SLUG>`.
+- Resetting a room calls `channel.unsubscribe()`, clears local state and starts a new room.
 - No server-side record is kept beyond the lifetime of the Supabase channel. When the last presence drops, the channel ends.
+- A periodic `sessionStorage` snapshot lets a single tab survive a hard reload without losing the table.
 
 ## Anti-abuse notes for production
 
+- **Front the deployment with Cloudflare** (or an equivalent reverse proxy) for WAF rules, bot fight mode, rate limiting per IP, and DDoS L7 mitigation. Vercel's built-in protections handle infrastructure-level floods but not targeted application-layer abuse.
 - Configure Supabase realtime quotas to match your expected traffic.
-- Front the deployment with Cloudflare (or equivalent) for WAF and bot mitigation; Vercel's built-in protections are not sufficient against targeted floods.
-- Consider sponsored Supabase paid plan for elevated WS quotas before viral traffic.
+- Consider a paid Supabase plan for elevated WebSocket quotas before viral traffic.
 - For multi-region resilience, deploy in two Vercel regions and let Supabase handle the realtime fan-out.
+- Add a Cloudflare Turnstile (or equivalent) challenge on the room-create path if you start seeing scraping or automated room-spawning.
 
 ## Reporting issues
 

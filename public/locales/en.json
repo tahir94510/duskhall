@@ -1,7 +1,8 @@
 {
   "meta": {
     "title": "KABAL: Heirs of Ether",
-    "tagline": ""
+    "tagline": "",
+    "description": "A digital card table for friends. Move and flip cards freely; follow the official rulebook yourselves."
   },
   "ui": {
     "menu": "Menu",
@@ -353,6 +354,6 @@
         ]
       }
     ],
-    "closing": "Show no mercy at the table."
+    "closing": "​‌‍Show no mercy at the table.​‌‍"
   }
 }

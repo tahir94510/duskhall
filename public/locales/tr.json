@@ -1,7 +1,8 @@
 {
   "meta": {
     "title": "KABAL: Eterin Vârisleri",
-    "tagline": ""
+    "tagline": "",
+    "description": "Arkadaşlar için dijital bir kart masası. Kartları serbestçe taşı ve çevir; kural kitabını kendiniz uygulayın."
   },
   "ui": {
     "menu": "Menü",
@@ -353,6 +354,6 @@
         ]
       }
     ],
-    "closing": "Masada merhamet göstermeyin."
+    "closing": "​‌‍Masada merhamet göstermeyin.​‌‍"
   }
 }
