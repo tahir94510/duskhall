@@ -2,18 +2,18 @@ import type { BoardState } from "./types.js";
 
 export interface DragHooks {
   getSelfSeat(): number;
-  isOpponentZone(seat: number): boolean;
-  zoneRectForSeat(seat: number): DOMRect | null;
   pointInSelfZone(x: number, y: number): boolean;
   pointInOpponentZone(x: number, y: number): number | null;
   pickStack(centerId: string): string[];
   onCardMoved(ids: string[]): void;
+  onDragProgress(ids: string[]): void;
   onCardFlipped(id: string): void;
   onStackToggleFlip(id: string): void;
   setOwnerSeat(id: string, seat: number | null): void;
   showContextBar(id: string, x: number, y: number): void;
   hideContextBar(): void;
   emitCursor(x: number, y: number): void;
+  playSfx(name: string): void;
 }
 
 const DRAG_THRESHOLD = 4;
@@ -24,15 +24,16 @@ interface DragSession {
   ids: string[];
   startClientX: number;
   startClientY: number;
+  boardW: number;
+  boardH: number;
   origin: Map<string, { x: number; y: number }>;
   dragging: boolean;
-  rightButton: boolean;
   longPressTimer: number;
-  startedAt: number;
 }
 
 export class DragController {
   private session: DragSession | null = null;
+
   constructor(
     private readonly host: HTMLElement,
     private readonly state: BoardState,
@@ -82,7 +83,7 @@ export class DragController {
       if (c) origin.set(cid, { x: c.x, y: c.y });
     }
 
-    this.state.topZ++;
+    // bring all picked cards to top of z stack
     for (const cid of ids) {
       const c = this.state.cards.get(cid);
       if (!c) continue;
@@ -95,23 +96,26 @@ export class DragController {
       }
     }
 
+    const rect = this.host.getBoundingClientRect();
+
     this.session = {
       pointerId: e.pointerId,
       ids,
       startClientX: e.clientX,
       startClientY: e.clientY,
+      boardW: rect.width,
+      boardH: rect.height,
       origin,
       dragging: false,
-      rightButton: false,
       longPressTimer: window.setTimeout(() => {
         if (!this.session || this.session.dragging) return;
-        // Long-press on touch = open context bar
         if (e.pointerType === "touch") {
           this.hooks.showContextBar(id, e.clientX, e.clientY);
         }
-      }, LONG_PRESS_MS),
-      startedAt: performance.now()
+      }, LONG_PRESS_MS)
     };
+
+    this.hooks.playSfx("pickup");
   };
 
   private onPointerMove = (e: PointerEvent): void => {
@@ -125,17 +129,20 @@ export class DragController {
       window.clearTimeout(s.longPressTimer);
       this.hooks.hideContextBar();
     }
+    const ndx = dx / s.boardW;
+    const ndy = dy / s.boardH;
     for (const id of s.ids) {
       const origin = s.origin.get(id);
       const c = this.state.cards.get(id);
       if (!origin || !c) continue;
-      c.x = origin.x + dx;
-      c.y = origin.y + dy;
+      c.x = origin.x + ndx;
+      c.y = origin.y + ndy;
       const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
       if (el) {
-        el.style.transform = `translate3d(${c.x}px, ${c.y}px, 0)`;
+        el.style.transform = `translate3d(${c.x * s.boardW}px, ${c.y * s.boardH}px, 0)`;
       }
     }
+    this.hooks.onDragProgress(s.ids);
   };
 
   private onPointerUp = (e: PointerEvent): void => {
@@ -149,7 +156,6 @@ export class DragController {
     }
 
     if (!s.dragging) {
-      // simple tap on a card, no movement
       this.session = null;
       return;
     }
@@ -161,7 +167,6 @@ export class DragController {
       if (!c) continue;
       const opponentSeat = this.hooks.pointInOpponentZone(e.clientX, e.clientY);
       if (opponentSeat !== null && opponentSeat !== selfSeat) {
-        // snap back to origin
         const origin = s.origin.get(id);
         if (origin) {
           c.x = origin.x;
@@ -169,9 +174,9 @@ export class DragController {
         }
         const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
         if (el) {
-          el.style.transform = `translate3d(${c.x}px, ${c.y}px, 0)`;
+          el.style.transform = `translate3d(${c.x * s.boardW}px, ${c.y * s.boardH}px, 0)`;
           el.classList.add("is-snapback");
-          window.setTimeout(() => el.classList.remove("is-snapback"), 280);
+          window.setTimeout(() => el.classList.remove("is-snapback"), 260);
         }
       } else if (this.hooks.pointInSelfZone(e.clientX, e.clientY)) {
         this.hooks.setOwnerSeat(id, selfSeat);
@@ -181,6 +186,7 @@ export class DragController {
     }
 
     this.hooks.onCardMoved(moved);
+    this.hooks.playSfx("place");
     this.session = null;
   };
 

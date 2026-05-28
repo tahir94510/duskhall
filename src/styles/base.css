@@ -1,6 +1,4 @@
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; }
 
 html, body {
   margin: 0;
@@ -10,8 +8,9 @@ html, body {
   background: var(--ink);
   color: var(--ivory);
   font-family: var(--font-body);
-  font-size: 15px;
-  line-height: 1.4;
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -22,10 +21,7 @@ body {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-  background:
-    radial-gradient(140vmin 80vmin at 50% -10%, #15151b 0%, transparent 60%),
-    radial-gradient(120vmin 80vmin at 50% 110%, #11111a 0%, transparent 65%),
-    var(--ink);
+  background: var(--ink);
 }
 
 #app {
@@ -46,27 +42,30 @@ button {
 button:focus-visible,
 [role="button"]:focus-visible,
 a:focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 1px solid var(--ivory);
   outline-offset: 2px;
   border-radius: var(--r-panel);
 }
 
-::selection {
-  background: var(--gold);
-  color: var(--ink);
-}
+::selection { background: var(--ivory); color: var(--ink); }
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
   font-weight: 600;
   margin: 0;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
 p { margin: 0; }
-a { color: var(--gold); text-decoration: none; }
-a:hover { color: var(--gold-soft); }
+
+a {
+  color: var(--ivory);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(243, 239, 229, 0.3);
+}
+
+a:hover { color: var(--ivory); text-decoration-color: var(--ivory); }
 
 img, svg { display: block; max-width: 100%; }
-
 svg { fill: currentColor; }

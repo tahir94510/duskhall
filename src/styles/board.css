@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   display: grid;
-  grid-template-columns: minmax(150px, 18vw) 1fr minmax(150px, 18vw);
+  grid-template-columns: minmax(150px, 17vw) 1fr minmax(150px, 17vw);
   grid-template-rows: minmax(120px, 18vh) 1fr minmax(150px, 22vh);
   gap: clamp(8px, 1.4vmin, 18px);
   padding:
@@ -17,8 +17,6 @@
   grid-row: 2;
   position: relative;
   border-radius: var(--r-zone);
-  background:
-    radial-gradient(70% 70% at 50% 50%, rgba(243, 239, 229, 0.02) 0%, transparent 70%);
 }
 
 .board__layer {
@@ -27,9 +25,7 @@
   pointer-events: none;
 }
 
-.board__cards {
-  pointer-events: auto;
-}
+.board__cards { pointer-events: auto; }
 
 .dock {
   position: absolute;
@@ -38,7 +34,7 @@
   transform: translate(-50%, -50%);
   display: flex;
   align-items: stretch;
-  gap: clamp(14px, 2.4vmin, 32px);
+  gap: clamp(20px, 3vmin, 38px);
   pointer-events: none;
 }
 
@@ -47,39 +43,33 @@
   width: var(--card-w);
   height: var(--card-h);
   border-radius: var(--r-card);
-  border: 1px dashed var(--line-2);
+  border: 1px dashed rgba(243, 239, 229, 0.16);
   display: grid;
   place-items: center;
-  text-align: center;
-  color: var(--ivory-mute);
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  background: rgba(10, 10, 14, 0.4);
-  backdrop-filter: blur(6px);
+  background: rgba(8, 8, 12, 0.35);
 }
 
-.dock__count {
-  position: absolute;
-  top: 6px;
-  right: 6px;
+.dock__value {
   font-family: var(--font-display);
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
-  color: var(--ivory-dim);
-  background: rgba(0, 0, 0, 0.4);
-  padding: 1px 6px;
-  border-radius: var(--r-pill);
-  border: 1px solid var(--line);
+  font-size: clamp(14px, 2.2vmin, 22px);
+  font-weight: 500;
+  color: var(--ivory-mute);
+  font-variant-numeric: tabular-nums;
+  transition: color var(--dur) var(--ease);
 }
 
-.dock__label {
+.dock__slot[data-has="true"] .dock__value {
+  color: var(--ivory);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.dock__slot::after {
+  content: attr(data-label);
   position: absolute;
   bottom: -22px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.6rem;
+  font-size: 10px;
   color: var(--ivory-mute);
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }

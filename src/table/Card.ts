@@ -17,7 +17,6 @@ export function createCardElement(instanceId: string, defId: string): { el: HTML
   if (def) {
     const cat = CATEGORY_META[def.category];
     card.style.setProperty("--type-color", cat.color);
-    card.style.setProperty("--accent-color", def.accentColor);
   }
 
   const inner = document.createElement("div");
@@ -29,9 +28,6 @@ export function createCardElement(instanceId: string, defId: string): { el: HTML
 
   const front = document.createElement("div");
   front.className = "card__face card__face--front";
-
-  const band = document.createElement("div");
-  band.className = "card__type-band";
 
   const type = document.createElement("div");
   type.className = "card__type";
@@ -45,13 +41,8 @@ export function createCardElement(instanceId: string, defId: string): { el: HTML
   hero.setAttribute("aria-label", "Card");
   if (def) hero.innerHTML = getIcon(def.nameIconId);
 
-  const name = document.createElement("div");
-  name.className = "card__name";
-
-  front.appendChild(band);
   front.appendChild(type);
   front.appendChild(hero);
-  front.appendChild(name);
 
   inner.appendChild(back);
   inner.appendChild(front);
@@ -62,8 +53,5 @@ export function createCardElement(instanceId: string, defId: string): { el: HTML
 }
 
 export function refreshCardLabel(el: HTMLDivElement, defId: string): void {
-  const nameEl = el.querySelector<HTMLDivElement>(".card__name");
-  if (!nameEl) return;
-  nameEl.textContent = t(`cards.${defId}.name`);
   el.setAttribute("aria-label", t(`cards.${defId}.name`));
 }

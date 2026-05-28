@@ -1,23 +1,14 @@
 .zone {
   position: relative;
   border-radius: var(--r-zone);
-  background: rgba(20, 20, 26, 0.42);
+  background: rgba(16, 16, 22, 0.42);
   border: 1px solid var(--line);
-  backdrop-filter: blur(14px) saturate(110%);
-  -webkit-backdrop-filter: blur(14px) saturate(110%);
+  backdrop-filter: blur(12px) saturate(110%);
+  -webkit-backdrop-filter: blur(12px) saturate(110%);
   transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), opacity var(--dur) var(--ease);
   overflow: hidden;
   isolation: isolate;
   z-index: var(--z-zone);
-}
-
-.zone::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 35%, transparent 65%, rgba(0, 0, 0, 0.22) 100%);
 }
 
 .zone__rail {
@@ -26,13 +17,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
   pointer-events: none;
   font-family: var(--font-display);
-  font-size: 0.72rem;
-  letter-spacing: 0.22em;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ivory-mute);
   text-transform: uppercase;
-  color: var(--ivory-dim);
+  letter-spacing: 0.08em;
 }
 
 .zone__name {
@@ -43,51 +34,34 @@
 
 .zone__name::before {
   content: "";
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 8px currentColor;
-  opacity: 0.85;
+  opacity: 0.7;
 }
 
 .zone__count {
-  font-size: 0.7rem;
-  color: var(--ivory-mute);
+  font-variant-numeric: tabular-nums;
+  color: var(--ivory-dim);
+  font-weight: 500;
 }
 
 .zone--empty {
-  opacity: 0.4;
+  opacity: 0.42;
   color: var(--ivory-mute);
 }
 
-.zone--self {
-  --seat-color: var(--seat-0);
-}
-
-.zone--top {
-  grid-column: 2;
-  grid-row: 1;
-}
-.zone--left {
-  grid-column: 1;
-  grid-row: 2;
-}
-.zone--right {
-  grid-column: 3;
-  grid-row: 2;
-}
-.zone--self,
-.zone--bottom {
-  grid-column: 2;
-  grid-row: 3;
-}
+.zone--top { grid-column: 2; grid-row: 1; }
+.zone--left { grid-column: 1; grid-row: 2; }
+.zone--right { grid-column: 3; grid-row: 2; }
+.zone--self, .zone--bottom { grid-column: 2; grid-row: 3; }
 
 .zone--active {
   color: var(--seat-color);
-  border-color: color-mix(in oklab, var(--seat-color) 50%, transparent);
-  background: linear-gradient(180deg, rgba(20, 20, 26, 0.55), rgba(14, 14, 18, 0.55));
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--seat-color) 25%, transparent);
+  border-color: color-mix(in oklab, var(--seat-color) 45%, transparent);
+  background: rgba(16, 16, 22, 0.55);
+  opacity: 1;
 }
 
 .zone__cards {

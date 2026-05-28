@@ -1,5 +1,4 @@
-// KABAL — card catalogue (V8 → English-primary rebuild).
-// Text is i18n-keyed; this module only carries structural data + icon ids.
+// KABAL card catalogue. Text is i18n-keyed; this module carries structural data only.
 
 export type CardCategory = "seal" | "spell" | "intervention" | "servant";
 
@@ -25,25 +24,25 @@ export const CATEGORY_META: Record<CardCategory, CategoryMeta> = {
 };
 
 export const CARD_DEFS: CardDef[] = [
-  // Seals — 4×4 = 16
+  // Seals: 4 types x 4 copies = 16
   { id: "timeRift", category: "seal", count: 4, typeIconId: "cat-seal", nameIconId: "name-timeRift", accentColor: "#7fb2e8" },
   { id: "veilOfVoid", category: "seal", count: 4, typeIconId: "cat-seal", nameIconId: "name-veilOfVoid", accentColor: "#d5d2cb" },
   { id: "crimsonMonolith", category: "seal", count: 4, typeIconId: "cat-seal", nameIconId: "name-crimsonMonolith", accentColor: "#e07a5a" },
   { id: "necromancersEye", category: "seal", count: 4, typeIconId: "cat-seal", nameIconId: "name-necromancersEye", accentColor: "#9bd17b" },
 
-  // Spells — 8 + 6 + 4 + 4 + 2 = 24
+  // Spells: 8 + 6 + 4 + 4 + 2 = 24
   { id: "etherStrike", category: "spell", count: 8, typeIconId: "cat-spell", nameIconId: "name-etherStrike", accentColor: "#f0c068" },
   { id: "shadowTheft", category: "spell", count: 6, typeIconId: "cat-spell", nameIconId: "name-shadowTheft", accentColor: "#7a6cc7" },
   { id: "ancientSight", category: "spell", count: 4, typeIconId: "cat-spell", nameIconId: "name-ancientSight", accentColor: "#5fc6c0" },
   { id: "mindParasite", category: "spell", count: 4, typeIconId: "cat-spell", nameIconId: "name-mindParasite", accentColor: "#c87fb2" },
   { id: "twistOfFate", category: "spell", count: 2, typeIconId: "cat-spell", nameIconId: "name-twistOfFate", accentColor: "#e5c578" },
 
-  // Interventions — 8 + 4 + 4 = 16
+  // Interventions: 8 + 4 + 4 = 16
   { id: "silence", category: "intervention", count: 8, typeIconId: "cat-intervention", nameIconId: "name-silence", accentColor: "#d5d2cb" },
   { id: "karmicReflection", category: "intervention", count: 4, typeIconId: "cat-intervention", nameIconId: "name-karmicReflection", accentColor: "#5fc6c0" },
   { id: "bloodAtonement", category: "intervention", count: 4, typeIconId: "cat-intervention", nameIconId: "name-bloodAtonement", accentColor: "#c8444a" },
 
-  // Servants — 8 + 4 + 4 = 16
+  // Servants: 8 + 4 + 4 = 16
   { id: "runicWarden", category: "servant", count: 8, typeIconId: "cat-servant", nameIconId: "name-runicWarden", accentColor: "#e5c578" },
   { id: "glacialAberration", category: "servant", count: 4, typeIconId: "cat-servant", nameIconId: "name-glacialAberration", accentColor: "#7fb2e8" },
   { id: "shadowSlayer", category: "servant", count: 4, typeIconId: "cat-servant", nameIconId: "name-shadowSlayer", accentColor: "#7a6cc7" }

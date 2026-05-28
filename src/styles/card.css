@@ -10,7 +10,7 @@
   user-select: none;
   -webkit-user-drag: none;
   z-index: var(--z-card);
-  transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+  transition: box-shadow var(--dur) var(--ease);
   will-change: transform;
   box-shadow: var(--shadow-card);
 }
@@ -26,7 +26,7 @@
   inset: 0;
   border-radius: inherit;
   transform-style: preserve-3d;
-  transform: rotateY(180deg); /* default = back facing camera */
+  transform: rotateY(180deg); /* default = back facing the camera */
   transition: transform var(--dur-slow) var(--ease);
 }
 
@@ -43,11 +43,10 @@
   overflow: hidden;
 }
 
-/* Card back — refined noble sigil */
+/* --- Back --- */
 .card__face--back {
-  background:
-    linear-gradient(135deg, #14141a 0%, #07070a 100%);
-  border: 1px solid rgba(200, 164, 90, 0.28);
+  background: #07070a;
+  border: 1px solid rgba(255, 255, 255, 0.07);
   display: grid;
   place-items: center;
 }
@@ -55,138 +54,74 @@
 .card__face--back::before {
   content: "";
   position: absolute;
-  inset: 5px;
+  inset: 6px;
   border-radius: calc(var(--r-card) - 2px);
-  border: 1px solid rgba(200, 164, 90, 0.18);
-  pointer-events: none;
-}
-
-.card__face--back::after {
-  content: "";
-  position: absolute;
-  inset: 12% 8%;
-  background:
-    repeating-linear-gradient(45deg, rgba(200, 164, 90, 0.04) 0 1px, transparent 1px 8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   pointer-events: none;
 }
 
 .card__back-sigil {
-  width: 54%;
+  width: 52%;
   aspect-ratio: 1;
-  color: var(--gold);
-  opacity: 0.78;
-  filter: drop-shadow(0 0 6px rgba(200, 164, 90, 0.25));
+  color: rgba(255, 255, 255, 0.55);
   position: relative;
   z-index: 1;
 }
 
 .card__back-sigil svg { width: 100%; height: 100%; }
 
-/* Card front — diagonal type band + lower name area */
+/* --- Front: two centred icons, nothing else --- */
 .card__face--front {
   transform: rotateY(180deg);
-  background: var(--ink);
+  background: #0d0d11;
   border: 1px solid var(--line-2);
-  color: var(--ivory);
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  align-items: center;
+  justify-items: center;
 }
 
-.card__type-band {
-  position: absolute;
-  inset: 0;
-  background: var(--type-color, var(--cat-spell));
-  clip-path: polygon(0 0, 100% 0, 100% 38%, 0 70%);
-  pointer-events: none;
-}
-
-.card__type-band::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  clip-path: inherit;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.18) 60%, rgba(0, 0, 0, 0.32));
-}
-
-.card__divider {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.32);
-  transform-origin: 0 50%;
-  transform: rotate(calc(var(--diag, -10) * 1deg)) translateY(54%);
-  pointer-events: none;
-  opacity: 0;
+.card__type,
+.card__hero {
+  width: 56%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  cursor: help;
 }
 
 .card__type {
-  position: absolute;
-  left: 50%;
-  top: 17%;
-  transform: translate(-50%, -50%);
-  width: 38%;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
+  background: color-mix(in oklab, var(--type-color, var(--ivory)) 22%, transparent);
+  border: 1px solid color-mix(in oklab, var(--type-color, var(--ivory)) 50%, transparent);
+  border-radius: 50%;
   color: #ffffff;
-  pointer-events: auto;
-  cursor: help;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
 }
 
-.card__type svg { width: 100%; height: 100%; }
+.card__type svg { width: 62%; height: 62%; }
 
 .card__hero {
-  position: absolute;
-  left: 50%;
-  top: 64%;
-  transform: translate(-50%, -50%);
-  width: 50%;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  color: var(--accent-color, var(--ivory));
-  pointer-events: auto;
-  cursor: help;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+  color: var(--ivory);
 }
 
-.card__hero svg { width: 100%; height: 100%; }
+.card__hero svg { width: 92%; height: 92%; }
 
-.card__name {
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  bottom: 6%;
-  text-align: center;
-  font-family: var(--font-display);
-  font-size: clamp(7px, 1.05vmin, 11px);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent-color, var(--ivory));
-  padding-top: 4%;
-  border-top: 1px solid color-mix(in oklab, var(--accent-color, var(--ivory)) 35%, transparent);
-  pointer-events: none;
-}
-
-/* Face-down: hide front entirely from cursor & interaction */
+/* Face-down: no hover behaviour on front icons */
 .card:not(.is-faceup) .card__type,
-.card:not(.is-faceup) .card__hero,
-.card:not(.is-faceup) .card__name {
+.card:not(.is-faceup) .card__hero {
   pointer-events: none;
 }
 
-/* Concealed (own face-up card seen only by owner) */
+/* Concealed (own face-up card, hidden from opponents) */
 .card.is-concealed .card__face--front { visibility: hidden; }
 .card.is-concealed .card__face--back { visibility: visible; }
 
-/* Snap-back animation when dropped into opponent zone */
+/* Snap-back animation when dropped into a rival zone */
 .card.is-snapback {
-  animation: snapback 280ms var(--ease);
+  animation: snapback 260ms var(--ease);
 }
 
 @keyframes snapback {
-  0% { outline: 2px solid var(--cat-spell); }
-  100% { outline: 0 solid transparent; }
+  0% { outline: 1px solid rgba(255, 80, 80, 0.6); outline-offset: 0; }
+  100% { outline: 0 solid transparent; outline-offset: 0; }
 }

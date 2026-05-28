@@ -1,4 +1,4 @@
-# KABAL — Heirs of Ether · Design Notes
+# KABAL: Heirs of Ether · Design Notes
 
 ## Balance constants
 
@@ -36,14 +36,14 @@ All numbers live in `src/game/balance.ts` and are referenced from rules text, to
 
 ## Palette
 
-- `--ink #070708` — table background
-- `--ash #1a1a1f` — panels
-- `--ivory #f3efe5` — body text
-- `--gold #c8a45a` — accents
+- `--ink #070708`: table background
+- `--ash #1a1a1f`: panels
+- `--ivory #f3efe5`: body text
+- `--gold #c8a45a`: accents
 - Category sigils: Seal `#7a4ed1`, Spell `#c8444a`, Intervention `#3c7fc8`, Servant `#3c9a6a`
 - Seat accents: seat 0 `#c8a45a`, seat 1 `#6cb6c0`, seat 2 `#c87a9a`, seat 3 `#9aa86c`
 
-Card type colour and card name colour are deliberately decoupled — every card has two distinct chromatic anchors so the eye never confuses category with identity. The card body never carries a third colour line.
+Card type colour and card name colour are deliberately decoupled: every card has two distinct chromatic anchors so the eye never confuses category with identity. The card body never carries a third colour line.
 
 ## Seating layout
 
@@ -65,7 +65,7 @@ Empty seats render dim grey; once a player presence arrives the seat gains its a
 
 - Standardised English first, Turkish second, with shared key IDs across both locale files.
 - Fixed typos (`zorundasınuz`, `Mühlürü`, `MÜDAHALEler`).
-- Clarified `Mind Parasite` requires both target and self-room legality — otherwise it cannot be cast and HP is not spent.
+- Clarified `Mind Parasite` requires both target and self-room legality: otherwise it cannot be cast and HP is not spent.
 - Explicit "Necromancer's Eye fizzles if Discard empty" line.
 - Ascension declaration restricted to end-of-own-turn explicitly.
 - Blood Atonement randomiser: digital table auto-shuffles and auto-discards two hand cards; physical play follows the same rule.
