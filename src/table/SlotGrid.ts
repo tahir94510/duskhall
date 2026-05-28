@@ -48,12 +48,19 @@ const ZONES: Record<Seat, ZoneRect> = {
 
 const ROW_GAP = 0.018; // gap between the two rows (Seal row vs Servant row), in canonical units
 
-export function slotsForSeat(seat: Seat): SlotPos[] {
+// v3.2: per-seat slot grid is intentionally empty. The visual was cluttering
+// the table and the snap-to-slot magnetism is now reserved for the central
+// Deck / Discard dock (see Game.applySnap). Returning [] for every seat keeps
+// every consumer working without rendering slot outlines.
+export function slotsForSeat(_seat: Seat): SlotPos[] { return []; }
+
+// Legacy implementation preserved below for the day per-seat slots come back.
+// @ts-expect-error kept intentionally unused for future revival
+function _legacySlotsForSeat(seat: Seat): SlotPos[] {
   const rect = ZONES[seat];
   const out: SlotPos[] = [];
   const longSide = rect.horizontal ? rect.x1 - rect.x0 : rect.y1 - rect.y0;
   const shortSide = rect.horizontal ? rect.y1 - rect.y0 : rect.x1 - rect.x0;
-  // Allocate 60% of short side to "Seal row" (front), 40% to "Servant row" (back).
   const halfRow = (shortSide - ROW_GAP) / 2;
 
   for (let k = 0; k < 2; k++) {

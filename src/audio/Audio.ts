@@ -79,16 +79,34 @@ export class AudioEngine {
     if (this.muted) return;
     this.ensureContext();
     if (!this.ctx || !this.sfxGain) return;
-    const url = `/audio/${name}.mp3`;
-    const buf = await this.fetchBuffer(url);
-    if (buf) {
-      const src = this.ctx.createBufferSource();
-      src.buffer = buf;
-      src.connect(this.sfxGain);
-      src.start();
-    } else {
-      this.playProcedural(PROCEDURAL[name]);
+    const manifest = await this.loadManifest();
+    if (manifest.has(name)) {
+      const buf = await this.fetchBuffer(`/audio/${name}.mp3`);
+      if (buf) {
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(this.sfxGain);
+        src.start();
+        return;
+      }
     }
+    this.playProcedural(PROCEDURAL[name]);
+  }
+
+  private manifestPromise: Promise<Set<string>> | null = null;
+  private loadManifest(): Promise<Set<string>> {
+    if (this.manifestPromise) return this.manifestPromise;
+    this.manifestPromise = fetch("/audio/manifest.json", { cache: "force-cache" })
+      .then((r) => (r.ok ? r.json() : { available: [] }))
+      .catch(() => ({ available: [] }))
+      .then((data: { available?: unknown }) => {
+        const set = new Set<string>();
+        if (Array.isArray(data.available)) {
+          for (const e of data.available) if (typeof e === "string") set.add(e);
+        }
+        return set;
+      });
+    return this.manifestPromise;
   }
 
   private async fetchBuffer(url: string): Promise<AudioBuffer | null> {
@@ -218,9 +236,9 @@ export class AudioEngine {
     this.ensureContext();
     if (!this.ctx || !this.musicGain) return;
     if (this.musicElement || this.musicProcedural) return;
-    try {
-      const res = await fetch("/audio/music.mp3", { method: "HEAD" });
-      if (res.ok) {
+    const manifest = await this.loadManifest();
+    if (manifest.has("music")) {
+      try {
         const el = new Audio("/audio/music.mp3");
         el.loop = true;
         el.preload = "auto";
@@ -230,8 +248,10 @@ export class AudioEngine {
         await el.play().catch(() => {});
         this.musicElement = el;
         return;
+      } catch {
+        // fall through to procedural
       }
-    } catch {}
+    }
     // procedural ambient drone
     const osc = this.ctx.createOscillator();
     osc.type = "sine";
