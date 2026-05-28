@@ -1,5 +1,6 @@
 import { t } from "../i18n/index.js";
 import { slotsForSeat } from "./SlotGrid.js";
+import { DECK_NX, DECK_NY, DISCARD_NX, DISCARD_NY } from "./constants.js";
 import type { Seat } from "./rotation.js";
 
 export interface BoardRefs {
@@ -41,9 +42,9 @@ export function buildTable(host: HTMLElement): BoardRefs {
     <div class="board__perspective" data-role="perspective">
       <div class="board__slots" data-role="slots"></div>
       <div class="board__layer board__cards" data-role="cards"></div>
-      <div class="dock" data-role="dock">
-        <div class="dock__slot" data-role="deck"></div>
-        <div class="dock__slot" data-role="discard"></div>
+      <div class="dock dock--canonical" data-role="dock">
+        <div class="dock__slot" data-role="deck" style="left:${DECK_NX * 100}%;top:${DECK_NY * 100}%"></div>
+        <div class="dock__slot" data-role="discard" style="left:${DISCARD_NX * 100}%;top:${DISCARD_NY * 100}%"></div>
       </div>
     </div>
   `;
@@ -68,20 +69,14 @@ export function buildTable(host: HTMLElement): BoardRefs {
 function paintSlotGrid(refs: BoardRefs): void {
   refs.slotLayer.innerHTML = "";
   const seats: Seat[] = [0, 1, 2, 3];
-  const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
-  const cardH = cardW * 1.45;
   for (const seat of seats) {
     for (const slot of slotsForSeat(seat)) {
       const dot = document.createElement("div");
       dot.className = `slot-mark slot-mark--${slot.kind}`;
       dot.dataset.seat = String(seat);
       dot.dataset.kind = slot.kind;
-      // Width relative to current card-w, height proportional
-      dot.style.width = `${cardW * 0.7}px`;
-      dot.style.height = `${cardH * 0.7}px`;
       dot.style.left = `${slot.nx * 100}%`;
       dot.style.top = `${slot.ny * 100}%`;
-      // Orient toward the seat (so cards stand vertically toward owner)
       const baseRot = seat === 0 ? 0 : seat === 1 ? 180 : seat === 2 ? -90 : 90;
       dot.style.transform = `translate(-50%, -50%) rotate(${baseRot}deg)`;
       refs.slotLayer.appendChild(dot);

@@ -183,17 +183,25 @@ export class DragController {
     if (!s || e.pointerId !== s.pointerId) return;
     window.clearTimeout(s.longPressTimer);
 
-    for (const id of s.ids) {
-      const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
-      if (el) el.classList.remove("is-held");
+    if (!s.dragging) {
+      // Mere click on a card — no drag, no place. Drop the held class and exit.
+      for (const id of s.ids) {
+        const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
+        if (el) el.classList.remove("is-held");
+      }
+      this.session = null;
+      return;
     }
 
-    if (!s.dragging) { this.session = null; return; }
-
+    // STATE FIRST: update every card's canonical position synchronously, so
+    // the RAF render loop never sees a half-applied drop.
     const selfSeat = this.hooks.getSelfSeat();
+    const opponentSeat = this.hooks.pointInOpponentZone(e.clientX, e.clientY);
+    const inSelf = this.hooks.pointInSelfZone(e.clientX, e.clientY);
+    const snappedSeats = new Set<string>();
     let didSnapBack = false;
     let didPlace = false;
-    const opponentSeat = this.hooks.pointInOpponentZone(e.clientX, e.clientY);
+
     for (const id of s.ids) {
       const c = this.state.cards.get(id);
       if (!c) continue;
@@ -203,18 +211,28 @@ export class DragController {
           c.x = s.startNx + s.anchorDx + rel.dx;
           c.y = s.startNy + s.anchorDy + rel.dy;
         }
-        const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
-        if (el) {
-          const rect = this.host.getBoundingClientRect();
-          el.style.transform = `translate3d(${c.x * rect.width}px, ${c.y * rect.height}px, 0) rotate(${c.rot * 90}deg)`;
-          el.classList.add("is-snapback");
-          window.setTimeout(() => el.classList.remove("is-snapback"), 260);
-        }
         didSnapBack = true;
       } else {
-        const seat = this.hooks.pointInSelfZone(e.clientX, e.clientY) ? selfSeat : null;
+        const seat = inSelf ? selfSeat : null;
         this.hooks.setOwnerSeat(id, seat);
+        if (seat !== null) snappedSeats.add(id);
         didPlace = true;
+      }
+    }
+
+    // THEN write the final inline transform and toggle classes — all in the
+    // same frame so the next render does not race against drop state.
+    const rect = this.host.getBoundingClientRect();
+    for (const id of s.ids) {
+      const c = this.state.cards.get(id);
+      if (!c) continue;
+      const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
+      if (!el) continue;
+      el.style.transform = `translate3d(${c.x * rect.width}px, ${c.y * rect.height}px, 0) rotate(${c.rot * 90}deg)`;
+      el.classList.remove("is-held");
+      if (didSnapBack && (opponentSeat !== null && opponentSeat !== selfSeat)) {
+        el.classList.add("is-snapback");
+        window.setTimeout(() => el.classList.remove("is-snapback"), 260);
       }
     }
 
@@ -223,6 +241,9 @@ export class DragController {
     else if (didPlace) this.hooks.playSfx("place");
     this.session = null;
   };
+
+  /** True between pointerdown on a card and pointerup. */
+  isActive(): boolean { return this.session !== null; }
 
   destroy(): void {
     this.host.removeEventListener("pointerdown", this.onPointerDown);
