@@ -21,11 +21,11 @@
   --cat-intervention: #4f8ec8;
   --cat-servant: #4ea27a;
 
-  /* Seat accents (4 seats) */
+  /* Seat accents: pure black-and-white nobility, four ivory tones */
   --seat-0: #f3efe5;
-  --seat-1: #7cc4d0;
-  --seat-2: #d690ac;
-  --seat-3: #a8b67e;
+  --seat-1: #cdc8bc;
+  --seat-2: #a09c92;
+  --seat-3: #79766f;
 
   /* Geometry */
   --r-card: 8px;

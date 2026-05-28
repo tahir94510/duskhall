@@ -34,7 +34,7 @@ import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
 
 const SEAT_COUNT = 4;
-const SEAT_COLORS = ["#f3efe5", "#7cc4d0", "#d690ac", "#a8b67e"];
+const SEAT_COLORS = ["#f3efe5", "#cdc8bc", "#a09c92", "#79766f"];
 const SS_SNAPSHOT_PREFIX = "kabal:snap:";
 const SS_CLIENT_ID = "kabal:cid";
 
@@ -158,18 +158,30 @@ export class Game {
         return findStackOverlapping(this.state, this.boardSize, top.id);
       },
       applySnap: (ownerSeat, nx, ny) => {
-        const found = findNearestSlot(this.slotsBySeat[ownerSeat as Seat] || [], nx, ny, ownerSeat as Seat);
-        if (!found) return { nx, ny, snapped: false };
-        if (found.dist <= SNAP_RADIUS) {
-          this.highlightSlot(ownerSeat as Seat, found.slot, true);
-          return { nx: found.slot.nx, ny: found.slot.ny, snapped: true };
+        // 1. Central dock snap (Deck + Discard). Aggressive radius so cards
+        //    "cuk" into the pile; break radius is wider so picking back up
+        //    is effortless.
+        const dock = this.dockSnapTarget(nx, ny);
+        if (dock) {
+          this.setDockHot(dock.slot, true);
+          return { nx: dock.nx, ny: dock.ny, snapped: true };
         }
-        if (found.dist > BREAK_RADIUS) this.clearSlotHighlights();
+        this.setDockHot(null, false);
+        // 2. Per-seat slot snap (currently empty, kept for the future).
+        if (ownerSeat >= 0) {
+          const found = findNearestSlot(this.slotsBySeat[ownerSeat as Seat] || [], nx, ny, ownerSeat as Seat);
+          if (found && found.dist <= SNAP_RADIUS) {
+            this.highlightSlot(ownerSeat as Seat, found.slot, true);
+            return { nx: found.slot.nx, ny: found.slot.ny, snapped: true };
+          }
+          if (!found || found.dist > BREAK_RADIUS) this.clearSlotHighlights();
+        }
         return { nx, ny, snapped: false };
       },
       onCardMoved: (ids) => {
         for (const id of ids) this.dirtyIds.add(id);
         this.clearSlotHighlights();
+        this.setDockHot(null, false);
         this.scheduleFlush();
       },
       onDragProgress: (ids) => {
@@ -219,6 +231,35 @@ export class Game {
     return pick;
   }
 
+  private dockSnapTarget(nx: number, ny: number): { slot: "deck" | "discard"; nx: number; ny: number } | null {
+    const SNAP = 0.07;
+    const targets: Array<["deck" | "discard", DOMRect]> = [
+      ["deck", this.refs.deckSlot.getBoundingClientRect()],
+      ["discard", this.refs.discardSlot.getBoundingClientRect()]
+    ];
+    const layer = this.refs.cardsLayer.getBoundingClientRect();
+    const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
+    const cardH = cardW * 1.45;
+    let best: { slot: "deck" | "discard"; nx: number; ny: number; dist: number } | null = null;
+    for (const [name, r] of targets) {
+      const centreXpx = r.left + r.width / 2 - layer.left;
+      const centreYpx = r.top + r.height / 2 - layer.top;
+      const centreNx = (centreXpx - cardW / 2) / this.boardSize.width;
+      const centreNy = (centreYpx - cardH / 2) / this.boardSize.height;
+      const d = Math.hypot(centreNx - nx, centreNy - ny);
+      if (d <= SNAP && (!best || d < best.dist)) {
+        best = { slot: name, nx: centreNx, ny: centreNy, dist: d };
+      }
+    }
+    if (!best) return null;
+    return { slot: best.slot, nx: best.nx, ny: best.ny };
+  }
+
+  private setDockHot(target: "deck" | "discard" | null, on: boolean): void {
+    this.refs.deckSlot.classList.toggle("is-hot", on && target === "deck");
+    this.refs.discardSlot.classList.toggle("is-hot", on && target === "discard");
+  }
+
   private highlightSlot(seat: Seat, slot: SlotPos, on: boolean): void {
     const marks = this.refs.slotLayer.querySelectorAll<HTMLDivElement>(`.slot-mark[data-seat="${seat}"][data-kind="${slot.kind}"]`);
     marks.forEach((m, i) => m.classList.toggle("is-hot", on && i === slot.index));
@@ -237,9 +278,28 @@ export class Game {
   private initialDealLocal(): void {
     const deck = seededDeck(this.room);
     let z = 1;
+    // Defer position math by two RAFs so the board has finished laying out
+    // (CSS variables, perspective rotation, ResizeObserver). This keeps the
+    // pile centred over the Deck slot every time.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      this.measureBoard();
+      const slotRect = this.refs.deckSlot.getBoundingClientRect();
+      const layerRect = this.refs.cardsLayer.getBoundingClientRect();
+      const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
+      const cardH = cardW * 1.45;
+      const cx = slotRect.left + slotRect.width / 2 - layerRect.left;
+      const cy = slotRect.top + slotRect.height / 2 - layerRect.top;
+      const baseNx = (cx - cardW / 2) / this.boardSize.width;
+      const baseNy = (cy - cardH / 2) / this.boardSize.height;
+      let i = 0;
+      for (const c of this.state.cards.values()) {
+        c.x = baseNx + (i % 6) * 0.0004;
+        c.y = baseNy - i * 0.00015;
+        i++;
+      }
+    }));
     const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
     const cardH = cardW * 1.45;
-    // place all cards centred on the canonical centre (0.5, 0.5) with tiny offsets
     const baseNx = 0.5 - cardW / (2 * this.boardSize.width);
     const baseNy = 0.5 - cardH / (2 * this.boardSize.height);
     let i = 0;
@@ -328,10 +388,15 @@ export class Game {
   }
 
   private installResizeObserver(): void {
+    let pending = 0;
     const ro = new ResizeObserver(() => {
-      this.measureBoard();
-      repaintSlots(this.refs);
-      this.renderAllCards();
+      if (pending) return;
+      pending = window.setTimeout(() => {
+        pending = 0;
+        this.measureBoard();
+        repaintSlots(this.refs);
+        this.renderAllCards();
+      }, 50);
     });
     ro.observe(this.refs.cardsLayer);
   }

@@ -73,9 +73,14 @@ export class RealtimeBus {
     }
     this.setStatus("connecting");
     try {
-      this.client = createClient(this.config.supabaseUrl, this.config.supabaseAnonKey, {
-        realtime: { params: { eventsPerSecond: 20 } }
-      });
+      // Reuse a single Supabase client across reconnects so we don't trigger
+      // "Multiple GoTrueClient instances" warnings.
+      if (!this.client) {
+        this.client = createClient(this.config.supabaseUrl, this.config.supabaseAnonKey, {
+          auth: { persistSession: false, autoRefreshToken: false, storageKey: "kabal-rt" },
+          realtime: { params: { eventsPerSecond: 20 } }
+        });
+      }
       const ch = this.client.channel(`kabal:${roomSlug}`, {
         config: { presence: { key: me.id }, broadcast: { ack: false, self: false } }
       });
@@ -112,7 +117,7 @@ export class RealtimeBus {
       }
     } finally {
       this.channel = null;
-      this.client = null;
+      // keep this.client alive so reconnects reuse the same Supabase instance
       this.setStatus("offline");
       for (const l of this.presenceListeners) l([]);
     }

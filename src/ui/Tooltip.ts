@@ -1,5 +1,5 @@
 import { t } from "../i18n/index.js";
-import { CARD_DEFS, CATEGORY_META } from "../game/cards.js";
+import { CARD_DEFS } from "../game/cards.js";
 
 const HOVER_DELAY = 800;
 const OFFSET = 14;
@@ -69,10 +69,9 @@ export class Tooltip {
     if (!def) return;
     if (!data.cardEl.classList.contains("is-faceup")) return;
     this.active = data;
-    const cat = CATEGORY_META[def.category];
     this.el.innerHTML = `
       <div class="tooltip__title">${escapeHtml(t(`cards.${def.id}.name`))}</div>
-      <div class="tooltip__type" style="color:${cat.color}">${escapeHtml(t(`categories.${def.category}.name`))}</div>
+      <div class="tooltip__type">${escapeHtml(t(`categories.${def.category}.name`))}</div>
       <div class="tooltip__body">${escapeHtml(t(`cards.${def.id}.effect`))}</div>
       <div class="tooltip__flavor">${escapeHtml(t(`cards.${def.id}.flavor`))}</div>
     `;

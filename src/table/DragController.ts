@@ -155,15 +155,15 @@ export class DragController {
     let seedNx = pointerNx + s.anchorDx;
     let seedNy = pointerNy + s.anchorDy;
 
-    // magnet snap on the seed if pointer sits inside a player's zone
+    // Magnet snap. Run for self-zone (per-seat slots, currently empty) AND for
+    // the central dock so cards "cuk" into the Deck / Discard piles.
     const opponentSeat = this.hooks.pointInOpponentZone(e.clientX, e.clientY);
     if (opponentSeat === null) {
-      const ownerSeat = this.hooks.pointInSelfZone(e.clientX, e.clientY) ? this.hooks.getSelfSeat() : -1;
-      if (ownerSeat !== -1) {
-        const snap = this.hooks.applySnap(ownerSeat, seedNx, seedNy);
-        seedNx = snap.nx;
-        seedNy = snap.ny;
-      }
+      const inSelf = this.hooks.pointInSelfZone(e.clientX, e.clientY);
+      const ownerSeat = inSelf ? this.hooks.getSelfSeat() : -1;
+      const snap = this.hooks.applySnap(ownerSeat, seedNx, seedNy);
+      seedNx = snap.nx;
+      seedNy = snap.ny;
     }
 
     for (const id of s.ids) {
