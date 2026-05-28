@@ -1,22 +1,24 @@
-import { ICON_RULES, ICON_SUPPORT, ICON_LEAVE, ICON_LANG } from "./icons.js";
+import { ICON_RULES, ICON_SUPPORT, ICON_RESET, ICON_SETTINGS } from "./icons.js";
 import { t, getLocale, loadLocale, type Locale } from "../i18n/index.js";
 
 export interface HeaderHooks {
   onRules(): void;
   onSupport(): void;
-  onLeave(): void;
+  onReset(): void;
+  onSettings(): void;
   onLangChange(loc: Locale): void;
 }
 
 export class Header {
   el: HTMLElement;
-  private brandMeta: HTMLDivElement;
-  private roomCode: HTMLSpanElement;
+  private brandLink: HTMLAnchorElement;
   private timer: HTMLSpanElement;
   private rulesBtn: HTMLButtonElement;
   private supportBtn: HTMLButtonElement;
-  private leaveBtn: HTMLButtonElement;
-  private langBtn: HTMLButtonElement;
+  private resetBtn: HTMLButtonElement;
+  private settingsBtn: HTMLButtonElement;
+  private langEn: HTMLButtonElement;
+  private langTr: HTMLButtonElement;
   private roomStart = performance.now();
   private timerHandle = 0;
 
@@ -25,33 +27,34 @@ export class Header {
     this.el.className = "header";
     this.el.innerHTML = `
       <a class="brand" href="/" data-role="brand" aria-label="KABAL">
-        <span class="brand__mark"><img src="/assets/icon.svg" alt="KABAL" width="34" height="34"/></span>
+        <img src="/assets/icon.svg" alt="" width="32" height="32"/>
       </a>
       <div class="header__center">
-        <div class="room-pill" title="${escapeHtml(t("ui.room"))}">
-          <span class="room-code"></span>
-        </div>
         <div class="timer-pill" title="${escapeHtml(t("ui.timer"))}">
           <span class="timer-value">00:00</span>
         </div>
       </div>
       <div class="header__right">
-        <button type="button" class="icon-btn icon-btn--lang" data-action="lang" aria-label="${escapeHtml(t("ui.language"))}">${getLocale().toUpperCase()}</button>
+        <div class="lang-toggle" role="group" aria-label="${escapeHtml(t("ui.language"))}">
+          <button type="button" class="lang-toggle__btn" data-lang="en">EN</button>
+          <button type="button" class="lang-toggle__btn" data-lang="tr">TR</button>
+        </div>
+        <button type="button" class="icon-btn" data-action="settings" aria-label="${escapeHtml(t("ui.settings"))}">${ICON_SETTINGS}</button>
         <button type="button" class="icon-btn" data-action="rules" aria-label="${escapeHtml(t("ui.rules"))}">${ICON_RULES}</button>
         <button type="button" class="icon-btn" data-action="support" aria-label="${escapeHtml(t("ui.support"))}">${ICON_SUPPORT}<span class="icon-btn__badge">1</span></button>
-        <button type="button" class="icon-btn" data-action="leave" aria-label="${escapeHtml(t("ui.leave"))}">${ICON_LEAVE}</button>
+        <button type="button" class="icon-btn" data-action="reset" aria-label="${escapeHtml(t("ui.reset"))}">${ICON_RESET}</button>
       </div>
     `;
-    this.brandMeta = this.el.querySelector(".brand") as HTMLDivElement;
-    this.roomCode = this.el.querySelector(".room-code") as HTMLSpanElement;
+    this.brandLink = this.el.querySelector<HTMLAnchorElement>('[data-role="brand"]')!;
     this.timer = this.el.querySelector(".timer-value") as HTMLSpanElement;
     this.rulesBtn = this.el.querySelector('[data-action="rules"]') as HTMLButtonElement;
     this.supportBtn = this.el.querySelector('[data-action="support"]') as HTMLButtonElement;
-    this.leaveBtn = this.el.querySelector('[data-action="leave"]') as HTMLButtonElement;
-    this.langBtn = this.el.querySelector('[data-action="lang"]') as HTMLButtonElement;
-    void ICON_LANG;
-    this.refreshLocale();
+    this.resetBtn = this.el.querySelector('[data-action="reset"]') as HTMLButtonElement;
+    this.settingsBtn = this.el.querySelector('[data-action="settings"]') as HTMLButtonElement;
+    this.langEn = this.el.querySelector('[data-lang="en"]') as HTMLButtonElement;
+    this.langTr = this.el.querySelector('[data-lang="tr"]') as HTMLButtonElement;
     this.bind();
+    this.refreshLocale();
     this.startTimer();
   }
 
@@ -63,29 +66,30 @@ export class Header {
     };
     this.rulesBtn.addEventListener("click", wrap(this.hooks.onRules));
     this.supportBtn.addEventListener("click", wrap(this.hooks.onSupport));
-    this.leaveBtn.addEventListener("click", wrap(this.hooks.onLeave));
-    this.langBtn.addEventListener("click", (e) => {
+    this.resetBtn.addEventListener("click", wrap(this.hooks.onReset));
+    this.settingsBtn.addEventListener("click", wrap(this.hooks.onSettings));
+    this.brandLink.addEventListener("click", (e) => e.preventDefault());
+    const switchLang = (loc: Locale) => (e: MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      const next: Locale = getLocale() === "en" ? "tr" : "en";
-      void loadLocale(next).then(() => this.hooks.onLangChange(next));
-    });
-    const brand = this.el.querySelector<HTMLAnchorElement>('[data-role="brand"]');
-    brand?.addEventListener("click", (e) => {
-      e.preventDefault();
-    });
+      if (getLocale() === loc) return;
+      void loadLocale(loc).then(() => this.hooks.onLangChange(loc));
+    };
+    this.langEn.addEventListener("click", switchLang("en"));
+    this.langTr.addEventListener("click", switchLang("tr"));
   }
 
   refreshLocale(): void {
-    void this.brandMeta;
     this.rulesBtn.setAttribute("aria-label", t("ui.rules"));
     this.supportBtn.setAttribute("aria-label", t("ui.support"));
-    this.leaveBtn.setAttribute("aria-label", t("ui.leave"));
-    this.langBtn.textContent = getLocale().toUpperCase();
+    this.resetBtn.setAttribute("aria-label", t("ui.reset"));
+    this.settingsBtn.setAttribute("aria-label", t("ui.settings"));
+    const loc = getLocale();
+    this.langEn.classList.toggle("is-active", loc === "en");
+    this.langTr.classList.toggle("is-active", loc === "tr");
   }
 
-  setRoom(slug: string): void {
-    this.roomCode.textContent = slug.replace(/^KBL-/, "");
+  setRoom(_slug: string): void {
     this.roomStart = performance.now();
     this.tick();
   }
@@ -101,20 +105,16 @@ export class Header {
   }
 
   private tick(): void {
-    const elapsedMs = performance.now() - this.roomStart;
-    const totalSec = Math.max(0, Math.floor(elapsedMs / 1000));
+    const totalSec = Math.max(0, Math.floor((performance.now() - this.roomStart) / 1000));
     const m = Math.floor(totalSec / 60);
     const s = totalSec % 60;
     this.timer.textContent = `${pad(m)}:${pad(s)}`;
   }
 
-  destroy(): void {
-    window.clearInterval(this.timerHandle);
-  }
+  destroy(): void { window.clearInterval(this.timerHandle); }
 }
 
 function pad(n: number): string { return n < 10 ? `0${n}` : String(n); }
-
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[m]!);
 }

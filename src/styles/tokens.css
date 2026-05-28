@@ -1,53 +1,52 @@
 :root {
   /* Ink & ivory */
-  --ink: #050507;
-  --ink-2: #0b0b0e;
-  --ash: #15151a;
-  --ash-2: #1f1f25;
-  --line: rgba(243, 239, 229, 0.08);
-  --line-2: rgba(243, 239, 229, 0.16);
-  --line-3: rgba(243, 239, 229, 0.28);
+  --ink: #000000;
+  --ink-2: #07070a;
+  --ash: #101015;
+  --ash-2: #181820;
+  --line: rgba(243, 239, 229, 0.06);
+  --line-2: rgba(243, 239, 229, 0.14);
+  --line-3: rgba(243, 239, 229, 0.26);
   --ivory: #f3efe5;
-  --ivory-dim: #aea99d;
-  --ivory-mute: #76726a;
+  --ivory-dim: #b3afa5;
+  --ivory-mute: #6e6a63;
 
-  /* Single noble accent */
-  --gold: #c8a45a;
-  --gold-soft: #e5c578;
-  --gold-deep: #8d6c2c;
+  /* Accent reserved for badges & active states */
+  --accent: #f3efe5;
+  --accent-dim: #b3afa5;
 
-  /* Card categories — quieter, deeper hues */
-  --cat-seal: #5b3f99;
-  --cat-spell: #a23a3f;
-  --cat-intervention: #2e6396;
-  --cat-servant: #347459;
+  /* Card categories (used only as a tiny tinted dot behind the type icon) */
+  --cat-seal: #8c6fd6;
+  --cat-spell: #c2585c;
+  --cat-intervention: #4f8ec8;
+  --cat-servant: #4ea27a;
 
   /* Seat accents (4 seats) */
-  --seat-0: #c8a45a;
-  --seat-1: #6bbac4;
-  --seat-2: #c87a9a;
-  --seat-3: #9aa86c;
+  --seat-0: #f3efe5;
+  --seat-1: #7cc4d0;
+  --seat-2: #d690ac;
+  --seat-3: #a8b67e;
 
   /* Geometry */
   --r-card: 8px;
-  --r-panel: 12px;
-  --r-zone: 14px;
+  --r-panel: 10px;
+  --r-zone: 12px;
   --r-pill: 999px;
 
-  /* Shadow */
-  --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.55);
-  --shadow-card-held: 0 22px 44px rgba(0, 0, 0, 0.65);
-  --shadow-panel: 0 22px 60px rgba(0, 0, 0, 0.6);
+  /* Shadow — restrained */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --shadow-card-held: 0 14px 32px rgba(0, 0, 0, 0.55);
+  --shadow-panel: 0 20px 50px rgba(0, 0, 0, 0.55);
 
   /* Card sizing */
-  --card-w: clamp(60px, 7.6vmin, 108px);
+  --card-w: clamp(58px, 7.2vmin, 104px);
   --card-h: calc(var(--card-w) * 1.45);
 
   /* Motion */
   --ease: cubic-bezier(0.2, 0.65, 0.18, 0.99);
-  --dur-fast: 120ms;
-  --dur: 200ms;
-  --dur-slow: 360ms;
+  --dur-fast: 110ms;
+  --dur: 180ms;
+  --dur-slow: 320ms;
 
   /* z layers */
   --z-board: 1;
@@ -60,9 +59,9 @@
   --z-toast: 1100;
   --z-held: 9999;
 
-  /* Type */
-  --font-display: "Cinzel", "Times New Roman", serif;
+  /* Type — single family, restrained spacing */
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Inter", system-ui, sans-serif;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,4 +1,4 @@
-# KABAL — Copyright Notice
+# KABAL: Copyright Notice
 
 The KABAL universe, including but not limited to:
 

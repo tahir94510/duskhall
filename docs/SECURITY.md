@@ -1,4 +1,4 @@
-# KABAL — Security and Threat Notes
+# KABAL: Security and Threat Notes
 
 ## What KABAL is and is not
 
