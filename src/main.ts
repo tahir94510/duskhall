@@ -1,4 +1,5 @@
 import "./styles/index.css";
+import "./styles/boot.css";
 import { detectLocale, loadLocale, t } from "./i18n/index.js";
 import { loadConfig } from "./net/config.js";
 import { RealtimeBus } from "./net/realtime.js";
@@ -18,17 +19,13 @@ async function boot(): Promise<void> {
   await game.mount();
 }
 
-boot().catch((err) => {
+function showBootFail(err: unknown): void {
   console.error("KABAL boot failed", err);
-  const host = document.getElementById("app");
-  if (host) {
-    host.innerHTML = `
-      <div style="position:fixed;inset:0;display:grid;place-items:center;color:#f3efe5;font-family:Inter,sans-serif;text-align:center;padding:32px;">
-        <div>
-          <h1 style="font-family:Cinzel,serif;letter-spacing:.18em;">KABAL</h1>
-          <p>An unexpected error has occurred. Please refresh the page.</p>
-        </div>
-      </div>
-    `;
-  }
-});
+  const fail = document.getElementById("boot-fail");
+  if (!fail) return;
+  fail.removeAttribute("hidden");
+  const btn = fail.querySelector<HTMLButtonElement>("[data-reload]");
+  btn?.addEventListener("click", () => window.location.reload());
+}
+
+boot().catch(showBootFail);

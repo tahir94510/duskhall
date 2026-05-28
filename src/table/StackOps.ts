@@ -95,15 +95,13 @@ export function gatherStack(state: BoardState, ids: string[], focusNx?: number, 
     .map((id) => state.cards.get(id))
     .filter((c): c is CardState => !!c)
     .sort((a, b) => a.z - b.z);
-  const stepX = 0.0024;
-  const stepY = 0.0024;
-  let i = 0;
+  // v3.7: every card lands exactly on the focus point so the stack is a
+  // single tight pile with no diagonal tail. Z is the only visual stride.
   for (const c of ordered) {
-    c.x = cx + i * stepX;
-    c.y = cy + i * stepY;
+    c.x = cx;
+    c.y = cy;
     state.topZ++;
     c.z = state.topZ;
-    i++;
   }
 }
 

@@ -87,8 +87,12 @@ export class Header {
       if (t instanceof Element && (this.menu.contains(t) || this.moreBtn.contains(t))) return;
       this.closeMenu();
     });
+    // Any wheel scroll or key press outside the menu collapses it so the
+    // table interaction never fights an open popover.
+    document.addEventListener("wheel", () => { if (this.menuOpen) this.closeMenu(); }, { passive: true });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && this.menuOpen) this.closeMenu();
+      if (!this.menuOpen) return;
+      if (e.key === "Escape" || (e.target instanceof Element && !this.menu.contains(e.target))) this.closeMenu();
     });
     const wrap = (cb: () => void) => (e: MouseEvent) => {
       e.preventDefault();

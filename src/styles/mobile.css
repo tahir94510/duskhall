@@ -5,7 +5,7 @@
   flex-wrap: wrap;
   gap: 6px;
   padding: 7px;
-  background: rgba(8, 8, 12, 0.9);
+  background: rgba(10, 10, 10, 0.9);
   border: 1px solid var(--line-2);
   border-radius: var(--r-panel);
   backdrop-filter: blur(14px);
@@ -29,7 +29,7 @@
   border: 1px solid var(--line-2);
   display: grid;
   place-items: center;
-  background: rgba(16, 16, 22, 0.6);
+  background: rgba(18, 18, 18, 0.6);
   color: var(--ivory-dim);
   transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
@@ -38,7 +38,7 @@
 .context-bar__btn:active {
   color: var(--ivory);
   border-color: var(--line-3);
-  background: rgba(28, 28, 34, 0.78);
+  background: rgba(28, 28, 28, 0.78);
 }
 
 .context-bar__btn svg { width: 16px; height: 16px; }
@@ -62,5 +62,5 @@
 }
 
 @media (pointer: coarse) {
-  .icon-btn:hover { background: rgba(16, 16, 22, 0.55); }
+  .icon-btn:hover { background: rgba(18, 18, 18, 0.55); }
 }
