@@ -100,24 +100,33 @@
   align-items: center;
   gap: 6px;
   height: 36px;
-  padding: 0 16px;
+  padding: 0 18px;
   font-size: 0.78rem;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   border-radius: var(--r-pill);
   border: 1px solid var(--line-2);
   background: rgba(20, 20, 26, 0.6);
   color: var(--ivory);
   font-family: var(--font-display);
+  text-decoration: none;
   transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 
-.btn:hover { border-color: var(--line-3); background: rgba(28, 28, 34, 0.7); }
+.btn:hover { border-color: var(--line-3); background: rgba(28, 28, 34, 0.78); color: var(--ivory); }
+a.btn, a.btn:hover { text-decoration: none; }
 
 .btn--primary {
   background: var(--gold);
   color: var(--ink);
   border-color: var(--gold);
+}
+
+.btn--primary,
+.btn--primary:hover,
+a.btn--primary,
+a.btn--primary:hover {
+  color: var(--ink);
 }
 
 .btn--primary:hover {

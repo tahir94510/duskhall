@@ -11,8 +11,6 @@ export interface BoardRefs {
   zones: HTMLDivElement[];
 }
 
-const SEAT_LABELS = ["You", "Opponent", "Left", "Right"];
-
 export function buildTable(host: HTMLElement): BoardRefs {
   const root = document.createElement("div");
   root.className = "table";
@@ -78,14 +76,12 @@ export function buildTable(host: HTMLElement): BoardRefs {
 }
 
 export function refreshLabels(refs: BoardRefs): void {
-  refs.board.querySelector('[data-role="deck-label"]')!.textContent = "Deck";
-  refs.board.querySelector('[data-role="open-label"]')!.textContent = "Open";
-  refs.board.querySelector('[data-role="discard-label"]')!.textContent = "Discard";
+  refs.board.querySelector('[data-role="deck-label"]')!.textContent = t("table.deck");
+  refs.board.querySelector('[data-role="open-label"]')!.textContent = t("table.open");
+  refs.board.querySelector('[data-role="discard-label"]')!.textContent = t("table.discard");
+  const labels = [t("table.seatSelf"), t("table.seatOpponent"), t("table.seatLeft"), t("table.seatRight")];
   for (let i = 0; i < refs.zones.length; i++) {
     const name = refs.zones[i]!.querySelector<HTMLElement>('[data-role="name"]');
-    if (name) name.textContent = i === 0 ? t("ui.waiting").replace("…", "") || "You" : SEAT_LABELS[i]!;
+    if (name) name.textContent = labels[i] || "";
   }
-  // Replace placeholder for self zone with actual name once locale is loaded
-  const selfName = refs.zones[0]!.querySelector<HTMLElement>('[data-role="name"]');
-  if (selfName) selfName.textContent = "You · Sen";
 }

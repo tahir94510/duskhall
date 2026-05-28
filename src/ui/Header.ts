@@ -25,16 +25,13 @@ export class Header {
     this.el.className = "header";
     this.el.innerHTML = `
       <a class="brand" href="/" data-role="brand" aria-label="KABAL">
-        <span class="brand__mark"><img src="/assets/icon.svg" alt="" width="28" height="28"/></span>
-        <span class="brand__meta"><span></span><span></span></span>
+        <span class="brand__mark"><img src="/assets/icon.svg" alt="KABAL" width="34" height="34"/></span>
       </a>
       <div class="header__center">
         <div class="room-pill" title="${escapeHtml(t("ui.room"))}">
-          <span class="room-label">${escapeHtml(t("ui.room"))}</span>
           <span class="room-code"></span>
         </div>
         <div class="timer-pill" title="${escapeHtml(t("ui.timer"))}">
-          <span class="timer-label">${escapeHtml(t("ui.timer"))}</span>
           <span class="timer-value">00:00</span>
         </div>
       </div>
@@ -45,7 +42,7 @@ export class Header {
         <button type="button" class="icon-btn" data-action="leave" aria-label="${escapeHtml(t("ui.leave"))}">${ICON_LEAVE}</button>
       </div>
     `;
-    this.brandMeta = this.el.querySelector(".brand__meta") as HTMLDivElement;
+    this.brandMeta = this.el.querySelector(".brand") as HTMLDivElement;
     this.roomCode = this.el.querySelector(".room-code") as HTMLSpanElement;
     this.timer = this.el.querySelector(".timer-value") as HTMLSpanElement;
     this.rulesBtn = this.el.querySelector('[data-action="rules"]') as HTMLButtonElement;
@@ -80,15 +77,7 @@ export class Header {
   }
 
   refreshLocale(): void {
-    const titleEls = this.brandMeta.querySelectorAll("span");
-    if (titleEls.length >= 2) {
-      titleEls[0]!.textContent = "KABAL";
-      titleEls[1]!.textContent = t("meta.tagline");
-    }
-    const roomLabel = this.el.querySelector(".room-label");
-    if (roomLabel) roomLabel.textContent = t("ui.room");
-    const timerLabel = this.el.querySelector(".timer-label");
-    if (timerLabel) timerLabel.textContent = t("ui.timer");
+    void this.brandMeta;
     this.rulesBtn.setAttribute("aria-label", t("ui.rules"));
     this.supportBtn.setAttribute("aria-label", t("ui.support"));
     this.leaveBtn.setAttribute("aria-label", t("ui.leave"));

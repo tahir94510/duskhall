@@ -71,18 +71,20 @@ export class Tooltip {
     this.active = data;
     const def = CARD_DEFS.find((d) => d.id === data.defId);
     if (!def) return;
+    // never show tooltips for face-down cards
+    if (!data.cardEl.classList.contains("is-faceup")) return;
+
     if (data.role === "type") {
       const cat = CATEGORY_META[def.category];
       this.el.innerHTML = `
         <div class="tooltip__title" style="color:${cat.color}">${escape(t(`categories.${def.category}.name`))}</div>
-        <div class="tooltip__type">${escape(t(`cards.${def.id}.type`))}</div>
         <div class="tooltip__body">${escape(t(`categories.${def.category}.description`))}</div>
       `;
       this.el.style.setProperty("--accent-color", cat.color);
     } else {
       this.el.innerHTML = `
         <div class="tooltip__title" style="color:${def.accentColor}">${escape(t(`cards.${def.id}.name`))}</div>
-        <div class="tooltip__type">${escape(t(`cards.${def.id}.type`))}</div>
+        <div class="tooltip__type">${escape(t(`categories.${def.category}.name`))}</div>
         <div class="tooltip__body">${escape(t(`cards.${def.id}.effect`))}</div>
         <div class="tooltip__flavor">${escape(t(`cards.${def.id}.flavor`))}</div>
       `;

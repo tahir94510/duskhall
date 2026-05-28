@@ -1,17 +1,17 @@
+/* Card root */
 .card {
   position: absolute;
   width: var(--card-w);
   height: var(--card-h);
   border-radius: var(--r-card);
-  transform: translate3d(0, 0, 0);
-  transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
-  will-change: transform;
+  perspective: 900px;
   cursor: grab;
   pointer-events: auto;
   user-select: none;
   -webkit-user-drag: none;
   z-index: var(--z-card);
-  background: var(--ink);
+  transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+  will-change: transform;
   box-shadow: var(--shadow-card);
 }
 
@@ -19,21 +19,19 @@
   cursor: grabbing;
   z-index: var(--z-held);
   box-shadow: var(--shadow-card-held);
-  transition: box-shadow var(--dur) var(--ease);
 }
-
-.card.is-held .card__face { transform: rotateY(0deg) scale(1.03); }
 
 .card__inner {
   position: absolute;
   inset: 0;
   border-radius: inherit;
   transform-style: preserve-3d;
+  transform: rotateY(180deg); /* default = back facing camera */
   transition: transform var(--dur-slow) var(--ease);
 }
 
-.card.is-flipped .card__inner {
-  transform: rotateY(180deg);
+.card.is-faceup .card__inner {
+  transform: rotateY(0deg);
 }
 
 .card__face {
@@ -45,108 +43,150 @@
   overflow: hidden;
 }
 
+/* Card back — refined noble sigil */
 .card__face--back {
-  transform: rotateY(180deg);
   background:
-    radial-gradient(120% 80% at 50% 0%, #1b1b22 0%, #0a0a0f 80%),
-    var(--ink);
+    linear-gradient(135deg, #14141a 0%, #07070a 100%);
+  border: 1px solid rgba(200, 164, 90, 0.28);
   display: grid;
   place-items: center;
-  border: 1px solid var(--line-2);
 }
 
 .card__face--back::before {
   content: "";
   position: absolute;
-  inset: 6%;
-  border: 1px solid color-mix(in oklab, var(--gold) 40%, transparent);
+  inset: 5px;
   border-radius: calc(var(--r-card) - 2px);
-  opacity: 0.55;
+  border: 1px solid rgba(200, 164, 90, 0.18);
+  pointer-events: none;
+}
+
+.card__face--back::after {
+  content: "";
+  position: absolute;
+  inset: 12% 8%;
+  background:
+    repeating-linear-gradient(45deg, rgba(200, 164, 90, 0.04) 0 1px, transparent 1px 8px);
+  pointer-events: none;
 }
 
 .card__back-sigil {
-  width: 58%;
+  width: 54%;
   aspect-ratio: 1;
-  display: grid;
-  place-items: center;
   color: var(--gold);
-  opacity: 0.85;
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.6));
+  opacity: 0.78;
+  filter: drop-shadow(0 0 6px rgba(200, 164, 90, 0.25));
+  position: relative;
+  z-index: 1;
 }
 
+.card__back-sigil svg { width: 100%; height: 100%; }
+
+/* Card front — diagonal type band + lower name area */
 .card__face--front {
-  background:
-    linear-gradient(180deg, #15151b 0%, #0d0d12 100%);
+  transform: rotateY(180deg);
+  background: var(--ink);
   border: 1px solid var(--line-2);
   color: var(--ivory);
-  display: flex;
-  flex-direction: column;
-  padding: 7%;
-  gap: 4%;
 }
 
-.card__corner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-family: var(--font-display);
-  font-size: clamp(8px, 1.1vmin, 11px);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+.card__type-band {
+  position: absolute;
+  inset: 0;
+  background: var(--type-color, var(--cat-spell));
+  clip-path: polygon(0 0, 100% 0, 100% 38%, 0 70%);
+  pointer-events: none;
+}
+
+.card__type-band::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: inherit;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.18) 60%, rgba(0, 0, 0, 0.32));
+}
+
+.card__divider {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.32);
+  transform-origin: 0 50%;
+  transform: rotate(calc(var(--diag, -10) * 1deg)) translateY(54%);
+  pointer-events: none;
+  opacity: 0;
 }
 
 .card__type {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22%;
+  position: absolute;
+  left: 50%;
+  top: 17%;
+  transform: translate(-50%, -50%);
+  width: 38%;
   aspect-ratio: 1;
-  border-radius: 50%;
-  background: color-mix(in oklab, var(--type-color) 18%, transparent);
-  color: var(--type-color);
-  cursor: help;
-  pointer-events: auto;
-  border: 1px solid color-mix(in oklab, var(--type-color) 50%, transparent);
-}
-
-.card__type svg { width: 64%; height: 64%; }
-
-.card__hero {
-  flex: 1;
   display: grid;
   place-items: center;
-  color: var(--accent-color);
+  color: #ffffff;
+  pointer-events: auto;
+  cursor: help;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
 }
 
-.card__hero-icon {
-  width: 60%;
-  height: 60%;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
-  cursor: help;
+.card__type svg { width: 100%; height: 100%; }
+
+.card__hero {
+  position: absolute;
+  left: 50%;
+  top: 64%;
+  transform: translate(-50%, -50%);
+  width: 50%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  color: var(--accent-color, var(--ivory));
   pointer-events: auto;
+  cursor: help;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
 }
+
+.card__hero svg { width: 100%; height: 100%; }
 
 .card__name {
-  display: block;
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 6%;
   text-align: center;
   font-family: var(--font-display);
   font-size: clamp(7px, 1.05vmin, 11px);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: color-mix(in oklab, var(--accent-color) 85%, var(--ivory) 15%);
-  padding: 4% 6%;
-  border-top: 1px solid color-mix(in oklab, var(--accent-color) 30%, transparent);
+  color: var(--accent-color, var(--ivory));
+  padding-top: 4%;
+  border-top: 1px solid color-mix(in oklab, var(--accent-color, var(--ivory)) 35%, transparent);
+  pointer-events: none;
 }
 
-.card.is-concealed .card__face--front {
-  visibility: hidden;
+/* Face-down: hide front entirely from cursor & interaction */
+.card:not(.is-faceup) .card__type,
+.card:not(.is-faceup) .card__hero,
+.card:not(.is-faceup) .card__name {
+  pointer-events: none;
 }
 
+/* Concealed (own face-up card seen only by owner) */
+.card.is-concealed .card__face--front { visibility: hidden; }
+.card.is-concealed .card__face--back { visibility: visible; }
+
+/* Snap-back animation when dropped into opponent zone */
 .card.is-snapback {
   animation: snapback 280ms var(--ease);
 }
 
 @keyframes snapback {
-  0% { box-shadow: 0 0 0 2px var(--cat-spell); }
-  100% { box-shadow: var(--shadow-card); }
+  0% { outline: 2px solid var(--cat-spell); }
+  100% { outline: 0 solid transparent; }
 }
