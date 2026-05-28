@@ -69,7 +69,8 @@ export function findStackAtPoint(state: BoardState, boardEl: HTMLElement, client
 
 /**
  * Gather the stack around (focusNx, focusNy). When focus is omitted we fall back
- * to the centroid of the stack.
+ * to the centroid of the stack. Z-indices are reassigned in order so the
+ * gathered stack always sits on top of whatever else is on the board.
  */
 export function gatherStack(state: BoardState, ids: string[], focusNx?: number, focusNy?: number): void {
   if (!ids.length) return;
@@ -94,13 +95,14 @@ export function gatherStack(state: BoardState, ids: string[], focusNx?: number, 
     .map((id) => state.cards.get(id))
     .filter((c): c is CardState => !!c)
     .sort((a, b) => a.z - b.z);
-  // tiny offset per card (~3 px equivalent at 1080p)
   const stepX = 0.0024;
   const stepY = 0.0024;
   let i = 0;
   for (const c of ordered) {
     c.x = cx + i * stepX;
     c.y = cy + i * stepY;
+    state.topZ++;
+    c.z = state.topZ;
     i++;
   }
 }

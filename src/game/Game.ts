@@ -29,6 +29,7 @@ import {
   type SlotPos
 } from "../table/SlotGrid.js";
 import { localToCanonical, seatRotationDeg, type Seat } from "../table/rotation.js";
+import { DECK_NX, DECK_NY, DISCARD_NX, DISCARD_NY, DOCK_SNAP_RADIUS } from "../table/constants.js";
 import type { RealtimeBus, PresencePlayer, CardPatch } from "../net/realtime.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
@@ -56,6 +57,7 @@ export class Game {
   private modal = new Modal();
   private contextBar!: ContextBar;
   private audio = new AudioEngine();
+  private drag!: DragController;
   private room = "";
   private patchVersion = 0;
   private dirtyIds = new Set<string>();
@@ -99,6 +101,9 @@ export class Game {
     this.header.setRoom(this.room);
     for (const s of [0, 1, 2, 3] as Seat[]) this.slotsBySeat[s] = slotsForSeat(s);
 
+    // Apply perspective transform first, then measure: the rect we read out
+    // belongs to the rotated layout so all canonical math lines up.
+    this.applyBoardPerspective();
     this.measureBoard();
 
     const restored = this.tryRestoreSnapshot();
@@ -111,7 +116,6 @@ export class Game {
     this.installAudioBoot();
     this.installBeforeUnload();
     this.startRenderLoop();
-    this.applyBoardPerspective();
 
     await this.bus.connect(this.room, this.presencePayload());
   }
@@ -208,7 +212,7 @@ export class Game {
       },
       playSfx: (name) => { void this.audio.play(name as SfxName); }
     };
-    new DragController(this.refs.cardsLayer, this.state, hooks);
+    this.drag = new DragController(this.refs.cardsLayer, this.state, hooks);
   }
 
   private topCardAtCanonicalPoint(localX: number, localY: number): CardState | null {
@@ -232,23 +236,23 @@ export class Game {
   }
 
   private dockSnapTarget(nx: number, ny: number): { slot: "deck" | "discard"; nx: number; ny: number } | null {
-    const SNAP = 0.07;
-    const targets: Array<["deck" | "discard", DOMRect]> = [
-      ["deck", this.refs.deckSlot.getBoundingClientRect()],
-      ["discard", this.refs.discardSlot.getBoundingClientRect()]
-    ];
-    const layer = this.refs.cardsLayer.getBoundingClientRect();
+    // Slot canonical centres are constants. Card top-left math: subtract half a
+    // card so the card's centre lands on the slot centre.
     const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
     const cardH = cardW * 1.45;
+    const halfWn = cardW / (2 * this.boardSize.width);
+    const halfHn = cardH / (2 * this.boardSize.height);
+    const cardCentreNx = nx + halfWn;
+    const cardCentreNy = ny + halfHn;
+    const targets: Array<["deck" | "discard", number, number]> = [
+      ["deck", DECK_NX, DECK_NY],
+      ["discard", DISCARD_NX, DISCARD_NY]
+    ];
     let best: { slot: "deck" | "discard"; nx: number; ny: number; dist: number } | null = null;
-    for (const [name, r] of targets) {
-      const centreXpx = r.left + r.width / 2 - layer.left;
-      const centreYpx = r.top + r.height / 2 - layer.top;
-      const centreNx = (centreXpx - cardW / 2) / this.boardSize.width;
-      const centreNy = (centreYpx - cardH / 2) / this.boardSize.height;
-      const d = Math.hypot(centreNx - nx, centreNy - ny);
-      if (d <= SNAP && (!best || d < best.dist)) {
-        best = { slot: name, nx: centreNx, ny: centreNy, dist: d };
+    for (const [name, snx, sny] of targets) {
+      const d = Math.hypot(snx - cardCentreNx, sny - cardCentreNy);
+      if (d <= DOCK_SNAP_RADIUS && (!best || d < best.dist)) {
+        best = { slot: name, nx: snx - halfWn, ny: sny - halfHn, dist: d };
       }
     }
     if (!best) return null;
@@ -277,31 +281,12 @@ export class Game {
 
   private initialDealLocal(): void {
     const deck = seededDeck(this.room);
-    let z = 1;
-    // Defer position math by two RAFs so the board has finished laying out
-    // (CSS variables, perspective rotation, ResizeObserver). This keeps the
-    // pile centred over the Deck slot every time.
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      this.measureBoard();
-      const slotRect = this.refs.deckSlot.getBoundingClientRect();
-      const layerRect = this.refs.cardsLayer.getBoundingClientRect();
-      const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
-      const cardH = cardW * 1.45;
-      const cx = slotRect.left + slotRect.width / 2 - layerRect.left;
-      const cy = slotRect.top + slotRect.height / 2 - layerRect.top;
-      const baseNx = (cx - cardW / 2) / this.boardSize.width;
-      const baseNy = (cy - cardH / 2) / this.boardSize.height;
-      let i = 0;
-      for (const c of this.state.cards.values()) {
-        c.x = baseNx + (i % 6) * 0.0004;
-        c.y = baseNy - i * 0.00015;
-        i++;
-      }
-    }));
+    // Pile origin: card top-left so its centre lands on (DECK_NX, DECK_NY).
     const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
     const cardH = cardW * 1.45;
-    const baseNx = 0.5 - cardW / (2 * this.boardSize.width);
-    const baseNy = 0.5 - cardH / (2 * this.boardSize.height);
+    const baseNx = DECK_NX - cardW / (2 * this.boardSize.width);
+    const baseNy = DECK_NY - cardH / (2 * this.boardSize.height);
+    let z = 1;
     let i = 0;
     for (const card of deck) {
       const cardState: CardState = {
@@ -339,6 +324,7 @@ export class Game {
 
     window.addEventListener("wheel", (e) => {
       if (this.modal.isOpen()) return;
+      if (this.drag && this.drag.isActive()) return; // never act mid-drag
       const pt = this.lastPointer;
       if (!pt) return;
       const rect = this.refs.cardsLayer.getBoundingClientRect();
@@ -376,14 +362,24 @@ export class Game {
   }
 
   private applyShuffleJitter(ids: string[]): void {
+    const w = this.boardSize.width;
+    const h = this.boardSize.height;
     for (const id of ids) {
       const el = this.refs.cardsLayer.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
-      if (!el) continue;
+      const c = this.state.cards.get(id);
+      if (!el || !c) continue;
+      // Anchor the keyframe to the card's current pixel position so the jitter
+      // animates *around* it instead of around 0,0.
+      el.style.setProperty("--tx", `${c.x * w}px`);
+      el.style.setProperty("--ty", `${c.y * h}px`);
       el.classList.remove("is-shuffling");
-      // force reflow to restart animation
       void el.offsetWidth;
       el.classList.add("is-shuffling");
-      window.setTimeout(() => el.classList.remove("is-shuffling"), 260);
+      window.setTimeout(() => {
+        el.classList.remove("is-shuffling");
+        el.style.removeProperty("--tx");
+        el.style.removeProperty("--ty");
+      }, 260);
     }
   }
 

@@ -62,22 +62,18 @@
 
 .dock {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: stretch;
-  gap: clamp(20px, 3vmin, 36px);
+  inset: 0;
   pointer-events: none;
 }
 
 .dock__slot {
-  position: relative;
+  position: absolute;
   width: var(--card-w);
   height: var(--card-h);
   border-radius: var(--r-card);
   border: 1px dashed rgba(243, 239, 229, 0.08);
   background: transparent;
+  transform: translate(-50%, -50%);
   transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
 
