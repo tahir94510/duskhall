@@ -4,6 +4,7 @@
     "tagline": ""
   },
   "ui": {
+    "menu": "Menu",
     "rules": "Rules",
     "support": "Support",
     "leave": "Reset room",
@@ -32,14 +33,14 @@
   },
   "shortcutsList": {
     "title": "Shortcuts",
-    "subtitle": "Hover a stack. The cursor target wins.",
+    "subtitle": "The cursor target wins; empty space does nothing.",
     "items": [
-      { "keys": "Left-press, drag", "desc": "Move a single card" },
+      { "keys": "Left-press, drag", "desc": "Move the card under the cursor" },
       { "keys": "Ctrl + Left-press, drag", "desc": "Move the whole stack under the cursor" },
-      { "keys": "Right-click", "desc": "Flip a single card" },
-      { "keys": "Ctrl + Right-click", "desc": "Flip the whole stack (mixed becomes all face-down)" },
-      { "keys": "Ctrl + scroll up", "desc": "Gather the stack" },
-      { "keys": "Ctrl + scroll down", "desc": "Shuffle the stack" }
+      { "keys": "Right-click", "desc": "Flip the card(s) under the cursor" },
+      { "keys": "Scroll", "desc": "Flip the single card under the cursor" },
+      { "keys": "Ctrl / Shift + scroll up", "desc": "Gather the stack to the cursor" },
+      { "keys": "Ctrl / Shift + scroll down", "desc": "Shuffle the stack in place" }
     ],
     "mobileNote": "On touch devices, long-press a card to open its action bar."
   },
@@ -50,9 +51,9 @@
   },
   "settings": {
     "title": "Settings",
+    "master": "Master",
     "music": "Music",
-    "sfx": "Effects",
-    "muteAll": "Mute all audio"
+    "sfx": "Effects"
   },
   "support": {
     "title": "Support KABAL",

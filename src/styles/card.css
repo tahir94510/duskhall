@@ -4,13 +4,13 @@
   width: var(--card-w);
   height: var(--card-h);
   border-radius: var(--r-card);
-  perspective: 900px;
+  perspective: 1000px;
   cursor: grab;
   pointer-events: auto;
   user-select: none;
   -webkit-user-drag: none;
   z-index: var(--z-card);
-  transition: box-shadow var(--dur) var(--ease);
+  transition: box-shadow var(--dur) var(--ease), filter var(--dur) var(--ease);
   will-change: transform;
   box-shadow: var(--shadow-card);
 }
@@ -19,6 +19,7 @@
   cursor: grabbing;
   z-index: var(--z-held);
   box-shadow: var(--shadow-card-held);
+  filter: brightness(1.04);
 }
 
 .card__inner {
@@ -26,12 +27,12 @@
   inset: 0;
   border-radius: inherit;
   transform-style: preserve-3d;
-  transform: rotateY(180deg); /* default = back facing the camera */
+  /* default: back facing camera (no rotation) */
   transition: transform var(--dur-slow) var(--ease);
 }
 
 .card.is-faceup .card__inner {
-  transform: rotateY(0deg);
+  transform: rotateY(180deg);
 }
 
 .card__face {
@@ -43,10 +44,10 @@
   overflow: hidden;
 }
 
-/* --- Back --- */
+/* --- Back face: faces camera by default --- */
 .card__face--back {
   background: #07070a;
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   display: grid;
   place-items: center;
 }
@@ -54,74 +55,81 @@
 .card__face--back::before {
   content: "";
   position: absolute;
-  inset: 6px;
+  inset: 5px;
   border-radius: calc(var(--r-card) - 2px);
   border: 1px solid rgba(255, 255, 255, 0.05);
   pointer-events: none;
 }
 
 .card__back-sigil {
-  width: 52%;
+  width: 50%;
   aspect-ratio: 1;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.5);
   position: relative;
   z-index: 1;
 }
 
 .card__back-sigil svg { width: 100%; height: 100%; }
 
-/* --- Front: two centred icons, nothing else --- */
+/* --- Front face: rotated away from camera until is-faceup flips --- */
 .card__face--front {
   transform: rotateY(180deg);
-  background: #0d0d11;
+  background: var(--ink-2);
   border: 1px solid var(--line-2);
   display: grid;
-  grid-template-rows: 1fr 1fr;
-  align-items: center;
-  justify-items: center;
-}
-
-.card__type,
-.card__hero {
-  width: 56%;
-  aspect-ratio: 1;
-  display: grid;
   place-items: center;
-  pointer-events: auto;
-  cursor: help;
 }
 
-.card__type {
-  background: color-mix(in oklab, var(--type-color, var(--ivory)) 22%, transparent);
-  border: 1px solid color-mix(in oklab, var(--type-color, var(--ivory)) 50%, transparent);
-  border-radius: 50%;
-  color: #ffffff;
-}
-
-.card__type svg { width: 62%; height: 62%; }
-
-.card__hero {
-  color: var(--ivory);
-}
-
-.card__hero svg { width: 92%; height: 92%; }
-
-/* Face-down: no hover behaviour on front icons */
-.card:not(.is-faceup) .card__type,
-.card:not(.is-faceup) .card__hero {
+.card__art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
   pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
-/* Concealed (own face-up card, hidden from opponents) */
+.card__art[data-loaded="false"] {
+  display: none;
+}
+
+/* When art is missing, render a quiet placeholder watermark */
+.card__face--front[data-empty="true"] {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.02) 0%, rgba(255,255,255,0) 50%),
+    var(--ink-2);
+}
+
+.card__face--front[data-empty="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 14%;
+  border: 1px solid rgba(243, 239, 229, 0.08);
+  border-radius: 4px;
+}
+
+/* Face-down: hover targets disabled */
+.card:not(.is-faceup) .card__face--front { pointer-events: none; }
+
+/* Concealed (own face-up card hidden from opponents) */
 .card.is-concealed .card__face--front { visibility: hidden; }
 .card.is-concealed .card__face--back { visibility: visible; }
 
 /* Snap-back animation when dropped into a rival zone */
-.card.is-snapback {
-  animation: snapback 260ms var(--ease);
-}
+.card.is-snapback { animation: snapback 260ms var(--ease); }
 
 @keyframes snapback {
-  0% { outline: 1px solid rgba(255, 80, 80, 0.6); outline-offset: 0; }
+  0% { outline: 1px solid rgba(220, 90, 90, 0.55); outline-offset: 0; }
   100% { outline: 0 solid transparent; outline-offset: 0; }
+}
+
+/* Shuffle jitter — applied transiently during shuffle */
+.card.is-shuffling { animation: shuffle-jitter 240ms var(--ease); }
+@keyframes shuffle-jitter {
+  0%   { transform: translate3d(var(--tx, 0), var(--ty, 0), 0); }
+  25%  { transform: translate3d(calc(var(--tx, 0) + 4px), calc(var(--ty, 0) - 3px), 0); }
+  50%  { transform: translate3d(calc(var(--tx, 0) - 5px), calc(var(--ty, 0) + 4px), 0); }
+  75%  { transform: translate3d(calc(var(--tx, 0) + 3px), calc(var(--ty, 0) + 2px), 0); }
+  100% { transform: translate3d(var(--tx, 0), var(--ty, 0), 0); }
 }

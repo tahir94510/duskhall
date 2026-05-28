@@ -4,6 +4,7 @@
     "tagline": ""
   },
   "ui": {
+    "menu": "Menü",
     "rules": "Kurallar",
     "support": "Destek",
     "leave": "Odayı sıfırla",
@@ -32,14 +33,14 @@
   },
   "shortcutsList": {
     "title": "Kısayollar",
-    "subtitle": "İmleci yığına götür. Hedef imleçtir.",
+    "subtitle": "Hedef imleçtir; boş alanda hiçbir şey olmaz.",
     "items": [
-      { "keys": "Sol tık, sürükle", "desc": "Tek kartı taşı" },
+      { "keys": "Sol tık, sürükle", "desc": "İmlecin altındaki kartı taşı" },
       { "keys": "Ctrl + sol tık, sürükle", "desc": "İmlecin altındaki yığını taşı" },
-      { "keys": "Sağ tık", "desc": "Tek kartı çevir" },
-      { "keys": "Ctrl + sağ tık", "desc": "Yığını toplu çevir (karışıksa hepsi kapanır)" },
-      { "keys": "Ctrl + yukarı scroll", "desc": "Yığını topla" },
-      { "keys": "Ctrl + aşağı scroll", "desc": "Yığını karıştır" }
+      { "keys": "Sağ tık", "desc": "İmlecin altındaki kart(lar)ı çevir" },
+      { "keys": "Scroll", "desc": "İmlecin altındaki tek kartı çevir" },
+      { "keys": "Ctrl / Shift + yukarı scroll", "desc": "Yığını imlece topla" },
+      { "keys": "Ctrl / Shift + aşağı scroll", "desc": "Yığını yerinde karıştır" }
     ],
     "mobileNote": "Dokunmatik cihazlarda kartın üstüne uzun basarak eylem çubuğunu aç."
   },
@@ -50,9 +51,9 @@
   },
   "settings": {
     "title": "Ayarlar",
+    "master": "Ana",
     "music": "Müzik",
-    "sfx": "Efekt",
-    "muteAll": "Tüm sesi kapat"
+    "sfx": "Efekt"
   },
   "support": {
     "title": "KABAL'a Destek Ol",

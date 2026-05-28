@@ -24,6 +24,7 @@ export interface CardPatch {
     x: number;
     y: number;
     z: number;
+    rot: 0 | 1 | 2 | 3;
     faceUp: boolean;
     ownerSeat: number | null;
   }>;
@@ -154,6 +155,7 @@ export class RealtimeBus {
           x: safeNumber(c.x),
           y: safeNumber(c.y),
           z: safeNumber(c.z, 0),
+          rot: ((typeof c.rot === "number" ? Math.max(0, Math.min(3, Math.round(c.rot))) : 0) as 0 | 1 | 2 | 3),
           faceUp: c.faceUp === true,
           ownerSeat: typeof c.ownerSeat === "number" ? Math.max(-1, Math.min(3, c.ownerSeat)) : null
         }))

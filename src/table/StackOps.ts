@@ -1,20 +1,13 @@
 import type { BoardState, CardState } from "./types.js";
 import { mulberry32 } from "../game/deck.js";
 
-const OVERLAP_RATIO = 0.5; // a card is part of a stack if it overlaps the seed by ≥50% of its own area
+// Tight threshold: a card joins the stack only when its bbox overlaps the seed by ≥75 %.
+const OVERLAP_RATIO = 0.75;
 
-interface BoardSize {
-  width: number;
-  height: number;
-}
+interface BoardSize { width: number; height: number; }
 
 function cardPixelBox(c: CardState, board: BoardSize, cardW: number, cardH: number) {
-  return {
-    x: c.x * board.width,
-    y: c.y * board.height,
-    w: cardW,
-    h: cardH
-  };
+  return { x: c.x * board.width, y: c.y * board.height, w: cardW, h: cardH };
 }
 
 function intersectionArea(a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }): number {
@@ -40,15 +33,9 @@ export function findStackOverlapping(state: BoardState, board: BoardSize, seedId
   const seedArea = w * h;
   const out: string[] = [];
   for (const c of state.cards.values()) {
-    if (c.id === seedId) {
-      out.push(c.id);
-      continue;
-    }
+    if (c.id === seedId) { out.push(c.id); continue; }
     const cb = cardPixelBox(c, board, w, h);
-    const ia = intersectionArea(seedBox, cb);
-    if (ia / seedArea >= OVERLAP_RATIO) {
-      out.push(c.id);
-    }
+    if (intersectionArea(seedBox, cb) / seedArea >= OVERLAP_RATIO) out.push(c.id);
   }
   return out;
 }
@@ -80,40 +67,51 @@ export function findStackAtPoint(state: BoardState, boardEl: HTMLElement, client
   return findStackOverlapping(state, { width: boardEl.clientWidth, height: boardEl.clientHeight }, top.id);
 }
 
-export function gatherStack(state: BoardState, ids: string[]): void {
+/**
+ * Gather the stack around (focusNx, focusNy). When focus is omitted we fall back
+ * to the centroid of the stack.
+ */
+export function gatherStack(state: BoardState, ids: string[], focusNx?: number, focusNy?: number): void {
   if (!ids.length) return;
-  let avgX = 0;
-  let avgY = 0;
-  for (const id of ids) {
-    const c = state.cards.get(id);
-    if (!c) continue;
-    avgX += c.x;
-    avgY += c.y;
+  let cx: number;
+  let cy: number;
+  if (focusNx !== undefined && focusNy !== undefined) {
+    cx = focusNx;
+    cy = focusNy;
+  } else {
+    let sx = 0;
+    let sy = 0;
+    for (const id of ids) {
+      const c = state.cards.get(id);
+      if (!c) continue;
+      sx += c.x;
+      sy += c.y;
+    }
+    cx = sx / ids.length;
+    cy = sy / ids.length;
   }
-  avgX /= ids.length;
-  avgY /= ids.length;
   const ordered = ids
     .map((id) => state.cards.get(id))
     .filter((c): c is CardState => !!c)
     .sort((a, b) => a.z - b.z);
-  // tight offset in board-fraction units (~3px equivalent)
-  const offsetX = 0.003;
-  const offsetY = 0.003;
+  // tiny offset per card (~3 px equivalent at 1080p)
+  const stepX = 0.0024;
+  const stepY = 0.0024;
   let i = 0;
   for (const c of ordered) {
-    c.x = avgX + i * offsetX;
-    c.y = avgY + i * offsetY;
+    c.x = cx + i * stepX;
+    c.y = cy + i * stepY;
     i++;
   }
 }
 
+/**
+ * Shuffle the stack in place. Cards do not move; only z-order and face-up state
+ * are randomised. Visual jitter is applied via a CSS class by the caller.
+ */
 export function shuffleStack(state: BoardState, ids: string[]): void {
   if (ids.length < 2) return;
   const rng = mulberry32((performance.now() * 1000) | 0);
-  const positions = ids
-    .map((id) => state.cards.get(id))
-    .filter((c): c is CardState => !!c)
-    .map((c) => ({ x: c.x, y: c.y, z: c.z }));
   const order = ids.slice();
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
@@ -121,13 +119,12 @@ export function shuffleStack(state: BoardState, ids: string[]): void {
     order[i] = order[j]!;
     order[j] = tmp;
   }
+  // Reassign z-indices in the new order, preserving positions
+  const minZ = Math.min(...ids.map((id) => state.cards.get(id)?.z ?? 0));
   for (let i = 0; i < order.length; i++) {
     const c = state.cards.get(order[i]!);
-    const pos = positions[i];
-    if (!c || !pos) continue;
-    c.x = pos.x;
-    c.y = pos.y;
-    c.z = pos.z;
+    if (!c) continue;
+    c.z = minZ + i;
     c.faceUp = false;
   }
 }
