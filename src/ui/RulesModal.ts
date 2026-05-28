@@ -7,36 +7,67 @@ interface RuleSection {
   body: string[];
 }
 
+// Inline markdown-lite: **bold** and _italic_. Runs AFTER escape so the
+// generated tags are the only HTML in the output.
+function applyInline(escaped: string): string {
+  return escaped
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|\s)_([^_]+)_(?=\s|$|[.,;:!?])/g, '$1<em>$2</em>');
+}
+
 function renderBody(lines: string[]): string {
-  // Group consecutive lines: bullet items (`x: y` short factoids) into <ul>, Q/A into .qa,
-  // everything else stays as <p>.
   const out: string[] = [];
   let bulletBuffer: string[] = [];
+  let numberedBuffer: string[] = [];
+
   const flushBullets = () => {
     if (!bulletBuffer.length) return;
-    out.push(`<ul>${bulletBuffer.map((l) => `<li>${escape(l)}</li>`).join("")}</ul>`);
+    out.push(`<ul>${bulletBuffer.map((l) => `<li>${applyInline(escape(l))}</li>`).join("")}</ul>`);
     bulletBuffer = [];
   };
+  const flushNumbered = () => {
+    if (!numberedBuffer.length) return;
+    out.push(`<ol>${numberedBuffer.map((l) => `<li>${applyInline(escape(l))}</li>`).join("")}</ol>`);
+    numberedBuffer = [];
+  };
+  const flushAll = () => { flushBullets(); flushNumbered(); };
+
   for (const raw of lines) {
     const line = raw.trim();
     if (!line) continue;
+
+    // Q&A grid
     if (/^Q\.\s/.test(line) || /^S\.\s/.test(line)) {
-      flushBullets();
+      flushAll();
       const m = line.match(/^(Q\.|S\.)\s+(.+?)\s+(A\.|C\.)\s+(.+)$/);
       if (m) {
-        out.push(`<div class="qa"><b>${escape(m[1]!)}</b><span>${escape(m[2]!)}</span><b>${escape(m[3]!)}</b><span>${escape(m[4]!)}</span></div>`);
+        out.push(
+          `<div class="qa"><b>${escape(m[1]!)}</b><span>${applyInline(escape(m[2]!))}</span>` +
+          `<b>${escape(m[3]!)}</b><span>${applyInline(escape(m[4]!))}</span></div>`
+        );
         continue;
       }
     }
-    // Lines like "FOO: bar" or short statements get bulleted if they look like list items
+
+    // Numbered list: "1. foo", "2. bar"
+    const numbered = line.match(/^(\d+)\.\s+(.+)$/);
+    if (numbered) {
+      flushBullets();
+      numberedBuffer.push(numbered[2]!);
+      continue;
+    }
+
+    // Bulleted: "FOO: bar" short factoid
     if (/^[A-ZÜÇŞĞİÖ][A-ZÜÇŞĞİÖ \-]+:/.test(line) && line.length < 120) {
+      flushNumbered();
       bulletBuffer.push(line);
       continue;
     }
-    flushBullets();
-    out.push(`<p>${escape(line)}</p>`);
+
+    flushAll();
+    out.push(`<p>${applyInline(escape(line))}</p>`);
   }
-  flushBullets();
+  flushAll();
   return out.join("");
 }
 
@@ -45,7 +76,7 @@ export function openRulesModal(modal: Modal): void {
   const subtitle = `${t("rulesDoc.subtitle")} • ${t("rulesDoc.tldr")}`;
   const sections = tArr<RuleSection>("rulesDoc.sections");
   const tocHtml = sections.map((s) => `<a href="#sec-${s.id}">${escape(s.title)}</a>`).join("");
-  const introHtml = `<p class="intro">${escape(t("rulesDoc.intro"))}</p>`;
+  const introHtml = `<p class="intro">${applyInline(escape(t("rulesDoc.intro")))}</p>`;
   const sectionsHtml = sections
     .map((s) => `<section id="sec-${s.id}"><h2>${escape(s.title)}</h2>${renderBody(s.body || [])}</section>`)
     .join("");
@@ -56,7 +87,6 @@ export function openRulesModal(modal: Modal): void {
   </div>`;
   modal.open({ title, subtitle, bodyHtml });
 
-  // wire smooth-scroll for TOC clicks
   const body = modal.bodyEl();
   body?.querySelectorAll<HTMLAnchorElement>('.rules__toc a').forEach((a) => {
     a.addEventListener("click", (e) => {

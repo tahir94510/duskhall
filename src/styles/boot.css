@@ -1,0 +1,76 @@
+/* Boot-fail / noscript fallback. Loaded both by index.html (via main bundle)
+   and stand-alone enough to render before the rest of the app is up. */
+
+#boot-fail {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #000;
+  color: #f3efe5;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  z-index: 99999;
+  padding: 24px;
+}
+
+#boot-fail[hidden] { display: none; }
+
+.boot-fail__card {
+  max-width: 360px;
+  text-align: center;
+  border: 1px solid rgba(243, 239, 229, 0.14);
+  border-radius: 14px;
+  padding: 28px 24px;
+  background: #0a0a0a;
+}
+
+.boot-fail__sigil {
+  display: inline-block;
+  width: 40px;
+  height: 56px;
+  margin: 0 auto 14px;
+  color: #f3efe5;
+}
+.boot-fail__sigil svg { width: 100%; height: 100%; }
+
+.boot-fail__card h1 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #f3efe5;
+}
+.boot-fail__card p {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #aea99d;
+}
+.boot-fail__card button {
+  display: inline-block;
+  padding: 8px 18px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: #f3efe5;
+  color: #000;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+.boot-fail__card button:hover { background: #fff; }
+
+.boot-fail__noscript {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #000;
+  color: #f3efe5;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  padding: 24px;
+  text-align: center;
+}

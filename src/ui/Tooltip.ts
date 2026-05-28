@@ -69,6 +69,9 @@ export class Tooltip {
     if (!def) return;
     if (!data.cardEl.classList.contains("is-faceup")) return;
     this.active = data;
+    // Always start hidden so the first frame after innerHTML cannot leak in
+    // at the previous (or default) position.
+    this.el.classList.remove("is-visible");
     this.el.innerHTML = `
       <div class="tooltip__title">${escapeHtml(t(`cards.${def.id}.name`))}</div>
       <div class="tooltip__type">${escapeHtml(t(`categories.${def.category}.name`))}</div>
@@ -76,6 +79,7 @@ export class Tooltip {
       <div class="tooltip__flavor">${escapeHtml(t(`cards.${def.id}.flavor`))}</div>
     `;
     this.position();
+    void this.el.offsetWidth; // force layout commit so opacity transition starts from the right place
     this.el.classList.add("is-visible");
   }
 

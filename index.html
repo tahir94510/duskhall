@@ -7,6 +7,8 @@
     <meta name="color-scheme" content="dark" />
     <title>KABAL: Heirs of Ether</title>
     <meta name="description" content="KABAL: Heirs of Ether. A digital card table for friends. Move and flip cards freely, follow the official rulebook." />
+    <link rel="icon" type="image/svg+xml" href="/assets/icon-dark.svg" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="/assets/icon-light.svg" media="(prefers-color-scheme: light)" />
     <link rel="icon" type="image/svg+xml" href="/assets/icon.svg" />
     <link rel="apple-touch-icon" href="/assets/icon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -25,8 +27,24 @@
   </head>
   <body>
     <div id="app" aria-live="polite"></div>
+    <div id="boot-fail" hidden>
+      <div class="boot-fail__card">
+        <span class="boot-fail__sigil" aria-hidden="true">
+          <svg viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
+            <g fill="none" stroke="#f3efe5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M24 4 L40 32 L24 60 L8 32 Z" />
+              <path d="M24 4 L24 60" />
+              <circle cx="24" cy="32" r="3.5" fill="#f3efe5" stroke="none" />
+            </g>
+          </svg>
+        </span>
+        <h1>Something went wrong.</h1>
+        <p>KABAL could not start. Try reloading the page.</p>
+        <button type="button" data-reload>Reload</button>
+      </div>
+    </div>
     <noscript>
-      <div style="position:fixed;inset:0;display:grid;place-items:center;background:#000;color:#f3efe5;font-family:Inter,system-ui,sans-serif;padding:24px;text-align:center;">
+      <div class="boot-fail__noscript">
         KABAL requires JavaScript. Please enable it to play.
       </div>
     </noscript>

@@ -21,15 +21,8 @@ import {
   shuffleStack,
   setStackFaceUp
 } from "../table/StackOps.js";
-import {
-  slotsForSeat,
-  findNearestSlot,
-  SNAP_RADIUS,
-  BREAK_RADIUS,
-  type SlotPos
-} from "../table/SlotGrid.js";
 import { localToCanonical, seatRotationDeg, type Seat } from "../table/rotation.js";
-import { DECK_NX, DECK_NY, DISCARD_NX, DISCARD_NY, DOCK_SNAP_RADIUS } from "../table/constants.js";
+import { DECK_NX, DECK_NY } from "../table/constants.js";
 import type { RealtimeBus, PresencePlayer, CardPatch } from "../net/realtime.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
@@ -67,7 +60,6 @@ export class Game {
   private cursorEls = new Map<string, HTMLDivElement>();
   private lastPointer: { x: number; y: number } | null = null;
   private boardSize = { width: 1, height: 1 };
-  private slotsBySeat: Record<Seat, SlotPos[]> = { 0: [], 1: [], 2: [], 3: [] };
 
   constructor(deps: GameDeps) {
     this.host = deps.host;
@@ -99,7 +91,6 @@ export class Game {
 
     this.room = getOrCreateRoom();
     this.header.setRoom(this.room);
-    for (const s of [0, 1, 2, 3] as Seat[]) this.slotsBySeat[s] = slotsForSeat(s);
 
     // Apply perspective transform first, then measure: the rect we read out
     // belongs to the rotated layout so all canonical math lines up.
@@ -161,31 +152,11 @@ export class Game {
         if (!top) return [];
         return findStackOverlapping(this.state, this.boardSize, top.id);
       },
-      applySnap: (ownerSeat, nx, ny) => {
-        // 1. Central dock snap (Deck + Discard). Aggressive radius so cards
-        //    "cuk" into the pile; break radius is wider so picking back up
-        //    is effortless.
-        const dock = this.dockSnapTarget(nx, ny);
-        if (dock) {
-          this.setDockHot(dock.slot, true);
-          return { nx: dock.nx, ny: dock.ny, snapped: true };
-        }
-        this.setDockHot(null, false);
-        // 2. Per-seat slot snap (currently empty, kept for the future).
-        if (ownerSeat >= 0) {
-          const found = findNearestSlot(this.slotsBySeat[ownerSeat as Seat] || [], nx, ny, ownerSeat as Seat);
-          if (found && found.dist <= SNAP_RADIUS) {
-            this.highlightSlot(ownerSeat as Seat, found.slot, true);
-            return { nx: found.slot.nx, ny: found.slot.ny, snapped: true };
-          }
-          if (!found || found.dist > BREAK_RADIUS) this.clearSlotHighlights();
-        }
-        return { nx, ny, snapped: false };
-      },
+      // v3.7: snap-to-slot is removed. The user places cards by hand and the
+      // dock + per-seat slots are pure visual scaffolding.
+      applySnap: (_ownerSeat, nx, ny) => ({ nx, ny, snapped: false }),
       onCardMoved: (ids) => {
         for (const id of ids) this.dirtyIds.add(id);
-        this.clearSlotHighlights();
-        this.setDockHot(null, false);
         this.scheduleFlush();
       },
       onDragProgress: (ids) => {
@@ -233,43 +204,6 @@ export class Game {
       }
     }
     return pick;
-  }
-
-  private dockSnapTarget(nx: number, ny: number): { slot: "deck" | "discard"; nx: number; ny: number } | null {
-    // Slot canonical centres are constants. Card top-left math: subtract half a
-    // card so the card's centre lands on the slot centre.
-    const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
-    const cardH = cardW * 1.45;
-    const halfWn = cardW / (2 * this.boardSize.width);
-    const halfHn = cardH / (2 * this.boardSize.height);
-    const cardCentreNx = nx + halfWn;
-    const cardCentreNy = ny + halfHn;
-    const targets: Array<["deck" | "discard", number, number]> = [
-      ["deck", DECK_NX, DECK_NY],
-      ["discard", DISCARD_NX, DISCARD_NY]
-    ];
-    let best: { slot: "deck" | "discard"; nx: number; ny: number; dist: number } | null = null;
-    for (const [name, snx, sny] of targets) {
-      const d = Math.hypot(snx - cardCentreNx, sny - cardCentreNy);
-      if (d <= DOCK_SNAP_RADIUS && (!best || d < best.dist)) {
-        best = { slot: name, nx: snx - halfWn, ny: sny - halfHn, dist: d };
-      }
-    }
-    if (!best) return null;
-    return { slot: best.slot, nx: best.nx, ny: best.ny };
-  }
-
-  private setDockHot(target: "deck" | "discard" | null, on: boolean): void {
-    this.refs.deckSlot.classList.toggle("is-hot", on && target === "deck");
-    this.refs.discardSlot.classList.toggle("is-hot", on && target === "discard");
-  }
-
-  private highlightSlot(seat: Seat, slot: SlotPos, on: boolean): void {
-    const marks = this.refs.slotLayer.querySelectorAll<HTMLDivElement>(`.slot-mark[data-seat="${seat}"][data-kind="${slot.kind}"]`);
-    marks.forEach((m, i) => m.classList.toggle("is-hot", on && i === slot.index));
-  }
-  private clearSlotHighlights(): void {
-    this.refs.slotLayer.querySelectorAll<HTMLDivElement>(".slot-mark.is-hot").forEach((m) => m.classList.remove("is-hot"));
   }
 
   private pointInZone(seat: number, x: number, y: number): boolean {
@@ -364,14 +298,16 @@ export class Game {
   private applyShuffleJitter(ids: string[]): void {
     const w = this.boardSize.width;
     const h = this.boardSize.height;
+    let i = 0;
     for (const id of ids) {
       const el = this.refs.cardsLayer.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
       const c = this.state.cards.get(id);
       if (!el || !c) continue;
-      // Anchor the keyframe to the card's current pixel position so the jitter
-      // animates *around* it instead of around 0,0.
+      // Anchor the keyframe to the card's current pixel position and pick a
+      // direction so adjacent cards sweep opposite ways for a riffle feel.
       el.style.setProperty("--tx", `${c.x * w}px`);
       el.style.setProperty("--ty", `${c.y * h}px`);
+      el.style.setProperty("--dir", i % 2 === 0 ? "1" : "-1");
       el.classList.remove("is-shuffling");
       void el.offsetWidth;
       el.classList.add("is-shuffling");
@@ -379,7 +315,9 @@ export class Game {
         el.classList.remove("is-shuffling");
         el.style.removeProperty("--tx");
         el.style.removeProperty("--ty");
-      }, 260);
+        el.style.removeProperty("--dir");
+      }, 400);
+      i++;
     }
   }
 
@@ -410,6 +348,9 @@ export class Game {
   private installBeforeUnload(): void {
     window.addEventListener("beforeunload", () => this.saveSnapshot());
     window.addEventListener("pagehide", () => this.saveSnapshot());
+    // Periodic safety net so a tab crash still leaves a fresh snapshot for
+    // the next reload to pick up.
+    window.setInterval(() => this.saveSnapshot(), 5000);
   }
 
   private snapshotKey(): string { return SS_SNAPSHOT_PREFIX + this.room; }

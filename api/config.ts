@@ -1,5 +1,5 @@
-// Vercel serverless function — public runtime config
-// Returns Supabase + support URLs from environment variables.
+// Vercel serverless function — public runtime config.
+// Returns Supabase + branding URLs from environment variables.
 
 export const config = {
   runtime: "edge"
@@ -14,6 +14,9 @@ interface Env {
   VITE_SUPABASE_ANON_KEY?: string;
   SUPPORT_URL?: string;
   NEXT_PUBLIC_APP_URL?: string;
+  APP_NAME?: string;
+  SITE_URL?: string;
+  OG_IMAGE?: string;
 }
 
 export default function handler(): Response {
@@ -27,7 +30,10 @@ export default function handler(): Response {
       env.VITE_SUPABASE_ANON_KEY ||
       "",
     supportUrl: env.SUPPORT_URL || "",
-    appUrl: env.NEXT_PUBLIC_APP_URL || ""
+    appUrl: env.NEXT_PUBLIC_APP_URL || "",
+    appName: env.APP_NAME || "",
+    siteUrl: env.SITE_URL || env.NEXT_PUBLIC_APP_URL || "",
+    socialOgImage: env.OG_IMAGE || ""
   };
   return new Response(JSON.stringify(payload), {
     status: 200,

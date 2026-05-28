@@ -1,9 +1,9 @@
 :root {
-  /* Ink & ivory */
+  /* Ink & ivory: pure neutral greys — no blue/purple cast. */
   --ink: #000000;
-  --ink-2: #07070a;
-  --ash: #101015;
-  --ash-2: #181820;
+  --ink-2: #060606;
+  --ash: #111111;
+  --ash-2: #1a1a1a;
   --line: rgba(243, 239, 229, 0.06);
   --line-2: rgba(243, 239, 229, 0.14);
   --line-3: rgba(243, 239, 229, 0.26);

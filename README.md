@@ -6,9 +6,10 @@ KABAL'ın dijital kart masası. 2 ila 4 oyuncu. Kurallar oyuncular tarafından u
 
 ## Stack
 
-- Vite + TypeScript, zero-framework vanilla DOM modules
-- Supabase Realtime (Broadcast + Presence); no tables required
-- Vercel static deployment, plus one Edge function (`/api/config`) for runtime env
+- **Vite 6** + **TypeScript 5.7**, zero-framework vanilla DOM modules
+- **Supabase Realtime** (Broadcast + Presence); no SQL tables required
+- **Vercel** static deployment + one Edge function (`/api/config`) for runtime env
+- **Node 22 LTS** for local development (`.nvmrc` shipped)
 
 ## Quick start
 
@@ -21,11 +22,19 @@ npm run preview  # serves dist/
 
 ## Environment variables
 
-Set these in Vercel (or `.env.local` for local). All four are optional. If Supabase keys are missing, the table runs in single-player local mode without errors.
+Set these in Vercel (or `.env.local` for local). All are optional; missing ones use safe fallbacks.
 
 ```
+# Realtime (required for multiplayer)
 SUPABASE_URL=https://<project>.supabase.co
 SUPABASE_ANON_KEY=<public anon key>
+
+# Branding (runtime-patched; lets you rename or move domains without a code change)
+APP_NAME=KABAL
+SITE_URL=https://kabal.example
+OG_IMAGE=https://kabal.example/assets/og.svg
+
+# Support button link
 SUPPORT_URL=https://your-support-page
 NEXT_PUBLIC_APP_URL=https://kabal.example
 ```
@@ -38,7 +47,6 @@ NEXT_PUBLIC_APP_URL=https://kabal.example
 Framework Preset: Other
 Build Command:    npm run build
 Output Directory: dist
-Install Command:  npm ci
 ```
 
 `vercel.json` sets CSP, HSTS, X-Frame-Options DENY, Referrer-Policy and Permissions-Policy headers. Assets and locales have explicit cache headers. The slug rewrite `/<6-char>` routes to the SPA.
@@ -48,30 +56,54 @@ Install Command:  npm ci
 - **Player count:** 4 seats (you + 3 opponents). Empty seats stay dim.
 - **Cards:** 72-card deck (16 Seals, 24 Spells, 16 Interventions, 16 Servants).
 - **Interaction:**
-  - Left-press, drag: move a single card
-  - Ctrl + left-press, drag: move the whole stack
-  - Right-click: flip a single card
-  - Ctrl + right-click: flip the whole stack (mixed becomes all face-down)
-  - Ctrl + scroll up: gather the stack
-  - Ctrl + scroll down: shuffle the stack
+  - Left-press + drag: move the card under the cursor
+  - Ctrl + left-press + drag: move the whole stack
+  - Right-click: flip the card(s) under the cursor
+  - Scroll: flip the single card under the cursor
+  - Ctrl / Shift + scroll up: gather the stack to the cursor
+  - Ctrl / Shift + scroll down: shuffle the stack in place
   - Long-press on touch: open a context bar for the same actions
 - **Privacy:** cards you drop into your own zone are private; opponents see the count, not the contents.
 - **URL:** `https://kabal.example/P86B3T` (6-char path slug per room).
 - **Reset room:** opens a fresh room with a new link; current players stay in the old room.
 - **Localisation:** English-primary with full Turkish parity. Auto-detected on first visit, remembered after.
 
-## Audio
+## Assets
 
-Drop your own MP3s into `public/audio/` to replace the placeholder synthesised tones. See `public/audio/README.md` for filenames. Volumes and master mute live in the in-game Settings panel.
+### Card art (`public/cards/`)
+
+Drop your own card front images and list them in `public/cards/manifest.json`. The runtime only fetches what the manifest declares, so a fresh checkout produces zero 404s.
+
+```json
+{ "available": ["timeRift", "etherStrike", "silence"] }
+```
+
+or per-card extensions:
+
+```json
+{ "available": [{ "id": "timeRift", "ext": "webp" }, { "id": "etherStrike", "ext": "png" }] }
+```
+
+Recommended: 640 × 928 px WebP under ~100 KB. See `public/cards/README.md`.
+
+### Audio (`public/audio/`)
+
+Same model. Add a manifest entry to enable a file; missing entries fall back to procedural Web Audio tones generated at runtime.
+
+```json
+{ "available": ["flip", "pickup", "place", "shuffle", "gather", "music"] }
+```
+
+In-game **Settings** (Master / Music / Effects) sliders persist to `localStorage`.
 
 ## Docs
 
 - `docs/RULES.en.md`: complete English V8.1 rulebook
 - `docs/RULES.tr.md`: Türkçe V8.1 kural kitabı
-- `docs/DESIGN.md`: balance numbers, palette, seating diagram
-- `docs/SECURITY.md`: security model, rate-limits, threat notes
+- `docs/DESIGN.md`: balance numbers, palette, coordinate system, asset systems
+- `docs/SECURITY.md`: security model, rate-limits, threat notes, Cloudflare guidance
 - `docs/COPYRIGHT.md`: copyright notice and recommended legal steps
 
 ## License
 
-All KABAL game design, card names, effects, icons and rulebook text are copyright the project author. See `docs/COPYRIGHT.md`.
+See `LICENSE`. All KABAL game design, card names, effects, sigils, rulebook text and visual identity are copyright © 2026 the project author. Personal play permitted; commercial use, reprint, derivatives and source redistribution require written permission.

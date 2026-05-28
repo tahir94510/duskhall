@@ -32,7 +32,7 @@
   display: grid;
   place-items: center;
   border-radius: 8px;
-  background: rgba(20, 20, 26, 0.55);
+  background: rgba(22, 22, 22, 0.55);
   border: 1px solid var(--line-2);
   color: var(--ivory-dim);
   transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), background var(--dur) var(--ease);
@@ -41,9 +41,9 @@
 .icon-btn:hover {
   color: var(--ivory);
   border-color: var(--line-3);
-  background: rgba(28, 28, 34, 0.7);
+  background: rgba(28, 28, 28, 0.7);
 }
-.icon-btn:active { background: rgba(32, 32, 38, 0.8); }
+.icon-btn:active { background: rgba(32, 32, 32, 0.8); }
 .icon-btn svg { width: 18px; height: 18px; stroke-linejoin: round; }
 
 .icon-btn__badge {
@@ -69,7 +69,7 @@
   top: 46px;
   right: 0;
   min-width: 220px;
-  background: rgba(10, 10, 14, 0.94);
+  background: rgba(12, 12, 12, 0.94);
   border: 1px solid var(--line-2);
   border-radius: 12px;
   backdrop-filter: blur(16px) saturate(120%);
@@ -173,7 +173,7 @@
   left: 50%;
   bottom: max(env(safe-area-inset-bottom), 28px);
   transform: translate(-50%, 16px);
-  background: rgba(16, 16, 22, 0.92);
+  background: rgba(18, 18, 18, 0.92);
   border: 1px solid var(--line-2);
   color: var(--ivory);
   padding: 9px 16px;
@@ -227,7 +227,7 @@
   top: 0;
   left: 0;
   max-width: min(320px, 80vw);
-  background: rgba(10, 10, 14, 0.94);
+  background: rgba(12, 12, 12, 0.94);
   border: 1px solid var(--line-2);
   border-radius: var(--r-panel);
   padding: 12px 14px;

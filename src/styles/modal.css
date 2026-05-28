@@ -18,7 +18,7 @@
   position: relative;
   width: min(720px, 100%);
   max-height: min(86vh, 100%);
-  background: rgba(12, 12, 16, 0.97);
+  background: rgba(14, 14, 14, 0.97);
   border: 1px solid var(--line-2);
   border-radius: 14px;
   box-shadow: var(--shadow-panel);
@@ -54,7 +54,7 @@
   color: var(--ivory-mute);
   display: grid;
   place-items: center;
-  background: rgba(16, 16, 22, 0.6);
+  background: rgba(18, 18, 18, 0.6);
   transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 .modal__close:hover { color: var(--ivory); border-color: var(--line-3); }
@@ -89,14 +89,14 @@
   font-weight: 500;
   border-radius: 8px;
   border: 1px solid var(--line-2);
-  background: rgba(16, 16, 22, 0.6);
+  background: rgba(18, 18, 18, 0.6);
   color: var(--ivory);
   font-family: var(--font-display);
   text-decoration: none;
   letter-spacing: 0.01em;
   transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
-.btn:hover { border-color: var(--line-3); background: rgba(24, 24, 30, 0.78); color: var(--ivory); }
+.btn:hover { border-color: var(--line-3); background: rgba(26, 26, 26, 0.78); color: var(--ivory); }
 a.btn, a.btn:hover { text-decoration: none; color: var(--ivory); }
 
 .btn--primary {
@@ -171,10 +171,16 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   margin: 0 0 8px;
 }
 
-.rules ul {
-  list-style: none;
+.rules ul,
+.rules ol {
   padding: 0;
   margin: 0 0 10px;
+}
+
+.rules ul { list-style: none; }
+.rules ol {
+  list-style: decimal;
+  padding-left: 22px;
 }
 
 .rules ul li {
@@ -184,6 +190,19 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   color: var(--ivory);
   line-height: 1.6;
   margin-bottom: 4px;
+}
+
+.rules ol li {
+  font-size: 13px;
+  color: var(--ivory);
+  line-height: 1.6;
+  margin-bottom: 4px;
+}
+
+.rules ol li::marker {
+  color: var(--ivory-dim);
+  font-family: var(--font-display);
+  font-size: 11px;
 }
 
 .rules ul li::before {
@@ -196,6 +215,9 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   border-radius: 50%;
   background: var(--ivory-dim);
 }
+
+.rules strong { font-weight: 600; color: var(--ivory); }
+.rules em { font-style: italic; color: var(--ivory-dim); }
 
 .rules .qa {
   display: grid;
@@ -286,7 +308,7 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   color: var(--ivory-dim);
 }
 .shortcuts-grid kbd {
-  background: rgba(28, 28, 34, 0.7);
+  background: rgba(28, 28, 28, 0.7);
   border: 1px solid var(--line-2);
   border-radius: 5px;
   padding: 2px 7px;

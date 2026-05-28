@@ -125,11 +125,14 @@
 }
 
 /* Shuffle jitter — applied transiently during shuffle */
-.card.is-shuffling { animation: shuffle-jitter 240ms var(--ease); }
-@keyframes shuffle-jitter {
+/* Riffle: cards stay at their canonical position but each card slides a few
+   pixels sideways in alternating directions, suggesting a fan-and-collect
+   shuffle without ever moving the actual position. */
+.card.is-shuffling { animation: shuffle-riffle 380ms cubic-bezier(.4, .12, .2, 1); }
+@keyframes shuffle-riffle {
   0%   { transform: translate3d(var(--tx, 0), var(--ty, 0), 0); }
-  25%  { transform: translate3d(calc(var(--tx, 0) + 4px), calc(var(--ty, 0) - 3px), 0); }
-  50%  { transform: translate3d(calc(var(--tx, 0) - 5px), calc(var(--ty, 0) + 4px), 0); }
-  75%  { transform: translate3d(calc(var(--tx, 0) + 3px), calc(var(--ty, 0) + 2px), 0); }
+  20%  { transform: translate3d(calc(var(--tx, 0) + var(--dir, 1) * 7px), var(--ty, 0), 0); }
+  50%  { transform: translate3d(calc(var(--tx, 0) + var(--dir, 1) * 3px), var(--ty, 0), 0); }
+  80%  { transform: translate3d(calc(var(--tx, 0) + var(--dir, 1) * -2px), var(--ty, 0), 0); }
   100% { transform: translate3d(var(--tx, 0), var(--ty, 0), 0); }
 }
