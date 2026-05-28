@@ -1,64 +1,72 @@
-# KABAL: Eterin Varisleri — Türkçe Dijital Kart Masası
+# KABAL — Heirs of Ether
 
-Bu paket, KABAL: Eterin Varisleri için hazırlanmış hafif, bağımlılıksız ve Vercel uyumlu MVP/tam masa sürümüdür. Oyuncular kuralları dokümantasyondan takip eder; masa ise kartları sürükleme, çevirme, yığın taşıma, yığın toparlama, yığın karıştırma, gizli el alanı ve oda linkiyle arkadaşlarla oynama deneyimini sağlar.
+A noble, tabletop-style digital card sandbox for 2–4 friends. Free movement, no enforced rules — players follow the official rulebook themselves. Built with Vite, TypeScript and Supabase Realtime.
 
-## Temel özellikler
+Asil bir dijital kart masası. 2–4 oyuncu için. Kurallar oyuncular tarafından uygulanır; site yalnızca masayı sağlar.
 
-- Tamamen Türkçe arayüz.
-- 72 kartlık V8 deste yapısı.
-- 5 oyuncuya kadar masa yerleşimi: kendi alanın + 4 rakip alanı.
-- Rakip el alanındaki kartlar görünmez; yalnızca kart sayısı görünür.
-- Kart kendi alanından çıkınca tekrar masada görünür.
-- Deste, Açık ve Kayıp alanlarında kart sayaçları.
-- Sağ tık / `F` ile kart çevirme.
-- `Ctrl + sürükle` ile yığın taşıma.
-- `Ctrl + G` ile yığın toparlama.
-- `Ctrl + M` ile yığın karıştırma.
-- `Shift + A` ile yığını açma, `Shift + K` ile yığını kapatma.
-- Mobilde uzun bas ile çevirme ve seçili karta özel küçük işlem paneli.
-- Kurallar modalında V8 tam kural kitabı.
-- Destek paneli ve bildirim rozetli destek butonu.
-- Oda açılış süresi sayacı.
-- Supabase Realtime Broadcast + Presence desteği.
-- Supabase ENV yoksa yerel masa olarak bozulmadan çalışır.
-- `package.json` yoktur; npm/pnpm install ve Node engines uyarısı tetiklemez.
+## Stack
 
-## Yerelde çalıştırma
+- Vite + TypeScript, zero-framework vanilla DOM modules
+- Supabase Realtime (Broadcast + Presence) — no tables required
+- Vercel static deployment, with one Edge function (`/api/config`) for runtime env
+
+## Quick start
 
 ```bash
-python3 -m http.server 5173
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # outputs dist/
+npm run preview  # serves dist/
 ```
 
-Sonra tarayıcıdan aç:
+## Environment variables
 
-```text
-http://localhost:5173
+Set these in Vercel (or `.env.local` for local) — all four are optional. If Supabase keys are missing, the table runs in single-player local mode without errors.
+
+```
+SUPABASE_URL=https://<project>.supabase.co
+SUPABASE_ANON_KEY=<public anon key>
+SUPPORT_URL=https://your-support-page
+NEXT_PUBLIC_APP_URL=https://kabal.example
 ```
 
-## Vercel kurulumu
+`/api/config` is an Edge function that reads these env vars and serves them to the client at runtime. No keys are baked into the bundle.
 
-Vercel'de framework seçimi:
+## Vercel deployment
 
-```text
+```
 Framework Preset: Other
-Build Command: boş bırak
-Output Directory: .
-Install Command: boş bırak
+Build Command:    npm run build
+Output Directory: dist
+Install Command:  npm install
 ```
 
-Ortam değişkenleri:
+`vercel.json` sets CSP, HSTS, X-Frame-Options DENY, Referrer-Policy and Permissions-Policy headers. Assets and locales have explicit cache headers.
 
-```text
-SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_KEY
-SUPPORT_URL=https://destek-linkin.com
-NEXT_PUBLIC_APP_URL=https://senin-projen.vercel.app
-```
+## Game
 
-## Supabase
+- **Player count:** locked to 4 seats (you + 3 opponents). Empty seats stay dim.
+- **Cards:** 72-card deck (16 Seals, 24 Spells, 16 Interventions, 16 Servants).
+- **Interaction:**
+  - Left-press + drag — move a card
+  - Right-click / `F` — flip the card under the cursor
+  - `Ctrl + drag` — drag the whole stack
+  - `Ctrl + G` — gather the stack under the cursor
+  - `Ctrl + M` — shuffle the stack
+  - `Shift + A` / `Shift + K` — reveal / conceal the whole stack
+  - Long-press on touch → context bar for the same actions
+- **Privacy:** cards you drop into your own zone are private — opponents see the count, not the contents.
+- **Rooms:** one room per page load. URL contains the slug. "Leave room" generates a new slug.
+- **Localisation:** English-primary with full Turkish parity. Auto-detected on first visit, remembered after.
 
-Bu MVP kalıcı tabloya ihtiyaç duymaz. Realtime Broadcast ve Presence kullanır. Supabase projesinde Realtime kapalıysa oyun yine yerel masa olarak açılır; bağlantı kurulunca oda linki üzerinden senkron çalışır.
+## Docs
 
-## Güvenlik ve telif
+- `docs/RULES.en.md` — complete English V8.1 rulebook
+- `docs/RULES.tr.md` — Türkçe V8.1 kural kitabı
+- `docs/DESIGN.md` — balance numbers, palette, seating diagram
+- `docs/SECURITY.md` — security model, rate-limits, threat notes
+- `docs/COPYRIGHT.md` — copyright notice and recommended legal steps
 
-`SECURITY_AND_MVP_NOTES.md` ve `COPYRIGHT_NOTICE.md` dosyalarını okuyun. Web istemcisi yüzde yüz çalınamaz hale getirilemez; teknik koruma hukuki korumanın yerine geçmez. Bu paket makul güvenlik başlıkları, throttle ve istemci doğrulamaları içerir.
+## License
+
+All KABAL game design, card names, effects, icons and rulebook text are © the project author. See `docs/COPYRIGHT.md`.

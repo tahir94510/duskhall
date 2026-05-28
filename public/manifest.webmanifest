@@ -1,0 +1,14 @@
+{
+  "name": "KABAL — Heirs of Ether",
+  "short_name": "KABAL",
+  "description": "A noble digital card sandbox for friends.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#070708",
+  "theme_color": "#070708",
+  "icons": [
+    { "src": "/assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

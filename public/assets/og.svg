@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="KABAL — Heirs of Ether">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="55%" r="75%">
+      <stop offset="0%" stop-color="#1a1a1f"/>
+      <stop offset="100%" stop-color="#070708"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e5c578"/>
+      <stop offset="100%" stop-color="#9e7a3a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g transform="translate(170 165)" fill="none" stroke="url(#gold)" stroke-width="5">
+    <circle cx="150" cy="150" r="150" opacity="0.5"/>
+    <circle cx="150" cy="150" r="118"/>
+    <path d="M150 30 L208 150 L150 270 L92 150 Z"/>
+    <path d="M62 150 L150 96 L238 150 L150 204 Z"/>
+    <circle cx="150" cy="150" r="14" fill="url(#gold)" stroke="none"/>
+  </g>
+  <g fill="#f3efe5" font-family="Cinzel, serif">
+    <text x="540" y="280" font-size="86" font-weight="700" letter-spacing="14">KABAL</text>
+    <text x="540" y="350" font-size="34" font-weight="500" fill="#c8a45a" letter-spacing="6">Heirs of Ether</text>
+    <text x="540" y="430" font-size="22" font-weight="400" fill="#a8a39a" font-family="Inter,sans-serif" letter-spacing="2">A noble digital card sandbox</text>
+  </g>
+</svg>

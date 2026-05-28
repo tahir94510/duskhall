@@ -1,0 +1,72 @@
+:root {
+  /* Palette */
+  --ink: #070708;
+  --ink-2: #0c0c10;
+  --ash: #1a1a1f;
+  --ash-2: #232329;
+  --line: rgba(243, 239, 229, 0.07);
+  --line-2: rgba(243, 239, 229, 0.12);
+  --line-3: rgba(243, 239, 229, 0.22);
+  --ivory: #f3efe5;
+  --ivory-dim: #a8a39a;
+  --ivory-mute: #6b6862;
+  --gold: #c8a45a;
+  --gold-soft: #e5c578;
+  --gold-deep: #9e7a3a;
+
+  /* Category palette */
+  --cat-seal: #7a4ed1;
+  --cat-spell: #c8444a;
+  --cat-intervention: #3c7fc8;
+  --cat-servant: #3c9a6a;
+
+  /* Player accent palette (seats 0..3 = bottom, top, left, right) */
+  --seat-0: #c8a45a;
+  --seat-1: #6cb6c0;
+  --seat-2: #c87a9a;
+  --seat-3: #9aa86c;
+
+  /* Geometry */
+  --r-card: 10px;
+  --r-panel: 14px;
+  --r-zone: 16px;
+  --r-pill: 999px;
+
+  /* Shadow */
+  --shadow-card: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --shadow-card-held: 0 14px 34px rgba(0, 0, 0, 0.55);
+  --shadow-panel: 0 22px 60px rgba(0, 0, 0, 0.55);
+
+  /* Card sizing — clamped for every viewport */
+  --card-w: clamp(56px, 7.4vmin, 102px);
+  --card-h: calc(var(--card-w) * 1.45);
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.65, 0.18, 0.99);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --dur-slow: 360ms;
+
+  /* z layers */
+  --z-board: 1;
+  --z-zone: 2;
+  --z-card: 10;
+  --z-cursor: 600;
+  --z-header: 800;
+  --z-tooltip: 900;
+  --z-modal: 1000;
+  --z-toast: 1100;
+  --z-held: 9999;
+
+  /* Type */
+  --font-display: "Cinzel", "Times New Roman", serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur: 0ms;
+    --dur-slow: 0ms;
+  }
+}
