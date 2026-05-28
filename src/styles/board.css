@@ -3,7 +3,7 @@
   inset: 0;
   display: grid;
   grid-template-columns: minmax(150px, 17vw) 1fr minmax(150px, 17vw);
-  grid-template-rows: minmax(120px, 18vh) 1fr minmax(150px, 22vh);
+  grid-template-rows: minmax(110px, 16vh) 1fr minmax(140px, 20vh);
   gap: clamp(8px, 1.4vmin, 18px);
   padding:
     max(env(safe-area-inset-top), 14px)
@@ -13,11 +13,23 @@
 }
 
 .board {
-  grid-column: 2;
-  grid-row: 2;
+  grid-column: 1 / span 3;
+  grid-row: 1 / span 3;
   position: relative;
-  border-radius: var(--r-zone);
+  pointer-events: none;
+  z-index: 0;
 }
+
+.board__perspective {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  transform: rotate(var(--board-rot, 0deg));
+  transition: transform var(--dur-slow) var(--ease);
+  pointer-events: none;
+}
+
+.board__perspective > * { pointer-events: auto; }
 
 .board__layer {
   position: absolute;
@@ -27,6 +39,27 @@
 
 .board__cards { pointer-events: auto; }
 
+.board__slots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.slot-mark {
+  position: absolute;
+  border-radius: var(--r-card);
+  border: 1px dashed rgba(243, 239, 229, 0.07);
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+
+.slot-mark--seal { border-style: solid; border-color: rgba(243, 239, 229, 0.05); }
+.slot-mark--servant { border-style: dashed; border-color: rgba(243, 239, 229, 0.05); }
+
+.slot-mark.is-hot {
+  border-color: rgba(243, 239, 229, 0.45);
+  background: rgba(243, 239, 229, 0.04);
+}
+
 .dock {
   position: absolute;
   left: 50%;
@@ -34,7 +67,7 @@
   transform: translate(-50%, -50%);
   display: flex;
   align-items: stretch;
-  gap: clamp(20px, 3vmin, 38px);
+  gap: clamp(20px, 3vmin, 36px);
   pointer-events: none;
 }
 
@@ -43,33 +76,12 @@
   width: var(--card-w);
   height: var(--card-h);
   border-radius: var(--r-card);
-  border: 1px dashed rgba(243, 239, 229, 0.16);
-  display: grid;
-  place-items: center;
-  background: rgba(8, 8, 12, 0.35);
+  border: 1px dashed rgba(243, 239, 229, 0.08);
+  background: transparent;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
 
-.dock__value {
-  font-family: var(--font-display);
-  font-size: clamp(14px, 2.2vmin, 22px);
-  font-weight: 500;
-  color: var(--ivory-mute);
-  font-variant-numeric: tabular-nums;
-  transition: color var(--dur) var(--ease);
-}
-
-.dock__slot[data-has="true"] .dock__value {
-  color: var(--ivory);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-}
-
-.dock__slot::after {
-  content: attr(data-label);
-  position: absolute;
-  bottom: -22px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 10px;
-  color: var(--ivory-mute);
-  letter-spacing: 0.08em;
+.dock__slot.is-hot {
+  border-color: rgba(243, 239, 229, 0.4);
+  background: rgba(243, 239, 229, 0.04);
 }

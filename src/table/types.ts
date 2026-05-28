@@ -4,6 +4,7 @@ export interface CardState {
   x: number;
   y: number;
   z: number;
+  rot: 0 | 1 | 2 | 3;
   faceUp: boolean;
   ownerSeat: number | null;
   v: number;

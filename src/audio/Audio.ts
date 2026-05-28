@@ -22,9 +22,11 @@ const PROCEDURAL: Record<SfxName, ProceduralSpec> = {
 
 const SFX_DEFAULT = 0.6;
 const MUSIC_DEFAULT = 0.25;
+const MASTER_DEFAULT = 0.85;
 
 const LS_SFX = "kabal:vol:sfx";
 const LS_MUSIC = "kabal:vol:music";
+const LS_MASTER = "kabal:vol:master";
 const LS_MUTED = "kabal:audio:muted";
 
 export class AudioEngine {
@@ -39,6 +41,7 @@ export class AudioEngine {
 
   sfxVolume = readNum(LS_SFX, SFX_DEFAULT);
   musicVolume = readNum(LS_MUSIC, MUSIC_DEFAULT);
+  masterVolume = readNum(LS_MASTER, MASTER_DEFAULT);
   muted = readBool(LS_MUTED, false);
 
   ensureContext(): void {
@@ -48,7 +51,7 @@ export class AudioEngine {
       if (!Ctor) return;
       this.ctx = new Ctor();
       this.master = this.ctx.createGain();
-      this.master.gain.value = this.muted ? 0 : 1;
+      this.master.gain.value = this.muted ? 0 : this.masterVolume;
       this.master.connect(this.ctx.destination);
       this.sfxGain = this.ctx.createGain();
       this.sfxGain.gain.value = this.sfxVolume;
@@ -274,9 +277,15 @@ export class AudioEngine {
     writeNum(LS_MUSIC, this.musicVolume);
   }
 
+  setMasterVolume(v: number): void {
+    this.masterVolume = clamp01(v);
+    if (this.master) this.master.gain.value = this.muted ? 0 : this.masterVolume;
+    writeNum(LS_MASTER, this.masterVolume);
+  }
+
   setMuted(m: boolean): void {
     this.muted = m;
-    if (this.master) this.master.gain.value = m ? 0 : 1;
+    if (this.master) this.master.gain.value = m ? 0 : this.masterVolume;
     writeBool(LS_MUTED, m);
     if (m) this.stopMusic();
     else void this.startMusic();

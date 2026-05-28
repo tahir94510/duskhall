@@ -1,7 +1,7 @@
 {
   "name": "kabal-heirs-of-ether",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,14 +10,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.4"
+    "@supabase/supabase-js": "^2.46.2"
   },
   "devDependencies": {
-    "@types/node": "^25.9.1",
-    "typescript": "^5.6.2",
-    "vite": "^5.4.8"
-  },
-  "engines": {
-    "node": "20.x"
+    "@types/node": "^22.10.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3"
   }
 }

@@ -4,7 +4,12 @@ export interface DragHooks {
   getSelfSeat(): number;
   pointInSelfZone(x: number, y: number): boolean;
   pointInOpponentZone(x: number, y: number): number | null;
-  pickStack(centerId: string): string[];
+  /** Local-pixel cursor to canonical normalised board coords. */
+  toCanonical(localX: number, localY: number): { nx: number; ny: number };
+  /** Returns the cards under the pointer, tight overlap. */
+  pickStackUnder(clientX: number, clientY: number): string[];
+  /** Optional magnetic snap: nudge a single canonical (nx, ny) to nearest slot. */
+  applySnap(ownerSeat: number, nx: number, ny: number): { nx: number; ny: number; snapped: boolean };
   onCardMoved(ids: string[]): void;
   onDragProgress(ids: string[]): void;
   onCardFlipped(id: string): void;
@@ -22,11 +27,14 @@ const LONG_PRESS_MS = 280;
 interface DragSession {
   pointerId: number;
   ids: string[];
-  startClientX: number;
-  startClientY: number;
-  boardW: number;
-  boardH: number;
-  origin: Map<string, { x: number; y: number }>;
+  /** anchor offset between the seed card's canonical pos and the pointer canonical pos at grab */
+  anchorDx: number;
+  anchorDy: number;
+  /** canonical position of pointer at grab */
+  startNx: number;
+  startNy: number;
+  /** relative offsets of every grabbed card from the seed (canonical) */
+  relOffsets: Map<string, { dx: number; dy: number }>;
   dragging: boolean;
   longPressTimer: number;
 }
@@ -67,20 +75,33 @@ export class DragController {
     if (e.button !== 0 && e.button !== 2) return;
     const id = cardEl.dataset.id;
     if (!id) return;
-
     e.preventDefault();
 
     if (e.button === 2) {
-      if (e.ctrlKey || e.metaKey) this.hooks.onStackToggleFlip(id);
-      else this.hooks.onCardFlipped(id);
+      // Right-click always flips the whole stack under the cursor; if it's a
+      // lone card the stack has one element and behaves as a single flip.
+      this.hooks.onStackToggleFlip(id);
       return;
     }
 
-    const ids = e.ctrlKey || e.metaKey ? this.hooks.pickStack(id) : [id];
-    const origin = new Map<string, { x: number; y: number }>();
+    const ids = e.ctrlKey || e.metaKey ? this.hooks.pickStackUnder(e.clientX, e.clientY) : [id];
+    if (ids.length === 0) return;
+
+    const seed = this.state.cards.get(ids[0]!);
+    if (!seed) return;
+
+    const rect = this.host.getBoundingClientRect();
+    const localX = e.clientX - rect.left;
+    const localY = e.clientY - rect.top;
+    const { nx: pointerNx, ny: pointerNy } = this.hooks.toCanonical(localX, localY);
+
+    const anchorDx = seed.x - pointerNx;
+    const anchorDy = seed.y - pointerNy;
+    const relOffsets = new Map<string, { dx: number; dy: number }>();
     for (const cid of ids) {
       const c = this.state.cards.get(cid);
-      if (c) origin.set(cid, { x: c.x, y: c.y });
+      if (!c) continue;
+      relOffsets.set(cid, { dx: c.x - seed.x, dy: c.y - seed.y });
     }
 
     // bring all picked cards to top of z stack
@@ -96,51 +117,63 @@ export class DragController {
       }
     }
 
-    const rect = this.host.getBoundingClientRect();
-
     this.session = {
       pointerId: e.pointerId,
       ids,
-      startClientX: e.clientX,
-      startClientY: e.clientY,
-      boardW: rect.width,
-      boardH: rect.height,
-      origin,
+      anchorDx,
+      anchorDy,
+      startNx: pointerNx,
+      startNy: pointerNy,
+      relOffsets,
       dragging: false,
       longPressTimer: window.setTimeout(() => {
         if (!this.session || this.session.dragging) return;
-        if (e.pointerType === "touch") {
-          this.hooks.showContextBar(id, e.clientX, e.clientY);
-        }
+        if (e.pointerType === "touch") this.hooks.showContextBar(id, e.clientX, e.clientY);
       }, LONG_PRESS_MS)
     };
-
-    this.hooks.playSfx("pickup");
+    // pickup sound fires only once drag actually starts (see onPointerMove)
   };
 
   private onPointerMove = (e: PointerEvent): void => {
     const s = this.session;
     if (!s || e.pointerId !== s.pointerId) return;
-    const dx = e.clientX - s.startClientX;
-    const dy = e.clientY - s.startClientY;
+    const rect = this.host.getBoundingClientRect();
+    const localX = e.clientX - rect.left;
+    const localY = e.clientY - rect.top;
+    const { nx: pointerNx, ny: pointerNy } = this.hooks.toCanonical(localX, localY);
+
     if (!s.dragging) {
+      const dx = (pointerNx - s.startNx) * rect.width;
+      const dy = (pointerNy - s.startNy) * rect.height;
       if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
       s.dragging = true;
       window.clearTimeout(s.longPressTimer);
       this.hooks.hideContextBar();
+      this.hooks.playSfx("pickup");
     }
-    const ndx = dx / s.boardW;
-    const ndy = dy / s.boardH;
-    for (const id of s.ids) {
-      const origin = s.origin.get(id);
-      const c = this.state.cards.get(id);
-      if (!origin || !c) continue;
-      c.x = origin.x + ndx;
-      c.y = origin.y + ndy;
-      const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
-      if (el) {
-        el.style.transform = `translate3d(${c.x * s.boardW}px, ${c.y * s.boardH}px, 0)`;
+
+    let seedNx = pointerNx + s.anchorDx;
+    let seedNy = pointerNy + s.anchorDy;
+
+    // magnet snap on the seed if pointer sits inside a player's zone
+    const opponentSeat = this.hooks.pointInOpponentZone(e.clientX, e.clientY);
+    if (opponentSeat === null) {
+      const ownerSeat = this.hooks.pointInSelfZone(e.clientX, e.clientY) ? this.hooks.getSelfSeat() : -1;
+      if (ownerSeat !== -1) {
+        const snap = this.hooks.applySnap(ownerSeat, seedNx, seedNy);
+        seedNx = snap.nx;
+        seedNy = snap.ny;
       }
+    }
+
+    for (const id of s.ids) {
+      const rel = s.relOffsets.get(id);
+      const c = this.state.cards.get(id);
+      if (!rel || !c) continue;
+      c.x = seedNx + rel.dx;
+      c.y = seedNy + rel.dy;
+      const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
+      if (el) el.style.transform = `translate3d(${c.x * rect.width}px, ${c.y * rect.height}px, 0) rotate(${c.rot * 90}deg)`;
     }
     this.hooks.onDragProgress(s.ids);
   };
@@ -155,38 +188,39 @@ export class DragController {
       if (el) el.classList.remove("is-held");
     }
 
-    if (!s.dragging) {
-      this.session = null;
-      return;
-    }
+    if (!s.dragging) { this.session = null; return; }
 
     const selfSeat = this.hooks.getSelfSeat();
-    const moved = s.ids.slice();
+    let didSnapBack = false;
+    let didPlace = false;
+    const opponentSeat = this.hooks.pointInOpponentZone(e.clientX, e.clientY);
     for (const id of s.ids) {
       const c = this.state.cards.get(id);
       if (!c) continue;
-      const opponentSeat = this.hooks.pointInOpponentZone(e.clientX, e.clientY);
       if (opponentSeat !== null && opponentSeat !== selfSeat) {
-        const origin = s.origin.get(id);
-        if (origin) {
-          c.x = origin.x;
-          c.y = origin.y;
+        const rel = s.relOffsets.get(id);
+        if (rel) {
+          c.x = s.startNx + s.anchorDx + rel.dx;
+          c.y = s.startNy + s.anchorDy + rel.dy;
         }
         const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
         if (el) {
-          el.style.transform = `translate3d(${c.x * s.boardW}px, ${c.y * s.boardH}px, 0)`;
+          const rect = this.host.getBoundingClientRect();
+          el.style.transform = `translate3d(${c.x * rect.width}px, ${c.y * rect.height}px, 0) rotate(${c.rot * 90}deg)`;
           el.classList.add("is-snapback");
           window.setTimeout(() => el.classList.remove("is-snapback"), 260);
         }
-      } else if (this.hooks.pointInSelfZone(e.clientX, e.clientY)) {
-        this.hooks.setOwnerSeat(id, selfSeat);
+        didSnapBack = true;
       } else {
-        this.hooks.setOwnerSeat(id, null);
+        const seat = this.hooks.pointInSelfZone(e.clientX, e.clientY) ? selfSeat : null;
+        this.hooks.setOwnerSeat(id, seat);
+        didPlace = true;
       }
     }
 
-    this.hooks.onCardMoved(moved);
-    this.hooks.playSfx("place");
+    this.hooks.onCardMoved(s.ids);
+    if (didSnapBack) this.hooks.playSfx("snap");
+    else if (didPlace) this.hooks.playSfx("place");
     this.session = null;
   };
 

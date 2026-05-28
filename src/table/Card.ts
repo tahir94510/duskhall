@@ -1,23 +1,13 @@
-import { CARD_DEFS, CATEGORY_META, type CardDef } from "../game/cards.js";
-import { getIcon, BACK_SIGIL } from "../ui/icons.js";
+import { BACK_SIGIL } from "../ui/icons.js";
 import { t } from "../i18n/index.js";
 
-const DEF_MAP = new Map<string, CardDef>();
-for (const d of CARD_DEFS) DEF_MAP.set(d.id, d);
-
 export function createCardElement(instanceId: string, defId: string): { el: HTMLDivElement } {
-  const def = DEF_MAP.get(defId);
   const card = document.createElement("div");
   card.className = "card";
   card.dataset.id = instanceId;
   card.dataset.def = defId;
   card.setAttribute("role", "img");
   card.setAttribute("tabindex", "-1");
-
-  if (def) {
-    const cat = CATEGORY_META[def.category];
-    card.style.setProperty("--type-color", cat.color);
-  }
 
   const inner = document.createElement("div");
   inner.className = "card__inner";
@@ -28,21 +18,22 @@ export function createCardElement(instanceId: string, defId: string): { el: HTML
 
   const front = document.createElement("div");
   front.className = "card__face card__face--front";
+  front.dataset.role = "card-face";
+  front.dataset.empty = "true";
 
-  const type = document.createElement("div");
-  type.className = "card__type";
-  type.dataset.role = "type";
-  type.setAttribute("aria-label", "Type");
-  if (def) type.innerHTML = getIcon(def.typeIconId);
+  // Card art: user-supplied image at /cards/<defId>.<ext>
+  const img = document.createElement("img");
+  img.className = "card__art";
+  img.alt = "";
+  img.draggable = false;
+  img.dataset.loaded = "false";
 
-  const hero = document.createElement("div");
-  hero.className = "card__hero";
-  hero.dataset.role = "name";
-  hero.setAttribute("aria-label", "Card");
-  if (def) hero.innerHTML = getIcon(def.nameIconId);
+  loadCardArt(img, defId, () => {
+    front.dataset.empty = "false";
+    img.dataset.loaded = "true";
+  });
 
-  front.appendChild(type);
-  front.appendChild(hero);
+  front.appendChild(img);
 
   inner.appendChild(back);
   inner.appendChild(front);
@@ -50,6 +41,34 @@ export function createCardElement(instanceId: string, defId: string): { el: HTML
 
   refreshCardLabel(card, defId);
   return { el: card };
+}
+
+const ART_EXTENSIONS = ["webp", "png", "svg", "jpg"];
+const tried = new Map<string, string | null>();
+
+function loadCardArt(img: HTMLImageElement, defId: string, onLoad: () => void): void {
+  const cached = tried.get(defId);
+  if (cached === null) return; // known missing
+  if (cached) {
+    img.onload = onLoad;
+    img.src = cached;
+    return;
+  }
+  let i = 0;
+  const tryNext = () => {
+    if (i >= ART_EXTENSIONS.length) {
+      tried.set(defId, null);
+      return;
+    }
+    const url = `/cards/${defId}.${ART_EXTENSIONS[i++]}`;
+    img.onload = () => {
+      tried.set(defId, url);
+      onLoad();
+    };
+    img.onerror = tryNext;
+    img.src = url;
+  };
+  tryNext();
 }
 
 export function refreshCardLabel(el: HTMLDivElement, defId: string): void {

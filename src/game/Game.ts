@@ -1,4 +1,4 @@
-import { buildTable, refreshLabels, type BoardRefs } from "../table/Board.js";
+import { buildTable, refreshLabels, repaintSlots, type BoardRefs } from "../table/Board.js";
 import { createCardElement, refreshCardLabel } from "../table/Card.js";
 import type { BoardState, CardState, SelfPlayer } from "../table/types.js";
 import { DragController, type DragHooks } from "../table/DragController.js";
@@ -8,7 +8,7 @@ import { Modal } from "../ui/Modal.js";
 import { openRulesModal } from "../ui/RulesModal.js";
 import { openSupportModal } from "../ui/SupportModal.js";
 import { openLeaveConfirm } from "../ui/LeaveConfirm.js";
-import { openShortcutsModal, mountShortcutsFab } from "../ui/ShortcutsPanel.js";
+import { openShortcutsModal } from "../ui/ShortcutsPanel.js";
 import { openSettingsModal } from "../ui/SettingsModal.js";
 import { ContextBar } from "../ui/ContextBar.js";
 import { toast } from "../ui/Toast.js";
@@ -17,17 +17,26 @@ import { getOrCreateRoom, newRoom } from "../net/room.js";
 import { seededDeck } from "./deck.js";
 import {
   findStackOverlapping,
-  topCardAtPoint,
   gatherStack,
   shuffleStack,
   setStackFaceUp
 } from "../table/StackOps.js";
+import {
+  slotsForSeat,
+  findNearestSlot,
+  SNAP_RADIUS,
+  BREAK_RADIUS,
+  type SlotPos
+} from "../table/SlotGrid.js";
+import { localToCanonical, seatRotationDeg, type Seat } from "../table/rotation.js";
 import type { RealtimeBus, PresencePlayer, CardPatch } from "../net/realtime.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
 
 const SEAT_COUNT = 4;
 const SEAT_COLORS = ["#f3efe5", "#7cc4d0", "#d690ac", "#a8b67e"];
+const SS_SNAPSHOT_PREFIX = "kabal:snap:";
+const SS_CLIENT_ID = "kabal:cid";
 
 export interface GameDeps {
   host: HTMLElement;
@@ -56,12 +65,13 @@ export class Game {
   private cursorEls = new Map<string, HTMLDivElement>();
   private lastPointer: { x: number; y: number } | null = null;
   private boardSize = { width: 1, height: 1 };
+  private slotsBySeat: Record<Seat, SlotPos[]> = { 0: [], 1: [], 2: [], 3: [] };
 
   constructor(deps: GameDeps) {
     this.host = deps.host;
     this.bus = deps.bus;
     this.config = deps.config;
-    this.self = { id: makeClientId(), seat: 0, color: SEAT_COLORS[0]!, name: "You" };
+    this.self = { id: getOrMakeClientId(), seat: 0, color: SEAT_COLORS[0]!, name: "P1" };
   }
 
   async mount(): Promise<void> {
@@ -78,23 +88,31 @@ export class Game {
       onSupport: () => { void this.audio.play("ui-open"); openSupportModal(this.modal, this.config.supportUrl); },
       onReset: () => { void this.audio.play("ui-open"); this.handleReset(); },
       onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio); },
+      onShortcuts: () => { void this.audio.play("ui-open"); openShortcutsModal(this.modal); },
       onLangChange: () => this.onLocale()
     });
     document.body.appendChild(this.header.el);
-    mountShortcutsFab(document.body, () => { void this.audio.play("ui-open"); openShortcutsModal(this.modal); });
 
     onLocaleChange(() => this.onLocale());
 
     this.room = getOrCreateRoom();
     this.header.setRoom(this.room);
+    for (const s of [0, 1, 2, 3] as Seat[]) this.slotsBySeat[s] = slotsForSeat(s);
+
     this.measureBoard();
-    this.initialDealLocal();
+
+    const restored = this.tryRestoreSnapshot();
+    if (!restored) this.initialDealLocal();
+
     this.bindHooks();
     this.installKeyboardAndWheel();
     this.installResizeObserver();
     this.installRealtime();
     this.installAudioBoot();
+    this.installBeforeUnload();
     this.startRenderLoop();
+    this.applyBoardPerspective();
+
     await this.bus.connect(this.room, this.presencePayload());
   }
 
@@ -108,6 +126,17 @@ export class Game {
     this.boardSize.height = Math.max(1, r.height);
   }
 
+  private applyBoardPerspective(): void {
+    this.refs.board.style.setProperty("--board-rot", `${seatRotationDeg(this.self.seat as Seat)}deg`);
+  }
+
+  private localToCanonical(localX: number, localY: number): { nx: number; ny: number } {
+    const nx0 = localX / this.boardSize.width;
+    const ny0 = localY / this.boardSize.height;
+    const [nx, ny] = localToCanonical(nx0, ny0, this.self.seat as Seat);
+    return { nx, ny };
+  }
+
   private bindHooks(): void {
     const hooks: DragHooks = {
       getSelfSeat: () => this.self.seat,
@@ -119,9 +148,28 @@ export class Game {
         }
         return null;
       },
-      pickStack: (id) => findStackOverlapping(this.state, this.boardSize, id),
+      toCanonical: (lx, ly) => this.localToCanonical(lx, ly),
+      pickStackUnder: (clientX, clientY) => {
+        const rect = this.refs.cardsLayer.getBoundingClientRect();
+        const localX = clientX - rect.left;
+        const localY = clientY - rect.top;
+        const top = this.topCardAtCanonicalPoint(localX, localY);
+        if (!top) return [];
+        return findStackOverlapping(this.state, this.boardSize, top.id);
+      },
+      applySnap: (ownerSeat, nx, ny) => {
+        const found = findNearestSlot(this.slotsBySeat[ownerSeat as Seat] || [], nx, ny, ownerSeat as Seat);
+        if (!found) return { nx, ny, snapped: false };
+        if (found.dist <= SNAP_RADIUS) {
+          this.highlightSlot(ownerSeat as Seat, found.slot, true);
+          return { nx: found.slot.nx, ny: found.slot.ny, snapped: true };
+        }
+        if (found.dist > BREAK_RADIUS) this.clearSlotHighlights();
+        return { nx, ny, snapped: false };
+      },
       onCardMoved: (ids) => {
         for (const id of ids) this.dirtyIds.add(id);
+        this.clearSlotHighlights();
         this.scheduleFlush();
       },
       onDragProgress: (ids) => {
@@ -141,10 +189,42 @@ export class Game {
       },
       showContextBar: (id, x, y) => this.contextBar.show(id, x, y),
       hideContextBar: () => this.contextBar.hide(),
-      emitCursor: (x, y) => this.bus.sendCursor({ id: this.self.id, x, y, seat: this.self.seat }),
+      emitCursor: (x, y) => {
+        // hide cursor when pointer is inside our own zone
+        if (this.pointInZone(this.self.seat, x, y)) return;
+        this.bus.sendCursor({ id: this.self.id, x, y, seat: this.self.seat });
+      },
       playSfx: (name) => { void this.audio.play(name as SfxName); }
     };
     new DragController(this.refs.cardsLayer, this.state, hooks);
+  }
+
+  private topCardAtCanonicalPoint(localX: number, localY: number): CardState | null {
+    const { nx, ny } = this.localToCanonical(localX, localY);
+    const w = this.boardSize.width;
+    const h = this.boardSize.height;
+    const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
+    const cardH = cardW * 1.45;
+    let pick: CardState | null = null;
+    for (const c of this.state.cards.values()) {
+      // bbox in canonical coords
+      const bx0 = c.x;
+      const by0 = c.y;
+      const bx1 = c.x + cardW / w;
+      const by1 = c.y + cardH / h;
+      if (nx >= bx0 && nx <= bx1 && ny >= by0 && ny <= by1) {
+        if (!pick || c.z > pick.z) pick = c;
+      }
+    }
+    return pick;
+  }
+
+  private highlightSlot(seat: Seat, slot: SlotPos, on: boolean): void {
+    const marks = this.refs.slotLayer.querySelectorAll<HTMLDivElement>(`.slot-mark[data-seat="${seat}"][data-kind="${slot.kind}"]`);
+    marks.forEach((m, i) => m.classList.toggle("is-hot", on && i === slot.index));
+  }
+  private clearSlotHighlights(): void {
+    this.refs.slotLayer.querySelectorAll<HTMLDivElement>(".slot-mark.is-hot").forEach((m) => m.classList.remove("is-hot"));
   }
 
   private pointInZone(seat: number, x: number, y: number): boolean {
@@ -156,32 +236,21 @@ export class Game {
 
   private initialDealLocal(): void {
     const deck = seededDeck(this.room);
-    requestAnimationFrame(() => {
-      this.measureBoard();
-      const slot = this.refs.deckSlot.getBoundingClientRect();
-      const layer = this.refs.cardsLayer.getBoundingClientRect();
-      const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
-      const cardH = cardW * 1.45;
-      const baseLeftPx = slot.left - layer.left + (slot.width - cardW) / 2;
-      const baseTopPx = slot.top - layer.top + (slot.height - cardH) / 2;
-      const nx = baseLeftPx / this.boardSize.width;
-      const ny = baseTopPx / this.boardSize.height;
-      let i = 0;
-      for (const c of this.state.cards.values()) {
-        c.x = nx + (i % 6) * 0.0006;
-        c.y = ny - i * 0.0003;
-        i++;
-      }
-      this.updateCounts();
-    });
     let z = 1;
+    const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
+    const cardH = cardW * 1.45;
+    // place all cards centred on the canonical centre (0.5, 0.5) with tiny offsets
+    const baseNx = 0.5 - cardW / (2 * this.boardSize.width);
+    const baseNy = 0.5 - cardH / (2 * this.boardSize.height);
+    let i = 0;
     for (const card of deck) {
       const cardState: CardState = {
         id: card.instanceId,
         defId: card.defId,
-        x: 0.45,
-        y: 0.45,
+        x: baseNx + (i % 8) * 0.0004,
+        y: baseNy - i * 0.00015,
         z: z++,
+        rot: 0,
         faceUp: false,
         ownerSeat: null,
         v: 0
@@ -190,9 +259,9 @@ export class Game {
       const { el } = createCardElement(cardState.id, cardState.defId);
       el.style.zIndex = String(cardState.z);
       this.refs.cardsLayer.appendChild(el);
+      i++;
     }
     this.state.topZ = z;
-    this.updateCounts();
   }
 
   private installKeyboardAndWheel(): void {
@@ -208,34 +277,60 @@ export class Game {
       this.lastPointer = { x: e.clientX, y: e.clientY };
     }, { passive: true });
 
-    // Ctrl + wheel: gather (up) / shuffle (down). Suppress browser zoom.
     window.addEventListener("wheel", (e) => {
-      if (!e.ctrlKey && !e.metaKey) return;
       if (this.modal.isOpen()) return;
-      e.preventDefault();
       const pt = this.lastPointer;
       if (!pt) return;
-      const top = topCardAtPoint(this.state, this.refs.cardsLayer, pt.x, pt.y);
-      if (!top) return;
-      const stack = findStackOverlapping(this.state, this.boardSize, top.id);
-      if (!stack.length) return;
-      if (e.deltaY < 0) {
-        gatherStack(this.state, stack);
-        void this.audio.play("gather");
+      const rect = this.refs.cardsLayer.getBoundingClientRect();
+      const localX = pt.x - rect.left;
+      const localY = pt.y - rect.top;
+      const top = this.topCardAtCanonicalPoint(localX, localY);
+      if (!top) return; // never act on empty space
+      const wantStack = e.ctrlKey || e.metaKey || e.shiftKey;
+      if (wantStack) {
+        e.preventDefault();
+        const stack = findStackOverlapping(this.state, this.boardSize, top.id);
+        if (!stack.length) return;
+        if (e.deltaY < 0) {
+          const { nx, ny } = this.localToCanonical(localX, localY);
+          gatherStack(this.state, stack, nx, ny);
+          void this.audio.play("gather");
+        } else {
+          shuffleStack(this.state, stack);
+          this.applyShuffleJitter(stack);
+          void this.audio.play("shuffle");
+        }
+        for (const id of stack) this.dirtyIds.add(id);
+        this.scheduleFlush();
       } else {
-        shuffleStack(this.state, stack);
-        void this.audio.play("shuffle");
+        // bare wheel over a card flips that single card
+        e.preventDefault();
+        top.faceUp = !top.faceUp;
+        this.dirtyIds.add(top.id);
+        this.scheduleFlush();
+        void this.audio.play("flip");
       }
-      for (const id of stack) this.dirtyIds.add(id);
-      this.scheduleFlush();
     }, { passive: false });
 
     window.addEventListener("contextmenu", (e) => e.preventDefault());
   }
 
+  private applyShuffleJitter(ids: string[]): void {
+    for (const id of ids) {
+      const el = this.refs.cardsLayer.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
+      if (!el) continue;
+      el.classList.remove("is-shuffling");
+      // force reflow to restart animation
+      void el.offsetWidth;
+      el.classList.add("is-shuffling");
+      window.setTimeout(() => el.classList.remove("is-shuffling"), 260);
+    }
+  }
+
   private installResizeObserver(): void {
     const ro = new ResizeObserver(() => {
       this.measureBoard();
+      repaintSlots(this.refs);
       this.renderAllCards();
     });
     ro.observe(this.refs.cardsLayer);
@@ -251,6 +346,61 @@ export class Game {
     window.addEventListener("keydown", start, { once: true });
   }
 
+  private installBeforeUnload(): void {
+    window.addEventListener("beforeunload", () => this.saveSnapshot());
+    window.addEventListener("pagehide", () => this.saveSnapshot());
+  }
+
+  private snapshotKey(): string { return SS_SNAPSHOT_PREFIX + this.room; }
+
+  private saveSnapshot(): void {
+    try {
+      const payload = {
+        v: this.patchVersion,
+        ts: Date.now(),
+        cards: Array.from(this.state.cards.values()).map((c) => ({
+          id: c.id, defId: c.defId, x: c.x, y: c.y, z: c.z,
+          rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat
+        }))
+      };
+      sessionStorage.setItem(this.snapshotKey(), JSON.stringify(payload));
+    } catch {}
+  }
+
+  private tryRestoreSnapshot(): boolean {
+    try {
+      const raw = sessionStorage.getItem(this.snapshotKey());
+      if (!raw) return false;
+      const data = JSON.parse(raw) as { v: number; ts: number; cards: Array<Partial<CardState>> };
+      if (!Array.isArray(data.cards) || data.cards.length === 0) return false;
+      if (Date.now() - data.ts > 30 * 60 * 1000) return false; // 30 min freshness
+      let z = 1;
+      for (const c of data.cards) {
+        if (!c.id || !c.defId) continue;
+        const cardState: CardState = {
+          id: c.id,
+          defId: c.defId,
+          x: typeof c.x === "number" ? c.x : 0.5,
+          y: typeof c.y === "number" ? c.y : 0.5,
+          z: typeof c.z === "number" ? c.z : z,
+          rot: (typeof c.rot === "number" ? Math.max(0, Math.min(3, c.rot)) : 0) as 0 | 1 | 2 | 3,
+          faceUp: !!c.faceUp,
+          ownerSeat: typeof c.ownerSeat === "number" ? c.ownerSeat : null,
+          v: 0
+        };
+        this.state.cards.set(cardState.id, cardState);
+        const { el } = createCardElement(cardState.id, cardState.defId);
+        el.style.zIndex = String(cardState.z);
+        this.refs.cardsLayer.appendChild(el);
+        if (cardState.z > z) z = cardState.z;
+        z++;
+      }
+      this.state.topZ = z + 10;
+      this.patchVersion = data.v || 0;
+      return true;
+    } catch { return false; }
+  }
+
   private flipCard(id: string): void {
     const c = this.state.cards.get(id);
     if (!c) return;
@@ -263,15 +413,16 @@ export class Game {
   private toggleStackFlip(id: string): void {
     const stack = findStackOverlapping(this.state, this.boardSize, id);
     if (!stack.length) return;
-    let up = 0;
-    let down = 0;
+    // Target orientation is the inverse of the topmost (highest-z) card. This
+    // keeps mixed stacks consistent and gives uniform stacks a clean toggle.
+    let topCard = this.state.cards.get(id);
     for (const cid of stack) {
       const c = this.state.cards.get(cid);
       if (!c) continue;
-      if (c.faceUp) up++; else down++;
+      if (!topCard || c.z > topCard.z) topCard = c;
     }
-    // mixed → all face-down; uniform → flip
-    const target = up === stack.length ? false : down === stack.length ? true : false;
+    if (!topCard) return;
+    const target = !topCard.faceUp;
     setStackFaceUp(this.state, stack, target);
     for (const cid of stack) this.dirtyIds.add(cid);
     this.scheduleFlush();
@@ -280,7 +431,9 @@ export class Game {
 
   private gatherAt(id: string): void {
     const stack = findStackOverlapping(this.state, this.boardSize, id);
-    gatherStack(this.state, stack);
+    if (!stack.length) return;
+    const seed = this.state.cards.get(id);
+    if (seed) gatherStack(this.state, stack, seed.x, seed.y);
     for (const cid of stack) this.dirtyIds.add(cid);
     this.scheduleFlush();
     void this.audio.play("gather");
@@ -288,7 +441,9 @@ export class Game {
 
   private shuffleAt(id: string): void {
     const stack = findStackOverlapping(this.state, this.boardSize, id);
+    if (stack.length < 2) return;
     shuffleStack(this.state, stack);
+    this.applyShuffleJitter(stack);
     for (const cid of stack) this.dirtyIds.add(cid);
     this.scheduleFlush();
     void this.audio.play("shuffle");
@@ -299,24 +454,19 @@ export class Game {
     this.flushHandle = window.setTimeout(() => {
       this.flushHandle = 0;
       this.flush();
-    }, 50);
+    }, 40);
   }
 
   private flush(): void {
-    if (!this.dirtyIds.size) {
-      this.updateCounts();
-      return;
-    }
+    if (!this.dirtyIds.size) return;
     this.patchVersion++;
     const cards = Array.from(this.dirtyIds).slice(0, 200).map((id) => {
       const c = this.state.cards.get(id)!;
       c.v = this.patchVersion;
-      return { id: c.id, x: c.x, y: c.y, z: c.z, faceUp: c.faceUp, ownerSeat: c.ownerSeat };
+      return { id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat };
     });
-    const patch: CardPatch = { v: this.patchVersion, by: this.self.id, cards };
-    this.bus.sendPatch(patch);
+    this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards });
     this.dirtyIds.clear();
-    this.updateCounts();
   }
 
   private scheduleDragPreview(): void {
@@ -332,12 +482,9 @@ export class Game {
     const cards = Array.from(this.dragPreviewIds).slice(0, 200).map((id) => {
       const c = this.state.cards.get(id);
       if (!c) return null;
-      return { id: c.id, x: c.x, y: c.y, z: c.z, faceUp: c.faceUp, ownerSeat: c.ownerSeat };
-    }).filter((c): c is { id: string; x: number; y: number; z: number; faceUp: boolean; ownerSeat: number | null } => !!c);
-    if (cards.length === 0) {
-      this.dragPreviewIds.clear();
-      return;
-    }
+      return { id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat };
+    }).filter((c): c is { id: string; x: number; y: number; z: number; rot: 0 | 1 | 2 | 3; faceUp: boolean; ownerSeat: number | null } => !!c);
+    if (cards.length === 0) { this.dragPreviewIds.clear(); return; }
     this.patchVersion++;
     this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards });
     this.dragPreviewIds.clear();
@@ -376,18 +523,13 @@ export class Game {
   private sendSnapshot(): void {
     this.patchVersion++;
     const cards = Array.from(this.state.cards.values()).slice(0, 200).map((c) => ({
-      id: c.id,
-      x: c.x,
-      y: c.y,
-      z: c.z,
-      faceUp: c.faceUp,
-      ownerSeat: c.ownerSeat
+      id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat
     }));
     this.bus.sendSnapshot({ v: this.patchVersion, by: this.self.id, cards });
   }
 
   private applyPatch(p: CardPatch): void {
-    if (p.v < this.patchVersion - 30) return; // ignore very stale
+    if (p.v < this.patchVersion - 30) return;
     this.patchVersion = Math.max(this.patchVersion, p.v);
     for (const upd of p.cards) {
       const c = this.state.cards.get(upd.id);
@@ -395,11 +537,11 @@ export class Game {
       c.x = upd.x;
       c.y = upd.y;
       c.z = upd.z;
+      c.rot = upd.rot;
       c.faceUp = upd.faceUp;
       c.ownerSeat = upd.ownerSeat;
       if (c.z > this.state.topZ) this.state.topZ = c.z;
     }
-    this.updateCounts();
   }
 
   private renderCursor(c: { id: string; x: number; y: number; seat: number }): void {
@@ -409,10 +551,7 @@ export class Game {
       el = document.createElement("div");
       el.className = "cursor-ghost";
       el.style.setProperty("--cursor-color", SEAT_COLORS[c.seat] ?? SEAT_COLORS[0]!);
-      el.innerHTML = `
-        <span class="cursor-ghost__pointer"></span>
-        <span class="cursor-ghost__label">P${c.seat + 1}</span>
-      `;
+      el.innerHTML = `<span class="cursor-ghost__pointer"></span><span class="cursor-ghost__label">P${c.seat + 1}</span>`;
       document.body.appendChild(el);
       this.cursorEls.set(c.id, el);
     }
@@ -433,8 +572,8 @@ export class Game {
     for (const c of this.state.cards.values()) {
       const el = this.refs.cardsLayer.querySelector<HTMLDivElement>(`[data-id="${c.id}"]`);
       if (!el) continue;
-      if (!el.classList.contains("is-held")) {
-        el.style.transform = `translate3d(${c.x * w}px, ${c.y * h}px, 0)`;
+      if (!el.classList.contains("is-held") && !el.classList.contains("is-shuffling")) {
+        el.style.transform = `translate3d(${c.x * w}px, ${c.y * h}px, 0) rotate(${c.rot * 90}deg)`;
       }
       el.style.zIndex = String(c.z);
       el.classList.toggle("is-faceup", c.faceUp);
@@ -453,51 +592,10 @@ export class Game {
     }
   }
 
-  private updateCounts(): void {
-    let deck = 0;
-    let discard = 0;
-    const zoneCounts = [0, 0, 0, 0];
-    for (const c of this.state.cards.values()) {
-      if (c.ownerSeat !== null && c.ownerSeat >= 0 && c.ownerSeat < 4) {
-        zoneCounts[c.ownerSeat]!++;
-      }
-      const inDock = this.isOverSlot(c);
-      if (inDock === "deck") deck++;
-      else if (inDock === "discard") discard++;
-    }
-    this.setDockValue(this.refs.deckSlot, deck);
-    this.setDockValue(this.refs.discardSlot, discard);
-    for (let i = 0; i < 4; i++) {
-      const node = this.refs.zones[i]?.querySelector<HTMLElement>('[data-role="count"]');
-      if (node) node.textContent = String(zoneCounts[i]);
-    }
-  }
-
-  private setDockValue(slot: HTMLDivElement, n: number): void {
-    const valEl = slot.querySelector<HTMLElement>(".dock__value");
-    if (valEl) valEl.textContent = String(n);
-    slot.setAttribute("data-has", n > 0 ? "true" : "false");
-  }
-
-  private isOverSlot(c: CardState): "deck" | "discard" | null {
-    const layer = this.refs.cardsLayer.getBoundingClientRect();
-    const slots: Array<["deck" | "discard", DOMRect]> = [
-      ["deck", this.refs.deckSlot.getBoundingClientRect()],
-      ["discard", this.refs.discardSlot.getBoundingClientRect()]
-    ];
-    const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
-    const cardH = cardW * 1.45;
-    const cx = c.x * this.boardSize.width + cardW / 2 + layer.left;
-    const cy = c.y * this.boardSize.height + cardH / 2 + layer.top;
-    for (const [name, r] of slots) {
-      if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) return name;
-    }
-    return null;
-  }
-
   private async handleReset(): Promise<void> {
     openLeaveConfirm(this.modal, this.room, async () => {
       void this.audio.play("ui-close");
+      try { sessionStorage.removeItem(this.snapshotKey()); } catch {}
       await this.bus.disconnect();
       this.resetTable();
       this.room = newRoom();
@@ -529,8 +627,16 @@ export class Game {
   }
 }
 
-function makeClientId(): string {
+function getOrMakeClientId(): string {
+  try {
+    const existing = sessionStorage.getItem(SS_CLIENT_ID);
+    if (existing) return existing;
+  } catch {}
   const arr = new Uint8Array(8);
   crypto.getRandomValues(arr);
-  return "p_" + Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
+  const id = "p_" + Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
+  try { sessionStorage.setItem(SS_CLIENT_ID, id); } catch {}
+  return id;
 }
+
+// silence unused import warnings until used

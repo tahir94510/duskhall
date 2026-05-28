@@ -1,14 +1,10 @@
 import { t } from "../i18n/index.js";
 import { CARD_DEFS, CATEGORY_META } from "../game/cards.js";
 
-const HOVER_DELAY = 220;
+const HOVER_DELAY = 800;
 const OFFSET = 14;
 
-interface ActiveTip {
-  cardEl: HTMLElement;
-  role: "type" | "name";
-  defId: string;
-}
+interface ActiveTip { cardEl: HTMLElement; defId: string; }
 
 export class Tooltip {
   private el: HTMLDivElement;
@@ -29,20 +25,19 @@ export class Tooltip {
     this.host.addEventListener("pointerover", this.onOver, { passive: true });
     this.host.addEventListener("pointerout", this.onOut, { passive: true });
     this.host.addEventListener("pointermove", this.onMove, { passive: true });
+    this.host.addEventListener("pointerdown", this.hide, { passive: true });
     window.addEventListener("scroll", this.hide, { passive: true });
     window.addEventListener("blur", this.hide);
   }
 
-  private resolve(target: Element): { role: "type" | "name"; defId: string; cardEl: HTMLElement } | null {
-    if (!(target instanceof Element)) return null;
-    const handle = target.closest<HTMLElement>('[data-role="type"], [data-role="name"]');
-    if (!handle) return null;
-    const cardEl = handle.closest<HTMLElement>(".card");
+  private resolve(target: Element): { defId: string; cardEl: HTMLElement } | null {
+    const cardEl = target.closest<HTMLElement>(".card");
     if (!cardEl) return null;
+    if (!cardEl.classList.contains("is-faceup")) return null;
+    if (cardEl.classList.contains("is-concealed")) return null;
     const defId = cardEl.dataset.def;
     if (!defId) return null;
-    const role = handle.dataset.role === "type" ? "type" : "name";
-    return { role, defId, cardEl };
+    return { defId, cardEl };
   }
 
   private onOver = (e: PointerEvent): void => {
@@ -55,8 +50,10 @@ export class Tooltip {
   };
 
   private onOut = (e: PointerEvent): void => {
-    const data = this.resolve(e.target as Element);
-    if (!data) return;
+    const cardEl = (e.target instanceof Element ? e.target.closest(".card") : null) as HTMLElement | null;
+    if (!cardEl) return;
+    const related = e.relatedTarget instanceof Element ? e.relatedTarget.closest(".card") : null;
+    if (related === cardEl) return;
     window.clearTimeout(this.showTimer);
     this.hide();
   };
@@ -67,26 +64,18 @@ export class Tooltip {
     if (this.active) this.position();
   };
 
-  private show(data: { role: "type" | "name"; defId: string; cardEl: HTMLElement }): void {
-    this.active = data;
+  private show(data: { defId: string; cardEl: HTMLElement }): void {
     const def = CARD_DEFS.find((d) => d.id === data.defId);
     if (!def) return;
     if (!data.cardEl.classList.contains("is-faceup")) return;
-
-    if (data.role === "type") {
-      const cat = CATEGORY_META[def.category];
-      this.el.innerHTML = `
-        <div class="tooltip__title" style="color:${cat.color}">${escape(t(`categories.${def.category}.name`))}</div>
-        <div class="tooltip__body">${escape(t(`categories.${def.category}.description`))}</div>
-      `;
-    } else {
-      this.el.innerHTML = `
-        <div class="tooltip__title">${escape(t(`cards.${def.id}.name`))}</div>
-        <div class="tooltip__type">${escape(t(`categories.${def.category}.name`))}</div>
-        <div class="tooltip__body">${escape(t(`cards.${def.id}.effect`))}</div>
-        <div class="tooltip__flavor">${escape(t(`cards.${def.id}.flavor`))}</div>
-      `;
-    }
+    this.active = data;
+    const cat = CATEGORY_META[def.category];
+    this.el.innerHTML = `
+      <div class="tooltip__title">${escapeHtml(t(`cards.${def.id}.name`))}</div>
+      <div class="tooltip__type" style="color:${cat.color}">${escapeHtml(t(`categories.${def.category}.name`))}</div>
+      <div class="tooltip__body">${escapeHtml(t(`cards.${def.id}.effect`))}</div>
+      <div class="tooltip__flavor">${escapeHtml(t(`cards.${def.id}.flavor`))}</div>
+    `;
     this.position();
     this.el.classList.add("is-visible");
   }
@@ -111,10 +100,6 @@ export class Tooltip {
   };
 }
 
-function escape(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
