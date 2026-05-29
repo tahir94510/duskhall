@@ -68,7 +68,17 @@
     white-space: nowrap;
     gap: 2px;
   }
-  .rules__toc a { white-space: nowrap; padding: 4px 8px; font-size: 10.5px; }
+  .rules__toc a {
+    white-space: nowrap;
+    padding: 6px 10px;
+    font-size: 11px;
+    min-height: 30px;
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
   .shortcuts-grid { grid-template-columns: 1fr; }
   .icon-btn { width: 34px; height: 34px; }
 }

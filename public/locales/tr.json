@@ -10,6 +10,8 @@
     "support": "Destek",
     "leave": "Odayı sıfırla",
     "reset": "Odayı sıfırla",
+    "resetDeck": "Desteyi sıfırla",
+    "deckReset": "Deste toplanıp yeniden karıştırıldı.",
     "settings": "Ayarlar",
     "shortcuts": "Kısayollar",
     "language": "Dil",
@@ -39,11 +41,11 @@
     "items": [
       { "keys": "Sol tık, sürükle", "desc": "İmlecin altındaki kartı taşı" },
       { "keys": "Ctrl + sol tık, sürükle", "desc": "İmlecin altındaki yığını taşı" },
-      { "keys": "Çift tık / Scroll", "desc": "İmlecin altındaki tek kartı çevir" },
-      { "keys": "Sağ tık", "desc": "Yığındaki tüm kartları toplu çevir" },
+      { "keys": "Scroll", "desc": "İmlecin altındaki tek kartı çevir" },
+      { "keys": "Ctrl + scroll", "desc": "İmlecin altındaki yığını toplu çevir" },
       { "keys": "Shift + scroll", "desc": "Kartı 90° döndür (yana, çevirme değil)" },
-      { "keys": "Ctrl + yukarı scroll", "desc": "Yığını imleç merkezine topla" },
-      { "keys": "Ctrl + aşağı scroll", "desc": "Yığını yerinde karıştır" }
+      { "keys": "G", "desc": "İmlecin altındaki yığını topla" },
+      { "keys": "M", "desc": "İmlecin altındaki yığını karıştır" }
     ],
     "mobileNote": "Dokunmatik cihazlarda kartın üstüne uzun basarak eylem çubuğunu aç."
   },
