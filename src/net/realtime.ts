@@ -7,6 +7,9 @@ export interface PresencePlayer {
   name: string;
   seat: number;
   color: string;
+  /** Local epoch ms when this client first joined; used to seat newcomers in
+   *  join order so a departure never reshuffles existing seats. */
+  joinedAt: number;
 }
 
 export interface CursorMsg {
@@ -24,7 +27,7 @@ export interface CardPatch {
     x: number;
     y: number;
     z: number;
-    rot: 0 | 1 | 2 | 3;
+    rot: number;
     faceUp: boolean;
     ownerSeat: number | null;
   }>;
@@ -160,7 +163,7 @@ export class RealtimeBus {
           x: safeNumber(c.x),
           y: safeNumber(c.y),
           z: safeNumber(c.z, 0),
-          rot: ((typeof c.rot === "number" ? Math.max(0, Math.min(3, Math.round(c.rot))) : 0) as 0 | 1 | 2 | 3),
+          rot: typeof c.rot === "number" ? Math.max(-999, Math.min(999, Math.round(c.rot))) : 0,
           faceUp: c.faceUp === true,
           ownerSeat: typeof c.ownerSeat === "number" ? Math.max(-1, Math.min(3, c.ownerSeat)) : null
         }))
@@ -198,7 +201,8 @@ export class RealtimeBus {
         id: safeString(entry.id || key, 40),
         name: safeString(entry.name, 24) || "Player",
         seat: typeof entry.seat === "number" ? Math.max(0, Math.min(3, entry.seat)) : 0,
-        color: safeString(entry.color, 16) || "#c8a45a"
+        color: safeString(entry.color, 16) || "#c8a45a",
+        joinedAt: typeof entry.joinedAt === "number" && Number.isFinite(entry.joinedAt) ? entry.joinedAt : Date.now()
       });
     }
     for (const l of this.presenceListeners) l(players);

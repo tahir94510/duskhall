@@ -26,6 +26,7 @@ import { DECK_NX, DECK_NY } from "../table/constants.js";
 import type { RealtimeBus, PresencePlayer, CardPatch } from "../net/realtime.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
+import { getOrAssignName, resetName } from "../util/names.js";
 
 const SEAT_COUNT = 4;
 const SEAT_COLORS = ["#f3efe5", "#cdc8bc", "#a09c92", "#79766f"];
@@ -62,12 +63,15 @@ export class Game {
   private lastPointer: { x: number; y: number } | null = null;
   private boardSize = { width: 1, height: 1 };
   private spectator = false;
+  private selfJoinedAt = Date.now();
+  private lastSeenAt = new Map<string, number>();
+  private staleSweepHandle = 0;
 
   constructor(deps: GameDeps) {
     this.host = deps.host;
     this.bus = deps.bus;
     this.config = deps.config;
-    this.self = { id: getOrMakeClientId(), seat: 0, color: SEAT_COLORS[0]!, name: "P1" };
+    this.self = { id: getOrMakeClientId(), seat: 0, color: SEAT_COLORS[0]!, name: getOrAssignName() };
   }
 
   async mount(): Promise<void> {
@@ -118,7 +122,13 @@ export class Game {
   }
 
   private presencePayload(): PresencePlayer {
-    return { id: this.self.id, name: this.self.name, seat: this.self.seat, color: this.self.color };
+    return {
+      id: this.self.id,
+      name: this.self.name,
+      seat: this.self.seat,
+      color: this.self.color,
+      joinedAt: this.selfJoinedAt
+    };
   }
 
   private measureBoard(): void {
@@ -323,13 +333,21 @@ export class Game {
       const top = this.topCardAtCanonicalPoint(pt.x - rect.left, pt.y - rect.top);
       if (!top) return; // empty space: do nothing
 
+      // Ownership guard: cards owned by a rival seat are off-limits to scroll.
+      if (top.ownerSeat != null && top.ownerSeat !== this.self.seat) {
+        e.preventDefault();
+        return;
+      }
+
       e.preventDefault();
       if (this.wheelCooldown()) return;
 
       if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
-        // Shift + scroll: rotate the card 90° in its own plane.
+        // Shift + scroll: rotate the card 90° in its own plane. We store rot
+        // CUMULATIVELY so the visual rotation always continues forward instead
+        // of snapping back through modulo at 360°.
         const dir = e.deltaY > 0 ? 1 : -1;
-        top.rot = ((((top.rot + dir) % 4) + 4) % 4) as 0 | 1 | 2 | 3;
+        top.rot = top.rot + dir;
         this.dirtyIds.add(top.id);
         this.scheduleFlush();
         void this.audio.play("flip");
@@ -460,7 +478,7 @@ export class Game {
           x: typeof c.x === "number" ? c.x : 0.5,
           y: typeof c.y === "number" ? c.y : 0.5,
           z: typeof c.z === "number" ? c.z : z,
-          rot: (typeof c.rot === "number" ? Math.max(0, Math.min(3, c.rot)) : 0) as 0 | 1 | 2 | 3,
+          rot: typeof c.rot === "number" && Number.isFinite(c.rot) ? c.rot : 0,
           faceUp: !!c.faceUp,
           ownerSeat: typeof c.ownerSeat === "number" ? c.ownerSeat : null,
           v: 0
@@ -484,7 +502,10 @@ export class Game {
   private rotateCard(id: string): void {
     const c = this.state.cards.get(id);
     if (!c) return;
-    c.rot = (((c.rot + 1) % 4) + 4) % 4 as 0 | 1 | 2 | 3;
+    if (c.ownerSeat != null && c.ownerSeat !== this.self.seat) return;
+    // Cumulative rotation: keep adding turns so 270°→360°→450° flows forward
+    // visually instead of teleporting back to 0°.
+    c.rot = c.rot + 1;
     this.dirtyIds.add(id);
     this.scheduleFlush();
     void this.audio.play("flip");
@@ -493,6 +514,7 @@ export class Game {
   private flipCard(id: string): void {
     const c = this.state.cards.get(id);
     if (!c) return;
+    if (c.ownerSeat != null && c.ownerSeat !== this.self.seat) return;
     c.faceUp = !c.faceUp;
     this.dirtyIds.add(id);
     this.scheduleFlush();
@@ -502,6 +524,13 @@ export class Game {
   private toggleStackFlip(id: string): void {
     const stack = findStackOverlapping(this.state, this.boardSize, id);
     if (!stack.length) return;
+    // Ownership guard: if any card in the stack belongs to a rival seat,
+    // the whole gesture is blocked. Otherwise mixed-seat flips would leak
+    // private orientation across players.
+    for (const cid of stack) {
+      const c = this.state.cards.get(cid);
+      if (c && c.ownerSeat != null && c.ownerSeat !== this.self.seat) return;
+    }
     // Target orientation is the inverse of the topmost (highest-z) card. This
     // keeps mixed stacks consistent and gives uniform stacks a clean toggle.
     let topCard = this.state.cards.get(id);
@@ -599,7 +628,7 @@ export class Game {
       const c = this.state.cards.get(id);
       if (!c) return null;
       return { id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat };
-    }).filter((c): c is { id: string; x: number; y: number; z: number; rot: 0 | 1 | 2 | 3; faceUp: boolean; ownerSeat: number | null } => !!c);
+    }).filter((c): c is { id: string; x: number; y: number; z: number; rot: number; faceUp: boolean; ownerSeat: number | null } => !!c);
     if (cards.length === 0) { this.dragPreviewIds.clear(); return; }
     this.patchVersion++;
     this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards });
@@ -624,21 +653,23 @@ export class Game {
   private presenceDebounce = 0;
 
   private applyPresence(players: PresencePlayer[]): void {
-      // Deterministic seating: every client sorts the full presence list by id
-      // and hands seats 0..3 to the first four. Everyone computes the same map,
-      // so no two clients ever believe they hold the same seat. Anyone beyond
-      // the fourth becomes a read-only spectator.
+      // Stable seating by join time: the earliest joiner takes seat 0, next
+      // seat 1, etc. A player leaving never reshuffles the seats of those who
+      // remain — their joinedAt timestamps are unchanged. Ties (e.g. two
+      // clients with identical clocks) break deterministically on id.
       const roster = players.length ? players.slice() : [this.presencePayload()];
       if (!roster.some((p) => p.id === this.self.id)) roster.push(this.presencePayload());
-      roster.sort((a, b) => a.id.localeCompare(b.id));
+      roster.sort((a, b) => (a.joinedAt - b.joinedAt) || a.id.localeCompare(b.id));
 
       this.players.clear();
       let mySeat = -1;
+      const now = Date.now();
       roster.forEach((p, idx) => {
         const seat = idx < SEAT_COUNT ? idx : -1;
         p.seat = seat;
         p.color = seat >= 0 ? (SEAT_COLORS[seat] ?? SEAT_COLORS[0]!) : "#7a766f";
         this.players.set(p.id, p);
+        if (seat >= 0) this.lastSeenAt.set(`seat-${seat}`, now);
         if (p.id === this.self.id) mySeat = seat;
       });
 
@@ -724,7 +755,8 @@ export class Game {
     el.style.display = "";
     el.style.setProperty("--cursor-color", SEAT_COLORS[seat] ?? SEAT_COLORS[0]!);
     const label = el.querySelector(".cursor-ghost__label");
-    if (label) label.textContent = `P${seat + 1}`;
+    const peerName = this.players.get(c.id)?.name || `P${seat + 1}`;
+    if (label) label.textContent = peerName;
     // c.x / c.y are canonical fractions; re-project into our own rotated view.
     const rect = this.refs.cardsLayer.getBoundingClientRect();
     const [lx, ly] = canonicalToLocal(c.x, c.y, this.self.seat as Seat);
@@ -768,12 +800,31 @@ export class Game {
   }
 
   private refreshZoneActivity(): void {
+    const now = Date.now();
+    const STALE_GRACE_MS = 15000;
+    let anyStale = false;
     for (let i = 0; i < this.refs.zones.length; i++) {
       const z = this.refs.zones[i]!;
       const hasPlayer = Array.from(this.players.values()).some((p) => p.seat === i);
       const isSelfSeat = i === this.self.seat;
-      z.classList.toggle("zone--empty", !hasPlayer && !isSelfSeat);
+      const lastSeen = this.lastSeenAt.get(`seat-${i}`) ?? 0;
+      const isStale = !hasPlayer && !isSelfSeat && lastSeen > 0 && (now - lastSeen) < STALE_GRACE_MS;
+      if (isStale) anyStale = true;
+      z.classList.toggle("zone--empty", !hasPlayer && !isSelfSeat && !isStale);
       z.classList.toggle("zone--active", hasPlayer || isSelfSeat);
+      z.classList.toggle("zone--stale", isStale);
+      if (hasPlayer) z.dataset.state = "active";
+      else if (isStale) z.dataset.state = "stale";
+      else if (isSelfSeat) z.dataset.state = "active";
+      else z.dataset.state = "vacant";
+    }
+    // While any zone is in stale grace, schedule a re-check at the grace
+    // boundary so the fade settles to vacant without further presence updates.
+    if (anyStale && !this.staleSweepHandle) {
+      this.staleSweepHandle = window.setTimeout(() => {
+        this.staleSweepHandle = 0;
+        this.refreshZoneActivity();
+      }, 1500);
     }
   }
 
@@ -781,6 +832,10 @@ export class Game {
     openLeaveConfirm(this.modal, this.room, async () => {
       void this.audio.play("ui-close");
       try { sessionStorage.removeItem(this.snapshotKey()); } catch {}
+      // Fresh room → fresh handle. The next visit rolls a new KABAL name.
+      resetName();
+      this.self.name = getOrAssignName();
+      this.selfJoinedAt = Date.now();
       await this.bus.disconnect();
       this.resetTable();
       this.room = newRoom();

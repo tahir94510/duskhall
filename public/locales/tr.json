@@ -41,6 +41,7 @@
     "items": [
       { "keys": "Sol tık, sürükle", "desc": "İmlecin altındaki kartı taşı" },
       { "keys": "Ctrl + sol tık, sürükle", "desc": "İmlecin altındaki yığını taşı" },
+      { "keys": "Sağ tık", "desc": "İmlecin altındaki yığını çevir (tek kart yalnız çevrilir)" },
       { "keys": "Scroll", "desc": "İmlecin altındaki tek kartı çevir" },
       { "keys": "Ctrl + scroll", "desc": "İmlecin altındaki yığını toplu çevir" },
       { "keys": "Shift + scroll", "desc": "Kartı 90° döndür (yana, çevirme değil)" },
@@ -252,7 +253,7 @@
           "BÜYÜLER 1 HP harcar. Oynamadan önce geçerli bir hedef belirleyin. Tüm olası hedefler hedef alınamaz ise büyü oynanamaz; HP harcanmaz.",
           "MÜDAHALELER HP harcamaz. Sıra kimde olursa olsun, en son eyleme tepki olarak oynanabilir.",
           "Karmik Yansıma ve Kan Kefareti BENCİL: yalnızca KENDİ kartlarınızı veya kendinizi korumak için.",
-          "Sustur! EVRENSEL: taze atılmış herhangi bir Büyü veya Müdahaleyi iptal edebilir.",
+          "Sustur! EVRENSEL: taze atılmış herhangi bir Büyü veya Müdahaleyi iptal edebilir. Mühür veya Hizmetkâr yerleştirmek (Yarat eylemi) Büyü ya da Müdahale DEĞİLDİR — Sustur! masaya yerleştirmeyi durduramaz.",
           "HİZMETKÂR: HİZMETKÂR KALKANI mutlaktır. Bir oyuncunun masasında en az 1 Hizmetkâr varsa, hiçbir rakip o oyuncunun Mühürlerini doğrudan hedef alamaz. Rakip önce tüm Hizmetkârları yok etmek zorundadır."
         ]
       },
@@ -314,8 +315,26 @@
         "id": "encyclopedia",
         "title": "11. Kart ansiklopedisi",
         "body": [
-          "Her kart yüzünde yazıldığı gibi çözülür. Bu uygulamadaki bilgi panelleri metni doğrudan bu kural kitabından alır; ihtilafta ansiklopedi nihaidir.",
-          "Bir kart metni ile genel bir kural çelişiyor gibi göründüğünde, kart metni kazanır."
+          "Her kart yüzünde yazıldığı gibi çözülür. Bir kart metni ile genel bir kural çelişiyor gibi göründüğünde, kart metni kazanır.",
+          "MÜHÜRLER (16 toplam, 4 benzersiz × 4 kopya):",
+          "Zaman Çatlağı: Odaklanma'da 2 yerine 3 kart çekersin. Her ek kopya +1 (en çok 4 kopya, 6 kart). Konulduğu turun ERTESİ tur etkinleşir.",
+          "Hiçlik Örtüsü: Diğer Mühürlerin ve elin düşman büyüleri/efektleri tarafından hedeflenemez. Örtü'nün kendisi her zaman hedeflenebilir. Konulduğu anda etkin. Birden fazla kopya birikmez.",
+          "Kızıl Monolit: Aksiyon'da 2 yerine 3 HP kullanırsın. Her ek kopya +1 HP (en fazla 5). Konulduğu turun ERTESİ tur etkinleşir.",
+          "Ölüçağıranın Gözü: Kapanış'ın başında, el limiti kontrolünden ÖNCE, Çöplüğün en üst kartını eline almak ZORUNDASIN. Her ek kopya bir kart daha alır. Çöplük boşsa boşa düşer. Konulduğu turda çalışır.",
+          "BÜYÜLER (24 toplam):",
+          "Eterik Çarpma: 1 HP. Bir rakibin masasındaki 1 kartı yok et. Hizmetkâr Kalkanı uygulanır.",
+          "Gölge Hırsızlığı: 1 HP. Rakibinin eli kapatılır; rastgele 1 kart eline çekilir. Hiçlik Örtüsü engeller.",
+          "Kadim Görü: 1 HP. Desteden 3 kart çek. Yalnızca kendine oynanır; hiçbir rakibi hedeflemez.",
+          "Zihin Paraziti: 1 HP. Bir rakibin Hizmetkâr'ını kendi masanıza alın. 3-Hizmetkâr limitiniz uygulanır.",
+          "Kaderin Cilvesi: 1 HP. Kendi elindeki tüm kartları seçilen bir rakibin elindeki tüm kartlarla takas et. Hiçlik Örtüsü engeller.",
+          "MÜDAHALELER (16 toplam):",
+          "Sustur!: 0 HP. Taze atılmış bir Büyü veya Müdahaleyi iptal et. İptal edilen kart ve Sustur! Çöplüğe gider. Evrensel hedef.",
+          "Karmik Yansıma: 0 HP. BENCİL — yalnızca SİZE veya kartlarınıza yönelik saldırıyı iptal eder ve saldırgana yansıtır.",
+          "Kan Kefareti: 0 HP. BENCİL — yalnızca SİZE ait bir Mühür yok edilecekken oynanır; elinden 2 rastgele kart at ve Mühür'ü kurtar.",
+          "HİZMETKÂRLAR (16 toplam):",
+          "Rünik Bekçi: Masandayken TÜM Mühürlerin hedeflenemez olur. Hizmetkâr Kalkanı geçerli; rakipler önce tüm Hizmetkârları temizlemelidir.",
+          "Buzul Ucube: Yok edildiğinde, onu yok eden oyuncu sonraki tüm turunu atlar (Odaklanma, Aksiyon, Kapanış). Atlanan turda Müdahaleler oynanabilir.",
+          "Gölge Katili: Girişte, bir rakibin Hizmetkâr'ı varsa BİRİNİ yok etmek ZORUNDASIN. Bu yolla Buzul Ucube yok edilirse cezayı SEN ödersin."
         ]
       },
       {
@@ -354,7 +373,7 @@
         "title": "14. Dijital masa",
         "body": [
           "KABAL web sürümü serbest bir masadır. Otomatik kural motoru yoktur; oyuncular kuralları bu kitaba göre kendileri uygular.",
-          "Sol basılı tutmak kartı sürükler. Sağ tık çevirir. Ctrl + sol tık yığını taşır. Ctrl + sağ tık yığını toplu çevirir. Ctrl + yukarı scroll yığını toplar; Ctrl + aşağı scroll yığını karıştırır.",
+          "Sol tıkla kartı sürükle. Sağ tık imleç altındaki yığını çevirir. Ctrl + sol tık yığını taşır. Scroll tek kartı çevirir; Ctrl + scroll yığını toplu çevirir. Shift + scroll kartı 90° yana döndürür. G ile yığını topla, M ile karıştır.",
           "Kendi alanın alttaki blur'lu bölge. Oradaki kartlar sana özeldir; rakipler yalnızca sayıyı görür. Rakip alanına kart bırakılamaz, kenarda bırak, sahibi kendisi içeri çeker.",
           "Herkes ayrıldığında oda kapanır. Odayı sıfırla tıklandığında yeni bağlantıyla taze bir oda açılır."
         ]

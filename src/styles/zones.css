@@ -44,8 +44,16 @@
   opacity: 0.7;
 }
 
-.zone--empty { opacity: 0.35; color: var(--ivory-mute); }
+.zone--empty { opacity: 0.32; color: var(--ivory-mute); }
 .zone--active { color: var(--seat-color); border-color: color-mix(in oklab, var(--seat-color) 40%, transparent); opacity: 1; }
+/* Recently-departed seat: a medium fade for 15s so the table doesn't blink to
+   "vacant" the instant a peer refreshes or briefly disconnects. */
+.zone--stale {
+  opacity: 0.58;
+  color: var(--ivory-mute);
+  border-color: color-mix(in oklab, var(--seat-color) 22%, transparent);
+  transition: opacity 600ms var(--ease), border-color 600ms var(--ease);
+}
 
 .zone--top { grid-column: 2; grid-row: 1; }
 .zone--left { grid-column: 1; grid-row: 2; }

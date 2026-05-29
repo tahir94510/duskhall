@@ -112,9 +112,12 @@
   -webkit-user-drag: none;
   position: relative;
   z-index: 1;
+  opacity: 0;
+  transition: opacity 260ms var(--ease);
 }
 
-.card__art[data-loaded="false"] { display: none; }
+.card__art[data-loaded="false"] { opacity: 0; }
+.card__art[data-loaded="true"] { opacity: 1; }
 
 /* Once art is loaded, drop the empty-state inner frame. */
 .card__face--front[data-empty="false"]::before { display: none; }

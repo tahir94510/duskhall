@@ -41,6 +41,7 @@
     "items": [
       { "keys": "Left-press, drag", "desc": "Move the card under the cursor" },
       { "keys": "Ctrl + Left-press, drag", "desc": "Move the whole stack under the cursor" },
+      { "keys": "Right-click", "desc": "Flip the stack under the cursor (a single card flips alone)" },
       { "keys": "Scroll", "desc": "Flip the single card under the cursor" },
       { "keys": "Ctrl + scroll", "desc": "Flip the whole stack under the cursor" },
       { "keys": "Shift + scroll", "desc": "Rotate the card 90° (sideways, not a flip)" },
@@ -252,7 +253,7 @@
           "SPELLS cost 1 HP. You must declare a legal target before casting. If every potential target is untargetable, the spell cannot be cast and HP is not spent.",
           "INTERVENTIONS cost no HP. They may be played at any moment, on anyone's turn, as a reaction to the most recent action.",
           "Karmic Reflection and Blood Atonement are SELFISH: usable only to protect YOURSELF or your own cards.",
-          "Silence! is UNIVERSAL: usable to cancel any newly cast Spell or Intervention, regardless of target.",
+          "Silence! is UNIVERSAL: usable to cancel any newly cast Spell or Intervention, regardless of target. Placement (Create) of a Seal or Servant is NOT a Spell or Intervention — Silence! cannot stop a tableau placement.",
           "SERVANTS: the SERVANT SHIELD is absolute. While a player has at least one Servant on their tableau, no rival may target any of that player's Seals directly. Even targetable cards like Runic Warden cannot be skipped; the rival must clear every Servant first."
         ]
       },
@@ -314,8 +315,26 @@
         "id": "encyclopedia",
         "title": "11. Card encyclopedia",
         "body": [
-          "Every card resolves exactly as written on its face. The hover panels in this app pull their text directly from this rulebook; if a question arises, the encyclopedia is final.",
-          "When a card text and a general rule appear to disagree, the card text wins."
+          "Every card resolves exactly as written on its face. When a card text and a general rule appear to disagree, the card text wins.",
+          "SEALS (16 total, 4 unique × 4 copies):",
+          "Time Rift: During your Focus phase you draw 3 cards instead of 2. Each additional copy adds +1 draw (max 4 copies, 6 cards). Becomes active from the turn AFTER it is placed.",
+          "Veil of Void: Your other Seals and your hand cannot be targeted by enemy spells or effects. Veil of Void itself remains targetable. Active immediately when placed. Multiple copies do not stack.",
+          "Crimson Monolith: During your Action phase you spend 3 HP instead of 2. Each additional copy adds +1 HP, but your total HP can never exceed 5. Becomes active from the turn AFTER it is placed.",
+          "Necromancer's Eye: At the start of your Closing phase, before the hand-limit check, you MUST take the top card of the Discard into your hand. Each additional copy takes one more. If the Discard is empty the effect fizzles. Works on the very turn it is placed.",
+          "SPELLS (24 total):",
+          "Ether Strike: 1 HP. Destroy 1 card on a rival's tableau. Servant Shield applies.",
+          "Shadow Theft: 1 HP. Choose a rival; their hand is turned face-down and 1 card is taken at random into your hand. Blocked by Veil of Void.",
+          "Ancient Sight: 1 HP. Draw 3 cards from the deck. Self-targeted only; no opponent involved.",
+          "Mind Parasite: 1 HP. Take control of one Servant from a rival's tableau. Counts toward your 3-Servant limit.",
+          "Twist of Fate: 1 HP. Swap every card in your hand with every card in a chosen rival's hand. Blocked by Veil of Void.",
+          "INTERVENTIONS (16 total):",
+          "Silence!: 0 HP. Cancel a freshly cast Spell or Intervention. Both cards go to the Discard. Universal target.",
+          "Karmic Reflection: 0 HP. SELFISH — cancel an attack aimed at YOU and redirect it onto the attacker.",
+          "Blood Atonement: 0 HP. SELFISH — when one of YOUR Seals is about to be destroyed, discard 2 random cards from hand to save it.",
+          "SERVANTS (16 total):",
+          "Runic Warden: While in play, ALL of your Seals gain untargetable. Servant Shield still applies — rivals must clear Wardens first.",
+          "Glacial Aberration: When destroyed, the destroyer skips their entire next turn (Focus, Action, Closing). Interventions still allowed during the skip.",
+          "Shadow Slayer: On entry, if any rival has a Servant you MUST destroy one. If it kills a Glacial Aberration this way, YOU receive the skip penalty."
         ]
       },
       {
@@ -354,7 +373,7 @@
         "title": "14. The digital table",
         "body": [
           "KABAL on the web is a sandbox. There is no automated rules engine; players follow this rulebook themselves.",
-          "Left-press drags a card. Right-click flips it. Ctrl plus left-press drags the whole stack. Ctrl plus right-click flips the whole stack. Ctrl plus scroll up gathers; Ctrl plus scroll down shuffles.",
+          "Left-press drags a card. Right-click flips the stack under the cursor. Ctrl plus left-press drags the whole stack. Scroll flips a single card; Ctrl plus scroll flips the whole stack. Shift plus scroll rotates the card 90° sideways. Press G to gather the stack, M to shuffle it.",
           "Your zone is the bottom blurred area. Cards there are private to you; rivals see only the count. Cards cannot be dropped inside an opponent's zone, leave them on the rim and the owner draws them in.",
           "When everyone leaves, the room closes. Reset room opens a fresh one with a new link."
         ]
