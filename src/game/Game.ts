@@ -258,6 +258,28 @@ export class Game {
       this.refs.cardsLayer.appendChild(el);
     }
     this.state.topZ = z;
+    // Re-centre once layout is guaranteed settled. If the board was measured
+    // before its grid finished sizing, the half-card offset fraction would be
+    // wrong and the pile would drift to the slot's top-left; this corrects it.
+    requestAnimationFrame(() => requestAnimationFrame(() => this.recenterDeckPile()));
+  }
+
+  // Snap any cards still sitting in the freshly dealt pile (face-down, no
+  // owner, not yet moved by a player) precisely onto the Deck slot centre,
+  // using a fresh board measurement.
+  private recenterDeckPile(): void {
+    this.measureBoard();
+    if (this.boardSize.width < 50 || this.boardSize.height < 50) return;
+    const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
+    const cardH = cardW * 1.45;
+    const baseNx = DECK_NX - cardW / (2 * this.boardSize.width);
+    const baseNy = DECK_NY - cardH / (2 * this.boardSize.height);
+    for (const c of this.state.cards.values()) {
+      if (c.ownerSeat === null && !c.faceUp && c.rot === 0) {
+        c.x = baseNx;
+        c.y = baseNy;
+      }
+    }
   }
 
   private installKeyboardAndWheel(): void {
@@ -586,6 +608,22 @@ export class Game {
 
   private installRealtime(): void {
     this.bus.onPresence((players) => {
+      // Debounce presence so a page refresh (drop + rejoin within ~1s) does
+      // not make everyone else flicker seats/cursors. The latest roster wins.
+      this.pendingPresence = players;
+      if (this.presenceDebounce) return;
+      this.presenceDebounce = window.setTimeout(() => {
+        this.presenceDebounce = 0;
+        this.applyPresence(this.pendingPresence);
+      }, 350);
+    });
+    this.bindRealtimeEvents();
+  }
+
+  private pendingPresence: PresencePlayer[] = [];
+  private presenceDebounce = 0;
+
+  private applyPresence(players: PresencePlayer[]): void {
       // Deterministic seating: every client sorts the full presence list by id
       // and hands seats 0..3 to the first four. Everyone computes the same map,
       // so no two clients ever believe they hold the same seat. Anyone beyond
@@ -624,7 +662,9 @@ export class Game {
         }
       }
       this.refreshZoneActivity();
-    });
+  }
+
+  private bindRealtimeEvents(): void {
     this.bus.onGame((msg) => {
       if (msg.type === "patch" || msg.type === "snapshot") this.applyPatch(msg.payload);
       else if (msg.type === "hello" && this.players.size > 0) this.sendSnapshot();
