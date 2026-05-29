@@ -14,6 +14,9 @@ function kabalAssetManifest(): Plugin {
     "flip", "pickup", "place", "shuffle", "gather", "snap",
     "ui-click", "ui-open", "ui-close", "music"
   ]);
+  // Music playlist: in addition to "music", files named "music1", "music2", …
+  // are recognised. They play in order, loop back to the first when finished.
+  const MUSIC_RE = /^music[0-9]*$/;
 
   const generate = () => {
     const pub = resolve(process.cwd(), "public");
@@ -39,7 +42,7 @@ function kabalAssetManifest(): Plugin {
         if (dot < 1) continue;
         const id = f.slice(0, dot);
         const ext = f.slice(dot + 1).toLowerCase();
-        if (AUDIO_EXT.includes(ext) && AUDIO_NAMES.has(id)) audioEntries.push({ id, ext });
+        if (AUDIO_EXT.includes(ext) && (AUDIO_NAMES.has(id) || MUSIC_RE.test(id))) audioEntries.push({ id, ext });
       }
       writeFileSync(resolve(audioDir, "manifest.json"), JSON.stringify({ available: audioEntries }, null, 2) + "\n");
     }

@@ -78,6 +78,16 @@ export class DragController {
     if (e.button !== 0 && e.button !== 2) return;
     const id = cardEl.dataset.id;
     if (!id) return;
+
+    // Ownership guard: a card claimed by a rival seat cannot be picked up or
+    // flipped by anyone else. Sahipsiz (ownerSeat=null) kart serbest kalır.
+    const seedCard = this.state.cards.get(id);
+    if (seedCard && seedCard.ownerSeat != null && seedCard.ownerSeat !== this.hooks.getSelfSeat()) {
+      e.preventDefault();
+      this.hooks.playSfx("snap");
+      return;
+    }
+
     e.preventDefault();
 
     if (e.button === 2) {

@@ -4,7 +4,10 @@ export interface CardState {
   x: number;
   y: number;
   z: number;
-  rot: 0 | 1 | 2 | 3;
+  // Cumulative quarter-turn count. Each Shift+scroll or rotate adds ±1; the
+  // CSS rotation is `rot * 90deg`, so going past 270° continues forward to
+  // 360° / 450° instead of snapping backwards through modulo.
+  rot: number;
   faceUp: boolean;
   ownerSeat: number | null;
   v: number;

@@ -44,6 +44,12 @@ export class AudioEngine {
   private musicElement: HTMLAudioElement | null = null;
   private musicProcedural: { osc: OscillatorNode; lfo: OscillatorNode; gain: GainNode } | null = null;
   private booted = false;
+  // Sequential playlist: filled from the audio manifest (music, music1, music2…).
+  private musicPlaylist: Array<{ id: string; ext: string }> = [];
+  private musicIndex = 0;
+  // Last-active source per SFX so a rapid repeat fades the previous instance
+  // out smoothly instead of slamming on top of it.
+  private activeSfx = new Map<SfxName, { src: AudioBufferSourceNode; gain: GainNode }>();
 
   sfxVolume = readNum(LS_SFX, SFX_DEFAULT);
   musicVolume = readNum(LS_MUSIC, MUSIC_DEFAULT);
@@ -104,10 +110,33 @@ export class AudioEngine {
     if (ext) {
       const buf = await this.fetchBuffer(`/audio/${name}.${ext}`);
       if (buf) {
-        const src = this.ctx.createBufferSource();
+        // Smart overlap: if this SFX is already ringing, ramp the previous
+        // instance down over 40ms before the new one bursts in. Prevents the
+        // hard "double-click" doubling when actions fire in quick succession.
+        const ctx = this.ctx;
+        const now = ctx.currentTime;
+        const prev = this.activeSfx.get(name);
+        if (prev) {
+          try {
+            const g = prev.gain.gain;
+            g.cancelScheduledValues(now);
+            g.setValueAtTime(Math.max(g.value, 0.0001), now);
+            g.exponentialRampToValueAtTime(0.0001, now + 0.04);
+            prev.src.stop(now + 0.05);
+          } catch {}
+        }
+        const gain = ctx.createGain();
+        gain.gain.value = 1;
+        const src = ctx.createBufferSource();
         src.buffer = buf;
-        src.connect(this.sfxGain);
-        src.start();
+        src.connect(gain);
+        gain.connect(this.sfxGain);
+        const entry = { src, gain };
+        this.activeSfx.set(name, entry);
+        src.onended = () => {
+          if (this.activeSfx.get(name) === entry) this.activeSfx.delete(name);
+        };
+        src.start(now);
         return;
       }
     }
@@ -140,7 +169,8 @@ export class AudioEngine {
   }
 
   // Maps a sound name to the file extension that actually exists (or "" if the
-  // file is absent, in which case we fall back to the procedural synth).
+  // file is absent, in which case we fall back to the procedural synth). The
+  // playlist of music\d* tracks is filled as a side effect during the parse.
   private manifestPromise: Promise<Map<string, string>> | null = null;
   private loadManifest(): Promise<Map<string, string>> {
     if (this.manifestPromise) return this.manifestPromise;
@@ -149,12 +179,27 @@ export class AudioEngine {
       .catch(() => ({ available: [] }))
       .then((data: { available?: unknown }) => {
         const map = new Map<string, string>();
+        const tracks: Array<{ id: string; ext: string }> = [];
         if (Array.isArray(data.available)) {
           for (const e of data.available as Array<string | { id: string; ext?: string }>) {
-            if (typeof e === "string") map.set(e, "mp3");
-            else if (e && typeof e.id === "string") map.set(e.id, (e.ext || "mp3").replace(/^\./, ""));
+            if (typeof e === "string") {
+              map.set(e, "mp3");
+              if (/^music[0-9]*$/.test(e)) tracks.push({ id: e, ext: "mp3" });
+            } else if (e && typeof e.id === "string") {
+              const ext = (e.ext || "mp3").replace(/^\./, "");
+              map.set(e.id, ext);
+              if (/^music[0-9]*$/.test(e.id)) tracks.push({ id: e.id, ext });
+            }
           }
         }
+        // Stable playlist order: "music" first (legacy single-track convention),
+        // then numerically by trailing digits ("music1", "music2", "music10").
+        tracks.sort((a, b) => {
+          const na = a.id === "music" ? -1 : parseInt(a.id.slice(5), 10) || 0;
+          const nb = b.id === "music" ? -1 : parseInt(b.id.slice(5), 10) || 0;
+          return na - nb;
+        });
+        this.musicPlaylist = tracks;
         return map;
       });
     return this.manifestPromise;
@@ -298,30 +343,22 @@ export class AudioEngine {
   async startMusic(): Promise<void> {
     this.ensureContext();
     if (this.musicElement || this.musicProcedural) return;
-    const manifest = await this.loadManifest();
-    const musicExt = manifest.get("music");
-    if (musicExt) {
-      // A real music file: drive it as a plain looping <audio> element with
-      // its own .volume. This sidesteps the cross-browser quirks of routing a
-      // MediaElementSource through WebAudio, which was the reason music could
-      // silently fail to play.
-      const el = new Audio(`/audio/music.${musicExt}`);
-      el.loop = true;
+    await this.loadManifest();
+    if (this.musicPlaylist.length > 0) {
+      // One <audio> element shared across tracks. When the current track ends
+      // we advance to the next; after the last we loop back to the first.
+      const el = new Audio();
+      el.loop = false;
       el.preload = "auto";
       el.volume = this.effectiveMusic();
+      el.addEventListener("ended", () => {
+        if (!this.musicElement || this.musicPlaylist.length === 0) return;
+        this.musicIndex = (this.musicIndex + 1) % this.musicPlaylist.length;
+        this.playMusicTrack(this.musicIndex);
+      });
       this.musicElement = el;
-      try {
-        await el.play();
-      } catch {
-        // Autoplay can still be blocked; retry on the next user gesture.
-        const retry = () => {
-          el.play().catch(() => {});
-          window.removeEventListener("pointerdown", retry);
-          window.removeEventListener("keydown", retry);
-        };
-        window.addEventListener("pointerdown", retry, { once: true });
-        window.addEventListener("keydown", retry, { once: true });
-      }
+      this.musicIndex = 0;
+      this.playMusicTrack(0);
       return;
     }
     // No file: a gentle procedural ambient bed through the WebAudio master.
@@ -347,6 +384,27 @@ export class AudioEngine {
     osc2.start();
     lfo.start();
     this.musicProcedural = { osc, lfo, gain };
+  }
+
+  // Drive the shared <audio> element to track #i in the playlist. Autoplay
+  // blocking is handled by retrying on the next user gesture.
+  private playMusicTrack(i: number): void {
+    if (!this.musicElement || this.musicPlaylist.length === 0) return;
+    const track = this.musicPlaylist[i];
+    if (!track) return;
+    const el = this.musicElement;
+    el.src = `/audio/${track.id}.${track.ext}`;
+    el.volume = this.effectiveMusic();
+    el.play().catch(() => {
+      // Autoplay blocked — retry once on the next user gesture.
+      const retry = () => {
+        el.play().catch(() => {});
+        window.removeEventListener("pointerdown", retry);
+        window.removeEventListener("keydown", retry);
+      };
+      window.addEventListener("pointerdown", retry, { once: true });
+      window.addEventListener("keydown", retry, { once: true });
+    });
   }
 
   stopMusic(): void {
