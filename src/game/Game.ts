@@ -21,7 +21,7 @@ import {
   shuffleStack,
   setStackFaceUp
 } from "../table/StackOps.js";
-import { localToCanonical, canonicalToLocal, seatRotationDeg, type Seat } from "../table/rotation.js";
+import { rotateVec, seatRotationDeg, type Seat } from "../table/rotation.js";
 import { DECK_NX, DECK_NY } from "../table/constants.js";
 import type { RealtimeBus, PresencePlayer, CardPatch } from "../net/realtime.js";
 import type { RuntimeConfig } from "../net/config.js";
@@ -60,6 +60,12 @@ export class Game {
   private dragPreviewIds = new Set<string>();
   private dragPreviewHandle = 0;
   private cursorEls = new Map<string, HTMLDivElement>();
+  // Cache of card id -> DOM node so the render loop never has to query the DOM
+  // (a per-card querySelector every frame was the main idle-CPU jank source).
+  private cardEls = new Map<string, HTMLDivElement>();
+  // Dirty flag: the RAF loop only re-renders when something actually changed,
+  // so a still table costs nothing instead of churning every frame.
+  private renderRequested = true;
   private lastPointer: { x: number; y: number } | null = null;
   private boardSize = { width: 1, height: 1 };
   private spectator = false;
@@ -142,11 +148,35 @@ export class Game {
     this.refs.board.style.setProperty("--board-rot", `${seatRotationDeg(this.self.seat as Seat)}deg`);
   }
 
-  private localToCanonical(localX: number, localY: number): { nx: number; ny: number } {
-    const nx0 = localX / this.boardSize.width;
-    const ny0 = localY / this.boardSize.height;
-    const [nx, ny] = localToCanonical(nx0, ny0, this.self.seat as Seat);
-    return { nx, ny };
+  // Centre of the cards layer in viewport pixels. Rotation is applied about
+  // this centre by CSS, so it is invariant under the board rotation and can be
+  // read straight off the (possibly rotated) bounding box.
+  private boardCenter(): { cx: number; cy: number } {
+    const r = this.refs.cardsLayer.getBoundingClientRect();
+    return { cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
+  }
+
+  // Viewport pixel -> canonical [0,1] fraction. Inverts the CSS board rotation
+  // in real pixel space (see rotateVec) so it stays exact on a non-square board
+  // for every seat. For seat 0 (no rotation) this reduces to the old
+  // (clientX - left) / width mapping, so solo play is unchanged.
+  private screenToCanonical(clientX: number, clientY: number): { nx: number; ny: number } {
+    const { cx, cy } = this.boardCenter();
+    const [ux, uy] = rotateVec(clientX - cx, clientY - cy, -seatRotationDeg(this.self.seat as Seat));
+    return {
+      nx: (ux + this.boardSize.width / 2) / this.boardSize.width,
+      ny: (uy + this.boardSize.height / 2) / this.boardSize.height
+    };
+  }
+
+  // Canonical [0,1] fraction -> viewport pixel, matching exactly where CSS
+  // paints a card at that canonical position (used to place peer cursors).
+  private canonicalToScreen(nx: number, ny: number): { px: number; py: number } {
+    const { cx, cy } = this.boardCenter();
+    const lx = nx * this.boardSize.width - this.boardSize.width / 2;
+    const ly = ny * this.boardSize.height - this.boardSize.height / 2;
+    const [sx, sy] = rotateVec(lx, ly, seatRotationDeg(this.self.seat as Seat));
+    return { px: cx + sx, py: cy + sy };
   }
 
   private bindHooks(): void {
@@ -161,12 +191,10 @@ export class Game {
         }
         return null;
       },
-      toCanonical: (lx, ly) => this.localToCanonical(lx, ly),
+      toCanonical: (clientX, clientY) => this.screenToCanonical(clientX, clientY),
+      boardMetrics: () => ({ width: this.boardSize.width, height: this.boardSize.height }),
       pickStackUnder: (clientX, clientY) => {
-        const rect = this.refs.cardsLayer.getBoundingClientRect();
-        const localX = clientX - rect.left;
-        const localY = clientY - rect.top;
-        const top = this.topCardAtCanonicalPoint(localX, localY);
+        const top = this.topCardAtCanonicalPoint(clientX, clientY);
         if (!top) return [];
         return findStackOverlapping(this.state, this.boardSize, top.id);
       },
@@ -199,8 +227,7 @@ export class Game {
         if (this.pointInZone(this.self.seat, x, y)) return;
         // Broadcast canonical (perspective-independent) coords so peers can
         // re-project the cursor into their own rotated view.
-        const rect = this.refs.cardsLayer.getBoundingClientRect();
-        const { nx, ny } = this.localToCanonical(x - rect.left, y - rect.top);
+        const { nx, ny } = this.screenToCanonical(x, y);
         this.bus.sendCursor({ id: this.self.id, x: nx, y: ny, seat: this.self.seat });
       },
       playSfx: (name) => { void this.audio.play(name as SfxName); }
@@ -208,8 +235,8 @@ export class Game {
     this.drag = new DragController(this.refs.cardsLayer, this.state, hooks);
   }
 
-  private topCardAtCanonicalPoint(localX: number, localY: number): CardState | null {
-    const { nx, ny } = this.localToCanonical(localX, localY);
+  private topCardAtCanonicalPoint(clientX: number, clientY: number): CardState | null {
+    const { nx, ny } = this.screenToCanonical(clientX, clientY);
     const w = this.boardSize.width;
     const h = this.boardSize.height;
     const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
@@ -266,6 +293,7 @@ export class Game {
       el.style.transform = tf;
       el.dataset.tf = tf;
       this.refs.cardsLayer.appendChild(el);
+      this.cardEls.set(cardState.id, el);
     }
     this.state.topZ = z;
     // Re-centre once layout is guaranteed settled. If the board was measured
@@ -290,6 +318,7 @@ export class Game {
         c.y = baseNy;
       }
     }
+    this.requestRender();
   }
 
   private installKeyboardAndWheel(): void {
@@ -307,8 +336,7 @@ export class Game {
         const pt = this.lastPointer;
         if (!pt) return;
         this.measureBoard();
-        const rect = this.refs.cardsLayer.getBoundingClientRect();
-        const top = this.topCardAtCanonicalPoint(pt.x - rect.left, pt.y - rect.top);
+        const top = this.topCardAtCanonicalPoint(pt.x, pt.y);
         if (!top) return;
         e.preventDefault();
         if (k === "g") this.gatherAt(top.id);
@@ -329,8 +357,7 @@ export class Game {
       const pt = this.lastPointer;
       if (!pt) return;
       this.measureBoard();
-      const rect = this.refs.cardsLayer.getBoundingClientRect();
-      const top = this.topCardAtCanonicalPoint(pt.x - rect.left, pt.y - rect.top);
+      const top = this.topCardAtCanonicalPoint(pt.x, pt.y);
       if (!top) return; // empty space: do nothing
 
       // Ownership guard: cards owned by a rival seat are off-limits to scroll.
@@ -388,7 +415,7 @@ export class Game {
     const w = this.boardSize.width;
     const h = this.boardSize.height;
     for (const id of ids) {
-      const el = this.refs.cardsLayer.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
+      const el = this.cardEls.get(id);
       const c = this.state.cards.get(id);
       if (!el || !c) continue;
       const a1 = (4 + Math.random() * 4) * (Math.random() < 0.5 ? 1 : -1);
@@ -410,6 +437,9 @@ export class Game {
         el.style.removeProperty("--base-rot");
         el.style.removeProperty("--a1");
         el.style.removeProperty("--a2");
+        // The keyframe owned the transform; repaint so the inline transform is
+        // restored cleanly now that the wobble class is gone.
+        this.requestRender();
       }, 380);
     }
   }
@@ -490,6 +520,7 @@ export class Game {
         el.style.transform = tf;
         el.dataset.tf = tf;
         this.refs.cardsLayer.appendChild(el);
+        this.cardEls.set(cardState.id, el);
         if (cardState.z > z) z = cardState.z;
         z++;
       }
@@ -595,6 +626,9 @@ export class Game {
   }
 
   private scheduleFlush(): void {
+    // Every local mutation routes through here, so this is the single place
+    // that guarantees the layout gets repainted on the next frame.
+    this.requestRender();
     if (this.flushHandle) return;
     this.flushHandle = window.setTimeout(() => {
       this.flushHandle = 0;
@@ -693,6 +727,8 @@ export class Game {
         }
       }
       this.refreshZoneActivity();
+      // Seat / concealment / perspective may have changed — repaint.
+      this.requestRender();
   }
 
   private bindRealtimeEvents(): void {
@@ -732,6 +768,7 @@ export class Game {
       c.ownerSeat = upd.ownerSeat;
       if (c.z > this.state.topZ) this.state.topZ = c.z;
     }
+    this.requestRender();
   }
 
   private renderCursor(c: { id: string; x: number; y: number; seat: number }): void {
@@ -757,17 +794,21 @@ export class Game {
     const label = el.querySelector(".cursor-ghost__label");
     const peerName = this.players.get(c.id)?.name || `P${seat + 1}`;
     if (label) label.textContent = peerName;
-    // c.x / c.y are canonical fractions; re-project into our own rotated view.
-    const rect = this.refs.cardsLayer.getBoundingClientRect();
-    const [lx, ly] = canonicalToLocal(c.x, c.y, this.self.seat as Seat);
-    const px = rect.left + lx * this.boardSize.width;
-    const py = rect.top + ly * this.boardSize.height;
+    // c.x / c.y are canonical fractions; re-project into our own rotated view
+    // in real pixel space so the ghost lands exactly where CSS paints cards.
+    const { px, py } = this.canonicalToScreen(c.x, c.y);
     el.style.transform = `translate(${px}px, ${py}px)`;
   }
+
+  // Mark the card layout as needing a repaint on the next animation frame.
+  // Coalesces many mutations in one frame into a single render.
+  private requestRender(): void { this.renderRequested = true; }
 
   private startRenderLoop(): void {
     const tick = () => {
       requestAnimationFrame(tick);
+      if (!this.renderRequested) return;
+      this.renderRequested = false;
       this.renderAllCards();
     };
     tick();
@@ -777,7 +818,7 @@ export class Game {
     const w = this.boardSize.width;
     const h = this.boardSize.height;
     for (const c of this.state.cards.values()) {
-      const el = this.refs.cardsLayer.querySelector<HTMLDivElement>(`[data-id="${c.id}"]`);
+      const el = this.cardEls.get(c.id);
       if (!el) continue;
       if (!el.classList.contains("is-held") && !el.classList.contains("is-shuffling")) {
         const transform = `translate3d(${c.x * w}px, ${c.y * h}px, 0) rotate(${c.rot * 90}deg)`;
@@ -849,11 +890,13 @@ export class Game {
   private resetTable(): void {
     this.refs.cardsLayer.innerHTML = "";
     this.state.cards.clear();
+    this.cardEls.clear();
     this.state.topZ = 10;
     this.dirtyIds.clear();
     this.patchVersion = 0;
     for (const el of this.cursorEls.values()) el.remove();
     this.cursorEls.clear();
+    this.requestRender();
   }
 
   private onLocale(): void {
