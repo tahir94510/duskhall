@@ -76,7 +76,9 @@ export class Game {
       onFlip: (id) => this.flipCard(id),
       onGather: (id) => this.gatherAt(id),
       onMix: (id) => this.shuffleAt(id),
-      onStackToggleFlip: (id) => this.toggleStackFlip(id)
+      onStackToggleFlip: (id) => this.toggleStackFlip(id),
+      onRotate: (id) => this.rotateCard(id),
+      stackFor: (id) => findStackOverlapping(this.state, this.boardSize, id)
     });
     this.header = new Header({
       onRules: () => { void this.audio.play("ui-open"); openRulesModal(this.modal); },
@@ -117,9 +119,10 @@ export class Game {
   }
 
   private measureBoard(): void {
-    const r = this.refs.cardsLayer.getBoundingClientRect();
-    this.boardSize.width = Math.max(1, r.width);
-    this.boardSize.height = Math.max(1, r.height);
+    // Use clientWidth/Height (raw layout box) instead of getBoundingClientRect
+    // so the board-perspective CSS rotation never warps our canonical math.
+    this.boardSize.width = Math.max(1, this.refs.cardsLayer.clientWidth);
+    this.boardSize.height = Math.max(1, this.refs.cardsLayer.clientHeight);
   }
 
   private applyBoardPerspective(): void {
@@ -299,16 +302,15 @@ export class Game {
         if (!stack.length) return;
         if (dir < 0) {
           if (this.throttleWheel("gather", 200)) return;
-          // Centre the pile on the cursor: shift focus by half a card so the
-          // card's centre (not its top-left) sits under the pointer.
-          const { nx, ny } = this.localToCanonical(localX, localY);
-          const cardW = this.cardW();
-          const halfWn = cardW / (2 * this.boardSize.width);
-          const halfHn = (cardW * 1.45) / (2 * this.boardSize.height);
-          gatherStack(this.state, stack, nx - halfWn, ny - halfHn);
+          // Align the pile to the TOP card already under the cursor. The whole
+          // stack collects exactly onto that card's position — no teleport, no
+          // cursor-centre offset. (top.x / top.y are top-left canonical.)
+          gatherStack(this.state, stack, top.x, top.y);
           void this.audio.play("gather");
         } else {
-          // Throttle so rapid wheel ticks don't restart the riffle every frame.
+          // Shuffle is only meaningful on 2+ cards. Single-card stacks are
+          // ignored — no sound, no animation, no state change.
+          if (stack.length < 2) return;
           if (this.throttleWheel("shuffle", 420)) return;
           shuffleStack(this.state, stack);
           this.applyShuffleJitter(stack);
@@ -337,11 +339,6 @@ export class Game {
     if (this.wheelThrottle[key] && now - this.wheelThrottle[key]! < ms) return true;
     this.wheelThrottle[key] = now;
     return false;
-  }
-
-  private cardW(): number {
-    const w = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w"));
-    return Number.isFinite(w) ? w : 96;
   }
 
   private applyShuffleJitter(ids: string[]): void {
@@ -453,6 +450,15 @@ export class Game {
       this.patchVersion = data.v || 0;
       return true;
     } catch { return false; }
+  }
+
+  private rotateCard(id: string): void {
+    const c = this.state.cards.get(id);
+    if (!c) return;
+    c.rot = (((c.rot + 1) % 4) + 4) % 4 as 0 | 1 | 2 | 3;
+    this.dirtyIds.add(id);
+    this.scheduleFlush();
+    void this.audio.play("flip");
   }
 
   private flipCard(id: string): void {

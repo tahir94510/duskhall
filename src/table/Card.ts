@@ -1,4 +1,3 @@
-import { BACK_SIGIL } from "../ui/icons.js";
 import { t } from "../i18n/index.js";
 
 // Card art convention: drop files into public/cards/ and list them in
@@ -45,7 +44,7 @@ export function createCardElement(instanceId: string, defId: string): { el: HTML
 
   const back = document.createElement("div");
   back.className = "card__face card__face--back";
-  back.innerHTML = `<span class="card__back-sigil">${BACK_SIGIL}</span>`;
+  // Empty interior; the entire visual identity lives on the card's border.
 
   const front = document.createElement("div");
   front.className = "card__face card__face--front";

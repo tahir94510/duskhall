@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>KABAL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <script>
+      // Defensive SPA fallback. If Vercel ever serves this 404 page for a
+      // valid room slug, redirect to root keeping the path so the SPA can
+      // pick it up. window.history.replaceState avoids leaving a 404 hit
+      // in the browser history.
+      (function () {
+        var p = window.location.pathname || "/";
+        if (p !== "/" && p !== "/404.html") {
+          window.location.replace("/" + p.replace(/^\/+/, ""));
+        }
+      })();
+    </script>
+    <style>
+      html, body {
+        margin: 0; padding: 0; height: 100%;
+        background: #000; color: #f3efe5;
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+      }
+      .wrap {
+        position: fixed; inset: 0;
+        display: grid; place-items: center;
+        text-align: center; padding: 24px;
+      }
+      .card {
+        max-width: 360px;
+        border: 1px solid rgba(243, 239, 229, 0.14);
+        border-radius: 14px;
+        padding: 28px 24px;
+        background: #0a0a0a;
+      }
+      svg { width: 40px; height: 56px; margin: 0 auto 14px; }
+      h1 { margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+      p { margin: 0 0 18px; font-size: 13px; line-height: 1.55; color: #aea99d; }
+      a {
+        display: inline-block; padding: 8px 18px;
+        background: #f3efe5; color: #000; text-decoration: none;
+        border-radius: 8px; font-weight: 600; font-size: 12px;
+        letter-spacing: 0.04em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <svg viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
+          <g fill="none" stroke="#f3efe5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M24 4 L40 32 L24 60 L8 32 Z" />
+            <path d="M24 4 L24 60" />
+            <circle cx="24" cy="32" r="3.5" fill="#f3efe5" stroke="none" />
+          </g>
+        </svg>
+        <h1>Page not found.</h1>
+        <p>That link does not point to a known KABAL room.</p>
+        <a href="/">Open a new room</a>
+      </div>
+    </div>
+  </body>
+</html>
