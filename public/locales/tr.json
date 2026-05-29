@@ -20,6 +20,7 @@
     "copyLink": "Davet bağlantısını kopyala",
     "linkCopied": "Davet bağlantısı kopyalandı",
     "newRoom": "Yeni bir oda açıldı.",
+    "roomFull": "Oda dolu — izleyici olarak bakıyorsun.",
     "timer": "Süre",
     "waiting": "Oyuncular bekleniyor..."
   },
@@ -40,8 +41,9 @@
       { "keys": "Ctrl + sol tık, sürükle", "desc": "İmlecin altındaki yığını taşı" },
       { "keys": "Sağ tık", "desc": "İmlecin altındaki kart(lar)ı çevir" },
       { "keys": "Scroll", "desc": "İmlecin altındaki tek kartı çevir" },
-      { "keys": "Ctrl / Shift + yukarı scroll", "desc": "Yığını imlece topla" },
-      { "keys": "Ctrl / Shift + aşağı scroll", "desc": "Yığını yerinde karıştır" }
+      { "keys": "Shift + scroll", "desc": "Kartı 90° döndür (yana, çevirme değil)" },
+      { "keys": "Ctrl + yukarı scroll", "desc": "Yığını imlece topla" },
+      { "keys": "Ctrl + aşağı scroll", "desc": "Yığını yerinde karıştır" }
     ],
     "mobileNote": "Dokunmatik cihazlarda kartın üstüne uzun basarak eylem çubuğunu aç."
   },

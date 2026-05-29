@@ -77,6 +77,9 @@ export class AudioEngine {
 
   async play(name: SfxName): Promise<void> {
     if (this.muted) return;
+    // Never create / touch an AudioContext before the first user gesture —
+    // otherwise the browser logs "AudioContext was not allowed to start".
+    if (!this.booted) return;
     this.ensureContext();
     if (!this.ctx || !this.sfxGain) return;
     const manifest = await this.loadManifest();

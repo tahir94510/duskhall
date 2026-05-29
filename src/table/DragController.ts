@@ -1,6 +1,8 @@
 import type { BoardState } from "./types.js";
 
 export interface DragHooks {
+  /** False for spectators (room full) — blocks all card manipulation. */
+  canInteract(): boolean;
   getSelfSeat(): number;
   pointInSelfZone(x: number, y: number): boolean;
   pointInOpponentZone(x: number, y: number): number | null;
@@ -70,6 +72,7 @@ export class DragController {
   };
 
   private onPointerDown = (e: PointerEvent): void => {
+    if (!this.hooks.canInteract()) return;
     const cardEl = this.cardFromTarget(e.target);
     if (!cardEl) return;
     if (e.button !== 0 && e.button !== 2) return;

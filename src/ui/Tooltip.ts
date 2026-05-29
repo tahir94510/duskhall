@@ -1,7 +1,7 @@
 import { t } from "../i18n/index.js";
 import { CARD_DEFS } from "../game/cards.js";
 
-const HOVER_DELAY = 800;
+const HOVER_DELAY = 320;
 const OFFSET = 14;
 
 interface ActiveTip { cardEl: HTMLElement; defId: string; }

@@ -156,19 +156,19 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--ivory);
-  margin: 22px 0 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--line);
+  margin: 38px 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-2);
 }
-.rules h2:first-child { margin-top: 0; }
+.rules h2:first-child { margin-top: 4px; }
 
 .rules p {
   font-size: 13px;
   color: var(--ivory);
-  line-height: 1.65;
-  margin: 0 0 8px;
+  line-height: 1.72;
+  margin: 0 0 11px;
 }
 
 .rules ul,
@@ -330,7 +330,6 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   font-size: 13px;
   color: var(--ivory);
 }
-.settings__row + .settings__row { border-top: 1px solid var(--line); }
 .settings__row--master {
   border-bottom: 1px solid var(--line);
   padding-bottom: 13px;

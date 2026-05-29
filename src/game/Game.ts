@@ -21,7 +21,7 @@ import {
   shuffleStack,
   setStackFaceUp
 } from "../table/StackOps.js";
-import { localToCanonical, seatRotationDeg, type Seat } from "../table/rotation.js";
+import { localToCanonical, canonicalToLocal, seatRotationDeg, type Seat } from "../table/rotation.js";
 import { DECK_NX, DECK_NY } from "../table/constants.js";
 import type { RealtimeBus, PresencePlayer, CardPatch } from "../net/realtime.js";
 import type { RuntimeConfig } from "../net/config.js";
@@ -60,6 +60,7 @@ export class Game {
   private cursorEls = new Map<string, HTMLDivElement>();
   private lastPointer: { x: number; y: number } | null = null;
   private boardSize = { width: 1, height: 1 };
+  private spectator = false;
 
   constructor(deps: GameDeps) {
     this.host = deps.host;
@@ -134,6 +135,7 @@ export class Game {
 
   private bindHooks(): void {
     const hooks: DragHooks = {
+      canInteract: () => !this.spectator,
       getSelfSeat: () => this.self.seat,
       pointInSelfZone: (x, y) => this.pointInZone(this.self.seat, x, y),
       pointInOpponentZone: (x, y) => {
@@ -179,7 +181,11 @@ export class Game {
       emitCursor: (x, y) => {
         // hide cursor when pointer is inside our own zone
         if (this.pointInZone(this.self.seat, x, y)) return;
-        this.bus.sendCursor({ id: this.self.id, x, y, seat: this.self.seat });
+        // Broadcast canonical (perspective-independent) coords so peers can
+        // re-project the cursor into their own rotated view.
+        const rect = this.refs.cardsLayer.getBoundingClientRect();
+        const { nx, ny } = this.localToCanonical(x - rect.left, y - rect.top);
+        this.bus.sendCursor({ id: this.self.id, x: nx, y: ny, seat: this.self.seat });
       },
       playSfx: (name) => { void this.audio.play(name as SfxName); }
     };
@@ -221,13 +227,14 @@ export class Game {
     const baseNx = DECK_NX - cardW / (2 * this.boardSize.width);
     const baseNy = DECK_NY - cardH / (2 * this.boardSize.height);
     let z = 1;
-    let i = 0;
     for (const card of deck) {
+      // Every card sits exactly on the Deck slot centre — a clean single pile,
+      // no diagonal fan. Depth is conveyed purely by z-order.
       const cardState: CardState = {
         id: card.instanceId,
         defId: card.defId,
-        x: baseNx + (i % 8) * 0.0004,
-        y: baseNy - i * 0.00015,
+        x: baseNx,
+        y: baseNy,
         z: z++,
         rot: 0,
         faceUp: false,
@@ -237,8 +244,12 @@ export class Game {
       this.state.cards.set(card.instanceId, cardState);
       const { el } = createCardElement(cardState.id, cardState.defId);
       el.style.zIndex = String(cardState.z);
+      // Set the transform before first paint so the smooth transition does NOT
+      // animate the card sliding in from the layer's top-left corner.
+      const tf = `translate3d(${baseNx * this.boardSize.width}px, ${baseNy * this.boardSize.height}px, 0) rotate(0deg)`;
+      el.style.transform = tf;
+      el.dataset.tf = tf;
       this.refs.cardsLayer.appendChild(el);
-      i++;
     }
     this.state.topZ = z;
   }
@@ -258,6 +269,7 @@ export class Game {
 
     window.addEventListener("wheel", (e) => {
       if (this.modal.isOpen()) return;
+      if (this.spectator) return; // spectators are read-only
       if (this.drag && this.drag.isActive()) return; // never act mid-drag
       const pt = this.lastPointer;
       if (!pt) return;
@@ -266,33 +278,70 @@ export class Game {
       const localY = pt.y - rect.top;
       const top = this.topCardAtCanonicalPoint(localX, localY);
       if (!top) return; // never act on empty space
-      const wantStack = e.ctrlKey || e.metaKey || e.shiftKey;
-      if (wantStack) {
+      const dir = e.deltaY > 0 ? 1 : -1;
+
+      // Shift + scroll: rotate the card under the cursor 90° in its own plane.
+      // (This is a flat rotation, NOT a front/back flip.)
+      if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        if (this.throttleWheel("rot", 120)) return;
+        top.rot = (((top.rot + dir) % 4) + 4) % 4 as 0 | 1 | 2 | 3;
+        this.dirtyIds.add(top.id);
+        this.scheduleFlush();
+        void this.audio.play("flip");
+        return;
+      }
+
+      // Ctrl + scroll: gather (up) / shuffle (down) the stack under the cursor.
+      if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         const stack = findStackOverlapping(this.state, this.boardSize, top.id);
         if (!stack.length) return;
-        if (e.deltaY < 0) {
+        if (dir < 0) {
+          if (this.throttleWheel("gather", 200)) return;
+          // Centre the pile on the cursor: shift focus by half a card so the
+          // card's centre (not its top-left) sits under the pointer.
           const { nx, ny } = this.localToCanonical(localX, localY);
-          gatherStack(this.state, stack, nx, ny);
+          const cardW = this.cardW();
+          const halfWn = cardW / (2 * this.boardSize.width);
+          const halfHn = (cardW * 1.45) / (2 * this.boardSize.height);
+          gatherStack(this.state, stack, nx - halfWn, ny - halfHn);
           void this.audio.play("gather");
         } else {
+          // Throttle so rapid wheel ticks don't restart the riffle every frame.
+          if (this.throttleWheel("shuffle", 420)) return;
           shuffleStack(this.state, stack);
           this.applyShuffleJitter(stack);
           void this.audio.play("shuffle");
         }
         for (const id of stack) this.dirtyIds.add(id);
         this.scheduleFlush();
-      } else {
-        // bare wheel over a card flips that single card
-        e.preventDefault();
-        top.faceUp = !top.faceUp;
-        this.dirtyIds.add(top.id);
-        this.scheduleFlush();
-        void this.audio.play("flip");
+        return;
       }
+
+      // Bare wheel over a card flips that single card.
+      e.preventDefault();
+      if (this.throttleWheel("flip", 160)) return;
+      top.faceUp = !top.faceUp;
+      this.dirtyIds.add(top.id);
+      this.scheduleFlush();
+      void this.audio.play("flip");
     }, { passive: false });
 
     window.addEventListener("contextmenu", (e) => e.preventDefault());
+  }
+
+  private wheelThrottle: Record<string, number> = {};
+  private throttleWheel(key: string, ms: number): boolean {
+    const now = performance.now();
+    if (this.wheelThrottle[key] && now - this.wheelThrottle[key]! < ms) return true;
+    this.wheelThrottle[key] = now;
+    return false;
+  }
+
+  private cardW(): number {
+    const w = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w"));
+    return Number.isFinite(w) ? w : 96;
   }
 
   private applyShuffleJitter(ids: string[]): void {
@@ -393,6 +442,9 @@ export class Game {
         this.state.cards.set(cardState.id, cardState);
         const { el } = createCardElement(cardState.id, cardState.defId);
         el.style.zIndex = String(cardState.z);
+        const tf = `translate3d(${cardState.x * this.boardSize.width}px, ${cardState.y * this.boardSize.height}px, 0) rotate(${cardState.rot * 90}deg)`;
+        el.style.transform = tf;
+        el.dataset.tf = tf;
         this.refs.cardsLayer.appendChild(el);
         if (cardState.z > z) z = cardState.z;
         z++;
@@ -494,18 +546,33 @@ export class Game {
 
   private installRealtime(): void {
     this.bus.onPresence((players) => {
+      // Deterministic seating: every client sorts the full presence list by id
+      // and hands seats 0..3 to the first four. Everyone computes the same map,
+      // so no two clients ever believe they hold the same seat. Anyone beyond
+      // the fourth becomes a read-only spectator.
+      const roster = players.length ? players.slice() : [this.presencePayload()];
+      if (!roster.some((p) => p.id === this.self.id)) roster.push(this.presencePayload());
+      roster.sort((a, b) => a.id.localeCompare(b.id));
+
       this.players.clear();
-      const others = players
-        .filter((p) => p.id !== this.self.id)
-        .sort((a, b) => a.id.localeCompare(b.id))
-        .slice(0, 3);
-      this.players.set(this.self.id, this.presencePayload());
-      const seatOrder = [1, 2, 3];
-      others.forEach((p, idx) => {
-        p.seat = seatOrder[idx] ?? 0;
-        p.color = SEAT_COLORS[p.seat] ?? SEAT_COLORS[0]!;
+      let mySeat = -1;
+      roster.forEach((p, idx) => {
+        const seat = idx < SEAT_COUNT ? idx : -1;
+        p.seat = seat;
+        p.color = seat >= 0 ? (SEAT_COLORS[seat] ?? SEAT_COLORS[0]!) : "#7a766f";
         this.players.set(p.id, p);
+        if (p.id === this.self.id) mySeat = seat;
       });
+
+      const wasSpectator = this.spectator;
+      this.spectator = mySeat < 0;
+      const resolvedSeat = mySeat < 0 ? 0 : mySeat; // spectators watch from seat 0
+      if (resolvedSeat !== this.self.seat) {
+        this.self.seat = resolvedSeat;
+        this.self.color = SEAT_COLORS[resolvedSeat] ?? SEAT_COLORS[0]!;
+        this.applyBoardPerspective();
+      }
+      if (this.spectator && !wasSpectator) toast(t("ui.roomFull"));
       this.refreshZoneActivity();
     });
     this.bus.onGame((msg) => {
@@ -557,7 +624,12 @@ export class Game {
       document.body.appendChild(el);
       this.cursorEls.set(c.id, el);
     }
-    el.style.transform = `translate(${c.x}px, ${c.y}px)`;
+    // c.x / c.y are canonical fractions; re-project into our own rotated view.
+    const rect = this.refs.cardsLayer.getBoundingClientRect();
+    const [lx, ly] = canonicalToLocal(c.x, c.y, this.self.seat as Seat);
+    const px = rect.left + lx * this.boardSize.width;
+    const py = rect.top + ly * this.boardSize.height;
+    el.style.transform = `translate(${px}px, ${py}px)`;
   }
 
   private startRenderLoop(): void {
@@ -575,9 +647,16 @@ export class Game {
       const el = this.refs.cardsLayer.querySelector<HTMLDivElement>(`[data-id="${c.id}"]`);
       if (!el) continue;
       if (!el.classList.contains("is-held") && !el.classList.contains("is-shuffling")) {
-        el.style.transform = `translate3d(${c.x * w}px, ${c.y * h}px, 0) rotate(${c.rot * 90}deg)`;
+        const transform = `translate3d(${c.x * w}px, ${c.y * h}px, 0) rotate(${c.rot * 90}deg)`;
+        // Dedup writes so a transition (added in card.css) only fires on a real
+        // change, and idle frames do no layout work.
+        if (el.dataset.tf !== transform) {
+          el.style.transform = transform;
+          el.dataset.tf = transform;
+        }
       }
-      el.style.zIndex = String(c.z);
+      const zStr = String(c.z);
+      if (el.style.zIndex !== zStr) el.style.zIndex = zStr;
       el.classList.toggle("is-faceup", c.faceUp);
       const hidden = c.ownerSeat !== null && c.ownerSeat !== this.self.seat && c.faceUp;
       el.classList.toggle("is-concealed", hidden);
