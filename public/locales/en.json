@@ -20,6 +20,7 @@
     "copyLink": "Copy invite link",
     "linkCopied": "Invite link copied",
     "newRoom": "A new room has been opened.",
+    "roomFull": "The room is full — you are watching as a spectator.",
     "timer": "Time",
     "waiting": "Waiting for players..."
   },
@@ -40,8 +41,9 @@
       { "keys": "Ctrl + Left-press, drag", "desc": "Move the whole stack under the cursor" },
       { "keys": "Right-click", "desc": "Flip the card(s) under the cursor" },
       { "keys": "Scroll", "desc": "Flip the single card under the cursor" },
-      { "keys": "Ctrl / Shift + scroll up", "desc": "Gather the stack to the cursor" },
-      { "keys": "Ctrl / Shift + scroll down", "desc": "Shuffle the stack in place" }
+      { "keys": "Shift + scroll", "desc": "Rotate the card 90° (sideways, not a flip)" },
+      { "keys": "Ctrl + scroll up", "desc": "Gather the stack to the cursor" },
+      { "keys": "Ctrl + scroll down", "desc": "Shuffle the stack in place" }
     ],
     "mobileNote": "On touch devices, long-press a card to open its action bar."
   },

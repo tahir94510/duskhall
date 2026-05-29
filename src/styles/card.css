@@ -9,18 +9,27 @@
   pointer-events: auto;
   user-select: none;
   -webkit-user-drag: none;
+  outline: none;
   z-index: var(--z-card);
-  transition: box-shadow var(--dur) var(--ease), filter var(--dur) var(--ease);
+  /* Smooth programmatic moves (gather settle, remote sync, flip). Held cards
+     opt out below so dragging stays 1:1 with the pointer. */
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), filter var(--dur) var(--ease);
   will-change: transform;
   box-shadow: var(--shadow-card);
 }
+
+.card:focus { outline: none; }
 
 .card.is-held {
   cursor: grabbing;
   z-index: var(--z-held);
   box-shadow: var(--shadow-card-held);
   filter: brightness(1.04);
+  transition: box-shadow var(--dur) var(--ease), filter var(--dur) var(--ease);
 }
+
+/* During a riffle the keyframe owns the transform — no competing transition. */
+.card.is-shuffling { transition: none; }
 
 .card__inner {
   position: absolute;

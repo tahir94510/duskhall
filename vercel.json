@@ -6,8 +6,7 @@
   "outputDirectory": "dist",
   "framework": null,
   "rewrites": [
-    { "source": "/api/config", "destination": "/api/config" },
-    { "source": "/:slug([A-Z0-9]{6})", "destination": "/index.html" }
+    { "source": "/((?!api/|assets/|locales/|cards/|audio/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {

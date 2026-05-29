@@ -15,6 +15,18 @@ function applyInline(escaped: string): string {
     .replace(/(^|\s)_([^_]+)_(?=\s|$|[.,;:!?])/g, '$1<em>$2</em>');
 }
 
+// Line-level rendering for paragraphs and list items: bold a leading label
+// that ends in a colon ("HAND:", "CREATE (1 HP):", "Time Rift:") so the
+// rulebook reads as structured definitions instead of a flat wall of text.
+function richLine(raw: string): string {
+  const escaped = escape(raw);
+  const m = escaped.match(/^([^:.!?]{2,46}):(\s+)(.+)$/s);
+  if (m) {
+    return `<strong>${m[1]}</strong>:${m[2]}${applyInline(m[3]!)}`;
+  }
+  return applyInline(escaped);
+}
+
 function renderBody(lines: string[]): string {
   const out: string[] = [];
   let bulletBuffer: string[] = [];
@@ -22,7 +34,7 @@ function renderBody(lines: string[]): string {
 
   const flushBullets = () => {
     if (!bulletBuffer.length) return;
-    out.push(`<ul>${bulletBuffer.map((l) => `<li>${applyInline(escape(l))}</li>`).join("")}</ul>`);
+    out.push(`<ul>${bulletBuffer.map((l) => `<li>${richLine(l)}</li>`).join("")}</ul>`);
     bulletBuffer = [];
   };
   const flushNumbered = () => {
@@ -65,7 +77,7 @@ function renderBody(lines: string[]): string {
     }
 
     flushAll();
-    out.push(`<p>${applyInline(escape(line))}</p>`);
+    out.push(`<p>${richLine(line)}</p>`);
   }
   flushAll();
   return out.join("");
