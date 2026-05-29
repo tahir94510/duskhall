@@ -1,3 +1,64 @@
 {
-  "available": []
+  "available": [
+    {
+      "id": "timeRift",
+      "ext": "webp"
+    },
+    {
+      "id": "veilOfVoid",
+      "ext": "webp"
+    },
+    {
+      "id": "crimsonMonolith",
+      "ext": "webp"
+    },
+    {
+      "id": "necromancersEye",
+      "ext": "webp"
+    },
+    {
+      "id": "etherStrike",
+      "ext": "webp"
+    },
+    {
+      "id": "shadowTheft",
+      "ext": "webp"
+    },
+    {
+      "id": "ancientSight",
+      "ext": "webp"
+    },
+    {
+      "id": "mindParasite",
+      "ext": "webp"
+    },
+    {
+      "id": "twistOfFate",
+      "ext": "webp"
+    },
+    {
+      "id": "silence",
+      "ext": "webp"
+    },
+    {
+      "id": "karmicReflection",
+      "ext": "webp"
+    },
+    {
+      "id": "bloodAtonement",
+      "ext": "webp"
+    },
+    {
+      "id": "runicWarden",
+      "ext": "webp"
+    },
+    {
+      "id": "glacialAberration",
+      "ext": "webp"
+    },
+    {
+      "id": "shadowSlayer",
+      "ext": "webp"
+    }
+  ]
 }
