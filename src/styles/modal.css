@@ -34,10 +34,11 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
-  padding: 18px 22px 14px;
+  gap: 16px;
+  padding: 16px 18px 12px;
   border-bottom: 1px solid var(--line);
 }
+.modal__head > div { min-width: 0; }
 .modal__title {
   font-family: var(--font-display);
   font-size: 16px;
@@ -47,6 +48,7 @@
 }
 .modal__sub { font-size: 12px; color: var(--ivory-mute); margin-top: 4px; }
 .modal__close {
+  flex: 0 0 auto;
   width: 30px;
   height: 30px;
   border-radius: 8px;

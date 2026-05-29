@@ -51,6 +51,7 @@ export class Game {
   private contextBar!: ContextBar;
   private audio = new AudioEngine();
   private drag!: DragController;
+  private tooltip!: Tooltip;
   private room = "";
   private patchVersion = 0;
   private dirtyIds = new Set<string>();
@@ -71,7 +72,7 @@ export class Game {
 
   async mount(): Promise<void> {
     this.refs = buildTable(this.host);
-    new Tooltip(this.refs.cardsLayer);
+    this.tooltip = new Tooltip(this.refs.cardsLayer);
     this.contextBar = new ContextBar({
       onFlip: (id) => this.flipCard(id),
       onGather: (id) => this.gatherAt(id),
@@ -84,6 +85,7 @@ export class Game {
       onRules: () => { void this.audio.play("ui-open"); openRulesModal(this.modal); },
       onSupport: () => { void this.audio.play("ui-open"); openSupportModal(this.modal, this.config.supportUrl); },
       onReset: () => { void this.audio.play("ui-open"); this.handleReset(); },
+      onResetDeck: () => { if (!this.spectator) this.resetDeck(); },
       onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio); },
       onShortcuts: () => { void this.audio.play("ui-open"); openShortcutsModal(this.modal); },
       onLangChange: () => this.onLocale()
@@ -109,6 +111,7 @@ export class Game {
     this.installRealtime();
     this.installAudioBoot();
     this.installBeforeUnload();
+    this.installVisibility();
     this.startRenderLoop();
 
     await this.bus.connect(this.room, this.presencePayload());
@@ -263,6 +266,21 @@ export class Game {
       if (e.key === "Escape" && this.modal.isOpen()) {
         e.preventDefault();
         this.modal.close();
+        return;
+      }
+      if (this.modal.isOpen() || this.spectator) return;
+      const k = e.key.toLowerCase();
+      // Desktop convenience: G gathers, M shuffles the stack under the cursor.
+      if (k === "g" || k === "m") {
+        const pt = this.lastPointer;
+        if (!pt) return;
+        this.measureBoard();
+        const rect = this.refs.cardsLayer.getBoundingClientRect();
+        const top = this.topCardAtCanonicalPoint(pt.x - rect.left, pt.y - rect.top);
+        if (!top) return;
+        e.preventDefault();
+        if (k === "g") this.gatherAt(top.id);
+        else this.shuffleAt(top.id);
       }
     });
 
@@ -270,90 +288,78 @@ export class Game {
       this.lastPointer = { x: e.clientX, y: e.clientY };
     }, { passive: true });
 
+    // Wheel interactions. A single global cooldown means every tick behaves
+    // identically — no "first three work then it breaks" inconsistency.
     window.addEventListener("wheel", (e) => {
       if (this.modal.isOpen()) return;
-      if (this.spectator) return; // spectators are read-only
-      if (this.drag && this.drag.isActive()) return; // never act mid-drag
+      if (this.spectator) return;
+      if (this.drag && this.drag.isActive()) return;
       const pt = this.lastPointer;
       if (!pt) return;
+      this.measureBoard();
       const rect = this.refs.cardsLayer.getBoundingClientRect();
-      const localX = pt.x - rect.left;
-      const localY = pt.y - rect.top;
-      const top = this.topCardAtCanonicalPoint(localX, localY);
-      if (!top) return; // never act on empty space
-      const dir = e.deltaY > 0 ? 1 : -1;
+      const top = this.topCardAtCanonicalPoint(pt.x - rect.left, pt.y - rect.top);
+      if (!top) return; // empty space: do nothing
 
-      // Shift + scroll: rotate the card under the cursor 90° in its own plane.
-      // (This is a flat rotation, NOT a front/back flip.)
+      e.preventDefault();
+      if (this.wheelCooldown()) return;
+
       if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        if (this.throttleWheel("rot", 120)) return;
-        top.rot = (((top.rot + dir) % 4) + 4) % 4 as 0 | 1 | 2 | 3;
+        // Shift + scroll: rotate the card 90° in its own plane.
+        const dir = e.deltaY > 0 ? 1 : -1;
+        top.rot = ((((top.rot + dir) % 4) + 4) % 4) as 0 | 1 | 2 | 3;
         this.dirtyIds.add(top.id);
         this.scheduleFlush();
         void this.audio.play("flip");
-        return;
-      }
-
-      // Ctrl + scroll: gather (up) / shuffle (down) the stack under the cursor.
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        const stack = findStackOverlapping(this.state, this.boardSize, top.id);
-        if (!stack.length) return;
-        if (dir < 0) {
-          if (this.throttleWheel("gather", 200)) return;
-          // Align the pile to the TOP card already under the cursor. The whole
-          // stack collects exactly onto that card's position — no teleport, no
-          // cursor-centre offset. (top.x / top.y are top-left canonical.)
-          gatherStack(this.state, stack, top.x, top.y);
-          void this.audio.play("gather");
-        } else {
-          // Shuffle is only meaningful on 2+ cards. Single-card stacks are
-          // ignored — no sound, no animation, no state change.
-          if (stack.length < 2) return;
-          if (this.throttleWheel("shuffle", 420)) return;
-          shuffleStack(this.state, stack);
-          this.applyShuffleJitter(stack);
-          void this.audio.play("shuffle");
-        }
-        for (const id of stack) this.dirtyIds.add(id);
+      } else if (e.ctrlKey || e.metaKey) {
+        // Ctrl + scroll: flip the whole stack under the cursor.
+        this.toggleStackFlip(top.id);
+      } else {
+        // Bare scroll: flip the single card under the cursor.
+        top.faceUp = !top.faceUp;
+        this.dirtyIds.add(top.id);
         this.scheduleFlush();
-        return;
+        void this.audio.play("flip");
       }
-
-      // Bare wheel over a card flips that single card.
-      e.preventDefault();
-      if (this.throttleWheel("flip", 160)) return;
-      top.faceUp = !top.faceUp;
-      this.dirtyIds.add(top.id);
-      this.scheduleFlush();
-      void this.audio.play("flip");
     }, { passive: false });
 
     window.addEventListener("contextmenu", (e) => e.preventDefault());
   }
 
-  private wheelThrottle: Record<string, number> = {};
-  private throttleWheel(key: string, ms: number): boolean {
+  private installVisibility(): void {
+    // When the tab is hidden, push the cursor off-board so peers stop showing
+    // a frozen ghost; it reappears on the next pointer move when we return.
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) this.bus.sendCursor({ id: this.self.id, x: -10, y: -10, seat: this.self.seat });
+    });
+  }
+
+  private wheelCooldownUntil = 0;
+  private wheelCooldown(): boolean {
     const now = performance.now();
-    if (this.wheelThrottle[key] && now - this.wheelThrottle[key]! < ms) return true;
-    this.wheelThrottle[key] = now;
+    if (now < this.wheelCooldownUntil) return true;
+    this.wheelCooldownUntil = now + 180;
     return false;
   }
 
+  // Shuffle visual: cards stay exactly in place and only wobble a few degrees
+  // around their own centre, giving a riffle feel without any positional move.
   private applyShuffleJitter(ids: string[]): void {
     const w = this.boardSize.width;
     const h = this.boardSize.height;
-    let i = 0;
     for (const id of ids) {
       const el = this.refs.cardsLayer.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
       const c = this.state.cards.get(id);
       if (!el || !c) continue;
-      // Anchor the keyframe to the card's current pixel position and pick a
-      // direction so adjacent cards sweep opposite ways for a riffle feel.
+      const a1 = (4 + Math.random() * 4) * (Math.random() < 0.5 ? 1 : -1);
+      const a2 = (3 + Math.random() * 3) * (a1 > 0 ? -1 : 1);
+      // The keyframe owns the transform while shuffling, so it must carry the
+      // card's translate too — otherwise it would snap to 0,0 and just spin.
       el.style.setProperty("--tx", `${c.x * w}px`);
       el.style.setProperty("--ty", `${c.y * h}px`);
-      el.style.setProperty("--dir", i % 2 === 0 ? "1" : "-1");
+      el.style.setProperty("--base-rot", `${c.rot * 90}deg`);
+      el.style.setProperty("--a1", `${a1}deg`);
+      el.style.setProperty("--a2", `${a2}deg`);
       el.classList.remove("is-shuffling");
       void el.offsetWidth;
       el.classList.add("is-shuffling");
@@ -361,9 +367,10 @@ export class Game {
         el.classList.remove("is-shuffling");
         el.style.removeProperty("--tx");
         el.style.removeProperty("--ty");
-        el.style.removeProperty("--dir");
-      }, 400);
-      i++;
+        el.style.removeProperty("--base-rot");
+        el.style.removeProperty("--a1");
+        el.style.removeProperty("--a2");
+      }, 380);
     }
   }
 
@@ -509,6 +516,33 @@ export class Game {
     void this.audio.play("shuffle");
   }
 
+  // Collect every card back into a freshly shuffled face-down pile on the Deck
+  // slot. A one-click "new game" without leaving the room.
+  private resetDeck(): void {
+    const order = seededDeck(`${this.room}:${Date.now()}`);
+    const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
+    const cardH = cardW * 1.45;
+    const baseNx = DECK_NX - cardW / (2 * this.boardSize.width);
+    const baseNy = DECK_NY - cardH / (2 * this.boardSize.height);
+    let z = 1;
+    for (const item of order) {
+      const c = this.state.cards.get(item.instanceId);
+      if (!c) continue;
+      c.x = baseNx;
+      c.y = baseNy;
+      c.z = z++;
+      c.rot = 0;
+      c.faceUp = false;
+      c.ownerSeat = null;
+      this.dirtyIds.add(c.id);
+    }
+    this.state.topZ = z;
+    this.scheduleFlush();
+    this.sendSnapshot();
+    void this.audio.play("shuffle");
+    toast(t("ui.deckReset"));
+  }
+
   private scheduleFlush(): void {
     if (this.flushHandle) return;
     this.flushHandle = window.setTimeout(() => {
@@ -579,6 +613,16 @@ export class Game {
         this.applyBoardPerspective();
       }
       if (this.spectator && !wasSpectator) toast(t("ui.roomFull"));
+
+      // Remove ghost cursors for players who are no longer present, so a
+      // reconnecting peer never leaves a stale duplicate (e.g. two "P2").
+      const presentIds = new Set(roster.map((p) => p.id));
+      for (const [id, el] of this.cursorEls) {
+        if (!presentIds.has(id)) {
+          el.remove();
+          this.cursorEls.delete(id);
+        }
+      }
       this.refreshZoneActivity();
     });
     this.bus.onGame((msg) => {
@@ -621,15 +665,26 @@ export class Game {
 
   private renderCursor(c: { id: string; x: number; y: number; seat: number }): void {
     if (c.id === this.self.id) return;
+    // Trust the authoritative seat from presence, not the seat in the cursor
+    // packet (which can lag a reseat and produce a duplicate "P2" label).
+    const seat = this.players.get(c.id)?.seat ?? c.seat;
     let el = this.cursorEls.get(c.id);
     if (!el) {
       el = document.createElement("div");
       el.className = "cursor-ghost";
-      el.style.setProperty("--cursor-color", SEAT_COLORS[c.seat] ?? SEAT_COLORS[0]!);
-      el.innerHTML = `<span class="cursor-ghost__pointer"></span><span class="cursor-ghost__label">P${c.seat + 1}</span>`;
+      el.innerHTML = `<span class="cursor-ghost__pointer"></span><span class="cursor-ghost__label"></span>`;
       document.body.appendChild(el);
       this.cursorEls.set(c.id, el);
     }
+    // Off-board sentinel (tab hidden / left the page): hide the ghost.
+    if (c.x < -1 || c.y < -1 || c.x > 2 || c.y > 2) {
+      el.style.display = "none";
+      return;
+    }
+    el.style.display = "";
+    el.style.setProperty("--cursor-color", SEAT_COLORS[seat] ?? SEAT_COLORS[0]!);
+    const label = el.querySelector(".cursor-ghost__label");
+    if (label) label.textContent = `P${seat + 1}`;
     // c.x / c.y are canonical fractions; re-project into our own rotated view.
     const rect = this.refs.cardsLayer.getBoundingClientRect();
     const [lx, ly] = canonicalToLocal(c.x, c.y, this.self.seat as Seat);
@@ -663,7 +718,10 @@ export class Game {
       }
       const zStr = String(c.z);
       if (el.style.zIndex !== zStr) el.style.zIndex = zStr;
+      const wasFaceUp = el.classList.contains("is-faceup");
       el.classList.toggle("is-faceup", c.faceUp);
+      // If a card just turned face-down, dismiss any tooltip it was showing.
+      if (wasFaceUp && !c.faceUp) this.tooltip.hide();
       const hidden = c.ownerSeat !== null && c.ownerSeat !== this.self.seat && c.faceUp;
       el.classList.toggle("is-concealed", hidden);
     }

@@ -60,17 +60,6 @@ export class DragController {
     window.addEventListener("pointercancel", this.onPointerUp, { passive: false });
     this.host.addEventListener("contextmenu", (e) => e.preventDefault());
     this.host.addEventListener("dragstart", (e) => e.preventDefault());
-    // Double-click on a card flips just that card (single card flip is the
-    // counterpart to right-click which flips the whole stack).
-    this.host.addEventListener("dblclick", (e) => {
-      if (!this.hooks.canInteract()) return;
-      const cardEl = this.cardFromTarget(e.target);
-      if (!cardEl) return;
-      const id = cardEl.dataset.id;
-      if (!id) return;
-      e.preventDefault();
-      this.hooks.onCardFlipped(id);
-    });
   }
 
   private cardFromTarget(target: EventTarget | null): HTMLDivElement | null {

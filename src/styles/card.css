@@ -53,50 +53,30 @@
   overflow: hidden;
 }
 
-/* Shared face decoration: the visual identity lives on the BORDER, not the
-   interior. Both faces use the same elegant dual-line frame with subtle
-   corner accents; the interior stays clean so user-supplied art can take
-   centre stage when face-up. */
-.card__face--back,
-.card__face--front {
-  background: #0a0a0a;
-  border: 1px solid rgba(243, 239, 229, 0.18);
-}
-
-.card__face--back::before,
-.card__face--front::before {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border-radius: calc(var(--r-card) - 2px);
+/* Both faces: flat, calm fill. The back is plain black with a single hairline
+   border — no sigil, no nested lines. The front (when no art is loaded) adds
+   one subtle inner frame so an empty card still reads as a card; user-supplied
+   art covers it entirely. */
+.card__face--back {
+  background: #050505;
   border: 1px solid rgba(243, 239, 229, 0.07);
-  pointer-events: none;
 }
 
-.card__face--back::after,
-.card__face--front::after {
+.card__face--front {
+  /* rotated away from camera until is-faceup flips */
+  transform: rotateY(180deg);
+  background: #050505;
+  border: 1px solid rgba(243, 239, 229, 0.12);
+}
+
+/* Empty front (no art yet): one quiet inner frame. */
+.card__face--front[data-empty="true"]::before {
   content: "";
   position: absolute;
-  inset: 8px;
+  inset: 5px;
+  border-radius: calc(var(--r-card) - 3px);
+  border: 1px solid rgba(243, 239, 229, 0.06);
   pointer-events: none;
-  background:
-    /* top-left corner */
-    linear-gradient(to right, rgba(243,239,229,0.35), rgba(243,239,229,0)) top left / 10px 1px no-repeat,
-    linear-gradient(to bottom, rgba(243,239,229,0.35), rgba(243,239,229,0)) top left / 1px 10px no-repeat,
-    /* top-right corner */
-    linear-gradient(to left, rgba(243,239,229,0.35), rgba(243,239,229,0)) top right / 10px 1px no-repeat,
-    linear-gradient(to bottom, rgba(243,239,229,0.35), rgba(243,239,229,0)) top right / 1px 10px no-repeat,
-    /* bottom-left */
-    linear-gradient(to right, rgba(243,239,229,0.35), rgba(243,239,229,0)) bottom left / 10px 1px no-repeat,
-    linear-gradient(to top, rgba(243,239,229,0.35), rgba(243,239,229,0)) bottom left / 1px 10px no-repeat,
-    /* bottom-right */
-    linear-gradient(to left, rgba(243,239,229,0.35), rgba(243,239,229,0)) bottom right / 10px 1px no-repeat,
-    linear-gradient(to top, rgba(243,239,229,0.35), rgba(243,239,229,0)) bottom right / 1px 10px no-repeat;
-}
-
-/* --- Front face: rotated away from camera until is-faceup flips --- */
-.card__face--front {
-  transform: rotateY(180deg);
 }
 
 .card__art {
@@ -113,9 +93,8 @@
 
 .card__art[data-loaded="false"] { display: none; }
 
-/* Front face with art covers the corner accents. */
-.card__face--front[data-empty="false"]::before,
-.card__face--front[data-empty="false"]::after { display: none; }
+/* Once art is loaded, drop the empty-state inner frame. */
+.card__face--front[data-empty="false"]::before { display: none; }
 
 /* Face-down: hover targets disabled */
 .card:not(.is-faceup) .card__face--front { pointer-events: none; }
@@ -132,15 +111,12 @@
   100% { outline: 0 solid transparent; outline-offset: 0; }
 }
 
-/* Shuffle jitter — applied transiently during shuffle */
-/* Riffle: cards stay at their canonical position but each card slides a few
-   pixels sideways in alternating directions, suggesting a fan-and-collect
-   shuffle without ever moving the actual position. */
-.card.is-shuffling { animation: shuffle-riffle 380ms cubic-bezier(.4, .12, .2, 1); }
-@keyframes shuffle-riffle {
-  0%   { transform: translate3d(var(--tx, 0), var(--ty, 0), 0); }
-  20%  { transform: translate3d(calc(var(--tx, 0) + var(--dir, 1) * 7px), var(--ty, 0), 0); }
-  50%  { transform: translate3d(calc(var(--tx, 0) + var(--dir, 1) * 3px), var(--ty, 0), 0); }
-  80%  { transform: translate3d(calc(var(--tx, 0) + var(--dir, 1) * -2px), var(--ty, 0), 0); }
-  100% { transform: translate3d(var(--tx, 0), var(--ty, 0), 0); }
+/* Shuffle: the card stays exactly in place and only wobbles a few degrees
+   around its own centre. No positional movement whatsoever. */
+.card.is-shuffling { animation: shuffle-spin 380ms cubic-bezier(.4, .12, .2, 1); }
+@keyframes shuffle-spin {
+  0%   { transform: translate3d(var(--tx, 0), var(--ty, 0), 0) rotate(var(--base-rot, 0deg)); }
+  30%  { transform: translate3d(var(--tx, 0), var(--ty, 0), 0) rotate(calc(var(--base-rot, 0deg) + var(--a1, 5deg))); }
+  65%  { transform: translate3d(var(--tx, 0), var(--ty, 0), 0) rotate(calc(var(--base-rot, 0deg) + var(--a2, -4deg))); }
+  100% { transform: translate3d(var(--tx, 0), var(--ty, 0), 0) rotate(var(--base-rot, 0deg)); }
 }

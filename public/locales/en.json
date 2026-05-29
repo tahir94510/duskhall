@@ -10,6 +10,8 @@
     "support": "Support",
     "leave": "Reset room",
     "reset": "Reset room",
+    "resetDeck": "Reset deck",
+    "deckReset": "The deck has been gathered and shuffled.",
     "settings": "Settings",
     "shortcuts": "Shortcuts",
     "language": "Language",
@@ -39,11 +41,11 @@
     "items": [
       { "keys": "Left-press, drag", "desc": "Move the card under the cursor" },
       { "keys": "Ctrl + Left-press, drag", "desc": "Move the whole stack under the cursor" },
-      { "keys": "Double-click / Scroll", "desc": "Flip the single card under the cursor" },
-      { "keys": "Right-click", "desc": "Flip every card in the stack under the cursor" },
+      { "keys": "Scroll", "desc": "Flip the single card under the cursor" },
+      { "keys": "Ctrl + scroll", "desc": "Flip the whole stack under the cursor" },
       { "keys": "Shift + scroll", "desc": "Rotate the card 90° (sideways, not a flip)" },
-      { "keys": "Ctrl + scroll up", "desc": "Gather the stack to the cursor centre" },
-      { "keys": "Ctrl + scroll down", "desc": "Shuffle the stack in place" }
+      { "keys": "G", "desc": "Gather the stack under the cursor" },
+      { "keys": "M", "desc": "Shuffle the stack under the cursor" }
     ],
     "mobileNote": "On touch devices, long-press a card to open its action bar."
   },

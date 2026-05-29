@@ -1,10 +1,11 @@
-import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER } from "./icons.js";
+import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER } from "./icons.js";
 import { t, getLocale, loadLocale, type Locale } from "../i18n/index.js";
 
 export interface HeaderHooks {
   onRules(): void;
   onSupport(): void;
   onReset(): void;
+  onResetDeck(): void;
   onSettings(): void;
   onShortcuts(): void;
   onLangChange(loc: Locale): void;
@@ -53,6 +54,11 @@ export class Header {
         <button type="button" class="header__menu-row" data-action="shortcuts" role="menuitem">
           <span class="header__menu-icon">${ICON_SHORTCUTS}</span>
           <span class="header__menu-label" data-i18n="ui.shortcuts">${esc(t("ui.shortcuts"))}</span>
+        </button>
+        <div class="header__menu-divider"></div>
+        <button type="button" class="header__menu-row" data-action="reset-deck" role="menuitem">
+          <span class="header__menu-icon">${ICON_RESET_DECK}</span>
+          <span class="header__menu-label" data-i18n="ui.resetDeck">${esc(t("ui.resetDeck"))}</span>
         </button>
         <button type="button" class="header__menu-row header__menu-row--danger" data-action="reset" role="menuitem">
           <span class="header__menu-icon">${ICON_RESET}</span>
@@ -104,6 +110,7 @@ export class Header {
     this.menu.querySelector<HTMLButtonElement>('[data-action="rules"]')?.addEventListener("click", wrap(this.hooks.onRules));
     this.menu.querySelector<HTMLButtonElement>('[data-action="support"]')?.addEventListener("click", wrap(this.hooks.onSupport));
     this.menu.querySelector<HTMLButtonElement>('[data-action="shortcuts"]')?.addEventListener("click", wrap(this.hooks.onShortcuts));
+    this.menu.querySelector<HTMLButtonElement>('[data-action="reset-deck"]')?.addEventListener("click", wrap(this.hooks.onResetDeck));
     this.menu.querySelector<HTMLButtonElement>('[data-action="reset"]')?.addEventListener("click", wrap(this.hooks.onReset));
     const switchLang = (loc: Locale) => (e: MouseEvent) => {
       e.preventDefault();
