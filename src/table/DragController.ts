@@ -21,6 +21,11 @@ export interface DragHooks {
   onCardFlipped(id: string): void;
   onStackToggleFlip(id: string): void;
   setOwnerSeat(id: string, seat: number | null): void;
+  /** Broadcast that we've grabbed / released these cards (ephemeral lock). */
+  beginHold(ids: string[]): void;
+  endHold(ids: string[]): void;
+  /** True if a peer currently holds this card — block local interaction. */
+  isLocked(id: string): boolean;
   showContextBar(id: string, x: number, y: number): void;
   hideContextBar(): void;
   emitCursor(x: number, y: number): void;
@@ -91,6 +96,12 @@ export class DragController {
       this.hooks.playSfx("snap");
       return;
     }
+    // Hold-lock: a card a peer is actively holding is off-limits until released.
+    if (this.hooks.isLocked(id)) {
+      e.preventDefault();
+      this.hooks.playSfx("snap");
+      return;
+    }
 
     e.preventDefault();
 
@@ -145,6 +156,9 @@ export class DragController {
         if (e.pointerType === "touch") this.hooks.showContextBar(id, e.clientX, e.clientY);
       }, LONG_PRESS_MS)
     };
+    // Claim the ephemeral lock for everything we just grabbed so peers can't
+    // tug the same cards; released on pointer up / cancel.
+    this.hooks.beginHold(ids);
     // pickup sound fires only once drag actually starts (see onPointerMove)
   };
 
@@ -194,6 +208,8 @@ export class DragController {
     const s = this.session;
     if (!s || e.pointerId !== s.pointerId) return;
     window.clearTimeout(s.longPressTimer);
+    // Release the ephemeral lock for every grabbed card (drag or mere click).
+    this.hooks.endHold(s.ids);
 
     if (!s.dragging) {
       // Mere click on a card — no drag, no place. Drop the held class and exit.

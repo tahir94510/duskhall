@@ -29,13 +29,34 @@ Web clients can never be made 100% tamper-proof. The following layers reduce com
 
 Every broadcast message is treated as untrusted.
 
-- Token-bucket rate limit: cursors 30 Hz, ops 10 Hz.
+- Token-bucket rate limit on **send**: cursors 30 Hz, ops 10 Hz, holds 20 Hz.
+- Token-bucket rate limit on **receive, per sender**: a flooding/buggy peer is
+  throttled (≈20 patch msgs/s, ≈45 cursor msgs/s) before dispatch, and its
+  bucket is pruned when it leaves presence — one peer can't pin every client's CPU.
 - Byte cap: 6 KB per payload.
 - Card array cap: 200 entries per patch.
 - Coordinate clamp: ±5000 px.
 - Schema check: every field must be the right primitive; unknown fields are dropped.
-- Patch version: monotonic per room. Older versions are discarded.
-- Seat index clamped to `[0, 3]`.
+- Seat index clamped to `[-1, 3]` (`-1` = spectator).
+
+## State sync & resilience
+
+- **Auto-reconnect:** a dropped channel (network blip, `CHANNEL_ERROR`/`TIMED_OUT`/
+  `CLOSED`) flips the client offline and rejoins with exponential backoff
+  (1→16 s + jitter); regained connectivity/visibility kicks an immediate retry.
+- **Last-write-wins:** each card carries a write stamp (`ts`); a patch is applied
+  to a card only when its stamp is newer, so a late/out-of-order packet can never
+  clobber a fresher edit. Snapshots are authoritative full state used to (re)sync.
+- **Single-responder join:** a newcomer's `hello` is answered by exactly one peer
+  (lowest seat other than the asker), avoiding redundant snapshot storms.
+- **Ephemeral hold-lock:** grabbing a card broadcasts a short, auto-expiring lock
+  so two players can't tug the same card; a crashed/departed holder's lock lapses.
+
+> **Threat model:** there is no auth, so the `by`/`id` fields on a broadcast are
+> not cryptographically verifiable — a determined peer could spoof another
+> player's cursor/patch. This is acceptable for *friendly play*; for a public
+> instance, gate room-create behind Cloudflare Turnstile and add Supabase RLS if
+> an auth flow is introduced.
 
 ## Card privacy
 

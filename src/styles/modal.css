@@ -29,6 +29,9 @@
   transition: transform var(--dur) var(--ease);
 }
 .modal-backdrop.is-visible .modal { transform: translateY(0) scale(1); }
+/* Symmetric exit: the panel eases back down/out as the backdrop fades, instead
+   of snapping to its entry transform the instant `is-visible` is removed. */
+.modal-backdrop:not(.is-visible) .modal { transform: translateY(8px) scale(0.98); }
 
 .modal__head {
   display: flex;
