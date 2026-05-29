@@ -258,6 +258,28 @@ export class Game {
       this.refs.cardsLayer.appendChild(el);
     }
     this.state.topZ = z;
+    // Re-centre once layout is guaranteed settled. If the board was measured
+    // before its grid finished sizing, the half-card offset fraction would be
+    // wrong and the pile would drift to the slot's top-left; this corrects it.
+    requestAnimationFrame(() => requestAnimationFrame(() => this.recenterDeckPile()));
+  }
+
+  // Snap any cards still sitting in the freshly dealt pile (face-down, no
+  // owner, not yet moved by a player) precisely onto the Deck slot centre,
+  // using a fresh board measurement.
+  private recenterDeckPile(): void {
+    this.measureBoard();
+    if (this.boardSize.width < 50 || this.boardSize.height < 50) return;
+    const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
+    const cardH = cardW * 1.45;
+    const baseNx = DECK_NX - cardW / (2 * this.boardSize.width);
+    const baseNy = DECK_NY - cardH / (2 * this.boardSize.height);
+    for (const c of this.state.cards.values()) {
+      if (c.ownerSeat === null && !c.faceUp && c.rot === 0) {
+        c.x = baseNx;
+        c.y = baseNy;
+      }
+    }
   }
 
   private installKeyboardAndWheel(): void {

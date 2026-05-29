@@ -53,13 +53,36 @@
   overflow: hidden;
 }
 
-/* Both faces: flat, calm fill. The back is plain black with a single hairline
-   border — no sigil, no nested lines. The front (when no art is loaded) adds
-   one subtle inner frame so an empty card still reads as a card; user-supplied
-   art covers it entirely. */
+/* Card back: a noble branded deck back. Deep black ground with a soft centre
+   vignette, a fine inner frame, and the KABAL rhombus emblem centred at low
+   opacity — consistent with the logo, calm and elegant (no nested clutter). */
 .card__face--back {
-  background: #050505;
-  border: 1px solid rgba(243, 239, 229, 0.07);
+  background:
+    radial-gradient(120% 90% at 50% 50%, rgba(243, 239, 229, 0.05) 0%, rgba(243, 239, 229, 0) 58%),
+    #050505;
+  border: 1px solid rgba(243, 239, 229, 0.16);
+}
+
+.card__face--back::before {
+  /* fine inner frame */
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: calc(var(--r-card) - 3px);
+  border: 1px solid rgba(243, 239, 229, 0.08);
+  pointer-events: none;
+}
+
+.card__face--back::after {
+  /* centred KABAL sigil (vertical rhombus + axis + dot), low-opacity ivory */
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 64'><g fill='none' stroke='%23f3efe5' stroke-linecap='round' stroke-linejoin='round'><path d='M24 6 L38 32 L24 58 L10 32 Z' stroke-width='2'/><path d='M24 6 L24 58' stroke-width='1.4'/><circle cx='24' cy='32' r='3.4' fill='%23f3efe5' stroke='none'/></g></svg>")
+    center / 42% auto no-repeat;
+  opacity: 0.14;
 }
 
 .card__face--front {
