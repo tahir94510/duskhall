@@ -39,10 +39,10 @@
     "items": [
       { "keys": "Sol tık, sürükle", "desc": "İmlecin altındaki kartı taşı" },
       { "keys": "Ctrl + sol tık, sürükle", "desc": "İmlecin altındaki yığını taşı" },
-      { "keys": "Sağ tık", "desc": "İmlecin altındaki kart(lar)ı çevir" },
-      { "keys": "Scroll", "desc": "İmlecin altındaki tek kartı çevir" },
+      { "keys": "Çift tık / Scroll", "desc": "İmlecin altındaki tek kartı çevir" },
+      { "keys": "Sağ tık", "desc": "Yığındaki tüm kartları toplu çevir" },
       { "keys": "Shift + scroll", "desc": "Kartı 90° döndür (yana, çevirme değil)" },
-      { "keys": "Ctrl + yukarı scroll", "desc": "Yığını imlece topla" },
+      { "keys": "Ctrl + yukarı scroll", "desc": "Yığını imleç merkezine topla" },
       { "keys": "Ctrl + aşağı scroll", "desc": "Yığını yerinde karıştır" }
     ],
     "mobileNote": "Dokunmatik cihazlarda kartın üstüne uzun basarak eylem çubuğunu aç."
