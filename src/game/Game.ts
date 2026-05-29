@@ -586,6 +586,22 @@ export class Game {
 
   private installRealtime(): void {
     this.bus.onPresence((players) => {
+      // Debounce presence so a page refresh (drop + rejoin within ~1s) does
+      // not make everyone else flicker seats/cursors. The latest roster wins.
+      this.pendingPresence = players;
+      if (this.presenceDebounce) return;
+      this.presenceDebounce = window.setTimeout(() => {
+        this.presenceDebounce = 0;
+        this.applyPresence(this.pendingPresence);
+      }, 350);
+    });
+    this.bindRealtimeEvents();
+  }
+
+  private pendingPresence: PresencePlayer[] = [];
+  private presenceDebounce = 0;
+
+  private applyPresence(players: PresencePlayer[]): void {
       // Deterministic seating: every client sorts the full presence list by id
       // and hands seats 0..3 to the first four. Everyone computes the same map,
       // so no two clients ever believe they hold the same seat. Anyone beyond
@@ -624,7 +640,9 @@ export class Game {
         }
       }
       this.refreshZoneActivity();
-    });
+  }
+
+  private bindRealtimeEvents(): void {
     this.bus.onGame((msg) => {
       if (msg.type === "patch" || msg.type === "snapshot") this.applyPatch(msg.payload);
       else if (msg.type === "hello" && this.players.size > 0) this.sendSnapshot();

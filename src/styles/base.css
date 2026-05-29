@@ -30,6 +30,10 @@ body {
 #app {
   position: fixed;
   inset: 0;
+  /* Dynamic viewport height keeps the table flush with the visual viewport
+     when mobile browser chrome (address bar) shows/hides. */
+  height: 100vh;
+  height: 100dvh;
   isolation: isolate;
 }
 
