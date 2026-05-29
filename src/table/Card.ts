@@ -11,7 +11,7 @@ let manifestPromise: Promise<Map<string, string>> | null = null;
 
 function loadManifest(): Promise<Map<string, string>> {
   if (manifestPromise) return manifestPromise;
-  manifestPromise = fetch("/cards/manifest.json", { cache: "force-cache" })
+  manifestPromise = fetch("/cards/manifest.json", { cache: "no-cache" })
     .then((r) => (r.ok ? r.json() : { available: [] } as CardManifest))
     .catch(() => ({ available: [] } as CardManifest))
     .then((data: CardManifest) => {

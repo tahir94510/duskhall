@@ -58,7 +58,9 @@
     "title": "Settings",
     "master": "Master",
     "music": "Music",
-    "sfx": "Effects"
+    "sfx": "Effects",
+    "autoBalance": "Auto-balance",
+    "autoBalanceHint": "Sets a clean music / effects mix. Use Master to set the overall level."
   },
   "support": {
     "title": "Support KABAL",

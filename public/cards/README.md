@@ -1,6 +1,15 @@
 # Card front art
 
-Drop a single image per card into this folder. The runtime auto-loads `/cards/<defId>.<ext>` and falls back through these extensions in order: `webp`, `png`, `svg`, `jpg`. If no file is found, the card front renders a quiet empty placeholder.
+**Just drop one image per card here — it works.** A build step scans this
+folder and regenerates `manifest.json` automatically (no manual editing). Name
+the file with the card's `defId` and any accepted extension; the runtime loads
+it on the card's front face. Cards with no image show a clean blank front, and
+missing files never produce 404s.
+
+Accepted formats: `.webp`, `.png`, `.jpg`, `.svg`, `.avif`.
+
+After adding files, run `npm run build` (or restart `npm run dev`) so the
+manifest regenerates. On Vercel this happens automatically on every deploy.
 
 ## Specification
 
