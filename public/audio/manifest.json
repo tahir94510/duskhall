@@ -1,3 +1,40 @@
 {
-  "available": []
+  "available": [
+    {
+      "id": "flip",
+      "ext": "mp3"
+    },
+    {
+      "id": "gather",
+      "ext": "mp3"
+    },
+    {
+      "id": "pickup",
+      "ext": "mp3"
+    },
+    {
+      "id": "place",
+      "ext": "mp3"
+    },
+    {
+      "id": "shuffle",
+      "ext": "mp3"
+    },
+    {
+      "id": "snap",
+      "ext": "mp3"
+    },
+    {
+      "id": "ui-click",
+      "ext": "mp3"
+    },
+    {
+      "id": "ui-close",
+      "ext": "mp3"
+    },
+    {
+      "id": "ui-open",
+      "ext": "mp3"
+    }
+  ]
 }
