@@ -23,7 +23,7 @@ import {
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, type Seat } from "../table/rotation.js";
 import { DECK_NX, DECK_NY } from "../table/constants.js";
-import type { RealtimeBus, PresencePlayer, CardPatch } from "../net/realtime.js";
+import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, HoldMsg } from "../net/realtime.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
 import { getOrAssignName, resetName } from "../util/names.js";
@@ -32,6 +32,7 @@ const SEAT_COUNT = 4;
 const SEAT_COLORS = ["#f3efe5", "#cdc8bc", "#a09c92", "#79766f"];
 const SS_SNAPSHOT_PREFIX = "kabal:snap:";
 const SS_CLIENT_ID = "kabal:cid";
+const LIVE_CID_PREFIX = "kabal:livecid:";
 
 export interface GameDeps {
   host: HTMLElement;
@@ -220,9 +221,15 @@ export class Game {
           this.scheduleFlush();
         }
       },
+      beginHold: (ids) => this.broadcastHold(ids, false),
+      endHold: (ids) => this.broadcastHold(ids, true),
+      isLocked: (id) => this.isLockedByOther(id),
       showContextBar: (id, x, y) => this.contextBar.show(id, x, y),
       hideContextBar: () => this.contextBar.hide(),
       emitCursor: (x, y) => {
+        // Spectators are silent observers — never broadcast a cursor (that was
+        // the source of the seat-0 "impostor" ghost).
+        if (this.spectator) return;
         // hide cursor when pointer is inside our own zone
         if (this.pointInZone(this.self.seat, x, y)) return;
         // Broadcast canonical (perspective-independent) coords so peers can
@@ -282,7 +289,7 @@ export class Game {
         rot: 0,
         faceUp: false,
         ownerSeat: null,
-        v: 0
+        ts: 0
       };
       this.state.cards.set(card.instanceId, cardState);
       const { el } = createCardElement(cardState.id, cardState.defId);
@@ -360,8 +367,9 @@ export class Game {
       const top = this.topCardAtCanonicalPoint(pt.x, pt.y);
       if (!top) return; // empty space: do nothing
 
-      // Ownership guard: cards owned by a rival seat are off-limits to scroll.
-      if (top.ownerSeat != null && top.ownerSeat !== this.self.seat) {
+      // Ownership/hold guard: a rival's owned card OR a card a peer is holding
+      // is off-limits to scroll.
+      if ((top.ownerSeat != null && top.ownerSeat !== this.self.seat) || this.isLockedByOther(top.id)) {
         e.preventDefault();
         return;
       }
@@ -485,7 +493,7 @@ export class Game {
         ts: Date.now(),
         cards: Array.from(this.state.cards.values()).map((c) => ({
           id: c.id, defId: c.defId, x: c.x, y: c.y, z: c.z,
-          rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat
+          rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat, ts: c.ts
         }))
       };
       sessionStorage.setItem(this.snapshotKey(), JSON.stringify(payload));
@@ -511,7 +519,7 @@ export class Game {
           rot: typeof c.rot === "number" && Number.isFinite(c.rot) ? c.rot : 0,
           faceUp: !!c.faceUp,
           ownerSeat: typeof c.ownerSeat === "number" ? c.ownerSeat : null,
-          v: 0
+          ts: typeof c.ts === "number" ? c.ts : 0
         };
         this.state.cards.set(cardState.id, cardState);
         const { el } = createCardElement(cardState.id, cardState.defId);
@@ -533,7 +541,7 @@ export class Game {
   private rotateCard(id: string): void {
     const c = this.state.cards.get(id);
     if (!c) return;
-    if (c.ownerSeat != null && c.ownerSeat !== this.self.seat) return;
+    if ((c.ownerSeat != null && c.ownerSeat !== this.self.seat) || this.isLockedByOther(id)) return;
     // Cumulative rotation: keep adding turns so 270°→360°→450° flows forward
     // visually instead of teleporting back to 0°.
     c.rot = c.rot + 1;
@@ -545,7 +553,7 @@ export class Game {
   private flipCard(id: string): void {
     const c = this.state.cards.get(id);
     if (!c) return;
-    if (c.ownerSeat != null && c.ownerSeat !== this.self.seat) return;
+    if ((c.ownerSeat != null && c.ownerSeat !== this.self.seat) || this.isLockedByOther(id)) return;
     c.faceUp = !c.faceUp;
     this.dirtyIds.add(id);
     this.scheduleFlush();
@@ -561,6 +569,7 @@ export class Game {
     for (const cid of stack) {
       const c = this.state.cards.get(cid);
       if (c && c.ownerSeat != null && c.ownerSeat !== this.self.seat) return;
+      if (this.isLockedByOther(cid)) return;
     }
     // Target orientation is the inverse of the topmost (highest-z) card. This
     // keeps mixed stacks consistent and gives uniform stacks a clean toggle.
@@ -581,6 +590,7 @@ export class Game {
   private gatherAt(id: string): void {
     const stack = findStackOverlapping(this.state, this.boardSize, id);
     if (!stack.length) return;
+    if (stack.some((cid) => this.isLockedByOther(cid))) return;
     const seed = this.state.cards.get(id);
     if (seed) gatherStack(this.state, stack, seed.x, seed.y);
     for (const cid of stack) this.dirtyIds.add(cid);
@@ -591,6 +601,7 @@ export class Game {
   private shuffleAt(id: string): void {
     const stack = findStackOverlapping(this.state, this.boardSize, id);
     if (stack.length < 2) return;
+    if (stack.some((cid) => this.isLockedByOther(cid))) return;
     shuffleStack(this.state, stack);
     this.applyShuffleJitter(stack);
     for (const cid of stack) this.dirtyIds.add(cid);
@@ -639,10 +650,12 @@ export class Game {
   private flush(): void {
     if (!this.dirtyIds.size) return;
     this.patchVersion++;
+    const now = Date.now();
     const cards = Array.from(this.dirtyIds).slice(0, 200).map((id) => {
       const c = this.state.cards.get(id)!;
-      c.v = this.patchVersion;
-      return { id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat };
+      // Stamp the write time so peers can reject this if a newer edit beats it.
+      c.ts = now;
+      return { id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat, ts: c.ts };
     });
     this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards });
     this.dirtyIds.clear();
@@ -658,11 +671,13 @@ export class Game {
 
   private flushDragPreview(): void {
     if (!this.dragPreviewIds.size) return;
+    const now = Date.now();
     const cards = Array.from(this.dragPreviewIds).slice(0, 200).map((id) => {
       const c = this.state.cards.get(id);
       if (!c) return null;
-      return { id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat };
-    }).filter((c): c is { id: string; x: number; y: number; z: number; rot: number; faceUp: boolean; ownerSeat: number | null } => !!c);
+      c.ts = now;
+      return { id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat, ts: c.ts };
+    }).filter((c): c is PatchCard => !!c);
     if (cards.length === 0) { this.dragPreviewIds.clear(); return; }
     this.patchVersion++;
     this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards });
@@ -714,6 +729,8 @@ export class Game {
         this.self.seat = resolvedSeat;
         this.self.color = SEAT_COLORS[resolvedSeat] ?? SEAT_COLORS[0]!;
         this.applyBoardPerspective();
+        // Publish our new seat so peers label our cursor correctly.
+        this.bus.updateMe(this.presencePayload());
       }
       if (this.spectator && !wasSpectator) toast(t("ui.roomFull"));
 
@@ -733,39 +750,126 @@ export class Game {
 
   private bindRealtimeEvents(): void {
     this.bus.onGame((msg) => {
-      if (msg.type === "patch" || msg.type === "snapshot") this.applyPatch(msg.payload);
-      else if (msg.type === "hello" && this.players.size > 0) this.sendSnapshot();
+      if (msg.type === "patch") this.applyPatch(msg.payload, false);
+      else if (msg.type === "snapshot") this.applyPatch(msg.payload, true);
+      else if (msg.type === "hold") this.applyHold(msg.payload);
+      else if (msg.type === "hello") this.respondToHello(msg.payload.id);
     });
     this.bus.onCursor((c) => this.renderCursor(c));
     this.bus.onStatus((s) => {
-      if (s === "online") this.sendSnapshot();
+      // NOTE: we deliberately do NOT push a snapshot on connect — a fresh
+      // joiner pushing their just-dealt board would clobber the live game.
+      // Instead the bus sends `hello` on every (re)connect and the authoritative
+      // peer answers it (see respondToHello), which also recovers state after a
+      // dropped channel.
       if (s === "offline") {
         for (const el of this.cursorEls.values()) el.remove();
         this.cursorEls.clear();
+        // Locks held by departed peers clear; they re-broadcast on reconnect.
+        if (this.heldByOther.size) { this.heldByOther.clear(); this.requestRender(); }
       }
     });
   }
 
+  // Exactly one authoritative peer answers a newcomer's hello (the lowest-seated
+  // player OTHER than the asker), so a join/reconnect pulls one snapshot instead
+  // of an N-peer storm — and the asker never answers itself.
+  private respondToHello(askerId: string): void {
+    if (this.spectator) return;
+    const otherSeats = Array.from(this.players.values())
+      .filter((p) => p.id !== askerId && p.seat >= 0)
+      .map((p) => p.seat);
+    if (!otherSeats.length) return; // asker is alone (or only spectators present)
+    if (this.self.seat === Math.min(...otherSeats)) this.sendSnapshot();
+  }
+
+  // --- Ephemeral hold-lock: a card a peer is holding can't be grabbed/edited
+  // by us until they release it or the TTL lapses (crash/leave safety). ---
+  private heldByOther = new Map<string, { seat: number; until: number }>();
+  private holdSweepHandle = 0;
+  private static readonly HOLD_TTL_MS = 6000;
+
+  private applyHold(h: HoldMsg): void {
+    if (h.by === this.self.id) return; // never lock ourselves out
+    let changed = false;
+    if (h.release) {
+      for (const id of h.ids) if (this.heldByOther.delete(id)) changed = true;
+    } else {
+      for (const id of h.ids) { this.heldByOther.set(id, { seat: h.seat, until: h.until }); changed = true; }
+      this.scheduleHoldSweep();
+    }
+    if (changed) this.requestRender();
+  }
+
+  private isLockedByOther(id: string): boolean {
+    const h = this.heldByOther.get(id);
+    if (!h) return false;
+    if (h.until <= Date.now()) { this.heldByOther.delete(id); return false; }
+    return true;
+  }
+
+  private scheduleHoldSweep(): void {
+    let soonest = Infinity;
+    for (const h of this.heldByOther.values()) soonest = Math.min(soonest, h.until);
+    if (!Number.isFinite(soonest)) return;
+    window.clearTimeout(this.holdSweepHandle);
+    this.holdSweepHandle = window.setTimeout(() => {
+      const now = Date.now();
+      let changed = false;
+      for (const [id, h] of this.heldByOther) if (h.until <= now) { this.heldByOther.delete(id); changed = true; }
+      if (changed) this.requestRender();
+      if (this.heldByOther.size) this.scheduleHoldSweep();
+    }, Math.max(50, soonest - Date.now() + 50));
+  }
+
+  private heldRefresh = 0;
+  private myHeldIds: string[] = [];
+  private broadcastHold(ids: string[], release: boolean): void {
+    if (this.spectator) return;
+    if (release) {
+      window.clearInterval(this.heldRefresh);
+      this.heldRefresh = 0;
+      this.myHeldIds = [];
+      if (ids.length) this.bus.sendHold({ ids, by: this.self.id, seat: this.self.seat, until: Date.now(), release: true });
+      return;
+    }
+    if (!ids.length) return;
+    this.myHeldIds = ids;
+    const send = () => this.bus.sendHold({
+      ids: this.myHeldIds, by: this.self.id, seat: this.self.seat, until: Date.now() + Game.HOLD_TTL_MS, release: false
+    });
+    send();
+    // Refresh well before the TTL so a long, deliberate hold stays locked for
+    // peers; cleared on release (above).
+    window.clearInterval(this.heldRefresh);
+    this.heldRefresh = window.setInterval(send, Math.floor(Game.HOLD_TTL_MS / 2));
+  }
+
   private sendSnapshot(): void {
     this.patchVersion++;
-    const cards = Array.from(this.state.cards.values()).slice(0, 200).map((c) => ({
-      id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat
+    const cards: PatchCard[] = Array.from(this.state.cards.values()).slice(0, 200).map((c) => ({
+      id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat, ts: c.ts
     }));
     this.bus.sendSnapshot({ v: this.patchVersion, by: this.self.id, cards });
   }
 
-  private applyPatch(p: CardPatch): void {
-    if (p.v < this.patchVersion - 30) return;
+  // Apply an incoming patch or snapshot. A snapshot is authoritative full
+  // state (used to (re)sync joiners/reconnects) and is applied wholesale; a
+  // patch is gated per-card by the last-write-wins stamp so a stale/out-of-order
+  // packet can never clobber a newer local or remote edit.
+  private applyPatch(p: CardPatch, isSnapshot: boolean): void {
     this.patchVersion = Math.max(this.patchVersion, p.v);
     for (const upd of p.cards) {
       const c = this.state.cards.get(upd.id);
       if (!c) continue;
+      if (!isSnapshot && upd.ts < c.ts) continue; // reject stale write
       c.x = upd.x;
       c.y = upd.y;
       c.z = upd.z;
       c.rot = upd.rot;
       c.faceUp = upd.faceUp;
       c.ownerSeat = upd.ownerSeat;
+      c.ts = upd.ts;
       if (c.z > this.state.topZ) this.state.topZ = c.z;
     }
     this.requestRender();
@@ -776,6 +880,13 @@ export class Game {
     // Trust the authoritative seat from presence, not the seat in the cursor
     // packet (which can lag a reseat and produce a duplicate "P2" label).
     const seat = this.players.get(c.id)?.seat ?? c.seat;
+    // A seated peer is required to draw a ghost; spectators (seat < 0) are
+    // silent and any stray spectator cursor is ignored.
+    if (seat < 0) {
+      const stale = this.cursorEls.get(c.id);
+      if (stale) stale.style.display = "none";
+      return;
+    }
     let el = this.cursorEls.get(c.id);
     if (!el) {
       el = document.createElement("div");
@@ -837,6 +948,8 @@ export class Game {
       if (wasFaceUp && !c.faceUp) this.tooltip.hide();
       const hidden = c.ownerSeat !== null && c.ownerSeat !== this.self.seat && c.faceUp;
       el.classList.toggle("is-concealed", hidden);
+      // Busy indicator while a peer is holding this card.
+      el.classList.toggle("is-locked", this.isLockedByOther(c.id));
     }
   }
 
@@ -910,16 +1023,34 @@ export class Game {
   }
 }
 
-function getOrMakeClientId(): string {
-  try {
-    const existing = sessionStorage.getItem(SS_CLIENT_ID);
-    if (existing) return existing;
-  } catch {}
+function makeClientId(): string {
   const arr = new Uint8Array(8);
   crypto.getRandomValues(arr);
-  const id = "p_" + Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
+  return "p_" + Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Stable per-tab id. sessionStorage keeps it across same-tab reloads (so a
+// refresh reclaims the same seat); a localStorage "live id" heartbeat detects a
+// DUPLICATED tab (which copies sessionStorage) and mints a fresh id so the two
+// tabs never collide into presence/cursor ghosts.
+function getOrMakeClientId(): string {
+  let id = "";
+  try { id = sessionStorage.getItem(SS_CLIENT_ID) || ""; } catch {}
+  try {
+    const seen = id ? Number(localStorage.getItem(LIVE_CID_PREFIX + id) || 0) : 0;
+    if (!id || (seen && Date.now() - seen < 4000)) id = makeClientId();
+  } catch { if (!id) id = makeClientId(); }
   try { sessionStorage.setItem(SS_CLIENT_ID, id); } catch {}
+  startClientHeartbeat(id);
   return id;
 }
 
-// silence unused import warnings until used
+function startClientHeartbeat(id: string): void {
+  const key = LIVE_CID_PREFIX + id;
+  const beat = () => { try { localStorage.setItem(key, String(Date.now())); } catch {} };
+  const clear = () => { try { localStorage.removeItem(key); } catch {} };
+  beat();
+  window.setInterval(beat, 2000);
+  window.addEventListener("pagehide", clear);
+  window.addEventListener("beforeunload", clear);
+}

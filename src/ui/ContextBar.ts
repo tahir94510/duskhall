@@ -89,6 +89,10 @@ export class ContextBar {
     if (y < margin) y = clientY + 24;
     if (x + w + margin > window.innerWidth) x = window.innerWidth - w - margin;
     if (x < margin) x = margin;
+    // Always keep the whole bar on-screen, including the bottom safe-area, so a
+    // long-press near a screen edge never opens a partly-clipped bar.
+    if (y + h + margin > window.innerHeight) y = window.innerHeight - h - margin;
+    if (y < margin) y = margin;
     this.el.style.transform = `translate(${x}px, ${y}px)`;
   }
 

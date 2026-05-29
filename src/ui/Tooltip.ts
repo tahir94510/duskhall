@@ -26,6 +26,8 @@ export class Tooltip {
     this.host.addEventListener("pointerout", this.onOut, { passive: true });
     this.host.addEventListener("pointermove", this.onMove, { passive: true });
     this.host.addEventListener("pointerdown", this.hide, { passive: true });
+    // Safety net: leaving the board entirely always dismisses the tooltip.
+    this.host.addEventListener("pointerleave", this.hide, { passive: true });
     window.addEventListener("scroll", this.hide, { passive: true });
     window.addEventListener("blur", this.hide);
   }
