@@ -114,16 +114,29 @@ export class AudioEngine {
     this.playProcedural(PROCEDURAL[name]);
   }
 
+  private duckTimer = 0;
   // Briefly dip the music so a sound effect always cuts through, then restore.
   private duckMusic(): void {
-    if (!this.ctx || !this.musicGain || this.musicVolume <= 0) return;
-    const g = this.musicGain.gain;
-    const now = this.ctx.currentTime;
-    const full = this.musicVolume;
-    g.cancelScheduledValues(now);
-    g.setValueAtTime(Math.max(g.value, full * 0.55), now);
-    g.linearRampToValueAtTime(full * 0.55, now + 0.06);
-    g.linearRampToValueAtTime(full, now + 0.45);
+    if (this.musicVolume <= 0 || this.muted) return;
+    // File-based music: ramp the element volume.
+    if (this.musicElement) {
+      this.musicElement.volume = this.effectiveMusic(0.55);
+      window.clearTimeout(this.duckTimer);
+      this.duckTimer = window.setTimeout(() => {
+        if (this.musicElement) this.musicElement.volume = this.effectiveMusic();
+      }, 320);
+      return;
+    }
+    // Procedural music: ramp the gain node.
+    if (this.ctx && this.musicGain) {
+      const g = this.musicGain.gain;
+      const now = this.ctx.currentTime;
+      const full = this.musicVolume;
+      g.cancelScheduledValues(now);
+      g.setValueAtTime(Math.max(g.value, full * 0.55), now);
+      g.linearRampToValueAtTime(full * 0.55, now + 0.06);
+      g.linearRampToValueAtTime(full, now + 0.45);
+    }
   }
 
   // Maps a sound name to the file extension that actually exists (or "" if the
@@ -276,42 +289,62 @@ export class AudioEngine {
     this.setSfxVolume(BALANCED_SFX);
   }
 
+  // Effective music level for the file element (which is NOT routed through
+  // the WebAudio master, so master is folded in here manually).
+  private effectiveMusic(duck = 1): number {
+    return this.muted ? 0 : clamp01(this.masterVolume * this.musicVolume * duck);
+  }
+
   async startMusic(): Promise<void> {
     this.ensureContext();
-    if (!this.ctx || !this.musicGain) return;
     if (this.musicElement || this.musicProcedural) return;
     const manifest = await this.loadManifest();
     const musicExt = manifest.get("music");
     if (musicExt) {
+      // A real music file: drive it as a plain looping <audio> element with
+      // its own .volume. This sidesteps the cross-browser quirks of routing a
+      // MediaElementSource through WebAudio, which was the reason music could
+      // silently fail to play.
+      const el = new Audio(`/audio/music.${musicExt}`);
+      el.loop = true;
+      el.preload = "auto";
+      el.volume = this.effectiveMusic();
+      this.musicElement = el;
       try {
-        const el = new Audio(`/audio/music.${musicExt}`);
-        el.loop = true;
-        el.preload = "auto";
-        el.crossOrigin = "anonymous";
-        const src = this.ctx.createMediaElementSource(el);
-        src.connect(this.musicGain);
-        await el.play().catch(() => {});
-        this.musicElement = el;
-        return;
+        await el.play();
       } catch {
-        // fall through to procedural
+        // Autoplay can still be blocked; retry on the next user gesture.
+        const retry = () => {
+          el.play().catch(() => {});
+          window.removeEventListener("pointerdown", retry);
+          window.removeEventListener("keydown", retry);
+        };
+        window.addEventListener("pointerdown", retry, { once: true });
+        window.addEventListener("keydown", retry, { once: true });
       }
+      return;
     }
-    // procedural ambient drone
+    // No file: a gentle procedural ambient bed through the WebAudio master.
+    if (!this.ctx || !this.musicGain) return;
     const osc = this.ctx.createOscillator();
     osc.type = "sine";
     osc.frequency.value = 110;
+    const osc2 = this.ctx.createOscillator();
+    osc2.type = "sine";
+    osc2.frequency.value = 164.81; // a soft fifth above for warmth
     const lfo = this.ctx.createOscillator();
-    lfo.frequency.value = 0.08;
+    lfo.frequency.value = 0.07;
     const lfoGain = this.ctx.createGain();
-    lfoGain.gain.value = 6;
+    lfoGain.gain.value = 5;
     lfo.connect(lfoGain);
     lfoGain.connect(osc.frequency);
     const gain = this.ctx.createGain();
-    gain.gain.value = 0.05;
+    gain.gain.value = 0.16; // audible but calm
     osc.connect(gain);
+    osc2.connect(gain);
     gain.connect(this.musicGain);
     osc.start();
+    osc2.start();
     lfo.start();
     this.musicProcedural = { osc, lfo, gain };
   }
@@ -338,6 +371,7 @@ export class AudioEngine {
 
   setMusicVolume(v: number): void {
     this.musicVolume = clamp01(v);
+    if (this.musicElement) this.musicElement.volume = this.effectiveMusic();
     if (this.musicGain) this.musicGain.gain.value = this.musicVolume;
     writeNum(LS_MUSIC, this.musicVolume);
   }
@@ -345,12 +379,14 @@ export class AudioEngine {
   setMasterVolume(v: number): void {
     this.masterVolume = clamp01(v);
     if (this.master) this.master.gain.value = this.muted ? 0 : this.masterVolume;
+    if (this.musicElement) this.musicElement.volume = this.effectiveMusic();
     writeNum(LS_MASTER, this.masterVolume);
   }
 
   setMuted(m: boolean): void {
     this.muted = m;
     if (this.master) this.master.gain.value = m ? 0 : this.masterVolume;
+    if (this.musicElement) this.musicElement.volume = this.effectiveMusic();
     writeBool(LS_MUTED, m);
     if (m) this.stopMusic();
     else void this.startMusic();

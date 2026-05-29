@@ -4,7 +4,7 @@ _Tam Kural Kitabı, Nihai Sürüm V8.1_
 
 **2 ila 4 oyuncu. 30 ila 60 dakika. 14 yaş ve üzeri.**
 
-Her şeyin merkezinde Eter durur, kaynağı olmayan bir güç, çok önce parçalanmış. Parçaları sessiz anlaşmalar, fısıltı tehditler ve sakin ihanetlerle el değiştirdi. Şimdi sen de o masadasın: vizyoner, kurnaz, Kabal'in bir vârisi. Burada dostluk yoktur. Merhamet yoktur. Şans yoktur. Yalnızca manipülasyon, strateji ve güç için kırpmadan sürdürülen savaş vardır.
+Her şeyin merkezinde, kaynağı bilinmeyen ve çok önce paramparça olmuş bir güç vardır: Eter. Onun parçaları yüzyıllar boyunca sessiz ittifaklarla, fısıltıyla verilen sözlerle ve soğukkanlı ihanetlerle el değiştirdi. Artık sen de o masadasın: ileri görüşlü, kurnaz, Kabal'in bir vârisi. Burada dostluk yoktur, merhamet yoktur, şans yoktur. Yalnızca manipülasyon, strateji ve hiç durmayan bir güç savaşı vardır.
 
 ## 1. Bileşenler
 

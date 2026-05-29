@@ -133,7 +133,7 @@
     "ancientSight": {
       "name": "Ancient Sight",
       "type": "Spell",
-      "effect": "Spend 1 HP. Draw 3 cards from the deck. Targets no one. If the deck empties mid-draw, Ether Resonance resolves first, then the remaining draws come from the new deck.",
+      "effect": "Spend 1 HP. Draw 3 cards from the deck. It only ever benefits you; no opponent is targeted. If the deck empties mid-draw, Ether Resonance resolves first, then the remaining draws come from the new deck.",
       "flavor": "Open the eye that never blinks."
     },
     "mindParasite": {
