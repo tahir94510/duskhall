@@ -15,12 +15,6 @@
   --accent: #f3efe5;
   --accent-dim: #b3afa5;
 
-  /* Card categories (used only as a tiny tinted dot behind the type icon) */
-  --cat-seal: #8c6fd6;
-  --cat-spell: #c2585c;
-  --cat-intervention: #4f8ec8;
-  --cat-servant: #4ea27a;
-
   /* Seat accents: pure black-and-white nobility, four ivory tones */
   --seat-0: #f3efe5;
   --seat-1: #cdc8bc;

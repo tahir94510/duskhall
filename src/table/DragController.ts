@@ -6,8 +6,12 @@ export interface DragHooks {
   getSelfSeat(): number;
   pointInSelfZone(x: number, y: number): boolean;
   pointInOpponentZone(x: number, y: number): number | null;
-  /** Local-pixel cursor to canonical normalised board coords. */
-  toCanonical(localX: number, localY: number): { nx: number; ny: number };
+  /** Viewport-pixel cursor to canonical normalised board coords (handles the
+   *  per-seat board rotation correctly, including non-square boards). */
+  toCanonical(clientX: number, clientY: number): { nx: number; ny: number };
+  /** Unrotated cards-layer pixel size, used to scale canonical -> in-layer
+   *  pixels. Must match the basis the render loop uses (clientWidth/Height). */
+  boardMetrics(): { width: number; height: number };
   /** Returns the cards under the pointer, tight overlap. */
   pickStackUnder(clientX: number, clientY: number): string[];
   /** Optional magnetic snap: nudge a single canonical (nx, ny) to nearest slot. */
@@ -103,10 +107,7 @@ export class DragController {
     const seed = this.state.cards.get(ids[0]!);
     if (!seed) return;
 
-    const rect = this.host.getBoundingClientRect();
-    const localX = e.clientX - rect.left;
-    const localY = e.clientY - rect.top;
-    const { nx: pointerNx, ny: pointerNy } = this.hooks.toCanonical(localX, localY);
+    const { nx: pointerNx, ny: pointerNy } = this.hooks.toCanonical(e.clientX, e.clientY);
 
     const anchorDx = seed.x - pointerNx;
     const anchorDy = seed.y - pointerNy;
@@ -150,14 +151,12 @@ export class DragController {
   private onPointerMove = (e: PointerEvent): void => {
     const s = this.session;
     if (!s || e.pointerId !== s.pointerId) return;
-    const rect = this.host.getBoundingClientRect();
-    const localX = e.clientX - rect.left;
-    const localY = e.clientY - rect.top;
-    const { nx: pointerNx, ny: pointerNy } = this.hooks.toCanonical(localX, localY);
+    const m = this.hooks.boardMetrics();
+    const { nx: pointerNx, ny: pointerNy } = this.hooks.toCanonical(e.clientX, e.clientY);
 
     if (!s.dragging) {
-      const dx = (pointerNx - s.startNx) * rect.width;
-      const dy = (pointerNy - s.startNy) * rect.height;
+      const dx = (pointerNx - s.startNx) * m.width;
+      const dy = (pointerNy - s.startNy) * m.height;
       if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
       s.dragging = true;
       window.clearTimeout(s.longPressTimer);
@@ -186,7 +185,7 @@ export class DragController {
       c.x = seedNx + rel.dx;
       c.y = seedNy + rel.dy;
       const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
-      if (el) el.style.transform = `translate3d(${c.x * rect.width}px, ${c.y * rect.height}px, 0) rotate(${c.rot * 90}deg)`;
+      if (el) el.style.transform = `translate3d(${c.x * m.width}px, ${c.y * m.height}px, 0) rotate(${c.rot * 90}deg)`;
     }
     this.hooks.onDragProgress(s.ids);
   };
@@ -235,13 +234,13 @@ export class DragController {
 
     // THEN write the final inline transform and toggle classes — all in the
     // same frame so the next render does not race against drop state.
-    const rect = this.host.getBoundingClientRect();
+    const m = this.hooks.boardMetrics();
     for (const id of s.ids) {
       const c = this.state.cards.get(id);
       if (!c) continue;
       const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
       if (!el) continue;
-      el.style.transform = `translate3d(${c.x * rect.width}px, ${c.y * rect.height}px, 0) rotate(${c.rot * 90}deg)`;
+      el.style.transform = `translate3d(${c.x * m.width}px, ${c.y * m.height}px, 0) rotate(${c.rot * 90}deg)`;
       el.classList.remove("is-held");
       if (didSnapBack && (opponentSeat !== null && opponentSeat !== selfSeat)) {
         el.classList.add("is-snapback");

@@ -32,7 +32,7 @@ export class Header {
         ${ICON_MORE}
         <span class="icon-btn__badge">1</span>
       </button>
-      <div class="header__menu" role="menu" aria-hidden="true">
+      <div class="header__menu" role="menu">
         <div class="header__menu-row header__menu-timer">
           <span class="header__menu-icon">${ICON_TIMER}</span>
           <span class="header__menu-label">${esc(t("ui.timer"))}</span>
@@ -74,6 +74,10 @@ export class Header {
     this.brandLink = this.el.querySelector<HTMLAnchorElement>('[data-role="brand"]')!;
     this.moreBtn = this.el.querySelector<HTMLButtonElement>('[data-action="more"]')!;
     this.menu = this.el.querySelector<HTMLDivElement>(".header__menu")!;
+    // Closed menu is `inert`: it removes the children from the focus order
+    // AND hides them from assistive tech, so focus can never get stuck inside a
+    // hidden subtree (the cause of the "aria-hidden on a focused element" warn).
+    this.menu.inert = true;
     this.timerVal = this.menu.querySelector<HTMLSpanElement>('[data-role="timer"]')!;
     this.bind();
     this.refreshLocale();
@@ -128,14 +132,18 @@ export class Header {
   }
   private openMenu(): void {
     this.menuOpen = true;
+    this.menu.inert = false;
     this.menu.classList.add("is-visible");
-    this.menu.setAttribute("aria-hidden", "false");
     this.moreBtn.setAttribute("aria-expanded", "true");
   }
   private closeMenu(): void {
     this.menuOpen = false;
     this.menu.classList.remove("is-visible");
-    this.menu.setAttribute("aria-hidden", "true");
+    // Pull focus out of the menu BEFORE making it inert, so we never strand the
+    // keyboard focus in a hidden region.
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && this.menu.contains(active)) this.moreBtn.focus();
+    this.menu.inert = true;
     this.moreBtn.setAttribute("aria-expanded", "false");
   }
 
@@ -148,8 +156,13 @@ export class Header {
     const tLabel = this.menu.querySelector<HTMLElement>(".header__menu-timer .header__menu-label");
     if (tLabel) tLabel.textContent = t("ui.timer");
     const loc = getLocale();
-    this.menu.querySelector<HTMLButtonElement>('[data-lang="en"]')?.classList.toggle("is-active", loc === "en");
-    this.menu.querySelector<HTMLButtonElement>('[data-lang="tr"]')?.classList.toggle("is-active", loc === "tr");
+    for (const code of ["en", "tr"] as const) {
+      const pill = this.menu.querySelector<HTMLButtonElement>(`[data-lang="${code}"]`);
+      if (!pill) continue;
+      const active = loc === code;
+      pill.classList.toggle("is-active", active);
+      pill.setAttribute("aria-pressed", active ? "true" : "false");
+    }
   }
 
   setRoom(_slug: string): void {

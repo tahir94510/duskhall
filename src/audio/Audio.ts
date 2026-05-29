@@ -34,6 +34,16 @@ const LS_MUSIC = "kabal:vol:music";
 const LS_MASTER = "kabal:vol:master";
 const LS_MUTED = "kabal:audio:muted";
 
+// Ducking: a *gentle, smart* dip so the music breathes under prominent effects
+// without ever pumping. Only the few weighty effects duck; light UI ticks and
+// flips never touch the music. Depth is shallow and the release is smooth.
+const DUCK_DEPTH = 0.85;   // music eases to 85% (not the old, pumpy 55%)
+const DUCK_HOLD_MS = 200;  // how long it stays dipped before easing back
+const DUCKING_SFX: ReadonlySet<SfxName> = new Set(["place", "shuffle", "gather", "snap"]);
+// Time constant for click-free gain ramps (master/music/sfx/mute). Short enough
+// to feel instant, long enough that no step-change clicks or zippers occur.
+const RAMP_TAU = 0.025;
+
 export class AudioEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
@@ -42,7 +52,11 @@ export class AudioEngine {
   private sfxGain: GainNode | null = null;
   private cachedBuffers = new Map<string, AudioBuffer | null>();
   private musicElement: HTMLAudioElement | null = null;
-  private musicProcedural: { osc: OscillatorNode; lfo: OscillatorNode; gain: GainNode } | null = null;
+  // When the <audio> element is routed through WebAudio we control its level on
+  // musicGain (click-free ramps) instead of stepping el.volume directly.
+  private musicSource: MediaElementAudioSourceNode | null = null;
+  private musicRouted = false;
+  private musicProcedural: { osc: OscillatorNode; osc2: OscillatorNode; lfo: OscillatorNode; gain: GainNode } | null = null;
   private booted = false;
   // Sequential playlist of music file paths, in play order. Looped end-to-end.
   private musicPlaylist: string[] = [];
@@ -93,6 +107,17 @@ export class AudioEngine {
     }
   }
 
+  // Smoothly glide an AudioParam to a target value. setTargetAtTime is an
+  // exponential approach with no discontinuity, so it never clicks the way a
+  // bare `.value =` step does (the source of the slider "zipper" and mute pop).
+  private ramp(param: AudioParam, target: number, tau = RAMP_TAU): void {
+    if (!this.ctx) { param.value = target; return; }
+    const now = this.ctx.currentTime;
+    param.cancelScheduledValues(now);
+    param.setValueAtTime(param.value, now);
+    param.setTargetAtTime(target, now, tau);
+  }
+
   // Resume audio on first user gesture (browsers block autoplay)
   async boot(): Promise<void> {
     if (this.booted) return;
@@ -120,7 +145,9 @@ export class AudioEngine {
 
     this.ensureContext();
     if (!this.ctx || !this.sfxGain) return;
-    this.duckMusic();
+    // Only weighty effects nudge the music; light UI ticks/flips leave it alone
+    // so rapid clicking never makes the bed pump.
+    if (DUCKING_SFX.has(name)) this.duckMusic();
     const { sfx } = await this.loadManifest();
     const path = sfx.get(name);
     if (path) {
@@ -175,27 +202,37 @@ export class AudioEngine {
   }
 
   private duckTimer = 0;
-  // Briefly dip the music so a sound effect always cuts through, then restore.
+  // Gently dip the music so a weighty effect can breathe through, then ease it
+  // back. Rapid retriggers only extend the hold (they never re-stab the dip),
+  // so the bed stays smooth instead of pumping.
   private duckMusic(): void {
     if (this.musicVolume <= 0 || this.muted) return;
-    // File-based music: ramp the element volume.
+    // Routed file music OR procedural bed: both live on musicGain, so one
+    // smooth code path covers them with click-free ramps.
+    if (this.ctx && this.musicGain && (this.musicRouted || this.musicProcedural)) {
+      const g = this.musicGain.gain;
+      const now = this.ctx.currentTime;
+      g.cancelScheduledValues(now);
+      g.setValueAtTime(g.value, now);
+      g.linearRampToValueAtTime(this.musicVolume * DUCK_DEPTH, now + 0.05);
+      window.clearTimeout(this.duckTimer);
+      this.duckTimer = window.setTimeout(() => {
+        if (!this.ctx || !this.musicGain) return;
+        const t = this.ctx.currentTime;
+        this.musicGain.gain.cancelScheduledValues(t);
+        this.musicGain.gain.setValueAtTime(this.musicGain.gain.value, t);
+        this.musicGain.gain.linearRampToValueAtTime(this.musicVolume, t + 0.28);
+      }, DUCK_HOLD_MS);
+      return;
+    }
+    // Fallback (WebAudio routing unavailable): step the element volume, still
+    // gentle depth so the rare unrouted path doesn't pump either.
     if (this.musicElement) {
-      this.musicElement.volume = this.effectiveMusic(0.55);
+      this.musicElement.volume = this.effectiveMusic(DUCK_DEPTH);
       window.clearTimeout(this.duckTimer);
       this.duckTimer = window.setTimeout(() => {
         if (this.musicElement) this.musicElement.volume = this.effectiveMusic();
-      }, 320);
-      return;
-    }
-    // Procedural music: ramp the gain node.
-    if (this.ctx && this.musicGain) {
-      const g = this.musicGain.gain;
-      const now = this.ctx.currentTime;
-      const full = this.musicVolume;
-      g.cancelScheduledValues(now);
-      g.setValueAtTime(Math.max(g.value, full * 0.55), now);
-      g.linearRampToValueAtTime(full * 0.55, now + 0.06);
-      g.linearRampToValueAtTime(full, now + 0.45);
+      }, DUCK_HOLD_MS);
     }
   }
 
@@ -387,7 +424,7 @@ export class AudioEngine {
       // gaplessly; a playlist advances on "ended" and wraps back to the first.
       const el = new Audio();
       el.preload = "auto";
-      el.volume = this.effectiveMusic();
+      el.crossOrigin = "anonymous";
       el.addEventListener("ended", () => {
         if (!this.musicElement || this.musicPlaylist.length <= 1) return;
         this.musicIndex = (this.musicIndex + 1) % this.musicPlaylist.length;
@@ -395,6 +432,20 @@ export class AudioEngine {
       });
       this.musicElement = el;
       this.musicIndex = 0;
+      // Route the element through musicGain so its level/duck/mute are all
+      // click-free WebAudio ramps. If routing fails, fall back to el.volume.
+      this.musicRouted = false;
+      if (this.ctx && this.musicGain) {
+        try {
+          this.musicSource = this.ctx.createMediaElementSource(el);
+          this.musicSource.connect(this.musicGain);
+          this.musicRouted = true;
+          el.volume = 1; // level is owned by musicGain now
+        } catch {
+          this.musicSource = null;
+        }
+      }
+      if (!this.musicRouted) el.volume = this.effectiveMusic();
       this.playMusicTrack(0);
       return;
     }
@@ -413,14 +464,17 @@ export class AudioEngine {
     lfo.connect(lfoGain);
     lfoGain.connect(osc.frequency);
     const gain = this.ctx.createGain();
-    gain.gain.value = 0.16; // audible but calm
+    // Fade the bed in from silence so it never clicks on start.
+    const now = this.ctx.currentTime;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(0.16, now + 0.4); // audible but calm
     osc.connect(gain);
     osc2.connect(gain);
     gain.connect(this.musicGain);
     osc.start();
     osc2.start();
     lfo.start();
-    this.musicProcedural = { osc, lfo, gain };
+    this.musicProcedural = { osc, osc2, lfo, gain };
   }
 
   // Drive the shared <audio> element to track #i in the playlist. Autoplay
@@ -434,7 +488,17 @@ export class AudioEngine {
     // "ended" handler to advance, so looping must stay off there.
     el.loop = this.musicPlaylist.length === 1;
     el.src = path;
-    el.volume = this.effectiveMusic();
+    // Fade the (new) track in click-free. Routed: ramp musicGain from 0;
+    // unrouted: best-effort element volume.
+    if (this.musicRouted && this.ctx && this.musicGain) {
+      const g = this.musicGain.gain;
+      const now = this.ctx.currentTime;
+      g.cancelScheduledValues(now);
+      g.setValueAtTime(0.0001, now);
+      g.linearRampToValueAtTime(this.musicVolume, now + 0.18);
+    } else {
+      el.volume = this.effectiveMusic();
+    }
     el.play().catch(() => {
       // Autoplay blocked — retry once on the next user gesture.
       const retry = () => {
@@ -449,45 +513,68 @@ export class AudioEngine {
 
   stopMusic(): void {
     if (this.musicElement) {
-      this.musicElement.pause();
+      try { this.musicElement.pause(); } catch {}
       this.musicElement = null;
     }
+    if (this.musicSource) {
+      try { this.musicSource.disconnect(); } catch {}
+      this.musicSource = null;
+    }
+    this.musicRouted = false;
     if (this.musicProcedural) {
-      try {
-        this.musicProcedural.osc.stop();
-        this.musicProcedural.lfo.stop();
-      } catch {}
+      const p = this.musicProcedural;
       this.musicProcedural = null;
+      if (this.ctx) {
+        // Fade out before stopping so the bed never cuts with a click; stop all
+        // three oscillators (osc2 was previously left running).
+        const t = this.ctx.currentTime;
+        p.gain.gain.cancelScheduledValues(t);
+        p.gain.gain.setValueAtTime(p.gain.gain.value, t);
+        p.gain.gain.linearRampToValueAtTime(0.0001, t + 0.14);
+        try { p.osc.stop(t + 0.16); p.osc2.stop(t + 0.16); p.lfo.stop(t + 0.16); } catch {}
+      } else {
+        try { p.osc.stop(); p.osc2.stop(); p.lfo.stop(); } catch {}
+      }
     }
   }
 
+  private muteStopTimer = 0;
+
   setSfxVolume(v: number): void {
     this.sfxVolume = clamp01(v);
-    if (this.sfxGain) this.sfxGain.gain.value = this.sfxVolume;
+    // Glide instead of stepping so dragging the slider never zippers.
+    if (this.sfxGain) this.ramp(this.sfxGain.gain, this.sfxVolume);
     writeNum(LS_SFX, this.sfxVolume);
   }
 
   setMusicVolume(v: number): void {
     this.musicVolume = clamp01(v);
-    if (this.musicElement) this.musicElement.volume = this.effectiveMusic();
-    if (this.musicGain) this.musicGain.gain.value = this.musicVolume;
+    if (this.musicGain) this.ramp(this.musicGain.gain, this.musicVolume);
+    if (this.musicElement && !this.musicRouted) this.musicElement.volume = this.effectiveMusic();
     writeNum(LS_MUSIC, this.musicVolume);
   }
 
   setMasterVolume(v: number): void {
     this.masterVolume = clamp01(v);
-    if (this.master) this.master.gain.value = this.muted ? 0 : this.masterVolume;
-    if (this.musicElement) this.musicElement.volume = this.effectiveMusic();
+    if (this.master) this.ramp(this.master.gain, this.muted ? 0 : this.masterVolume);
+    // Routed music rides the master node; only the unrouted fallback folds it in.
+    if (this.musicElement && !this.musicRouted) this.musicElement.volume = this.effectiveMusic();
     writeNum(LS_MASTER, this.masterVolume);
   }
 
   setMuted(m: boolean): void {
     this.muted = m;
-    if (this.master) this.master.gain.value = m ? 0 : this.masterVolume;
-    if (this.musicElement) this.musicElement.volume = this.effectiveMusic();
     writeBool(LS_MUTED, m);
-    if (m) this.stopMusic();
-    else void this.startMusic();
+    window.clearTimeout(this.muteStopTimer);
+    // Fade the whole mix rather than slamming the master to 0 (which popped).
+    if (this.master) this.ramp(this.master.gain, m ? 0 : this.masterVolume, m ? 0.03 : RAMP_TAU);
+    if (this.musicElement && !this.musicRouted) this.musicElement.volume = this.effectiveMusic();
+    if (m) {
+      // Let the fade reach silence, THEN tear the music down so it never clicks.
+      this.muteStopTimer = window.setTimeout(() => this.stopMusic(), 160);
+    } else {
+      void this.startMusic();
+    }
   }
 }
 

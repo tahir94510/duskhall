@@ -34,14 +34,26 @@
   letter-spacing: 0.06em;
 }
 
-.zone__name { display: inline-flex; align-items: center; gap: 8px; }
+/* Block + ellipsis so a long (or translated) seat name never overflows the
+   zone rail on narrow screens; the status dot rides along as an inline marker. */
+.zone__name {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .zone__name::before {
   content: "";
+  display: inline-block;
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: currentColor;
   opacity: 0.7;
+  margin-right: 8px;
+  vertical-align: middle;
 }
 
 .zone--empty { opacity: 0.32; color: var(--ivory-mute); }

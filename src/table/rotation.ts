@@ -26,20 +26,14 @@ export function seatRotationDeg(mySeat: Seat): number {
   }
 }
 
-function rotate01(x: number, y: number, deg: number): [number, number] {
-  // Rotate around the centre (0.5, 0.5)
+// Rotate a pixel vector (dx, dy) by `deg` degrees, in real pixel space. The
+// board is rotated by CSS about the cards-layer centre, so screen<->canonical
+// mapping must rotate the pixel offset from that centre. (An earlier version
+// rotated the [0,1] fraction about (0.5, 0.5), which silently assumed a SQUARE
+// board and skewed cursors/drops on the ±90° side seats — that is removed.)
+export function rotateVec(dx: number, dy: number, deg: number): [number, number] {
   const rad = (deg * Math.PI) / 180;
-  const dx = x - 0.5;
-  const dy = y - 0.5;
   const cos = Math.cos(rad);
   const sin = Math.sin(rad);
-  return [0.5 + dx * cos - dy * sin, 0.5 + dx * sin + dy * cos];
-}
-
-export function canonicalToLocal(nx: number, ny: number, mySeat: Seat): [number, number] {
-  return rotate01(nx, ny, seatRotationDeg(mySeat));
-}
-
-export function localToCanonical(nx: number, ny: number, mySeat: Seat): [number, number] {
-  return rotate01(nx, ny, -seatRotationDeg(mySeat));
+  return [dx * cos - dy * sin, dx * sin + dy * cos];
 }
