@@ -20,9 +20,14 @@ const PROCEDURAL: Record<SfxName, ProceduralSpec> = {
   "ui-close": { type: "chime", freq: 440 }
 };
 
-const SFX_DEFAULT = 0.6;
-const MUSIC_DEFAULT = 0.25;
-const MASTER_DEFAULT = 0.85;
+// Balanced defaults: sfx sits above music so effects never get buried, and
+// the master leaves headroom for the limiter.
+const SFX_DEFAULT = 0.7;
+const MUSIC_DEFAULT = 0.35;
+const MASTER_DEFAULT = 0.8;
+// The "auto-balance" target ratio (music vs sfx); master is left to the user.
+export const BALANCED_MUSIC = 0.35;
+export const BALANCED_SFX = 0.7;
 
 const LS_SFX = "kabal:vol:sfx";
 const LS_MUSIC = "kabal:vol:music";
@@ -32,6 +37,7 @@ const LS_MUTED = "kabal:audio:muted";
 export class AudioEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
+  private limiter: DynamicsCompressorNode | null = null;
   private musicGain: GainNode | null = null;
   private sfxGain: GainNode | null = null;
   private cachedBuffers = new Map<string, AudioBuffer | null>();
@@ -50,9 +56,19 @@ export class AudioEngine {
       const Ctor = (window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext);
       if (!Ctor) return;
       this.ctx = new Ctor();
+      // master gain → limiter → destination. The limiter tames peaks so the
+      // mix never clips or stings the ears regardless of how many sounds
+      // overlap.
       this.master = this.ctx.createGain();
       this.master.gain.value = this.muted ? 0 : this.masterVolume;
-      this.master.connect(this.ctx.destination);
+      this.limiter = this.ctx.createDynamicsCompressor();
+      this.limiter.threshold.value = -18;
+      this.limiter.knee.value = 24;
+      this.limiter.ratio.value = 4;
+      this.limiter.attack.value = 0.003;
+      this.limiter.release.value = 0.25;
+      this.master.connect(this.limiter);
+      this.limiter.connect(this.ctx.destination);
       this.sfxGain = this.ctx.createGain();
       this.sfxGain.gain.value = this.sfxVolume;
       this.sfxGain.connect(this.master);
@@ -82,9 +98,11 @@ export class AudioEngine {
     if (!this.booted) return;
     this.ensureContext();
     if (!this.ctx || !this.sfxGain) return;
+    this.duckMusic();
     const manifest = await this.loadManifest();
-    if (manifest.has(name)) {
-      const buf = await this.fetchBuffer(`/audio/${name}.mp3`);
+    const ext = manifest.get(name);
+    if (ext) {
+      const buf = await this.fetchBuffer(`/audio/${name}.${ext}`);
       if (buf) {
         const src = this.ctx.createBufferSource();
         src.buffer = buf;
@@ -96,18 +114,35 @@ export class AudioEngine {
     this.playProcedural(PROCEDURAL[name]);
   }
 
-  private manifestPromise: Promise<Set<string>> | null = null;
-  private loadManifest(): Promise<Set<string>> {
+  // Briefly dip the music so a sound effect always cuts through, then restore.
+  private duckMusic(): void {
+    if (!this.ctx || !this.musicGain || this.musicVolume <= 0) return;
+    const g = this.musicGain.gain;
+    const now = this.ctx.currentTime;
+    const full = this.musicVolume;
+    g.cancelScheduledValues(now);
+    g.setValueAtTime(Math.max(g.value, full * 0.55), now);
+    g.linearRampToValueAtTime(full * 0.55, now + 0.06);
+    g.linearRampToValueAtTime(full, now + 0.45);
+  }
+
+  // Maps a sound name to the file extension that actually exists (or "" if the
+  // file is absent, in which case we fall back to the procedural synth).
+  private manifestPromise: Promise<Map<string, string>> | null = null;
+  private loadManifest(): Promise<Map<string, string>> {
     if (this.manifestPromise) return this.manifestPromise;
-    this.manifestPromise = fetch("/audio/manifest.json", { cache: "force-cache" })
+    this.manifestPromise = fetch("/audio/manifest.json", { cache: "no-cache" })
       .then((r) => (r.ok ? r.json() : { available: [] }))
       .catch(() => ({ available: [] }))
       .then((data: { available?: unknown }) => {
-        const set = new Set<string>();
+        const map = new Map<string, string>();
         if (Array.isArray(data.available)) {
-          for (const e of data.available) if (typeof e === "string") set.add(e);
+          for (const e of data.available as Array<string | { id: string; ext?: string }>) {
+            if (typeof e === "string") map.set(e, "mp3");
+            else if (e && typeof e.id === "string") map.set(e.id, (e.ext || "mp3").replace(/^\./, ""));
+          }
         }
-        return set;
+        return map;
       });
     return this.manifestPromise;
   }
@@ -145,11 +180,11 @@ export class AudioEngine {
         o.frequency.setValueAtTime(spec.freq || 1000, now);
         o.frequency.exponentialRampToValueAtTime((spec.freq || 1000) * 0.5, now + 0.08);
         g.gain.setValueAtTime(0.001, now);
-        g.gain.exponentialRampToValueAtTime(0.5, now + 0.005);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        g.gain.exponentialRampToValueAtTime(0.3, now + 0.006);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
         o.connect(g);
         o.start(now);
-        o.stop(now + 0.12);
+        o.stop(now + 0.13);
         break;
       }
       case "thud": {
@@ -158,7 +193,7 @@ export class AudioEngine {
         o.frequency.setValueAtTime(spec.freq || 200, now);
         o.frequency.exponentialRampToValueAtTime(80, now + 0.18);
         g.gain.setValueAtTime(0.001, now);
-        g.gain.exponentialRampToValueAtTime(0.4, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.28, now + 0.012);
         g.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
         o.connect(g);
         o.start(now);
@@ -171,11 +206,11 @@ export class AudioEngine {
         src.buffer = noise;
         const filter = ctx.createBiquadFilter();
         filter.type = "bandpass";
-        filter.frequency.setValueAtTime(1200, now);
-        filter.frequency.exponentialRampToValueAtTime(400, now + 0.22);
-        filter.Q.value = 6;
+        filter.frequency.setValueAtTime(1100, now);
+        filter.frequency.exponentialRampToValueAtTime(380, now + 0.22);
+        filter.Q.value = 5;
         g.gain.setValueAtTime(0.0001, now);
-        g.gain.linearRampToValueAtTime(0.3, now + 0.04);
+        g.gain.linearRampToValueAtTime(0.2, now + 0.04);
         g.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
         src.connect(filter);
         filter.connect(g);
@@ -184,7 +219,7 @@ export class AudioEngine {
         break;
       }
       case "riffle": {
-        // Series of tiny clicks
+        // Series of soft tiny clicks.
         for (let i = 0; i < 9; i++) {
           const t = now + i * 0.028;
           const o = ctx.createOscillator();
@@ -192,7 +227,7 @@ export class AudioEngine {
           o.type = "triangle";
           o.frequency.setValueAtTime(900 + Math.random() * 600, t);
           eg.gain.setValueAtTime(0.0001, t);
-          eg.gain.exponentialRampToValueAtTime(0.25, t + 0.003);
+          eg.gain.exponentialRampToValueAtTime(0.16, t + 0.003);
           eg.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
           o.connect(eg);
           eg.connect(this.sfxGain);
@@ -207,8 +242,8 @@ export class AudioEngine {
         o.frequency.setValueAtTime(spec.freq || 300, now);
         o.frequency.exponentialRampToValueAtTime(120, now + 0.05);
         g.gain.setValueAtTime(0.001, now);
-        g.gain.exponentialRampToValueAtTime(0.35, now + 0.005);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        g.gain.exponentialRampToValueAtTime(0.24, now + 0.006);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
         o.connect(g);
         o.start(now);
         o.stop(now + 0.1);
@@ -222,7 +257,7 @@ export class AudioEngine {
         o1.frequency.setValueAtTime(spec.freq || 600, now);
         o2.frequency.setValueAtTime((spec.freq || 600) * 1.5, now);
         g.gain.setValueAtTime(0.0001, now);
-        g.gain.exponentialRampToValueAtTime(0.25, now + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
         g.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
         o1.connect(g);
         o2.connect(g);
@@ -235,14 +270,21 @@ export class AudioEngine {
     }
   }
 
+  // Set music + sfx to the balanced ratio; master is left to the user.
+  autoBalance(): void {
+    this.setMusicVolume(BALANCED_MUSIC);
+    this.setSfxVolume(BALANCED_SFX);
+  }
+
   async startMusic(): Promise<void> {
     this.ensureContext();
     if (!this.ctx || !this.musicGain) return;
     if (this.musicElement || this.musicProcedural) return;
     const manifest = await this.loadManifest();
-    if (manifest.has("music")) {
+    const musicExt = manifest.get("music");
+    if (musicExt) {
       try {
-        const el = new Audio("/audio/music.mp3");
+        const el = new Audio(`/audio/music.${musicExt}`);
         el.loop = true;
         el.preload = "auto";
         el.crossOrigin = "anonymous";

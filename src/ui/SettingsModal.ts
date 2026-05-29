@@ -28,6 +28,8 @@ export function openSettingsModal(modal: Modal, audio: AudioEngine): void {
         <input id="set-sfx" class="settings__slider" type="range" min="0" max="100" step="1" value="${sfx}" style="--fill:${sfx}%" />
         <span class="settings__value" data-role="sfx-val">${sfx}</span>
       </div>
+      <button type="button" class="settings__balance" data-role="balance">${escape(t("settings.autoBalance"))}</button>
+      <p class="settings__hint">${escape(t("settings.autoBalanceHint"))}</p>
     </div>
   `;
   modal.open({ title: t("settings.title"), bodyHtml });
@@ -58,5 +60,14 @@ export function openSettingsModal(modal: Modal, audio: AudioEngine): void {
     audio.setSfxVolume(n / 100);
     sfxVal.textContent = String(n);
     setFill(sfxInput);
+  });
+
+  body.querySelector<HTMLButtonElement>('[data-role="balance"]')?.addEventListener("click", (e) => {
+    e.preventDefault();
+    audio.autoBalance();
+    const m = Math.round(audio.musicVolume * 100);
+    const s = Math.round(audio.sfxVolume * 100);
+    musicInput.value = String(m); musicVal.textContent = String(m); setFill(musicInput);
+    sfxInput.value = String(s); sfxVal.textContent = String(s); setFill(sfxInput);
   });
 }

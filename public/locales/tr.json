@@ -58,7 +58,9 @@
     "title": "Ayarlar",
     "master": "Ana",
     "music": "Müzik",
-    "sfx": "Efekt"
+    "sfx": "Efekt",
+    "autoBalance": "Otomatik dengele",
+    "autoBalanceHint": "Müzik / efekt karışımını dengeler. Genel ses düzeyini Ana ile ayarlayın."
   },
   "support": {
     "title": "KABAL'a Destek Ol",
