@@ -88,11 +88,15 @@ Recommended: 640 × 928 px WebP under ~100 KB. See `public/cards/README.md`.
 
 ### Audio (`public/audio/`)
 
-Same model. Add a manifest entry to enable a file; missing entries fall back to procedural Web Audio tones generated at runtime.
+Effects and music live in separate folders — just drop files in, the manifest regenerates on build/dev:
 
-```json
-{ "available": ["flip", "pickup", "place", "shuffle", "gather", "music"] }
 ```
+public/audio/
+  sfx/     flip.mp3, pickup.mp3, place.mp3, shuffle.mp3, gather.mp3, snap.mp3, ui-*.mp3
+  music/   any file names; played in order, then looped
+```
+
+Missing sounds fall back to procedural Web Audio tones, so a fresh checkout produces zero 404s. The runtime debounces rapid repeats, caps overlapping voices, and ducks music under effects for clean, click-free playback. See `public/audio/README.md`.
 
 In-game **Settings** (Master / Music / Effects) sliders persist to `localStorage`.
 
