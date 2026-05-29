@@ -1,50 +1,94 @@
 import { defineConfig, type Plugin } from "vite";
-import { readdirSync, writeFileSync, existsSync } from "node:fs";
+import { readdirSync, writeFileSync, existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
 // Generates /cards/manifest.json and /audio/manifest.json from whatever files
-// actually live in public/cards and public/audio. This means a user only has
-// to DROP a file (timeRift.webp, flip.mp3, music.mp3) — no manual manifest
-// editing — and it works on the next dev start or build, with zero 404s for
-// files that aren't there.
+// actually live under public/. A user only has to DROP a file — no manual
+// manifest editing — and it works on the next dev start or build, with zero
+// 404s for files that aren't there.
+//
+// Audio is split into two folders so effects and music stay tidy:
+//   public/audio/sfx/<name>.<ext>     effect sounds (name must match a SfxName)
+//   public/audio/music/<anything>.<ext>  music tracks (any name; play in order)
+// A flat public/audio/<file> layout is still honoured for backwards
+// compatibility, but the folders are the documented convention.
 function kabalAssetManifest(): Plugin {
   const IMG_EXT = ["webp", "png", "jpg", "jpeg", "svg", "avif"];
   const AUDIO_EXT = ["mp3", "ogg", "wav", "m4a", "aac"];
-  const AUDIO_NAMES = new Set([
+  const SFX_NAMES = new Set([
     "flip", "pickup", "place", "shuffle", "gather", "snap",
-    "ui-click", "ui-open", "ui-close", "music"
+    "ui-click", "ui-open", "ui-close"
   ]);
-  // Music playlist: in addition to "music", files named "music1", "music2", …
-  // are recognised. They play in order, loop back to the first when finished.
-  const MUSIC_RE = /^music[0-9]*$/;
+  // Legacy flat-layout music naming: "music", "music1", "music2", …
+  const LEGACY_MUSIC_RE = /^music[0-9]*$/;
+
+  const splitExt = (f: string): { id: string; ext: string } | null => {
+    const dot = f.lastIndexOf(".");
+    if (dot < 1) return null;
+    return { id: f.slice(0, dot), ext: f.slice(dot + 1).toLowerCase() };
+  };
+  const isDir = (p: string) => { try { return statSync(p).isDirectory(); } catch { return false; } };
 
   const generate = () => {
     const pub = resolve(process.cwd(), "public");
-    // Cards
+
+    // ---- Cards ----
     const cardsDir = resolve(pub, "cards");
-    const cardEntries: Array<{ id: string; ext: string }> = [];
     if (existsSync(cardsDir)) {
+      const cardEntries: Array<{ id: string; ext: string }> = [];
       for (const f of readdirSync(cardsDir)) {
-        const dot = f.lastIndexOf(".");
-        if (dot < 1) continue;
-        const id = f.slice(0, dot);
-        const ext = f.slice(dot + 1).toLowerCase();
-        if (IMG_EXT.includes(ext)) cardEntries.push({ id, ext });
+        const parsed = splitExt(f);
+        if (parsed && IMG_EXT.includes(parsed.ext)) cardEntries.push(parsed);
       }
       writeFileSync(resolve(cardsDir, "manifest.json"), JSON.stringify({ available: cardEntries }, null, 2) + "\n");
     }
-    // Audio
+
+    // ---- Audio ----
     const audioDir = resolve(pub, "audio");
-    const audioEntries: Array<{ id: string; ext: string }> = [];
     if (existsSync(audioDir)) {
-      for (const f of readdirSync(audioDir)) {
-        const dot = f.lastIndexOf(".");
-        if (dot < 1) continue;
-        const id = f.slice(0, dot);
-        const ext = f.slice(dot + 1).toLowerCase();
-        if (AUDIO_EXT.includes(ext) && (AUDIO_NAMES.has(id) || MUSIC_RE.test(id))) audioEntries.push({ id, ext });
+      const sfx: Array<{ id: string; path: string }> = [];
+      const music: Array<{ id: string; path: string }> = [];
+
+      // Preferred layout: public/audio/sfx and public/audio/music.
+      const sfxDir = resolve(audioDir, "sfx");
+      if (isDir(sfxDir)) {
+        for (const f of readdirSync(sfxDir)) {
+          const parsed = splitExt(f);
+          if (parsed && AUDIO_EXT.includes(parsed.ext) && SFX_NAMES.has(parsed.id)) {
+            sfx.push({ id: parsed.id, path: `/audio/sfx/${f}` });
+          }
+        }
       }
-      writeFileSync(resolve(audioDir, "manifest.json"), JSON.stringify({ available: audioEntries }, null, 2) + "\n");
+      const musicDir = resolve(audioDir, "music");
+      if (isDir(musicDir)) {
+        for (const f of readdirSync(musicDir)) {
+          const parsed = splitExt(f);
+          if (parsed && AUDIO_EXT.includes(parsed.ext)) {
+            music.push({ id: parsed.id, path: `/audio/music/${f}` });
+          }
+        }
+      }
+
+      // Backwards compatibility: flat files dropped straight into public/audio.
+      for (const f of readdirSync(audioDir)) {
+        const full = resolve(audioDir, f);
+        if (isDir(full)) continue;
+        const parsed = splitExt(f);
+        if (!parsed || !AUDIO_EXT.includes(parsed.ext)) continue;
+        if (SFX_NAMES.has(parsed.id) && !sfx.some((e) => e.id === parsed.id)) {
+          sfx.push({ id: parsed.id, path: `/audio/${f}` });
+        } else if (LEGACY_MUSIC_RE.test(parsed.id)) {
+          music.push({ id: parsed.id, path: `/audio/${f}` });
+        }
+      }
+
+      // Natural sort music by name so "track2" precedes "track10".
+      music.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: "base" }));
+
+      writeFileSync(
+        resolve(audioDir, "manifest.json"),
+        JSON.stringify({ sfx, music }, null, 2) + "\n"
+      );
     }
   };
 

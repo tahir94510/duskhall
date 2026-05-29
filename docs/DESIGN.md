@@ -95,11 +95,24 @@ Recommended file: 640 × 928 px WebP (`object-fit: cover` covers the 8 px corner
 
 ### Audio (`public/audio/`)
 
-Same model: `manifest.json` lists which sound files actually exist. Anything missing falls back to a procedural Web Audio tone (synthesised at runtime). Volumes live in `localStorage` (`kabal:vol:master|music|sfx`).
+Effects and music live in separate folders so the asset set stays tidy:
+
+```
+public/audio/
+  sfx/     effect sounds — file name must match a SfxName (flip, pickup, …)
+  music/   music tracks — any file name; played in natural-sort order, looped
+```
+
+The Vite plugin scans both folders (and, for backwards compatibility, any flat files in `public/audio/`) and writes `manifest.json`. Effects map a sound name to a concrete file path; music is an ordered path list. Anything missing falls back to a procedural Web Audio tone synthesised at runtime, so a fresh checkout shows zero 404s. Volumes live in `localStorage` (`kabal:vol:master|music|sfx`).
 
 ```json
-{ "available": ["flip", "pickup", "place", "shuffle", "gather", "music"] }
+{
+  "sfx": [{ "id": "flip", "path": "/audio/sfx/flip.mp3" }],
+  "music": [{ "id": "theme", "path": "/audio/music/theme.mp3" }]
+}
 ```
+
+The runtime (`src/audio/Audio.ts`) routes every voice through a per-effect gain into a shared SFX bus → master gain → `DynamicsCompressor` limiter → destination. Quality safeguards: a per-sound **retrigger debounce** (~45 ms) drops machine-gun repeats of the same effect, a global **voice cap** (10) fades the oldest sound out rather than cutting it, samples get a 4 ms click-free fade-in, and the music **ducks** ~45 % under each effect and restores over ~0.4 s. A single music track loops itself gaplessly; a playlist advances on `ended` and wraps.
 
 ## Runtime branding (v3.8)
 

@@ -44,12 +44,19 @@ export class AudioEngine {
   private musicElement: HTMLAudioElement | null = null;
   private musicProcedural: { osc: OscillatorNode; lfo: OscillatorNode; gain: GainNode } | null = null;
   private booted = false;
-  // Sequential playlist: filled from the audio manifest (music, music1, music2…).
-  private musicPlaylist: Array<{ id: string; ext: string }> = [];
+  // Sequential playlist of music file paths, in play order. Looped end-to-end.
+  private musicPlaylist: string[] = [];
   private musicIndex = 0;
-  // Last-active source per SFX so a rapid repeat fades the previous instance
-  // out smoothly instead of slamming on top of it.
-  private activeSfx = new Map<SfxName, { src: AudioBufferSourceNode; gain: GainNode }>();
+  // Per-sound retrigger debounce: a rapid repeat of the SAME effect within this
+  // window is dropped, so machine-gun triggers never stack into a harsh blast.
+  // (Different effects are never debounced against each other.)
+  private static readonly RETRIGGER_MS = 45;
+  private lastPlayedAt = new Map<SfxName, number>();
+  // Active effect voices, oldest first. Capped so a flurry of sounds can never
+  // pile up; when the cap is hit the oldest voice is faded out (not cut) so it
+  // never clicks.
+  private static readonly MAX_VOICES = 10;
+  private voices: Array<{ src: AudioBufferSourceNode; gain: GainNode }> = [];
 
   sfxVolume = readNum(LS_SFX, SFX_DEFAULT);
   musicVolume = readNum(LS_MUSIC, MUSIC_DEFAULT);
@@ -102,45 +109,69 @@ export class AudioEngine {
     // Never create / touch an AudioContext before the first user gesture —
     // otherwise the browser logs "AudioContext was not allowed to start".
     if (!this.booted) return;
+
+    // Debounce machine-gun retriggers of the SAME sound. This is what keeps
+    // rapid actions from doubling into a distorted blast — without ever cutting
+    // a sound short (which is what produced the choppy/clicky audio before).
+    const nowMs = performance.now();
+    const last = this.lastPlayedAt.get(name) ?? 0;
+    if (nowMs - last < AudioEngine.RETRIGGER_MS) return;
+    this.lastPlayedAt.set(name, nowMs);
+
     this.ensureContext();
     if (!this.ctx || !this.sfxGain) return;
     this.duckMusic();
-    const manifest = await this.loadManifest();
-    const ext = manifest.get(name);
-    if (ext) {
-      const buf = await this.fetchBuffer(`/audio/${name}.${ext}`);
+    const { sfx } = await this.loadManifest();
+    const path = sfx.get(name);
+    if (path) {
+      const buf = await this.fetchBuffer(path);
       if (buf) {
-        // Smart overlap: if this SFX is already ringing, ramp the previous
-        // instance down over 40ms before the new one bursts in. Prevents the
-        // hard "double-click" doubling when actions fire in quick succession.
-        const ctx = this.ctx;
-        const now = ctx.currentTime;
-        const prev = this.activeSfx.get(name);
-        if (prev) {
-          try {
-            const g = prev.gain.gain;
-            g.cancelScheduledValues(now);
-            g.setValueAtTime(Math.max(g.value, 0.0001), now);
-            g.exponentialRampToValueAtTime(0.0001, now + 0.04);
-            prev.src.stop(now + 0.05);
-          } catch {}
-        }
-        const gain = ctx.createGain();
-        gain.gain.value = 1;
-        const src = ctx.createBufferSource();
-        src.buffer = buf;
-        src.connect(gain);
-        gain.connect(this.sfxGain);
-        const entry = { src, gain };
-        this.activeSfx.set(name, entry);
-        src.onended = () => {
-          if (this.activeSfx.get(name) === entry) this.activeSfx.delete(name);
-        };
-        src.start(now);
+        this.playBuffer(buf);
         return;
       }
     }
     this.playProcedural(PROCEDURAL[name]);
+  }
+
+  // Play a decoded sample with a click-free 4 ms fade-in, tracked by the voice
+  // cap so a flurry of effects can never pile up unbounded.
+  private playBuffer(buf: AudioBuffer): void {
+    if (!this.ctx || !this.sfxGain) return;
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(1, now + 0.004);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(gain);
+    gain.connect(this.sfxGain);
+    this.registerVoice(src, gain);
+    src.start(now);
+  }
+
+  // Track a voice for the global cap. When too many overlap, the oldest is
+  // faded out over 50 ms (never hard-cut, so it cannot click) and stopped.
+  private registerVoice(src: AudioBufferSourceNode, gain: GainNode): void {
+    const voice = { src, gain };
+    this.voices.push(voice);
+    src.onended = () => {
+      const i = this.voices.indexOf(voice);
+      if (i >= 0) this.voices.splice(i, 1);
+    };
+    if (this.voices.length > AudioEngine.MAX_VOICES) {
+      const oldest = this.voices.shift();
+      if (oldest && this.ctx) {
+        try {
+          const t = this.ctx.currentTime;
+          const g = oldest.gain.gain;
+          g.cancelScheduledValues(t);
+          g.setValueAtTime(Math.max(g.value, 0.0001), t);
+          g.exponentialRampToValueAtTime(0.0001, t + 0.05);
+          oldest.src.stop(t + 0.06);
+        } catch {}
+      }
+    }
   }
 
   private duckTimer = 0;
@@ -168,39 +199,46 @@ export class AudioEngine {
     }
   }
 
-  // Maps a sound name to the file extension that actually exists (or "" if the
-  // file is absent, in which case we fall back to the procedural synth). The
-  // playlist of music\d* tracks is filled as a side effect during the parse.
-  private manifestPromise: Promise<Map<string, string>> | null = null;
-  private loadManifest(): Promise<Map<string, string>> {
+  // Reads /audio/manifest.json (generated by the Vite plugin) into a sound→path
+  // map for effects and an ordered list of music paths. Understands the current
+  // split-folder format ({ sfx:[{id,path}], music:[{id,path}] }) and the legacy
+  // flat format ({ available:[...] }) so older deploys keep working.
+  private manifestPromise: Promise<{ sfx: Map<string, string>; music: string[] }> | null = null;
+  private loadManifest(): Promise<{ sfx: Map<string, string>; music: string[] }> {
     if (this.manifestPromise) return this.manifestPromise;
     this.manifestPromise = fetch("/audio/manifest.json", { cache: "no-cache" })
-      .then((r) => (r.ok ? r.json() : { available: [] }))
-      .catch(() => ({ available: [] }))
-      .then((data: { available?: unknown }) => {
-        const map = new Map<string, string>();
-        const tracks: Array<{ id: string; ext: string }> = [];
-        if (Array.isArray(data.available)) {
-          for (const e of data.available as Array<string | { id: string; ext?: string }>) {
-            if (typeof e === "string") {
-              map.set(e, "mp3");
-              if (/^music[0-9]*$/.test(e)) tracks.push({ id: e, ext: "mp3" });
-            } else if (e && typeof e.id === "string") {
-              const ext = (e.ext || "mp3").replace(/^\./, "");
-              map.set(e.id, ext);
-              if (/^music[0-9]*$/.test(e.id)) tracks.push({ id: e.id, ext });
-            }
+      .then((r) => (r.ok ? r.json() : {}))
+      .catch(() => ({}))
+      .then((data: { sfx?: unknown; music?: unknown; available?: unknown }) => {
+        const sfx = new Map<string, string>();
+        const music: string[] = [];
+
+        if (Array.isArray(data.sfx)) {
+          for (const e of data.sfx as Array<{ id?: string; path?: string }>) {
+            if (e && typeof e.id === "string" && typeof e.path === "string") sfx.set(e.id, e.path);
           }
         }
-        // Stable playlist order: "music" first (legacy single-track convention),
-        // then numerically by trailing digits ("music1", "music2", "music10").
-        tracks.sort((a, b) => {
-          const na = a.id === "music" ? -1 : parseInt(a.id.slice(5), 10) || 0;
-          const nb = b.id === "music" ? -1 : parseInt(b.id.slice(5), 10) || 0;
-          return na - nb;
-        });
-        this.musicPlaylist = tracks;
-        return map;
+        if (Array.isArray(data.music)) {
+          for (const e of data.music as Array<string | { path?: string }>) {
+            if (typeof e === "string") music.push(e);
+            else if (e && typeof e.path === "string") music.push(e.path);
+          }
+        }
+
+        // Legacy { available: [...] } — flat /audio/<name>.<ext> layout.
+        if (Array.isArray(data.available)) {
+          for (const e of data.available as Array<string | { id: string; ext?: string }>) {
+            const id = typeof e === "string" ? e : e?.id;
+            if (!id) continue;
+            const ext = (typeof e === "string" ? "mp3" : (e.ext || "mp3")).replace(/^\./, "");
+            if (/^music[0-9]*$/.test(id)) music.push(`/audio/${id}.${ext}`);
+            else sfx.set(id, `/audio/${id}.${ext}`);
+          }
+          music.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
+        }
+
+        this.musicPlaylist = music;
+        return { sfx, music };
       });
     return this.manifestPromise;
   }
@@ -343,16 +381,15 @@ export class AudioEngine {
   async startMusic(): Promise<void> {
     this.ensureContext();
     if (this.musicElement || this.musicProcedural) return;
-    await this.loadManifest();
-    if (this.musicPlaylist.length > 0) {
-      // One <audio> element shared across tracks. When the current track ends
-      // we advance to the next; after the last we loop back to the first.
+    const { music } = await this.loadManifest();
+    if (music.length > 0) {
+      // One <audio> element shared across tracks. A single track loops itself
+      // gaplessly; a playlist advances on "ended" and wraps back to the first.
       const el = new Audio();
-      el.loop = false;
       el.preload = "auto";
       el.volume = this.effectiveMusic();
       el.addEventListener("ended", () => {
-        if (!this.musicElement || this.musicPlaylist.length === 0) return;
+        if (!this.musicElement || this.musicPlaylist.length <= 1) return;
         this.musicIndex = (this.musicIndex + 1) % this.musicPlaylist.length;
         this.playMusicTrack(this.musicIndex);
       });
@@ -390,10 +427,13 @@ export class AudioEngine {
   // blocking is handled by retrying on the next user gesture.
   private playMusicTrack(i: number): void {
     if (!this.musicElement || this.musicPlaylist.length === 0) return;
-    const track = this.musicPlaylist[i];
-    if (!track) return;
+    const path = this.musicPlaylist[i];
+    if (!path) return;
     const el = this.musicElement;
-    el.src = `/audio/${track.id}.${track.ext}`;
+    // A lone track loops itself for a seamless bed; a playlist relies on the
+    // "ended" handler to advance, so looping must stay off there.
+    el.loop = this.musicPlaylist.length === 1;
+    el.src = path;
     el.volume = this.effectiveMusic();
     el.play().catch(() => {
       // Autoplay blocked — retry once on the next user gesture.
