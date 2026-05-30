@@ -13,6 +13,7 @@ import { openConfirm } from "../ui/ConfirmModal.js";
 import { openShortcutsModal } from "../ui/ShortcutsPanel.js";
 import { openSettingsModal } from "../ui/SettingsModal.js";
 import { ContextBar } from "../ui/ContextBar.js";
+import { DebugHud } from "../ui/DebugHud.js";
 import { toast } from "../ui/Toast.js";
 import { t, onLocaleChange } from "../i18n/index.js";
 import { getOrCreateRoom, newRoom, setRoomSlug } from "../net/room.js";
@@ -70,6 +71,7 @@ export class Game {
   private self: SelfPlayer;
   private players: Map<string, PresencePlayer> = new Map();
   private header!: Header;
+  private debug: DebugHud | null = DebugHud.enabled() ? new DebugHud() : null;
   private modal = new Modal();
   private contextBar!: ContextBar;
   private audio = new AudioEngine();
@@ -1056,6 +1058,7 @@ export class Game {
       return this.wireCard(c);
     });
     this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards });
+    if (this.debug) this.debug.sent++;
     this.dirtyIds.clear();
   }
 
@@ -1184,6 +1187,11 @@ export class Game {
 
       this.header.setSpectatorMode(this.spectator);
       this.header.setSpectators(spectatorCount);
+      if (this.debug) {
+        this.debug.peers = this.activeSeats.size;
+        this.debug.seat = this.claimSeat;
+        this.debug.spectator = this.spectator;
+      }
 
       // Remove ghost cursors for players who are no longer present, so a
       // reconnecting peer never leaves a stale duplicate (e.g. two "P2").
@@ -1248,6 +1256,11 @@ export class Game {
 
   private bindRealtimeEvents(): void {
     this.bus.onGame((msg) => {
+      if (this.debug) {
+        this.debug.markIn();
+        if (msg.type === "patch") this.debug.recvPatch++;
+        else if (msg.type === "snapshot") this.debug.recvSnap++;
+      }
       if (msg.type === "patch") this.applyPatch(msg.payload, false);
       else if (msg.type === "snapshot") this.applyPatch(msg.payload, true);
       else if (msg.type === "hold") this.applyHold(msg.payload);
@@ -1255,8 +1268,16 @@ export class Game {
       else if (msg.type === "kick") this.handleKicked(msg.payload);
       else if (msg.type === "hello") this.respondToHello(msg.payload.id);
     });
-    this.bus.onCursor((c) => this.renderCursor(c));
+    this.bus.onCursor((c) => {
+      if (this.debug && c.id !== this.self.id) { this.debug.markIn(); this.debug.recvCursor++; }
+      this.renderCursor(c);
+    });
     this.bus.onStatus((s) => {
+      // Surface the live connection state in the menu so a player can tell at a
+      // glance whether realtime sync is actually active (online) or the room is
+      // running locally only (offline → Supabase unreachable/unconfigured).
+      this.header.setConnection(s);
+      if (this.debug) this.debug.status = s;
       // NOTE: we deliberately do NOT push a snapshot on connect, a fresh
       // joiner pushing their just-dealt board would clobber the live game.
       // Instead the bus sends `hello` on every (re)connect and the authoritative
@@ -1534,6 +1555,7 @@ export class Game {
       this.patchVersion++;
       const cards = Array.from(this.state.cards.values()).slice(0, 200).map((c) => this.wireCard(c));
       this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards });
+      if (this.debug) this.debug.sent++;
     }, 2000);
   }
 

@@ -105,6 +105,21 @@
   filter: blur(5px);
   /* Keep the chip itself crisp; only the glyphs blur. */
 }
+/* A plain (non-secret, non-blurring) value chip, e.g. the connection state. */
+.header__code--plain { cursor: default; }
+
+/* Connection indicator: a small status dot that mirrors the realtime state. */
+.conn-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ivory-mute);
+  transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+[data-conn="online"] .conn-dot { background: #46c46a; box-shadow: 0 0 6px rgba(70, 196, 106, 0.55); }
+[data-conn="connecting"] .conn-dot { background: #e8993a; box-shadow: 0 0 6px rgba(232, 153, 58, 0.5); }
+[data-conn="offline"] .conn-dot { background: #d2603f; box-shadow: 0 0 6px rgba(210, 96, 63, 0.5); }
 
 /* Header popover menu */
 .header__menu {
@@ -322,3 +337,26 @@
 }
 .tooltip__body { font-size: 13px; color: var(--ivory); line-height: 1.55; }
 .tooltip__flavor { margin-top: 8px; font-style: italic; color: var(--ivory-dim); font-size: 12px; line-height: 1.5; }
+
+/* Opt-in diagnostics overlay (?debug=1). Bottom-left, unobtrusive, monospace. */
+.debug-hud {
+  position: fixed;
+  left: max(env(safe-area-inset-left), 10px);
+  bottom: max(env(safe-area-inset-bottom), 10px);
+  z-index: var(--z-toast);
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(8, 8, 12, 0.82);
+  border: 1px solid var(--line-2);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ivory-dim);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.debug-hud b { color: var(--ivory); font-weight: 600; }
+.debug-hud[data-status="online"] b { color: #6fdc8c; }
+.debug-hud[data-status="offline"] b { color: #e87d5c; }
