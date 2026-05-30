@@ -31,6 +31,35 @@ function loadManifest(): Promise<Map<string, string>> {
   return manifestPromise;
 }
 
+// Preload the art for a set of card defs and resolve once they have all settled
+// (loaded or failed). Used by the loading screen so card faces never pop in
+// after the table is shown. A per-image and overall timeout keeps a slow or
+// missing asset from ever stalling the loader.
+export function preloadCardArt(defIds: Iterable<string>, timeoutMs = 4000): Promise<void> {
+  return loadManifest().then((map) => {
+    const urls = new Set<string>();
+    for (const def of defIds) {
+      const url = map.get(def);
+      if (url) urls.add(url);
+    }
+    if (urls.size === 0) return;
+    const jobs = Array.from(urls).map(
+      (url) =>
+        new Promise<void>((resolve) => {
+          const img = new Image();
+          const done = () => resolve();
+          img.onload = done;
+          img.onerror = done;
+          img.src = url;
+          if (img.complete) done();
+        })
+    );
+    const all = Promise.all(jobs).then(() => undefined);
+    const cap = new Promise<void>((resolve) => window.setTimeout(resolve, timeoutMs));
+    return Promise.race([all, cap]);
+  });
+}
+
 export function createCardElement(instanceId: string, defId: string): { el: HTMLDivElement } {
   const card = document.createElement("div");
   card.className = "card";

@@ -19,6 +19,11 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "room": "Room",
+    "roomCode": "Room code",
+    "reveal": "Tap to reveal or hide",
+    "join": "Join",
+    "joinPlaceholder": "Room code",
+    "joinAria": "Enter a room code to join",
     "copyLink": "Copy invite link",
     "linkCopied": "Invite link copied",
     "newRoom": "A new room has been opened.",
@@ -30,10 +35,7 @@
     "deck": "Deck",
     "open": "Open",
     "discard": "Discard",
-    "seatSelf": "You",
-    "seatOpponent": "Opponent",
-    "seatLeft": "Left",
-    "seatRight": "Right"
+    "youSuffix": " (you)"
   },
   "shortcutsList": {
     "title": "Shortcuts",

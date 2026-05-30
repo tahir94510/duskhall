@@ -133,9 +133,18 @@
 /* Face-down: hover targets disabled */
 .card:not(.is-faceup) .card__face--front { pointer-events: none; }
 
-/* Concealed (own face-up card hidden from opponents) */
+/* Concealed: a rival's private card. We ALWAYS show the back, blurred, no matter
+   how the owner placed or flipped it (face-up or face-down). Forcing the inner
+   to its un-flipped pose makes the physical back face the camera; the front,
+   rotated 180deg, is hidden by backface-visibility. The owner is never concealed
+   from themselves, so they read their own card normally. */
+.card.is-concealed { cursor: default; }
+.card.is-concealed .card__inner { transform: rotateY(0deg) !important; }
+.card.is-concealed .card__face--back {
+  visibility: visible;
+  filter: blur(2.2px) saturate(0.82) brightness(0.9);
+}
 .card.is-concealed .card__face--front { visibility: hidden; }
-.card.is-concealed .card__face--back { visibility: visible; }
 
 /* Snap-back animation when dropped into a rival zone */
 .card.is-snapback { animation: snapback 260ms var(--ease); }

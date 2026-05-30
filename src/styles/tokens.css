@@ -36,6 +36,9 @@
   --card-w: clamp(58px, 7.2vmin, 104px);
   --card-h: calc(var(--card-w) * 1.45);
 
+  /* Gap between the deck and discard markers (matches DOCK_GUTTER_PX in TS). */
+  --dock-gutter: 14px;
+
   /* Motion */
   --ease: cubic-bezier(0.2, 0.65, 0.18, 0.99);
   --dur-fast: 110ms;
@@ -43,6 +46,8 @@
   --dur-slow: 320ms;
 
   /* z layers */
+  --z-bg: -2;
+  --z-scrim: -1;
   --z-board: 1;
   --z-zone: 2;
   --z-card: 10;
@@ -52,6 +57,7 @@
   --z-modal: 1000;
   --z-toast: 1100;
   --z-held: 9999;
+  --z-loader: 100000;
 
   /* Type: single family, restrained spacing */
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;

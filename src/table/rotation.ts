@@ -37,3 +37,39 @@ export function rotateVec(dx: number, dy: number, deg: number): [number, number]
   const sin = Math.sin(rad);
   return [dx * cos - dy * sin, dx * sin + dy * cos];
 }
+
+// The four physical zone slots on screen, fixed for every viewer.
+export type LocalSlot = "bottom" | "top" | "left" | "right";
+
+// Physical zone div order built in Board.ts: [bottom, top, left, right].
+export const SLOT_INDEX: Record<LocalSlot, number> = { bottom: 0, top: 1, left: 2, right: 3 };
+
+// Direction (screen space, +y downward) of each seat's canonical anchor from the
+// board centre, before any viewer rotation.
+const SEAT_DIR: Record<Seat, [number, number]> = {
+  0: [0, 1],   // bottom
+  1: [0, -1],  // top
+  2: [-1, 0],  // left
+  3: [1, 0]    // right
+};
+
+// Where an absolute seat lands on the local viewer's screen. The viewer rotates
+// the whole board by seatRotationDeg(viewerSeat) so their own seat is always at
+// the bottom; this rotates each seat's anchor the same way and snaps it to the
+// dominant compass slot. This is the single source of truth that keeps zone
+// labels, colours, hit-testing and ownership consistent for all four seats.
+export function localSlotForSeat(viewerSeat: Seat, seat: Seat): LocalSlot {
+  const [dx, dy] = SEAT_DIR[seat];
+  const [rx, ry] = rotateVec(dx, dy, seatRotationDeg(viewerSeat));
+  if (Math.abs(rx) > Math.abs(ry)) return rx > 0 ? "right" : "left";
+  return ry > 0 ? "bottom" : "top";
+}
+
+// Inverse of localSlotForSeat: which absolute seat occupies a given screen slot
+// for this viewer.
+export function seatForLocalSlot(viewerSeat: Seat, slot: LocalSlot): Seat {
+  for (const s of [0, 1, 2, 3] as Seat[]) {
+    if (localSlotForSeat(viewerSeat, s) === slot) return s;
+  }
+  return 0;
+}

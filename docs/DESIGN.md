@@ -112,14 +112,35 @@ Recommended file: 640 × 928 px WebP (`object-fit: cover` covers the 8 px corner
 
 ### Table background (`public/background/`)
 
-A single image dropped here becomes the table surface. The Vite plugin scans the
+A single image dropped here becomes the backdrop. The Vite plugin scans the
 folder and writes `public/background/manifest.json`; `src/table/Background.ts`
-reads it once, preloads the first image, and fades it onto the `.board__bg`
-layer. That layer lives inside `.board__perspective`, so the surface rotates
-with the board and reads as one shared table felt across all four seats. The
-folder is kept separate from `public/cards/` so card art and the table surface
-never collide. An empty folder makes no request and the default dark surface
-defined in `card.css` / `board.css` shows through, so there are zero 404s.
+reads it once, preloads the first image, and fades it onto the `.app-bg` layer.
+That layer is `position: fixed`, full-bleed, and behind everything (`--z-bg`), so
+it covers the whole screen at every seat with no black bars and does NOT rotate
+with the board. A thin `.app-scrim` (`--z-scrim`) sits just above it to steady
+contrast for card legibility without hiding the deck/discard. The folder is kept
+separate from `public/cards/` so card art and the backdrop never collide. An
+empty folder makes no request and an elegant built-in gradient (in `board.css`)
+shows through, so there are zero 404s.
+
+### Loading screen & first-sync gate
+
+`index.html` paints a logo splash (`#kabal-loader`) on the first frame from
+inline critical CSS. `Game.mount()` preloads the on-table card art and the
+background, then connects and waits (capped at ~1.8s) for the first sync: our
+seat (so the board is already rotated) and the authoritative snapshot (so cards
+are already in place), before `main.ts` calls `hideLoader()` (`body.is-ready`).
+Nothing rotates or reshuffles after the table is revealed.
+
+### Viewer-relative zones
+
+Card positions live in the shared canonical frame, but the four on-screen zone
+slots (bottom/top/left/right) are bound per viewer: `localSlotForSeat` (in
+`rotation.ts`) maps each absolute seat to the slot the rotated board puts it in,
+so the local player's own seat is always the bottom slot. `Game.refreshZones`
+uses this to set each slot's colour, occupant name (`Name (you)` for self) and
+hit-test rect, and `pointInZone` resolves ownership through the same map. This is
+what keeps drag/drop, ownership, concealment and cursors correct for all seats.
 
 ### Audio (`public/audio/`)
 

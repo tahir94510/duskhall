@@ -33,6 +33,11 @@ const LS_SFX = "kabal:vol:sfx";
 const LS_MUSIC = "kabal:vol:music";
 const LS_MASTER = "kabal:vol:master";
 const LS_MUTED = "kabal:audio:muted";
+// Music continuity across reloads: which track, how far in, and the remaining
+// shuffle bag so the no-repeat rotation survives a refresh.
+const LS_MUSIC_IDX = "kabal:music:idx";
+const LS_MUSIC_POS = "kabal:music:pos";
+const LS_MUSIC_BAG = "kabal:music:bag";
 
 // Ducking: a *gentle, smart* dip so the music breathes under prominent effects
 // without ever pumping. Only the few weighty effects duck; light UI ticks and
@@ -58,9 +63,19 @@ export class AudioEngine {
   private musicRouted = false;
   private musicProcedural: { osc: OscillatorNode; osc2: OscillatorNode; lfo: OscillatorNode; gain: GainNode } | null = null;
   private booted = false;
-  // Sequential playlist of music file paths, in play order. Looped end-to-end.
+  // Music file paths. Playback order comes from a shuffle bag (below), not the
+  // raw list order, so the rotation feels random yet fair.
   private musicPlaylist: string[] = [];
   private musicIndex = 0;
+  // Shuffle bag: a shuffled queue of upcoming track indices. Every track plays
+  // once before any repeats; when the bag empties it is reshuffled (avoiding an
+  // immediate repeat of the track that just finished). Persisted so a reload
+  // continues the same fair rotation instead of restarting from the top.
+  private musicBag: number[] = [];
+  // currentTime (seconds) to resume the first restored track at, applied once.
+  private resumePos = 0;
+  private musicSaveAt = 0;
+  private musicHooksInstalled = false;
   // Per-sound retrigger debounce: a rapid repeat of the SAME effect within this
   // window is dropped, so machine-gun triggers never stack into a harsh blast.
   // (Different effects are never debounced against each other.)
@@ -421,17 +436,36 @@ export class AudioEngine {
     const { music } = await this.loadManifest();
     if (music.length > 0) {
       // One <audio> element shared across tracks. A single track loops itself
-      // gaplessly; a playlist advances on "ended" and wraps back to the first.
+      // gaplessly; a playlist advances on "ended" by drawing from the shuffle bag.
       const el = new Audio();
       el.preload = "auto";
       el.crossOrigin = "anonymous";
       el.addEventListener("ended", () => {
         if (!this.musicElement || this.musicPlaylist.length <= 1) return;
-        this.musicIndex = (this.musicIndex + 1) % this.musicPlaylist.length;
+        this.musicIndex = this.nextTrackIndex();
+        this.resumePos = 0;
         this.playMusicTrack(this.musicIndex);
       });
+      // Persist progress so a refresh resumes the same track near the same spot.
+      el.addEventListener("timeupdate", () => {
+        const now = Date.now();
+        if (now - this.musicSaveAt < 3000) return;
+        this.musicSaveAt = now;
+        this.saveMusicState();
+      });
       this.musicElement = el;
-      this.musicIndex = 0;
+      // Persist immediately when the page is hidden or unloaded so we never lose
+      // more than the last few seconds of progress. Registered once.
+      if (!this.musicHooksInstalled) {
+        this.musicHooksInstalled = true;
+        const flush = () => this.saveMusicState();
+        window.addEventListener("pagehide", flush);
+        window.addEventListener("beforeunload", flush);
+        document.addEventListener("visibilitychange", () => { if (document.hidden) flush(); });
+      }
+      // Restore the bag + current track from the last session, else start a
+      // fresh shuffled rotation.
+      this.restoreMusicState();
       // Route the element through musicGain so its level/duck/mute are all
       // click-free WebAudio ramps. If routing fails, fall back to el.volume.
       this.musicRouted = false;
@@ -446,7 +480,7 @@ export class AudioEngine {
         }
       }
       if (!this.musicRouted) el.volume = this.effectiveMusic();
-      this.playMusicTrack(0);
+      this.playMusicTrack(this.musicIndex);
       return;
     }
     // No file: a gentle procedural ambient bed through the WebAudio master.
@@ -477,6 +511,56 @@ export class AudioEngine {
     this.musicProcedural = { osc, osc2, lfo, gain };
   }
 
+  // Build a fresh shuffled bag of all track indices (Fisher-Yates, crypto seed).
+  // If `avoid` is given (the track that just played), make sure it is not first
+  // so the rotation never repeats a track back-to-back across a bag boundary.
+  private buildShuffledBag(avoid = -1): number[] {
+    const n = this.musicPlaylist.length;
+    const bag = Array.from({ length: n }, (_, i) => i);
+    for (let i = n - 1; i > 0; i--) {
+      const j = Math.floor(randUnit() * (i + 1));
+      [bag[i], bag[j]] = [bag[j]!, bag[i]!];
+    }
+    if (n > 1 && bag[0] === avoid) [bag[0], bag[1]] = [bag[1]!, bag[0]!];
+    return bag;
+  }
+
+  // Next track index from the bag; refills (reshuffled) when empty.
+  private nextTrackIndex(): number {
+    if (this.musicBag.length === 0) this.musicBag = this.buildShuffledBag(this.musicIndex);
+    const next = this.musicBag.shift();
+    return typeof next === "number" ? next : 0;
+  }
+
+  private restoreMusicState(): void {
+    const n = this.musicPlaylist.length;
+    // Restore the remaining bag if it still matches the current playlist size.
+    let bag: number[] = [];
+    try {
+      const raw = localStorage.getItem(LS_MUSIC_BAG);
+      const parsed = raw ? (JSON.parse(raw) as unknown) : null;
+      if (Array.isArray(parsed)) bag = parsed.filter((x) => typeof x === "number" && x >= 0 && x < n);
+    } catch {}
+    const savedIdx = Math.floor(readRawNum(LS_MUSIC_IDX, -1));
+    const savedPos = readRawNum(LS_MUSIC_POS, 0);
+    if (savedIdx >= 0 && savedIdx < n) {
+      this.musicIndex = savedIdx;
+      this.resumePos = Number.isFinite(savedPos) && savedPos > 0 ? savedPos : 0;
+      this.musicBag = bag.length ? bag : this.buildShuffledBag(savedIdx);
+    } else {
+      this.musicBag = bag.length ? bag : this.buildShuffledBag();
+      this.musicIndex = this.nextTrackIndex();
+      this.resumePos = 0;
+    }
+  }
+
+  private saveMusicState(): void {
+    if (!this.musicElement) return;
+    writeNum(LS_MUSIC_IDX, this.musicIndex);
+    writeNum(LS_MUSIC_POS, this.musicElement.currentTime || 0);
+    try { localStorage.setItem(LS_MUSIC_BAG, JSON.stringify(this.musicBag)); } catch {}
+  }
+
   // Drive the shared <audio> element to track #i in the playlist. Autoplay
   // blocking is handled by retrying on the next user gesture.
   private playMusicTrack(i: number): void {
@@ -488,6 +572,16 @@ export class AudioEngine {
     // "ended" handler to advance, so looping must stay off there.
     el.loop = this.musicPlaylist.length === 1;
     el.src = path;
+    // Resume part-way into a restored track exactly once, after metadata loads.
+    if (this.resumePos > 0) {
+      const pos = this.resumePos;
+      this.resumePos = 0;
+      const seek = () => {
+        try { if (pos < (el.duration || Infinity)) el.currentTime = pos; } catch {}
+        el.removeEventListener("loadedmetadata", seek);
+      };
+      el.addEventListener("loadedmetadata", seek);
+    }
     // Fade the (new) track in click-free. Routed: ramp musicGain from 0;
     // unrouted: best-effort element volume.
     if (this.musicRouted && this.ctx && this.musicGain) {
@@ -587,6 +681,26 @@ function noiseBuffer(ctx: AudioContext, durationSec: number): AudioBuffer {
 }
 
 function clamp01(v: number): number { return Math.max(0, Math.min(1, v)); }
+
+// A crypto-quality unit random in [0, 1) for the shuffle bag.
+function randUnit(): number {
+  const c = (globalThis as { crypto?: Crypto }).crypto;
+  if (c && typeof c.getRandomValues === "function") {
+    return c.getRandomValues(new Uint32Array(1))[0]! / 0x100000000;
+  }
+  return Math.random();
+}
+
+// Raw (un-clamped) number reader for values that are not 0..1 volumes, e.g. the
+// music track index and playback position in seconds.
+function readRawNum(key: string, fallback: number): number {
+  try {
+    const v = localStorage.getItem(key);
+    if (v === null) return fallback;
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : fallback;
+  } catch { return fallback; }
+}
 
 function readNum(key: string, fallback: number): number {
   try {

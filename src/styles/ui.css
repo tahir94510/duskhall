@@ -123,11 +123,81 @@
   color: var(--ivory-dim);
 }
 
-.header__menu-timer {
+/* Static (non-navigating) rows: room code + timer. Not hover-highlighted like
+   the action items, and they never close the menu. */
+.header__menu-row--static {
+  grid-template-columns: 22px 1fr auto auto;
   cursor: default;
   background: rgba(255, 255, 255, 0.02);
 }
-.header__menu-timer:hover { background: rgba(255, 255, 255, 0.04); }
+.header__menu-row--static:hover { background: rgba(255, 255, 255, 0.02); }
+
+.header__menu-timer { cursor: default; }
+
+/* A blurrable secret chip (room code, timer). Blurred by default; click toggles.
+   Tabular numerals keep the room code from jittering as it reveals. */
+.header__secret {
+  justify-self: end;
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--ivory);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  padding: 3px 9px;
+  cursor: pointer;
+  user-select: all;
+  transition: filter var(--dur) var(--ease), border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.header__secret:hover { border-color: var(--line-3); background: rgba(0, 0, 0, 0.6); }
+.header__secret.is-blurred { filter: blur(5px); cursor: pointer; }
+
+.icon-btn--sm { width: 28px; height: 28px; }
+.icon-btn--sm svg { width: 15px; height: 15px; }
+
+/* Join-by-code: compact input + button on one line. */
+.header__join {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  padding: 4px 6px 6px;
+}
+.header__join-input {
+  height: 30px;
+  min-width: 0;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--line-2);
+  color: var(--ivory);
+  font-family: var(--font-body);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0 10px;
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.header__join-input::placeholder { color: var(--ivory-mute); letter-spacing: 0.04em; text-transform: none; }
+.header__join-input:focus { outline: none; border-color: var(--line-3); background: rgba(0, 0, 0, 0.65); }
+.header__join-input.is-error { border-color: rgba(220, 90, 90, 0.7); animation: snapback 360ms var(--ease); }
+.header__join-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 7px;
+  border: 1px solid var(--line-2);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ivory);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.header__join-btn svg { width: 15px; height: 15px; }
+.header__join-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--line-3); }
 
 .header__menu-pill {
   background: var(--ivory);
