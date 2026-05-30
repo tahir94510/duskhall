@@ -70,7 +70,10 @@ export class DragController {
 
   private bindEvents(): void {
     this.host.addEventListener("pointerdown", this.onPointerDown, { passive: false });
-    this.host.addEventListener("pointermove", this.onPointerMoveAlways, { passive: true });
+    // Cursor broadcast listens on window, not the cards layer: the cards layer is
+    // pointer-events:none (so it never blocks the zone kick button), which means it
+    // would not receive moves over empty board space. Window always sees them.
+    window.addEventListener("pointermove", this.onPointerMoveAlways, { passive: true });
     window.addEventListener("pointermove", this.onPointerMove, { passive: false });
     window.addEventListener("pointerup", this.onPointerUp, { passive: false });
     window.addEventListener("pointercancel", this.onPointerUp, { passive: false });
@@ -300,7 +303,7 @@ export class DragController {
 
   destroy(): void {
     this.host.removeEventListener("pointerdown", this.onPointerDown);
-    this.host.removeEventListener("pointermove", this.onPointerMoveAlways);
+    window.removeEventListener("pointermove", this.onPointerMoveAlways);
     window.removeEventListener("pointermove", this.onPointerMove);
     window.removeEventListener("pointerup", this.onPointerUp);
     window.removeEventListener("pointercancel", this.onPointerUp);

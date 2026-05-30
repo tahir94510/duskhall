@@ -254,6 +254,14 @@ export class Game {
     return 0.5 - (2 * cardW + DOCK_GUTTER_PX) / (2 * this.boardSize.width);
   }
 
+  // Top-left canonical x for the discard pile so its centre sits on the discard
+  // marker (half a card + gutter to the RIGHT of board centre). The card-width
+  // terms cancel for the right pile, leaving a clean gutter-only offset; mirrors
+  // the CSS calc in board.css (.dock__slot--discard).
+  private discardBaseNx(): number {
+    return 0.5 + DOCK_GUTTER_PX / (2 * this.boardSize.width);
+  }
+
   // Cached card pixel size. Reading offsetWidth forces a synchronous reflow, and
   // this is queried on every wheel tick / stack lookup, so we measure once and
   // reuse it until the viewport changes (measureBoard clears the cache). Reading
@@ -374,6 +382,11 @@ export class Game {
         // Spectators are silent observers, never broadcast a cursor (that was
         // the source of the seat-0 "impostor" ghost).
         if (this.spectator) return;
+        // The cursor listener is on window (so empty board space, no longer
+        // captured by the cards layer, still shares the pointer). Skip broadcast
+        // while a modal is open: the player is in a menu, not at the table, and
+        // peers should not see their ghost dart across the board.
+        if (this.modal.isOpen()) return;
         // Inside our own zone we keep our pointer private: send an off-board
         // sentinel ONCE so peers hide our ghost (instead of freezing it at the
         // zone edge), then stay quiet until we leave the zone again.
@@ -400,14 +413,18 @@ export class Game {
     const w = this.boardSize.width;
     const h = this.boardSize.height;
     const { w: cardW, h: cardH } = this.cardMetrics();
+    // Work in cards-layer pixels and test each card in its OWN rotated frame, so
+    // a 90°/270° card's hit-box matches what's painted (a card is rotated rot*90°
+    // about its centre by CSS). An axis-aligned bbox made rotated cards miss by
+    // their corners, forcing the cursor to hover too precisely.
+    const px = nx * w;
+    const py = ny * h;
     let pick: CardState | null = null;
     for (const c of this.state.cards.values()) {
-      // bbox in canonical coords
-      const bx0 = c.x;
-      const by0 = c.y;
-      const bx1 = c.x + cardW / w;
-      const by1 = c.y + cardH / h;
-      if (nx >= bx0 && nx <= bx1 && ny >= by0 && ny <= by1) {
+      const ccx = c.x * w + cardW / 2;
+      const ccy = c.y * h + cardH / 2;
+      const [lx, ly] = rotateVec(px - ccx, py - ccy, -c.rot * 90);
+      if (Math.abs(lx) <= cardW / 2 && Math.abs(ly) <= cardH / 2) {
         if (!pick || c.z > pick.z) pick = c;
       }
     }
@@ -482,17 +499,28 @@ export class Game {
     this.measureBoard();
     if (this.boardSize.width < 50 || this.boardSize.height < 50) return;
     const { w: cardW, h: cardH } = this.cardMetrics();
-    const baseNx = this.deckBaseNx(cardW);
+    const deckNx = this.deckBaseNx(cardW);
+    const discardNx = this.discardBaseNx();
     const baseNy = DECK_NY - cardH / (2 * this.boardSize.height);
-    // Half a card width as a canonical fraction — the tolerance for "still on
-    // the deck" so only the pile (never a card moved away) gets re-aligned.
+    // ~0.6 card as a canonical fraction — the tolerance for "still on the pile"
+    // so only the resting piles (never a card moved away) get re-aligned.
     const tolX = (cardW * 0.6) / this.boardSize.width;
     const tolY = (cardH * 0.6) / this.boardSize.height;
     for (const c of this.state.cards.values()) {
-      if (c.ownerSeat !== null || c.faceUp || c.rot !== 0) continue;
-      if (onlyNearDeck && (Math.abs(c.x - baseNx) > tolX || Math.abs(c.y - baseNy) > tolY)) continue;
-      c.x = baseNx;
-      c.y = baseNy;
+      // Private (owned) cards live in player zones, never on the central piles.
+      if (c.ownerSeat !== null) continue;
+      // Pristine deck pile: face-down, upright, on the deck marker. On the
+      // initial deal (onlyNearDeck=false) every such card belongs to the pile.
+      const onDeck = !c.faceUp && c.rot === 0 &&
+        (!onlyNearDeck || (Math.abs(c.x - deckNx) <= tolX && Math.abs(c.y - baseNy) <= tolY));
+      if (onDeck) { c.x = deckNx; c.y = baseNy; continue; }
+      // Discard pile: any public card resting on the discard marker. Both markers
+      // are positioned by a card-relative offset, so they shift as a fraction when
+      // the card-size clamp changes on resize/zoom; re-snap keeps the piles seated
+      // squarely on their markers at every viewport size.
+      if (Math.abs(c.x - discardNx) <= tolX && Math.abs(c.y - baseNy) <= tolY) {
+        c.x = discardNx; c.y = baseNy;
+      }
     }
     this.requestRender();
   }
@@ -642,10 +670,17 @@ export class Game {
     if (this.resizePending) return;
     this.resizePending = window.setTimeout(() => {
       this.resizePending = 0;
-      this.measureBoard();
-      repaintSlots(this.refs);
-      this.recenterDeckPile(true);
-      this.renderAllCards();
+      // Wait for layout to settle over two frames before measuring: a bare
+      // timeout can read clientWidth/Height (and the resolved card clamp) while
+      // the browser is still recalculating a heavy resize / orientation change,
+      // which would snap the deck onto stale coordinates. The double rAF lands
+      // after layout is final, so the piles re-seat exactly on their markers.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        this.measureBoard();
+        repaintSlots(this.refs);
+        this.recenterDeckPile(true);
+        this.renderAllCards();
+      }));
     }, 50);
   }
 

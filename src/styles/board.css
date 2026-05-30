@@ -76,7 +76,12 @@ body:not(.is-ready) .board__perspective { transition: none; }
   pointer-events: none;
 }
 
-.board__cards { pointer-events: auto; }
+/* The cards LAYER must not capture pointer events itself: it spans the whole
+   board and, sitting above the zone panels, would otherwise swallow clicks on a
+   zone's rail control (the host kick button) in the empty space around cards.
+   Each .card re-enables pointer-events on itself (card.css), so dragging/flipping
+   is unaffected while empty board space lets clicks fall through to the zone. */
+.board__cards { pointer-events: none; }
 
 .board__slots {
   position: absolute;
