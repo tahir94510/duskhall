@@ -154,6 +154,15 @@ export class RealtimeBus {
     if (this.channel && this.status === "online") void this.channel.track(me).catch(() => {});
   }
 
+  /** Re-broadcast a `hello` so an authoritative peer (re)sends a snapshot. Used
+   *  when a joiner discovers peers via presence but the hello it sent on connect
+   *  arrived before anyone had it in their roster, so no one answered. Safe to
+   *  call repeatedly; the responder de-dupes by being the single lowest seat. */
+  requestSync(): void {
+    if (!this.channel || this.status !== "online" || !this.desiredMe) return;
+    void this.channel.send({ type: "broadcast", event: "game", payload: { type: "hello", payload: { id: this.desiredMe.id } } });
+  }
+
   private async openChannel(): Promise<void> {
     if (!this.wantConnected || !this.desiredRoom || !this.desiredMe) return;
     if (!this.isAvailable()) { this.setStatus("offline"); return; }

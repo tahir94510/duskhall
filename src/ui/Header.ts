@@ -116,7 +116,11 @@ export class Header {
     document.addEventListener("wheel", () => { if (this.menuOpen) this.closeMenu(); }, { passive: true });
     document.addEventListener("keydown", (e) => {
       if (!this.menuOpen) return;
-      if (e.key === "Escape" || (e.target instanceof Element && !this.menu.contains(e.target))) this.closeMenu();
+      // Esc is a keyboard action, so it returns focus to the trigger; a keydown
+      // outside the menu (e.g. a game shortcut) just closes it without grabbing
+      // focus (which would otherwise flash a focus-visible outline).
+      if (e.key === "Escape") this.closeMenu(true);
+      else if (e.target instanceof Element && !this.menu.contains(e.target)) this.closeMenu();
     });
     const wrap = (cb: () => void) => (e: MouseEvent) => {
       e.preventDefault();
@@ -186,11 +190,19 @@ export class Header {
     // to reveal. This keeps the code from being exposed at a glance to onlookers.
     this.roomVal.classList.add("is-blurred");
   }
-  private closeMenu(): void {
+  // `returnFocus` is only true for keyboard-driven closes (Esc). For pointer /
+  // wheel / outside closes we must NOT programmatically focus the more-button:
+  // doing so while keyboard modality is briefly active (e.g. right after a
+  // Shift/Ctrl keydown) makes :focus-visible paint a stray white outline on the
+  // button. Instead we just drop focus out of the (about-to-be-inert) menu.
+  private closeMenu(returnFocus = false): void {
     this.menuOpen = false;
     this.menu.classList.remove("is-visible");
     const active = document.activeElement;
-    if (active instanceof HTMLElement && this.menu.contains(active)) this.moreBtn.focus();
+    if (active instanceof HTMLElement && this.menu.contains(active)) {
+      if (returnFocus) this.moreBtn.focus();
+      else active.blur();
+    }
     this.menu.inert = true;
     this.moreBtn.setAttribute("aria-expanded", "false");
   }

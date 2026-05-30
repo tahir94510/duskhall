@@ -19,16 +19,25 @@ function intersectionArea(a: { x: number; y: number; w: number; h: number }, b: 
   return (x2 - x1) * (y2 - y1);
 }
 
-function cardSize(): { w: number; h: number } {
+// Fallback only: reading --card-w returns the UNRESOLVED clamp() expression
+// (parseFloat -> NaN), so this is never the source of truth. Callers pass the
+// real measured pixel size (see Game.cardMetrics) so stack detection matches
+// exactly what the browser painted at every screen size.
+function cardSizeFallback(): { w: number; h: number } {
   const w = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w"));
-  const cardW = Number.isFinite(w) ? w : 96;
+  const cardW = Number.isFinite(w) && w > 0 ? w : 96;
   return { w: cardW, h: cardW * 1.45 };
 }
 
-export function findStackOverlapping(state: BoardState, board: BoardSize, seedId: string): string[] {
+export function findStackOverlapping(
+  state: BoardState,
+  board: BoardSize,
+  seedId: string,
+  size?: { w: number; h: number }
+): string[] {
   const seed = state.cards.get(seedId);
   if (!seed) return [seedId];
-  const { w, h } = cardSize();
+  const { w, h } = size && size.w > 0 ? size : cardSizeFallback();
   const seedBox = cardPixelBox(seed, board, w, h);
   const seedArea = w * h;
   const out: string[] = [];

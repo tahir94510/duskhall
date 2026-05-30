@@ -31,33 +31,37 @@
          settle behind the splash and never visibly snap into place. */
       html, body { margin: 0; background: #050507; }
       /* Baseline atmosphere painted on the body so the translucent, blurred
-         loader has the table's mood behind it even before #app fades in. */
+         loader always has the table's mood behind it — even on the very first
+         load before #app has painted anything. */
       body {
-        background-color: #050507;
+        background-color: #07060b;
         background-image:
-          radial-gradient(120% 90% at 50% 36%, rgba(74, 66, 98, 0.20) 0%, rgba(20, 18, 28, 0) 56%),
-          radial-gradient(150% 120% at 50% 122%, rgba(42, 37, 58, 0.26) 0%, rgba(8, 8, 12, 0) 62%),
-          linear-gradient(180deg, #08070b 0%, #050506 52%, #030304 100%);
+          radial-gradient(120% 90% at 50% 32%, rgba(96, 86, 126, 0.28) 0%, rgba(20, 18, 28, 0) 58%),
+          radial-gradient(150% 120% at 50% 120%, rgba(54, 47, 74, 0.30) 0%, rgba(8, 8, 12, 0) 64%),
+          linear-gradient(180deg, #0c0a12 0%, #08070b 52%, #050406 100%);
         background-repeat: no-repeat;
         background-size: cover;
       }
-      #app { opacity: 0; transition: opacity 360ms cubic-bezier(0.2, 0.65, 0.18, 0.99); }
-      body.is-ready #app { opacity: 1; }
+      /* #app (the real table) stays visible at all times. The loader is a
+         blurred veil ON TOP of it, so during a room switch the live table is
+         what shows — blurred — behind the logo, never a flat black panel.
+         Only a gentle fade is kept for the very first reveal. */
+      #app { opacity: 1; }
       /* The loader is a translucent, blurred veil so the table's atmosphere
-         (background art / gradient) shows through behind it instead of a flat
-         opaque colour. Just the logo and its gentle pulse — no spinner. */
+         (background art / gradient + any live cards) shows through behind it
+         instead of a flat opaque colour. Just the logo and its gentle pulse. */
       #kabal-loader {
         position: fixed; inset: 0; z-index: 100000;
         display: grid; place-items: center;
-        background: rgba(6, 6, 9, 0.42);
-        -webkit-backdrop-filter: blur(22px) saturate(115%);
-        backdrop-filter: blur(22px) saturate(115%);
+        background: rgba(8, 7, 12, 0.28);
+        -webkit-backdrop-filter: blur(26px) saturate(118%);
+        backdrop-filter: blur(26px) saturate(118%);
         opacity: 1; transition: opacity 360ms cubic-bezier(0.2, 0.65, 0.18, 0.99);
       }
       body.is-ready #kabal-loader { opacity: 0; pointer-events: none; }
       body.is-ready #kabal-loader * { animation-play-state: paused; }
       .kabal-loader__mark { position: relative; width: 64px; height: 86px; }
-      .kabal-loader__mark svg { width: 100%; height: 100%; display: block; color: #f3efe5; animation: kabal-pulse 1.8s ease-in-out infinite; }
+      .kabal-loader__mark svg { width: 100%; height: 100%; display: block; color: #f3efe5; animation: kabal-pulse 1.8s ease-in-out infinite; filter: drop-shadow(0 2px 12px rgba(0,0,0,0.5)); }
       @keyframes kabal-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
       @media (prefers-reduced-motion: reduce) {
         .kabal-loader__mark svg { animation: none; }

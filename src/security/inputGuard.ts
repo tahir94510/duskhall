@@ -1,7 +1,11 @@
 // Hard caps for any payload arriving from the Realtime channel.
 // We don't trust peers, schema-check, size-limit, and clamp coordinates.
 
-const MAX_BYTES = 6 * 1024;
+// A full 72-card snapshot (every card with rounded coords + stamp) is ~7-8 KB;
+// the old 6 KB cap silently DROPPED it, so joiners never received the
+// authoritative board and saw a pristine deck. 32 KB clears a full snapshot
+// with generous headroom while still rejecting absurd payloads.
+const MAX_BYTES = 32 * 1024;
 const MAX_CARDS_PER_PATCH = 200;
 const COORD_CLAMP = 5000;
 

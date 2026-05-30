@@ -13,9 +13,23 @@
   z-index: var(--z-card);
   /* Smooth programmatic moves (gather settle, remote sync, flip). Held cards
      opt out below so dragging stays 1:1 with the pointer. */
-  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), filter var(--dur) var(--ease);
+  transition: transform var(--dur) var(--ease), filter var(--dur) var(--ease);
   will-change: transform;
+}
+
+/* The drop shadow lives on a FLAT underlay (::before), a sibling of the 3D
+   .card__inner rather than its ancestor. A box-shadow on the perspective root
+   flickers/vanishes while a preserve-3d child rotates (a known compositor
+   quirk); painting it here keeps it rock-steady through every flip and move. */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   box-shadow: var(--shadow-card);
+  transition: box-shadow var(--dur) var(--ease);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .card:focus { outline: none; }
@@ -25,10 +39,10 @@
   /* z-index is set inline to the elevated --z-anim band (see DragController) so
      a held card floats over zones/opponent cards yet stays below peer cursors. */
   z-index: var(--z-anim);
-  box-shadow: var(--shadow-card-held);
   filter: brightness(1.03);
-  transition: box-shadow var(--dur) var(--ease), filter var(--dur) var(--ease);
+  transition: filter var(--dur) var(--ease);
 }
+.card.is-held::before { box-shadow: var(--shadow-card-held); }
 
 /* Cards mid flip/shuffle are lifted into the same band (inline z) so undercards
    never flash above a still-animating card. */
