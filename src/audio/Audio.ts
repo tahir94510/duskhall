@@ -25,7 +25,7 @@ const PROCEDURAL: Record<SfxName, ProceduralSpec> = {
 // master leaves headroom for the limiter.
 const SFX_DEFAULT = 0.55;
 const MUSIC_DEFAULT = 0.22;
-const MASTER_DEFAULT = 0.75;
+const MASTER_DEFAULT = 0.6;
 // The "restore defaults" targets — the whole recommended mix, master included.
 export const BALANCED_MUSIC = MUSIC_DEFAULT;
 export const BALANCED_SFX = SFX_DEFAULT;

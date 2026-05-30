@@ -38,12 +38,33 @@
    zone rail on narrow screens; the status dot rides along as an inline marker. */
 .zone__name {
   display: block;
+  flex: 1;
   min-width: 0;
   max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Host-only kick button on an occupied rival zone rail. */
+.zone__kick {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line-2);
+  background: rgba(20, 20, 20, 0.55);
+  color: var(--ivory-dim);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.zone__kick[hidden] { display: none; }
+.zone__kick svg { width: 13px; height: 13px; }
+.zone__kick:hover { color: #ffc0c0; border-color: rgba(220, 90, 90, 0.6); background: rgba(220, 90, 90, 0.16); }
 .zone__name::before {
   content: "";
   display: inline-block;

@@ -17,6 +17,8 @@ export interface DragHooks {
   /** Optional magnetic snap: nudge a single canonical (nx, ny) to nearest slot. */
   applySnap(ownerSeat: number, nx: number, ny: number): { nx: number; ny: number; snapped: boolean };
   onCardMoved(ids: string[]): void;
+  /** Pointer released over (x, y): re-arm the hover tooltip without a re-enter. */
+  onReleased(x: number, y: number): void;
   onDragProgress(ids: string[]): void;
   onCardFlipped(id: string): void;
   onStackToggleFlip(id: string): void;
@@ -117,6 +119,11 @@ export class DragController {
       return;
     }
 
+    // Grab sound fires NOW, on press, so it always precedes the place/snap sound
+    // even on a very fast tap-release (it used to fire on the first move, which
+    // could land after "place" and sound inverted).
+    this.hooks.playSfx("pickup");
+
     const ids = e.ctrlKey || e.metaKey ? this.hooks.pickStackUnder(e.clientX, e.clientY) : [id];
     if (ids.length === 0) return;
 
@@ -183,7 +190,6 @@ export class DragController {
       s.dragging = true;
       window.clearTimeout(s.longPressTimer);
       this.hooks.hideContextBar();
-      this.hooks.playSfx("pickup");
     }
 
     let seedNx = pointerNx + s.anchorDx;
@@ -229,6 +235,7 @@ export class DragController {
         const c = this.state.cards.get(id);
         if (c) el.style.zIndex = String(c.z);
       }
+      this.hooks.onReleased(e.clientX, e.clientY);
       this.session = null;
       return;
     }
@@ -282,6 +289,9 @@ export class DragController {
     this.hooks.onCardMoved(s.ids);
     if (didSnapBack) this.hooks.playSfx("snap");
     else if (didPlace) this.hooks.playSfx("place");
+    // Re-arm the hover tooltip at the drop point so a face-up card shows its info
+    // immediately, without the pointer having to leave and re-enter.
+    this.hooks.onReleased(e.clientX, e.clientY);
     this.session = null;
   };
 

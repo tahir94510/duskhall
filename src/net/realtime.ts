@@ -67,11 +67,19 @@ export interface HoldMsg {
   release: boolean;
 }
 
+/** Host-only "kick": only the targeted client acts on it, leaving to a fresh
+ *  empty room. Everyone else just sees them depart via the resulting `left`. */
+export interface KickMsg {
+  target: string;
+  by: string;
+}
+
 export type GameMsg =
   | { type: "patch"; payload: CardPatch }
   | { type: "snapshot"; payload: CardPatch }
   | { type: "hold"; payload: HoldMsg }
   | { type: "left"; payload: LeftMsg }
+  | { type: "kick"; payload: KickMsg }
   | { type: "hello"; payload: { id: string } };
 
 type Listener<T> = (msg: T) => void;
@@ -295,6 +303,12 @@ export class RealtimeBus {
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "left", payload: l } as GameMsg });
   }
 
+  /** Host-only: ask a player to leave. Only the target acts on it. */
+  sendKick(target: string, by: string): void {
+    if (!this.channel || this.status !== "online") return;
+    this.channel.send({ type: "broadcast", event: "game", payload: { type: "kick", payload: { target, by } } as GameMsg });
+  }
+
   private bucketFor(id: string): { patch: TokenBucket; cursor: TokenBucket } {
     let b = this.recvBuckets.get(id);
     if (!b) {
@@ -352,6 +366,12 @@ export class RealtimeBus {
       };
       if (!safe.id) return;
       for (const l of this.gameListeners) l({ type: "left", payload: safe });
+    } else if (msg.type === "kick") {
+      const k = msg.payload as Partial<KickMsg> | undefined;
+      if (!k || typeof k.target !== "string") return;
+      const safe: KickMsg = { target: safeString(k.target, 40), by: safeString(k.by, 40) };
+      if (!safe.target) return;
+      for (const l of this.gameListeners) l({ type: "kick", payload: safe });
     } else if (msg.type === "hold") {
       const h = msg.payload as Partial<HoldMsg> | undefined;
       if (!h || !Array.isArray(h.ids)) return;
