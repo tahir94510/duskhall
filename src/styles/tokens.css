@@ -27,10 +27,13 @@
   --r-zone: 12px;
   --r-pill: 999px;
 
-  /* Shadow: restrained */
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.45);
-  --shadow-card-held: 0 14px 32px rgba(0, 0, 0, 0.55);
-  --shadow-panel: 0 20px 50px rgba(0, 0, 0, 0.55);
+  /* Shadow: soft, top-lit and restrained. Vertical (no angle) and gentle, as if
+     a single soft light sits directly above the table — never a harsh, slanted,
+     heavy drop. Held/lifted cards rise with a slightly larger but still soft
+     shadow rather than a dramatic dark one. */
+  --shadow-card: 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-card-held: 0 8px 20px rgba(0, 0, 0, 0.38);
+  --shadow-panel: 0 16px 40px rgba(0, 0, 0, 0.5);
 
   /* Card sizing */
   --card-w: clamp(58px, 7.2vmin, 104px);
@@ -51,6 +54,9 @@
   --z-board: 1;
   --z-zone: 2;
   --z-card: 10;
+  /* Cards mid-animation or in hand float in this band: above the resting card
+     layer but below cursors/header so they never cover a peer's cursor. */
+  --z-anim: 500;
   --z-cursor: 600;
   --z-header: 800;
   --z-tooltip: 900;

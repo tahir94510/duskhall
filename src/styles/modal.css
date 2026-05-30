@@ -259,16 +259,35 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
 
 @media (max-width: 600px) {
   .rules { grid-template-columns: 1fr; }
+  /* A wrapped bar of clearly tappable section buttons, pinned to the top of the
+     scrolling body so the reader can jump sections at any time — not a hidden
+     horizontal scroll strip. */
   .rules__toc {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     flex-direction: row;
     flex-wrap: wrap;
+    gap: 6px;
     border-right: 0;
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 8px;
-    margin-bottom: 4px;
-    overflow-x: auto;
+    border-bottom: 1px solid var(--line-2);
+    padding: 0 0 10px;
+    margin-bottom: 10px;
+    overflow: visible;
+    background: rgba(12, 12, 12, 0.96);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
   }
-  .rules__toc a { white-space: nowrap; padding: 4px 8px; font-size: 11px; }
+  .rules__toc a {
+    white-space: nowrap;
+    padding: 6px 11px;
+    font-size: 11.5px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-pill);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--ivory-dim);
+  }
+  .rules__toc a:active { background: rgba(255, 255, 255, 0.08); color: var(--ivory); }
 }
 
 /* --- Support --- */
@@ -384,7 +403,8 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   font-size: 12px;
   text-align: right;
 }
-.settings__balance {
+.settings__balance,
+.settings__reset {
   margin-top: 14px;
   width: 100%;
   height: 36px;
@@ -399,12 +419,39 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   cursor: pointer;
   transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
-.settings__balance:hover { border-color: var(--line-3); background: rgba(30, 30, 30, 0.7); }
+.settings__balance:hover,
+.settings__reset:hover { border-color: var(--line-3); background: rgba(30, 30, 30, 0.7); }
 .settings__hint {
   margin: 8px 2px 0;
   font-size: 11px;
   line-height: 1.5;
   color: var(--ivory-mute);
+}
+
+/* Settings sections (audio, language). */
+.settings__group { padding: 6px 0; }
+.settings__group + .settings__group {
+  margin-top: 6px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+.settings__legend {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ivory-mute);
+  margin-bottom: 8px;
+}
+.settings__lang { display: flex; gap: 8px; }
+.settings__lang .lang-pill { flex: 1; height: 34px; font-size: 12px; }
+
+/* Plain confirmation dialog text. */
+.confirm__text {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ivory);
+  margin: 2px 0 4px;
 }
 
 /* --- Invite row (reset modal) --- */

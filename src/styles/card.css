@@ -22,11 +22,17 @@
 
 .card.is-held {
   cursor: grabbing;
-  z-index: var(--z-held);
+  /* z-index is set inline to the elevated --z-anim band (see DragController) so
+     a held card floats over zones/opponent cards yet stays below peer cursors. */
+  z-index: var(--z-anim);
   box-shadow: var(--shadow-card-held);
-  filter: brightness(1.04);
+  filter: brightness(1.03);
   transition: box-shadow var(--dur) var(--ease), filter var(--dur) var(--ease);
 }
+
+/* Cards mid flip/shuffle are lifted into the same band (inline z) so undercards
+   never flash above a still-animating card. */
+.card.is-animating { z-index: var(--z-anim); }
 
 /* During a riffle the keyframe owns the transform, so no competing transition. */
 .card.is-shuffling { transition: none; }

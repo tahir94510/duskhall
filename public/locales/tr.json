@@ -29,32 +29,61 @@
     "newRoom": "Yeni bir oda açıldı.",
     "roomFull": "Oda dolu olduğu için izleyici olarak bakıyorsun.",
     "timer": "Süre",
-    "waiting": "Oyuncular bekleniyor..."
+    "waiting": "Oyuncular bekleniyor...",
+    "pasteJoin": "Katılmak için kodu veya bağlantıyı yapıştır",
+    "joined": "Odaya katıldın",
+    "invalidCode": "Panoda geçerli bir oda kodu yok",
+    "spectators": "İzleyiciler"
   },
   "table": {
     "deck": "Deste",
     "open": "Açık",
     "discard": "Çöplük",
-    "youSuffix": " (sen)"
+    "youSuffix": " (sen)",
+    "droppedSuffix": " (uzakta)"
   },
   "shortcutsList": {
     "title": "Kısayollar",
     "subtitle": "Hedef imleçtir; boş alanda hiçbir şey olmaz.",
     "items": [
-      { "keys": "Sol tık, sürükle", "desc": "İmlecin altındaki kartı taşı" },
-      { "keys": "Ctrl + sol tık, sürükle", "desc": "İmlecin altındaki yığını taşı" },
-      { "keys": "Sağ tık", "desc": "İmlecin altındaki yığını çevir (tek kart yalnız çevrilir)" },
-      { "keys": "Scroll", "desc": "İmlecin altındaki tek kartı çevir" },
-      { "keys": "Ctrl + scroll", "desc": "İmlecin altındaki yığını toplu çevir" },
-      { "keys": "Shift + scroll", "desc": "Kartı 90° döndür (yana, çevirme değil)" },
-      { "keys": "G", "desc": "İmlecin altındaki yığını topla" },
-      { "keys": "M", "desc": "İmlecin altındaki yığını karıştır" }
+      {
+        "keys": "Sol tık, sürükle",
+        "desc": "İmlecin altındaki kartı taşı"
+      },
+      {
+        "keys": "Ctrl + sol tık, sürükle",
+        "desc": "İmlecin altındaki yığını taşı"
+      },
+      {
+        "keys": "Sağ tık",
+        "desc": "İmlecin altındaki yığını çevir (tek kart yalnız çevrilir)"
+      },
+      {
+        "keys": "Scroll",
+        "desc": "İmlecin altındaki tek kartı çevir"
+      },
+      {
+        "keys": "Ctrl + scroll",
+        "desc": "İmlecin altındaki yığını toplu çevir"
+      },
+      {
+        "keys": "Shift + scroll",
+        "desc": "Kartı 90° döndür (yana, çevirme değil)"
+      },
+      {
+        "keys": "G",
+        "desc": "İmlecin altındaki yığını topla"
+      },
+      {
+        "keys": "M",
+        "desc": "İmlecin altındaki yığını karıştır"
+      }
     ],
     "mobileNote": "Dokunmatik cihazlarda kartın üstüne uzun basarak eylem çubuğunu aç."
   },
   "leaveConfirm": {
     "title": "Odayı sıfırla?",
-    "body": "Yeni bağlantıyla taze bir oda açılır. Mevcut odadaki oyuncular orada kalır.",
+    "body": "Bu odadan ayrılırsın ve yeni bağlantıyla taze bir oda açılır. Burada sana ait kartlar diğer oyunculara serbest bırakılır.",
     "leave": "Sıfırla"
   },
   "settings": {
@@ -62,8 +91,10 @@
     "master": "Ana",
     "music": "Müzik",
     "sfx": "Efekt",
-    "autoBalance": "Otomatik dengele",
-    "autoBalanceHint": "Müzik / efekt karışımını dengeler. Genel ses düzeyini Ana ile ayarlayın."
+    "audio": "Ses",
+    "language": "Dil",
+    "resetDefaults": "Varsayılana dön",
+    "resetDefaultsHint": "Müzik, efekt ve ana ses düzeyini önerilen değerlere döndürür."
   },
   "support": {
     "title": "KABAL'a Destek Ol",
@@ -382,5 +413,10 @@
       }
     ],
     "closing": "​‌‍Masada merhamet göstermeyin.​‌‍"
+  },
+  "resetDeckConfirm": {
+    "title": "Desteyi sıfırla?",
+    "body": "Masadaki tüm kartlar toplanır, kapalı şekilde karılır ve desteye geri konur. Bu işlem tüm oyuncuları etkiler.",
+    "confirm": "Desteyi sıfırla"
   }
 }

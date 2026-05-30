@@ -16,13 +16,14 @@
 .brand {
   display: inline-flex;
   align-items: center;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   color: var(--ivory);
-  opacity: 0.75;
-  transition: opacity var(--dur) var(--ease);
+  opacity: 0.8;
+  /* Purely a mark, not a control: no pointer, no navigation. */
+  pointer-events: none;
+  user-select: none;
 }
-.brand:hover { opacity: 1; }
 .brand img { width: 100%; height: 100%; }
 
 .icon-btn {
@@ -45,6 +46,9 @@
 }
 .icon-btn:active { background: rgba(32, 32, 32, 0.8); }
 .icon-btn svg { width: 18px; height: 18px; stroke-linejoin: round; }
+/* Project-wide confirmation tick: a brief positive flash after copy/paste/etc. */
+.icon-btn.is-confirmed { color: var(--ivory); border-color: var(--line-3); background: rgba(255, 255, 255, 0.06); }
+.icon-btn.is-error { color: #ff9a9a; border-color: rgba(220, 90, 90, 0.7); animation: snapback 360ms var(--ease); }
 
 .icon-btn__badge {
   position: absolute;
@@ -126,98 +130,39 @@
 /* Static (non-navigating) rows: room code + timer. Not hover-highlighted like
    the action items, and they never close the menu. */
 .header__menu-row--static {
-  grid-template-columns: 22px 1fr auto auto;
+  grid-template-columns: 22px 1fr auto auto auto;
   cursor: default;
   background: rgba(255, 255, 255, 0.02);
+  align-items: center;
 }
 .header__menu-row--static:hover { background: rgba(255, 255, 255, 0.02); }
 
 .header__menu-timer { cursor: default; }
 
-/* A blurrable secret chip (room code, timer). Blurred by default; click toggles.
-   Tabular numerals keep the room code from jittering as it reveals. */
-.header__secret {
+/* Read-only value chip (room code, timer, spectator count). Always visible, and
+   deliberately NOT selectable — the room is shared via the copy button. */
+.header__code {
   justify-self: end;
   font-family: var(--font-body);
   font-variant-numeric: tabular-nums;
   font-size: 12px;
   letter-spacing: 0.14em;
   color: var(--ivory);
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--line-2);
   border-radius: 6px;
   padding: 3px 9px;
-  cursor: pointer;
-  user-select: all;
-  transition: filter var(--dur) var(--ease), border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+  user-select: none;
+  -webkit-user-select: none;
 }
-.header__secret:hover { border-color: var(--line-3); background: rgba(0, 0, 0, 0.6); }
-.header__secret.is-blurred { filter: blur(5px); cursor: pointer; }
 
 .icon-btn--sm { width: 28px; height: 28px; }
 .icon-btn--sm svg { width: 15px; height: 15px; }
-
-/* Join-by-code: compact input + button on one line. */
-.header__join {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 6px;
-  padding: 4px 6px 6px;
-}
-.header__join-input {
-  height: 30px;
-  min-width: 0;
-  border-radius: 7px;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid var(--line-2);
-  color: var(--ivory);
-  font-family: var(--font-body);
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  padding: 0 10px;
-  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
-}
-.header__join-input::placeholder { color: var(--ivory-mute); letter-spacing: 0.04em; text-transform: none; }
-.header__join-input:focus { outline: none; border-color: var(--line-3); background: rgba(0, 0, 0, 0.65); }
-.header__join-input.is-error { border-color: rgba(220, 90, 90, 0.7); animation: snapback 360ms var(--ease); }
-.header__join-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 12px;
-  border-radius: 7px;
-  border: 1px solid var(--line-2);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--ivory);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
-}
-.header__join-btn svg { width: 15px; height: 15px; }
-.header__join-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--line-3); }
-
-.header__menu-pill {
-  background: var(--ivory);
-  color: var(--ink);
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: var(--r-pill);
-  padding: 2px 7px;
-}
 
 .header__menu-divider {
   height: 1px;
   background: var(--line);
   margin: 4px 0;
-}
-
-.header__menu-lang {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
 }
 
 .lang-pill {

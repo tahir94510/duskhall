@@ -29,32 +29,61 @@
     "newRoom": "A new room has been opened.",
     "roomFull": "The room is full, so you are watching as a spectator.",
     "timer": "Time",
-    "waiting": "Waiting for players..."
+    "waiting": "Waiting for players...",
+    "pasteJoin": "Paste code or link to join",
+    "joined": "Joined the room",
+    "invalidCode": "No valid room code on the clipboard",
+    "spectators": "Spectators"
   },
   "table": {
     "deck": "Deck",
     "open": "Open",
     "discard": "Discard",
-    "youSuffix": " (you)"
+    "youSuffix": " (you)",
+    "droppedSuffix": " (away)"
   },
   "shortcutsList": {
     "title": "Shortcuts",
     "subtitle": "The cursor target wins; empty space does nothing.",
     "items": [
-      { "keys": "Left-press, drag", "desc": "Move the card under the cursor" },
-      { "keys": "Ctrl + Left-press, drag", "desc": "Move the whole stack under the cursor" },
-      { "keys": "Right-click", "desc": "Flip the stack under the cursor (a single card flips alone)" },
-      { "keys": "Scroll", "desc": "Flip the single card under the cursor" },
-      { "keys": "Ctrl + scroll", "desc": "Flip the whole stack under the cursor" },
-      { "keys": "Shift + scroll", "desc": "Rotate the card 90° (sideways, not a flip)" },
-      { "keys": "G", "desc": "Gather the stack under the cursor" },
-      { "keys": "M", "desc": "Shuffle the stack under the cursor" }
+      {
+        "keys": "Left-press, drag",
+        "desc": "Move the card under the cursor"
+      },
+      {
+        "keys": "Ctrl + Left-press, drag",
+        "desc": "Move the whole stack under the cursor"
+      },
+      {
+        "keys": "Right-click",
+        "desc": "Flip the stack under the cursor (a single card flips alone)"
+      },
+      {
+        "keys": "Scroll",
+        "desc": "Flip the single card under the cursor"
+      },
+      {
+        "keys": "Ctrl + scroll",
+        "desc": "Flip the whole stack under the cursor"
+      },
+      {
+        "keys": "Shift + scroll",
+        "desc": "Rotate the card 90° (sideways, not a flip)"
+      },
+      {
+        "keys": "G",
+        "desc": "Gather the stack under the cursor"
+      },
+      {
+        "keys": "M",
+        "desc": "Shuffle the stack under the cursor"
+      }
     ],
     "mobileNote": "On touch devices, long-press a card to open its action bar."
   },
   "leaveConfirm": {
     "title": "Reset room?",
-    "body": "A fresh room will open with a new link. Players in the current room stay there.",
+    "body": "You will leave this room and a fresh one opens with a new link. Any cards you owned here are released to the other players.",
     "leave": "Reset"
   },
   "settings": {
@@ -62,8 +91,10 @@
     "master": "Master",
     "music": "Music",
     "sfx": "Effects",
-    "autoBalance": "Auto-balance",
-    "autoBalanceHint": "Sets a clean music / effects mix. Use Master to set the overall level."
+    "audio": "Audio",
+    "language": "Language",
+    "resetDefaults": "Restore defaults",
+    "resetDefaultsHint": "Return music, effects and master volume to their recommended levels."
   },
   "support": {
     "title": "Support KABAL",
@@ -382,5 +413,10 @@
       }
     ],
     "closing": "​‌‍Show no mercy at the table.​‌‍"
+  },
+  "resetDeckConfirm": {
+    "title": "Reset deck?",
+    "body": "Every card on the table is gathered, shuffled face-down and returned to the deck. This affects all players.",
+    "confirm": "Reset deck"
   }
 }

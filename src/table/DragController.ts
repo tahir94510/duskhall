@@ -34,6 +34,11 @@ export interface DragHooks {
 
 const DRAG_THRESHOLD = 4;
 const LONG_PRESS_MS = 280;
+// Elevated z-band for cards in hand: above the table (--z-card: 10) and zones
+// (--z-zone: 2) but below peer cursors (--z-cursor: 600), so a held card always
+// renders over an opponent's area yet never covers their cursor or the header.
+// Mirrors ANIM_Z_BASE in Game.ts.
+const HELD_Z_BASE = 500;
 
 interface DragSession {
   pointerId: number;
@@ -129,7 +134,10 @@ export class DragController {
       relOffsets.set(cid, { dx: c.x - seed.x, dy: c.y - seed.y });
     }
 
-    // bring all picked cards to top of z stack
+    // Bring all picked cards to the top: bump their resting z (so the order
+    // persists after the drop) but paint them in the elevated held band while
+    // in hand, preserving their internal order.
+    let heldIdx = 0;
     for (const cid of ids) {
       const c = this.state.cards.get(cid);
       if (!c) continue;
@@ -137,7 +145,7 @@ export class DragController {
       c.z = this.state.topZ;
       const el = this.host.querySelector<HTMLDivElement>(`[data-id="${cid}"]`);
       if (el) {
-        el.style.zIndex = String(c.z);
+        el.style.zIndex = String(HELD_Z_BASE + heldIdx++);
         el.classList.add("is-held");
       }
     }
@@ -212,10 +220,14 @@ export class DragController {
     this.hooks.endHold(s.ids);
 
     if (!s.dragging) {
-      // Mere click on a card, no drag, no place. Drop the held class and exit.
+      // Mere click on a card, no drag, no place. Drop the held class, restore the
+      // resting z, and exit.
       for (const id of s.ids) {
         const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
-        if (el) el.classList.remove("is-held");
+        if (!el) continue;
+        el.classList.remove("is-held");
+        const c = this.state.cards.get(id);
+        if (c) el.style.zIndex = String(c.z);
       }
       this.session = null;
       return;
@@ -258,6 +270,9 @@ export class DragController {
       if (!el) continue;
       el.style.transform = `translate3d(${c.x * m.width}px, ${c.y * m.height}px, 0) rotate(${c.rot * 90}deg)`;
       el.classList.remove("is-held");
+      // Restore the resting z immediately so there is no one-frame gap where the
+      // dropped card still sits in the held band.
+      el.style.zIndex = String(c.z);
       if (didSnapBack && (opponentSeat !== null && opponentSeat !== selfSeat)) {
         el.classList.add("is-snapback");
         window.setTimeout(() => el.classList.remove("is-snapback"), 260);
