@@ -31,5 +31,8 @@ export const ICON_PASTE = svgEl(`<rect x="6" y="4" width="12" height="16" rx="2"
 export const ICON_CHECK = svgEl(`<path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`);
 // Language globe: used by the language switch row in Settings.
 export const ICON_LANG = svgEl(`<circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 12 H20.5 M12 3.5 C 15 7, 15 17, 12 20.5 C 9 17, 9 7, 12 3.5 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>`);
+// Exit / leave: a door with an outward arrow. Used by the "Exit" menu row that
+// leaves the current room and opens a fresh one with you as host.
+export const ICON_EXIT = svgEl(`<path d="M14 4 H6 A2 2 0 0 0 4 6 V18 A2 2 0 0 0 6 20 H14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 12 H20 M16 8 L20 12 L16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`);
 // Eye / spectator: a calm outline eye for the spectator-count row.
 export const ICON_EYE = svgEl(`<path d="M2.5 12 C 5 7, 9 5, 12 5 C 15 5, 19 7, 21.5 12 C 19 17, 15 19, 12 19 C 9 19, 5 17, 2.5 12 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/>`);

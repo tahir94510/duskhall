@@ -8,8 +8,9 @@
     "menu": "Menu",
     "rules": "Rules",
     "support": "Support",
-    "leave": "Reset room",
-    "reset": "Reset room",
+    "leave": "Exit room",
+    "reset": "Exit room",
+    "exit": "Exit room",
     "resetDeck": "Reset deck",
     "deckReset": "The deck has been gathered and shuffled.",
     "settings": "Settings",
@@ -90,9 +91,9 @@
     "mobileNote": "On touch devices, long-press a card to open its action bar."
   },
   "leaveConfirm": {
-    "title": "Reset room?",
-    "body": "You will leave this room and a fresh one opens with a new link. Any cards you owned here are released to the other players.",
-    "leave": "Reset"
+    "title": "Exit room?",
+    "body": "You will leave this room and a fresh one opens with a new link, with you as its host. Any cards you owned here are released to the other players.",
+    "leave": "Exit"
   },
   "settings": {
     "title": "Settings",

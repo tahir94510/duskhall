@@ -46,25 +46,26 @@
   text-overflow: ellipsis;
 }
 
-/* Host-only kick button on an occupied rival zone rail. */
+/* Host-only kick button on an occupied rival zone rail. Frameless — just the
+   glyph — and spaced symmetrically from the zone edge so it mirrors the player
+   name at the other end of the rail (the rail already insets 14px each side). */
 .zone__kick {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   margin-left: 8px;
-  border-radius: 6px;
-  border: 1px solid var(--line-2);
-  background: rgba(20, 20, 20, 0.55);
+  border: 0;
+  background: transparent;
   color: var(--ivory-dim);
   pointer-events: auto;
   cursor: pointer;
-  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+  transition: color var(--dur-fast) var(--ease);
 }
 .zone__kick[hidden] { display: none; }
-.zone__kick svg { width: 13px; height: 13px; }
-.zone__kick:hover { color: #ffc0c0; border-color: rgba(220, 90, 90, 0.6); background: rgba(220, 90, 90, 0.16); }
+.zone__kick svg { width: 14px; height: 14px; }
+.zone__kick:hover { color: #ff9a9a; }
 .zone__name::before {
   content: "";
   display: inline-block;
@@ -75,6 +76,19 @@
   opacity: 0.7;
   margin-right: 8px;
   vertical-align: middle;
+  transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+/* Presence dot: green while the player is active/connected, amber-orange while
+   they are "away" (dropped, reserved seat). Empty seats keep the neutral dot. */
+.zone--active .zone__name::before {
+  background: #46c46a;
+  opacity: 1;
+  box-shadow: 0 0 6px rgba(70, 196, 106, 0.55);
+}
+.zone--dropped .zone__name::before {
+  background: #e8993a;
+  opacity: 1;
+  box-shadow: 0 0 6px rgba(232, 153, 58, 0.5);
 }
 
 .zone--empty { opacity: 0.3; color: var(--ivory-mute); }

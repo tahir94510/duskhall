@@ -52,19 +52,56 @@
 
 .icon-btn__badge {
   position: absolute;
-  top: -4px;
-  right: -4px;
+  top: -5px;
+  right: -5px;
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
   border-radius: var(--r-pill);
-  background: var(--ivory);
-  color: var(--ink);
+  background: #e5484d;
+  color: #fff;
   font-size: 10px;
   font-weight: 700;
+  line-height: 16px;
+  text-align: center;
   display: grid;
   place-items: center;
   font-family: var(--font-body);
+  box-shadow: 0 0 0 2px rgba(8, 8, 10, 0.9);
+  pointer-events: none;
+}
+
+/* Inline notification pip on a menu row (e.g. Support). Sits at the row's end,
+   matching the standalone icon badge, and is stable — it does not clear on
+   click. */
+.header__row-badge {
+  justify-self: end;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--r-pill);
+  background: #e5484d;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  font-family: var(--font-body);
+  pointer-events: none;
+}
+.header__menu-row--badge { grid-template-columns: 22px 1fr auto; }
+
+/* Secret room code: a tappable chip that blurs its own text until revealed. It
+   re-blurs every time the menu opens (Header.openMenu). */
+.header__code--secret {
+  cursor: pointer;
+  font: inherit;
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease), filter var(--dur-fast) var(--ease);
+}
+.header__code--secret:hover { border-color: var(--line-3); }
+.header__code.is-blurred {
+  filter: blur(5px);
+  /* Keep the chip itself crisp; only the glyphs blur. */
 }
 
 /* Header popover menu */

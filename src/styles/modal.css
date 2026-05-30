@@ -55,14 +55,15 @@
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  border: 1px solid var(--line-2);
+  /* Frameless: no border, no fill — just the glyph, project-wide. */
+  border: 0;
   color: var(--ivory-mute);
   display: grid;
   place-items: center;
-  background: rgba(18, 18, 18, 0.6);
-  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  background: transparent;
+  transition: color var(--dur) var(--ease);
 }
-.modal__close:hover { color: var(--ivory); border-color: var(--line-3); }
+.modal__close:hover { color: var(--ivory); }
 .modal__close svg { width: 14px; height: 14px; }
 
 .modal__body {
