@@ -58,8 +58,10 @@
   height: 16px;
   padding: 0 4px;
   border-radius: var(--r-pill);
-  background: #e5484d;
-  color: #fff;
+  /* Ivory chip with ink glyph — matches the project's black-and-white palette
+     and keeps strong contrast, ringed so it reads cleanly over any button. */
+  background: var(--ivory);
+  color: var(--ink);
   font-size: 10px;
   font-weight: 700;
   line-height: 16px;
@@ -67,7 +69,7 @@
   display: grid;
   place-items: center;
   font-family: var(--font-body);
-  box-shadow: 0 0 0 2px rgba(8, 8, 10, 0.9);
+  box-shadow: 0 0 0 2px rgba(8, 8, 10, 0.92);
   pointer-events: none;
 }
 
@@ -80,8 +82,8 @@
   height: 16px;
   padding: 0 4px;
   border-radius: var(--r-pill);
-  background: #e5484d;
-  color: #fff;
+  background: var(--ivory);
+  color: var(--ink);
   font-size: 10px;
   font-weight: 700;
   line-height: 16px;
@@ -174,7 +176,15 @@
 }
 .header__menu-row--static:hover { background: rgba(255, 255, 255, 0.02); }
 
-.header__menu-timer { cursor: default; }
+/* The room row carries five columns (icon, label, code, copy, paste). The timer
+   and spectator rows have only three children, so they get a plain 3-column
+   grid; their value chip then lands flush against the SAME right edge as the
+   paste button above, instead of being pushed inward by two empty columns. */
+.header__menu-timer,
+.header__menu-spectators {
+  grid-template-columns: 22px 1fr auto;
+  cursor: default;
+}
 
 /* Read-only value chip (room code, timer, spectator count). Always visible, and
    deliberately NOT selectable — the room is shared via the copy button. */

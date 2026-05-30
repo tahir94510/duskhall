@@ -119,7 +119,7 @@ export class Game {
       onMix: (id) => this.shuffleAt(id),
       onStackToggleFlip: (id) => this.toggleStackFlip(id),
       onRotate: (id) => this.rotateCard(id),
-      stackFor: (id) => findStackOverlapping(this.state, this.boardSize, id)
+      stackFor: (id) => findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics())
     });
     this.header = new Header({
       onRules: () => { void this.audio.play("ui-open"); openRulesModal(this.modal); },
@@ -194,10 +194,21 @@ export class Game {
   private firstSync: Promise<void> = Promise.resolve();
   private armFirstSync(): void {
     this.firstSync = new Promise<void>((r) => { this.firstSyncResolve = r; });
+    // A new room means the previous room's authoritative board no longer counts.
+    this.gotSnapshot = false;
+    this.syncNudges = 0;
+    window.clearTimeout(this.syncNudgeTimer);
   }
   private resolveFirstSync(): void {
     if (this.firstSyncResolve) { this.firstSyncResolve(); this.firstSyncResolve = null; }
   }
+  // True once we've received an authoritative snapshot for the current room. A
+  // joiner that sees peers in presence but has NOT got a snapshot keeps nudging
+  // for one (requestSync), so a hello that raced ahead of presence is recovered
+  // and the newcomer always converges onto the live board (never a stale deal).
+  private gotSnapshot = false;
+  private syncNudges = 0;
+  private syncNudgeTimer = 0;
 
   // Resolve once the on-table card art and the background image have settled
   // (or a short timeout elapses), so the loader can hide with a fully painted
@@ -231,6 +242,9 @@ export class Game {
     // so the board-perspective CSS rotation never warps our canonical math.
     this.boardSize.width = Math.max(1, this.refs.cardsLayer.clientWidth);
     this.boardSize.height = Math.max(1, this.refs.cardsLayer.clientHeight);
+    // Card size depends on viewport (clamp on vmin); invalidate the cache so the
+    // next cardMetrics() re-measures against the new layout.
+    this.cardSizeCache = null;
   }
 
   // Top-left canonical x for the deck pile so its centre sits on the deck marker
@@ -240,18 +254,21 @@ export class Game {
     return 0.5 - (2 * cardW + DOCK_GUTTER_PX) / (2 * this.boardSize.width);
   }
 
-  // The on-screen card size in real pixels. Reading the --card-w custom property
-  // returns the UNRESOLVED clamp() expression (so parseFloat -> NaN), which is
-  // why the pile geometry and hit-testing used a wrong fixed 96px and the deck
-  // never sat exactly in its slot. Measuring a live card gives the exact size
-  // the browser actually painted, matching the CSS markers to the pixel.
+  // Cached card pixel size. Reading offsetWidth forces a synchronous reflow, and
+  // this is queried on every wheel tick / stack lookup, so we measure once and
+  // reuse it until the viewport changes (measureBoard clears the cache). Reading
+  // --card-w directly is no good — it returns the UNRESOLVED clamp() (NaN), the
+  // old bug that put the deck off its marker.
+  private cardSizeCache: { w: number; h: number } | null = null;
   private cardMetrics(): { w: number; h: number } {
+    if (this.cardSizeCache) return this.cardSizeCache;
     for (const el of this.cardEls.values()) {
       const w = el.offsetWidth;
-      if (w > 0) return { w, h: el.offsetHeight || w * 1.45 };
+      if (w > 0) { this.cardSizeCache = { w, h: el.offsetHeight || w * 1.45 }; return this.cardSizeCache; }
     }
     const probe = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w"));
     const w = Number.isFinite(probe) && probe > 0 ? probe : 96;
+    // Don't cache the fallback (no card painted yet) so we re-measure once cards exist.
     return { w, h: w * 1.45 };
   }
 
@@ -323,7 +340,7 @@ export class Game {
       pickStackUnder: (clientX, clientY) => {
         const top = this.topCardAtCanonicalPoint(clientX, clientY);
         if (!top) return [];
-        return findStackOverlapping(this.state, this.boardSize, top.id);
+        return findStackOverlapping(this.state, this.boardSize, top.id, this.cardMetrics());
       },
       // v3.7: snap-to-slot is removed. The user places cards by hand and the
       // dock + per-seat slots are pure visual scaffolding.
@@ -457,17 +474,25 @@ export class Game {
   // Snap any cards still sitting in the freshly dealt pile (face-down, no
   // owner, not yet moved by a player) precisely onto the Deck slot centre,
   // using a fresh board measurement.
-  private recenterDeckPile(): void {
+  // Re-snap the deck pile onto the Deck marker. `onlyNearDeck` (used on resize)
+  // restricts the move to cards that are STILL essentially on the deck, so a
+  // resize re-aligns the resting pile with its marker WITHOUT yanking back a
+  // face-down card a player deliberately placed elsewhere on the table.
+  private recenterDeckPile(onlyNearDeck = false): void {
     this.measureBoard();
     if (this.boardSize.width < 50 || this.boardSize.height < 50) return;
     const { w: cardW, h: cardH } = this.cardMetrics();
     const baseNx = this.deckBaseNx(cardW);
     const baseNy = DECK_NY - cardH / (2 * this.boardSize.height);
+    // Half a card width as a canonical fraction — the tolerance for "still on
+    // the deck" so only the pile (never a card moved away) gets re-aligned.
+    const tolX = (cardW * 0.6) / this.boardSize.width;
+    const tolY = (cardH * 0.6) / this.boardSize.height;
     for (const c of this.state.cards.values()) {
-      if (c.ownerSeat === null && !c.faceUp && c.rot === 0) {
-        c.x = baseNx;
-        c.y = baseNy;
-      }
+      if (c.ownerSeat !== null || c.faceUp || c.rot !== 0) continue;
+      if (onlyNearDeck && (Math.abs(c.x - baseNx) > tolX || Math.abs(c.y - baseNy) > tolY)) continue;
+      c.x = baseNx;
+      c.y = baseNy;
     }
     this.requestRender();
   }
@@ -486,7 +511,7 @@ export class Game {
       if (k === "g" || k === "m") {
         const pt = this.lastPointer;
         if (!pt) return;
-        this.measureBoard();
+        // Board metrics are kept fresh by onViewportChanged; no per-key reflow.
         const top = this.topCardAtCanonicalPoint(pt.x, pt.y);
         if (!top) return;
         e.preventDefault();
@@ -507,7 +532,7 @@ export class Game {
       if (this.drag && this.drag.isActive()) return;
       const pt = this.lastPointer;
       if (!pt) return;
-      this.measureBoard();
+      // Board metrics are kept fresh by onViewportChanged; no per-tick reflow.
       const top = this.topCardAtCanonicalPoint(pt.x, pt.y);
       if (!top) return; // empty space: do nothing
 
@@ -527,7 +552,7 @@ export class Game {
         // rot is stored CUMULATIVELY so the visual rotation always continues
         // forward instead of snapping back through modulo at 360°.
         const dir = e.deltaY > 0 ? 1 : -1;
-        const stack = findStackOverlapping(this.state, this.boardSize, top.id);
+        const stack = findStackOverlapping(this.state, this.boardSize, top.id, this.cardMetrics());
         if (this.stackBlocked(stack)) { return; }
         for (const cid of stack) {
           const c = this.state.cards.get(cid);
@@ -607,37 +632,36 @@ export class Game {
     }
   }
 
+  private resizePending = 0;
+  // Re-measure the board and re-align board-relative scaffolding after any
+  // viewport / resolution / zoom / orientation change. Card positions are
+  // canonical [0,1] fractions so moved cards stay put proportionally; only the
+  // deck/discard PILE (a card-width-relative offset) needs the re-snap, and
+  // only for cards still sitting on it.
+  private onViewportChanged(): void {
+    if (this.resizePending) return;
+    this.resizePending = window.setTimeout(() => {
+      this.resizePending = 0;
+      this.measureBoard();
+      repaintSlots(this.refs);
+      this.recenterDeckPile(true);
+      this.renderAllCards();
+    }, 50);
+  }
+
   private installResizeObserver(): void {
-    let pending = 0;
-    const ro = new ResizeObserver(() => {
-      if (pending) return;
-      pending = window.setTimeout(() => {
-        pending = 0;
-        this.measureBoard();
-        repaintSlots(this.refs);
-        // Card positions are canonical [0,1] fractions, so moved cards stay put
-        // proportionally. But the deck/discard PILE was laid out from a
-        // card-width-relative offset (deckBaseNx), which changes with the board
-        // size; re-snap any untouched pile card so it always lines up with the
-        // CSS dock markers after a resize / resolution / zoom change.
-        this.recenterDeckPile();
-        this.renderAllCards();
-      }, 50);
-    });
+    const ro = new ResizeObserver(() => this.onViewportChanged());
     ro.observe(this.refs.cardsLayer);
     // A window resize / orientation change does not always retrigger the layer's
-    // ResizeObserver synchronously on every browser; bind it too so the board is
-    // re-measured and re-aligned whenever the viewport metrics change.
-    window.addEventListener("resize", () => {
-      if (pending) return;
-      pending = window.setTimeout(() => {
-        pending = 0;
-        this.measureBoard();
-        repaintSlots(this.refs);
-        this.recenterDeckPile();
-        this.renderAllCards();
-      }, 50);
-    }, { passive: true });
+    // ResizeObserver synchronously on every browser; bind these too so the board
+    // is re-measured and re-aligned whenever the viewport metrics change.
+    window.addEventListener("resize", () => this.onViewportChanged(), { passive: true });
+    window.addEventListener("orientationchange", () => this.onViewportChanged(), { passive: true });
+    // A pinch-zoom / browser-zoom changes visualViewport scale without always
+    // firing window 'resize'; track it so cards re-align on zoom too.
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", () => this.onViewportChanged(), { passive: true });
+    }
   }
 
   private installAudioBoot(): void {
@@ -832,7 +856,7 @@ export class Game {
   }
 
   private toggleStackFlip(id: string): void {
-    const stack = findStackOverlapping(this.state, this.boardSize, id);
+    const stack = findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics());
     if (!stack.length) return;
     // Ownership guard: if any card in the stack belongs to a rival seat,
     // the whole gesture is blocked. Otherwise mixed-seat flips would leak
@@ -884,7 +908,7 @@ export class Game {
   }
 
   private gatherAt(id: string): void {
-    const stack = findStackOverlapping(this.state, this.boardSize, id);
+    const stack = findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics());
     if (!stack.length) return;
     if (this.stackBlocked(stack)) return;
     const seed = this.state.cards.get(id);
@@ -898,7 +922,7 @@ export class Game {
   }
 
   private shuffleAt(id: string): void {
-    const stack = findStackOverlapping(this.state, this.boardSize, id);
+    const stack = findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics());
     if (stack.length < 2) return;
     if (this.stackBlocked(stack)) return;
     // Straighten the shuffled pile to the viewer's upright angle (see gatherAt).
@@ -956,6 +980,23 @@ export class Game {
     return this.clock;
   }
 
+  // Build the wire form of a card with coordinates rounded to ~sub-pixel
+  // precision. Full f64 coords carried ~16 needless digits, bloating a 72-card
+  // snapshot past the byte cap (so it was silently dropped); 4 decimals is finer
+  // than one pixel on any screen yet keeps the payload compact.
+  private wireCard(c: CardState): PatchCard {
+    return {
+      id: c.id,
+      x: Math.round(c.x * 1e4) / 1e4,
+      y: Math.round(c.y * 1e4) / 1e4,
+      z: c.z,
+      rot: c.rot,
+      faceUp: c.faceUp,
+      ownerSeat: c.ownerSeat,
+      ts: c.ts
+    };
+  }
+
   private flush(): void {
     if (!this.dirtyIds.size) return;
     this.patchVersion++;
@@ -966,7 +1007,7 @@ export class Game {
       // deterministically and skew can never reject this as stale.
       c.ts = now;
       c.by = this.self.id;
-      return { id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat, ts: c.ts };
+      return this.wireCard(c);
     });
     this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards });
     this.dirtyIds.clear();
@@ -988,7 +1029,7 @@ export class Game {
       if (!c) return null;
       c.ts = now;
       c.by = this.self.id;
-      return { id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat, ts: c.ts };
+      return this.wireCard(c);
     }).filter((c): c is PatchCard => !!c);
     if (cards.length === 0) { this.dragPreviewIds.clear(); return; }
     this.patchVersion++;
@@ -1100,6 +1141,10 @@ export class Game {
       // If we're the only one here there's no peer to fetch a board from, so the
       // first-sync gate can release immediately (our local board is final).
       if (sorted.length <= 1) this.resolveFirstSync();
+      // Peers ARE present but we haven't received the live board yet: keep
+      // nudging for a snapshot so a newcomer never gets stuck on its local deal
+      // (covers a hello that raced ahead of the presence roster).
+      else this.nudgeForSnapshotIfNeeded(sorted.length);
       // Seat / concealment / perspective may have changed, repaint.
       this.requestRender();
   }
@@ -1294,9 +1339,7 @@ export class Game {
 
   private sendSnapshot(): void {
     this.patchVersion++;
-    const cards: PatchCard[] = Array.from(this.state.cards.values()).slice(0, 200).map((c) => ({
-      id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat, ts: c.ts
-    }));
+    const cards: PatchCard[] = Array.from(this.state.cards.values()).slice(0, 200).map((c) => this.wireCard(c));
     // Teach the receiver our known seat claims so a player who dropped before
     // they joined still shows as a reserved (dimmed) seat, not an empty one.
     const claims: SeatClaim[] = Array.from(this.seatClaims.entries()).map(([seat, c]) => ({ seat, id: c.id, name: c.name }));
@@ -1334,10 +1377,27 @@ export class Game {
     }
     // The authoritative board has arrived: the loader can lift without a jump.
     if (isSnapshot) {
+      this.gotSnapshot = true;
+      window.clearTimeout(this.syncNudgeTimer);
       if (p.claims && p.claims.length) this.mergeClaims(p.claims);
       this.resolveFirstSync();
     }
     this.requestRender();
+  }
+
+  // While peers are present but we have not yet received the authoritative
+  // board, re-ask for a snapshot a few times (a hello can race ahead of the
+  // presence roster, leaving no one to answer the first request).
+  private nudgeForSnapshotIfNeeded(peerCount: number): void {
+    window.clearTimeout(this.syncNudgeTimer);
+    if (this.gotSnapshot || this.spectator || peerCount <= 1) { this.syncNudges = 0; return; }
+    if (this.syncNudges >= 6) return;
+    this.syncNudgeTimer = window.setTimeout(() => {
+      if (this.gotSnapshot) return;
+      this.syncNudges++;
+      this.bus.requestSync();
+      this.nudgeForSnapshotIfNeeded(peerCount);
+    }, 400);
   }
 
   private renderCursor(c: { id: string; x: number; y: number; seat: number }): void {
