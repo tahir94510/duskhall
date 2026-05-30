@@ -1,4 +1,4 @@
-// Vercel serverless function — public runtime config.
+// Vercel serverless function for public runtime config.
 // Returns Supabase + branding URLs from environment variables.
 
 export const config = {

@@ -1,6 +1,6 @@
 # Audio assets
 
-**Just drop a file in the right folder — it works.** A build step scans these
+**Just drop a file in the right folder and it works.** A build step scans these
 folders and regenerates `manifest.json` automatically, so you never edit
 anything by hand. Missing sounds fall back to a synthesised placeholder tone
 (the game always has sound) and never produce 404s.
@@ -15,7 +15,7 @@ public/audio/
   music/   ← background music (any file name; tracks play in order, then loop)
 ```
 
-### `sfx/` — effect sounds
+### `sfx/`: effect sounds
 
 The file name (without extension) must match one of these. Anything else is
 ignored.
@@ -34,7 +34,7 @@ ignored.
 
 Example: `public/audio/sfx/flip.mp3`.
 
-### `music/` — background music
+### `music/`: background music
 
 Drop **any number** of tracks with **any names**: `public/audio/music/intro.mp3`,
 `public/audio/music/theme.mp3`, … They play in natural-sorted order (so
@@ -55,6 +55,6 @@ manifest regenerates. On Vercel this happens automatically on every deploy.
   effect, so effects never get buried and nothing clips.
 - Rapid repeats of the same effect are debounced (~45 ms) so they never stack
   into a harsh doubled blast, and a global voice cap fades the oldest sound out
-  gracefully rather than cutting it — no clicks or chopped audio.
+  gracefully rather than cutting it, so there are no clicks or chopped audio.
 - In-game **Settings** has Master / Music / Effects sliders plus an
   **Auto-balance** button that resets a clean music-vs-effects mix.

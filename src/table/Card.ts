@@ -59,13 +59,13 @@ export function createCardElement(instanceId: string, defId: string): { el: HTML
 
   void loadManifest().then((map) => {
     const url = map.get(defId);
-    if (!url) return; // silent — no art for this card yet
+    if (!url) return; // silent, no art for this card yet
     img.onload = () => {
       front.dataset.empty = "false";
       img.dataset.loaded = "true";
     };
     img.onerror = () => {
-      // Quietly give up — keep the placeholder, no console noise.
+      // Quietly give up, keep the placeholder, no console noise.
       img.removeAttribute("src");
     };
     img.src = url;

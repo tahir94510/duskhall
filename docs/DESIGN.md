@@ -41,7 +41,24 @@ Dock anchors are fixed constants in `src/table/constants.ts`:
 
 The Board.ts dock paints the two slots from these constants via CSS `top` / `left` percentages; the initial deal pile is anchored to the same numbers.
 
-`v3.7` removed magnet snap entirely — players place cards by hand. The dock slots remain as visual placeholders only.
+`v3.7` removed magnet snap entirely; players place cards by hand. The dock slots remain as visual placeholders only.
+
+## Stack interactions
+
+Helpers live in `src/table/StackOps.ts`; `Game.ts` wires them to gestures.
+
+- **Flip a stack** (right-click, Ctrl+scroll, or the long-press menu) turns the
+  whole pile over the way a hand would, via `flipStackOver`. The depth order
+  reverses (the bottom card ends up on top) and every face is toggled at once.
+  A single card simply flips its face, matching a plain flip. Flipping a stack
+  twice returns it to its exact starting order and orientation.
+- **Shuffle** (`shuffleStack`) randomises z-order with Fisher-Yates seeded from
+  the crypto RNG, then sets every card face-down. Only the initiating client
+  shuffles; the resulting order and orientation are broadcast as a normal patch,
+  so every peer converges on the same pile (last-write-wins by `ts`). Cards keep
+  their position and only wobble in place for the riffle feel.
+- **Gather** (`gatherStack`) pulls the overlapping cards onto one point and
+  reassigns z in their existing order, so the pile sits on top as a tight stack.
 
 ## Palette (v3.7)
 
@@ -93,14 +110,25 @@ Or, for a single extension across the board:
 
 Recommended file: 640 × 928 px WebP (`object-fit: cover` covers the 8 px corner radius). Solid backgrounds; no transparency required.
 
+### Table background (`public/background/`)
+
+A single image dropped here becomes the table surface. The Vite plugin scans the
+folder and writes `public/background/manifest.json`; `src/table/Background.ts`
+reads it once, preloads the first image, and fades it onto the `.board__bg`
+layer. That layer lives inside `.board__perspective`, so the surface rotates
+with the board and reads as one shared table felt across all four seats. The
+folder is kept separate from `public/cards/` so card art and the table surface
+never collide. An empty folder makes no request and the default dark surface
+defined in `card.css` / `board.css` shows through, so there are zero 404s.
+
 ### Audio (`public/audio/`)
 
 Effects and music live in separate folders so the asset set stays tidy:
 
 ```
 public/audio/
-  sfx/     effect sounds — file name must match a SfxName (flip, pickup, …)
-  music/   music tracks — any file name; played in natural-sort order, looped
+  sfx/     effect sounds (file name must match a SfxName: flip, pickup, …)
+  music/   music tracks (any file name; played in natural-sort order, looped)
 ```
 
 The Vite plugin scans both folders (and, for backwards compatibility, any flat files in `public/audio/`) and writes `manifest.json`. Effects map a sound name to a concrete file path; music is an ordered path list. Anything missing falls back to a procedural Web Audio tone synthesised at runtime, so a fresh checkout shows zero 404s. Volumes live in `localStorage` (`kabal:vol:master|music|sfx`).

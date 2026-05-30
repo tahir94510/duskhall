@@ -31,6 +31,24 @@
 
 .board__perspective > * { pointer-events: auto; }
 
+/* Table-surface background. Sits behind the slots and cards and rotates with
+   the board, so every seat shares one global surface turned to their own view.
+   Empty by default: the noble dark ground shows through until an image is
+   dropped into public/background/. The art is faded in once it has loaded. */
+.board__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease);
+  border-radius: var(--r-card);
+}
+
+.board__bg.is-loaded { opacity: 1; }
+
 .board__layer {
   position: absolute;
   inset: 0;

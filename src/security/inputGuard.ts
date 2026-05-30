@@ -1,5 +1,5 @@
 // Hard caps for any payload arriving from the Realtime channel.
-// We don't trust peers — schema-check, size-limit, and clamp coordinates.
+// We don't trust peers, schema-check, size-limit, and clamp coordinates.
 
 const MAX_BYTES = 6 * 1024;
 const MAX_CARDS_PER_PATCH = 200;

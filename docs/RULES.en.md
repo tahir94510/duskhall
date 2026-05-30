@@ -177,7 +177,7 @@ Q. Shadow Slayer enters but no rival has Servants? A. The entry effect fizzles. 
 
 Q. Shadow Slayer kills a Glacial Aberration on entry, who skips? A. You do. The destroyer pays the penalty.
 
-Q. Karmic Reflection redirects an attack, does the attacker's Servant Shield apply? A. Yes. The redirected attack must respect the attacker's Servant Shield.
+Q. When Karmic Reflection rebounds an attack, does the attacker's Servant Shield apply? A. Yes. The rebounding attack must respect the attacker's Servant Shield, so it has to clear their Servants before it can reach their Seals.
 
 Q. Blood Atonement needs how many cards in hand? A. At least 2. With fewer, it cannot be played.
 

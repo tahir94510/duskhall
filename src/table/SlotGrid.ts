@@ -1,6 +1,6 @@
 // Slot positions inside each player's tableau zone.
 // 4 Seal slots in front, then a small gap, then 3 Servant slots behind them
-// (relative to the seat). Pure geometry — drag controller uses these for
+// (relative to the seat). Pure geometry, drag controller uses these for
 // magnetic snap; CSS draws the matching outlines.
 
 import type { Seat } from "./rotation.js";

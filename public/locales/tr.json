@@ -22,7 +22,7 @@
     "copyLink": "Davet bağlantısını kopyala",
     "linkCopied": "Davet bağlantısı kopyalandı",
     "newRoom": "Yeni bir oda açıldı.",
-    "roomFull": "Oda dolu — izleyici olarak bakıyorsun.",
+    "roomFull": "Oda dolu olduğu için izleyici olarak bakıyorsun.",
     "timer": "Süre",
     "waiting": "Oyuncular bekleniyor..."
   },
@@ -158,7 +158,7 @@
     "karmicReflection": {
       "name": "Karmik Yansıma",
       "type": "Müdahale",
-      "effect": "HP harcamaz. YALNIZCA size veya kendi kartlarınıza yönelik bir saldırıyı iptal etmek için oynanır. Saldırı iptal edilir ve etkisi saldırgana yansıtılır; saldırganın Hizmetkâr Kalkanı bu yansımaya da uygulanır. Başkasını korumak için kullanılamaz.",
+      "effect": "HP harcamaz. Yalnızca size ya da masanızdaki bir kartınıza (Mühürleriniz ve Hizmetkârlarınız) yönelen bir saldırıyı iptal etmek için oynanır. Elinizi ya da destenizi korumaz ve başka bir oyuncuyu kollamak için kullanılamaz. İptal edilen saldırı saldırgana geri döner ve etkisini olduğu gibi ona uygular. Bu geri dönüşte saldırganın kendi Hizmetkâr Kalkanı devreye girer: masasında Hizmetkârı varsa, saldırı önce o Hizmetkârları yok etmek zorundadır, ancak ondan sonra Mühürlerine ulaşabilir.",
       "flavor": "Gönderdiğin geri döner, aynı sertlikte."
     },
     "bloodAtonement": {
@@ -253,7 +253,7 @@
           "BÜYÜLER 1 HP harcar. Oynamadan önce geçerli bir hedef belirleyin. Tüm olası hedefler hedef alınamaz ise büyü oynanamaz; HP harcanmaz.",
           "MÜDAHALELER HP harcamaz. Sıra kimde olursa olsun, en son eyleme tepki olarak oynanabilir.",
           "Karmik Yansıma ve Kan Kefareti BENCİL: yalnızca KENDİ kartlarınızı veya kendinizi korumak için.",
-          "Sustur! EVRENSEL: taze atılmış herhangi bir Büyü veya Müdahaleyi iptal edebilir. Mühür veya Hizmetkâr yerleştirmek (Yarat eylemi) Büyü ya da Müdahale DEĞİLDİR — Sustur! masaya yerleştirmeyi durduramaz.",
+          "Sustur! EVRENSEL: taze atılmış herhangi bir Büyü veya Müdahaleyi iptal edebilir. Mühür veya Hizmetkâr yerleştirmek (Yarat eylemi) Büyü ya da Müdahale DEĞİLDİR, bu yüzden Sustur! masaya yerleştirmeyi durduramaz.",
           "HİZMETKÂR: HİZMETKÂR KALKANI mutlaktır. Bir oyuncunun masasında en az 1 Hizmetkâr varsa, hiçbir rakip o oyuncunun Mühürlerini doğrudan hedef alamaz. Rakip önce tüm Hizmetkârları yok etmek zorundadır."
         ]
       },
@@ -329,8 +329,8 @@
           "Kaderin Cilvesi: 1 HP. Kendi elindeki tüm kartları seçilen bir rakibin elindeki tüm kartlarla takas et. Hiçlik Örtüsü engeller.",
           "MÜDAHALELER (16 toplam):",
           "Sustur!: 0 HP. Taze atılmış bir Büyü veya Müdahaleyi iptal et. İptal edilen kart ve Sustur! Çöplüğe gider. Evrensel hedef.",
-          "Karmik Yansıma: 0 HP. BENCİL — yalnızca SİZE veya kartlarınıza yönelik saldırıyı iptal eder ve saldırgana yansıtır.",
-          "Kan Kefareti: 0 HP. BENCİL — yalnızca SİZE ait bir Mühür yok edilecekken oynanır; elinden 2 rastgele kart at ve Mühür'ü kurtar.",
+          "Karmik Yansıma: 0 HP. Bencil. Size ya da masanızdaki kartlarınıza yönelen saldırıyı iptal eder ve saldırgana geri döndürür; bu geri dönüşte saldırganın kendi Hizmetkâr Kalkanı geçerlidir.",
+          "Kan Kefareti: 0 HP. Bencil. Yalnızca size ait bir Mühür yok edilecekken oynanır; elinizden 2 rastgele kart atıp Mührü kurtarırsınız.",
           "HİZMETKÂRLAR (16 toplam):",
           "Rünik Bekçi: Masandayken TÜM Mühürlerin hedeflenemez olur. Hizmetkâr Kalkanı geçerli; rakipler önce tüm Hizmetkârları temizlemelidir.",
           "Buzul Ucube: Yok edildiğinde, onu yok eden oyuncu sonraki tüm turunu atlar (Odaklanma, Aksiyon, Kapanış). Atlanan turda Müdahaleler oynanabilir.",
@@ -348,7 +348,7 @@
           "S. Ölüçağıranın Gözü bu tur konuldu, bu turun Kapanış'ında kart alır mıyım? C. Evet. Tetik Kapanış'ta çalışır; Aksiyon'dan sonra gelir.",
           "S. Gölge Katili'ni masada hiç Hizmetkâr yokken oynarsam? C. Giriş efekti boşa düşer. Gölge Katili yine masaya yerleşir.",
           "S. Gölge Katili girişiyle Buzul Ucube'yi yok edersem kim tur atlar? C. SİZ. Cezayı yok eden öder.",
-          "S. Karmik Yansıma saldırıyı yansıttığında saldırganın Hizmetkâr Kalkanı uygulanır mı? C. Evet. Yansıma saldırganın Kalkan Kuralı'na tabidir.",
+          "S. Karmik Yansıma saldırıyı geri döndürdüğünde saldırganın Hizmetkâr Kalkanı uygulanır mı? C. Evet. Geri dönen saldırı saldırganın Hizmetkâr Kalkanı'na tabidir; Mühürlerine ulaşmadan önce Hizmetkârlarını temizlemek zorundadır.",
           "S. Kan Kefareti için elimde kaç kart olmalı? C. En az 2. Daha azıyla oynanamaz.",
           "S. Zihin Paraziti'ni masamda 3 Hizmetkâr varken oynayabilir miyim? C. Hayır. Çalınan Hizmetkâr limitinizi doldurur; oynanamaz, HP harcanmaz.",
           "S. Gölge Hırsızlığı Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. El koruma altındadır.",

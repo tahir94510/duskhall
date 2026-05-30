@@ -32,7 +32,7 @@ Every broadcast message is treated as untrusted.
 - Token-bucket rate limit on **send**: cursors 30 Hz, ops 10 Hz, holds 20 Hz.
 - Token-bucket rate limit on **receive, per sender**: a flooding/buggy peer is
   throttled (≈20 patch msgs/s, ≈45 cursor msgs/s) before dispatch, and its
-  bucket is pruned when it leaves presence — one peer can't pin every client's CPU.
+  bucket is pruned when it leaves presence, so one peer can't pin every client's CPU.
 - Byte cap: 6 KB per payload.
 - Card array cap: 200 entries per patch.
 - Coordinate clamp: ±5000 px.
@@ -53,7 +53,7 @@ Every broadcast message is treated as untrusted.
   so two players can't tug the same card; a crashed/departed holder's lock lapses.
 
 > **Threat model:** there is no auth, so the `by`/`id` fields on a broadcast are
-> not cryptographically verifiable — a determined peer could spoof another
+> not cryptographically verifiable, so a determined peer could spoof another
 > player's cursor/patch. This is acceptable for *friendly play*; for a public
 > instance, gate room-create behind Cloudflare Turnstile and add Supabase RLS if
 > an auth flow is introduced.

@@ -1,4 +1,5 @@
 import { t } from "../i18n/index.js";
+import { applyTableBackground } from "./Background.js";
 import { slotsForSeat } from "./SlotGrid.js";
 import { DECK_NX, DECK_NY, DISCARD_NX, DISCARD_NY } from "./constants.js";
 import type { Seat } from "./rotation.js";
@@ -11,6 +12,7 @@ export interface BoardRefs {
   deckSlot: HTMLDivElement;
   discardSlot: HTMLDivElement;
   slotLayer: HTMLDivElement;
+  bgLayer: HTMLDivElement;
   zones: HTMLDivElement[];
 }
 
@@ -40,6 +42,7 @@ export function buildTable(host: HTMLElement): BoardRefs {
   board.className = "board";
   board.innerHTML = `
     <div class="board__perspective" data-role="perspective">
+      <div class="board__bg" data-role="bg"></div>
       <div class="board__slots" data-role="slots"></div>
       <div class="board__layer board__cards" data-role="cards"></div>
       <div class="dock dock--canonical" data-role="dock">
@@ -58,11 +61,13 @@ export function buildTable(host: HTMLElement): BoardRefs {
     deckSlot: board.querySelector<HTMLDivElement>('[data-role="deck"]')!,
     discardSlot: board.querySelector<HTMLDivElement>('[data-role="discard"]')!,
     slotLayer: board.querySelector<HTMLDivElement>('[data-role="slots"]')!,
+    bgLayer: board.querySelector<HTMLDivElement>('[data-role="bg"]')!,
     zones
   };
 
   paintSlotGrid(refs);
   refreshLabels(refs);
+  void applyTableBackground(refs.bgLayer);
   return refs;
 }
 

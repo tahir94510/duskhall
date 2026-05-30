@@ -22,7 +22,7 @@
     "copyLink": "Copy invite link",
     "linkCopied": "Invite link copied",
     "newRoom": "A new room has been opened.",
-    "roomFull": "The room is full — you are watching as a spectator.",
+    "roomFull": "The room is full, so you are watching as a spectator.",
     "timer": "Time",
     "waiting": "Waiting for players..."
   },
@@ -158,7 +158,7 @@
     "karmicReflection": {
       "name": "Karmic Reflection",
       "type": "Intervention",
-      "effect": "Costs no HP. Played ONLY to cancel an attack aimed at YOU or your own cards. The attack is cancelled and its effect is redirected onto the attacker, who then resolves the Servant Shield rule themselves. Cannot be played to protect another player.",
+      "effect": "Costs no HP. Play it only to cancel an attack aimed at you or at a card you control in play (your Seals and Servants on your tableau). It does not shield your hand or your deck, and it cannot protect another player. The cancelled attack rebounds onto the attacker and resolves against them in full. On the rebound, the attacker's own Servant Shield applies: if they have any Servant in play, the attack must destroy those Servants first and only then can it reach their Seals.",
       "flavor": "What you send returns, in kind."
     },
     "bloodAtonement": {
@@ -253,7 +253,7 @@
           "SPELLS cost 1 HP. You must declare a legal target before casting. If every potential target is untargetable, the spell cannot be cast and HP is not spent.",
           "INTERVENTIONS cost no HP. They may be played at any moment, on anyone's turn, as a reaction to the most recent action.",
           "Karmic Reflection and Blood Atonement are SELFISH: usable only to protect YOURSELF or your own cards.",
-          "Silence! is UNIVERSAL: usable to cancel any newly cast Spell or Intervention, regardless of target. Placement (Create) of a Seal or Servant is NOT a Spell or Intervention — Silence! cannot stop a tableau placement.",
+          "Silence! is UNIVERSAL: usable to cancel any newly cast Spell or Intervention, regardless of target. Placement (Create) of a Seal or Servant is NOT a Spell or Intervention, so Silence! cannot stop a tableau placement.",
           "SERVANTS: the SERVANT SHIELD is absolute. While a player has at least one Servant on their tableau, no rival may target any of that player's Seals directly. Even targetable cards like Runic Warden cannot be skipped; the rival must clear every Servant first."
         ]
       },
@@ -329,10 +329,10 @@
           "Twist of Fate: 1 HP. Swap every card in your hand with every card in a chosen rival's hand. Blocked by Veil of Void.",
           "INTERVENTIONS (16 total):",
           "Silence!: 0 HP. Cancel a freshly cast Spell or Intervention. Both cards go to the Discard. Universal target.",
-          "Karmic Reflection: 0 HP. SELFISH — cancel an attack aimed at YOU and redirect it onto the attacker.",
-          "Blood Atonement: 0 HP. SELFISH — when one of YOUR Seals is about to be destroyed, discard 2 random cards from hand to save it.",
+          "Karmic Reflection: 0 HP. Selfish. Cancels an attack aimed at you or your cards in play and rebounds it onto the attacker, where the attacker's own Servant Shield applies.",
+          "Blood Atonement: 0 HP. Selfish. When one of your Seals is about to be destroyed, discard 2 random cards from hand to save it.",
           "SERVANTS (16 total):",
-          "Runic Warden: While in play, ALL of your Seals gain untargetable. Servant Shield still applies — rivals must clear Wardens first.",
+          "Runic Warden: While in play, ALL of your Seals gain untargetable. Servant Shield still applies, so rivals must clear your Wardens first.",
           "Glacial Aberration: When destroyed, the destroyer skips their entire next turn (Focus, Action, Closing). Interventions still allowed during the skip.",
           "Shadow Slayer: On entry, if any rival has a Servant you MUST destroy one. If it kills a Glacial Aberration this way, YOU receive the skip penalty."
         ]
@@ -348,7 +348,7 @@
           "Q. Necromancer's Eye placed this turn, does it fire at this Closing? A. Yes. Its trigger is during Closing, which is after Action.",
           "Q. Shadow Slayer enters but no rival has Servants? A. The entry effect fizzles. Shadow Slayer still enters as a normal Servant.",
           "Q. Shadow Slayer kills a Glacial Aberration on entry, who skips? A. You do. The destroyer pays the penalty.",
-          "Q. Karmic Reflection redirects an attack, does the attacker's Servant Shield apply? A. Yes. The redirected attack must respect the attacker's Servant Shield.",
+          "Q. When Karmic Reflection rebounds an attack, does the attacker's Servant Shield apply? A. Yes. The rebounding attack must respect the attacker's Servant Shield, so it has to clear their Servants before it can reach their Seals.",
           "Q. Blood Atonement needs how many cards in hand? A. At least 2. With fewer, it cannot be played.",
           "Q. Mind Parasite when your tableau already has 3 Servants? A. Cannot be cast; no HP spent.",
           "Q. Shadow Theft against a hand protected by Veil of Void? A. Not legal; cannot be cast.",

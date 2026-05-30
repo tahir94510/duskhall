@@ -3,8 +3,8 @@ import { readdirSync, writeFileSync, existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
 // Generates /cards/manifest.json and /audio/manifest.json from whatever files
-// actually live under public/. A user only has to DROP a file — no manual
-// manifest editing — and it works on the next dev start or build, with zero
+// actually live under public/. A user only has to DROP a file, with no manual
+// manifest editing, and it works on the next dev start or build, with zero
 // 404s for files that aren't there.
 //
 // Audio is split into two folders so effects and music stay tidy:
@@ -41,6 +41,19 @@ function kabalAssetManifest(): Plugin {
         if (parsed && IMG_EXT.includes(parsed.ext)) cardEntries.push(parsed);
       }
       writeFileSync(resolve(cardsDir, "manifest.json"), JSON.stringify({ available: cardEntries }, null, 2) + "\n");
+    }
+
+    // ---- Background (table surface) ----
+    // Separate folder and manifest from cards so the two image sets never mix.
+    // Only the first entry is used as the active table surface.
+    const bgDir = resolve(pub, "background");
+    if (existsSync(bgDir)) {
+      const bgEntries: Array<{ id: string; ext: string }> = [];
+      for (const f of readdirSync(bgDir)) {
+        const parsed = splitExt(f);
+        if (parsed && IMG_EXT.includes(parsed.ext)) bgEntries.push(parsed);
+      }
+      writeFileSync(resolve(bgDir, "manifest.json"), JSON.stringify({ available: bgEntries }, null, 2) + "\n");
     }
 
     // ---- Audio ----
