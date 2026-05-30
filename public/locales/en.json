@@ -34,7 +34,11 @@
     "pasteJoin": "Paste code or link to join",
     "joined": "Joined the room",
     "invalidCode": "No valid room code on the clipboard",
-    "spectators": "Spectators"
+    "spectators": "Spectators",
+    "connection": "Connection",
+    "connOnline": "Online",
+    "connConnecting": "Connecting...",
+    "connOffline": "Offline"
   },
   "table": {
     "deck": "Deck",

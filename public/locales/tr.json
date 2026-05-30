@@ -34,7 +34,11 @@
     "pasteJoin": "Katılmak için kodu veya bağlantıyı yapıştır",
     "joined": "Odaya katıldın",
     "invalidCode": "Panoda geçerli bir oda kodu yok",
-    "spectators": "İzleyiciler"
+    "spectators": "İzleyiciler",
+    "connection": "Bağlantı",
+    "connOnline": "Çevrimiçi",
+    "connConnecting": "Bağlanıyor...",
+    "connOffline": "Çevrimdışı"
   },
   "table": {
     "deck": "Deste",

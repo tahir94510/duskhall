@@ -23,6 +23,9 @@ export class Header {
   private roomVal: HTMLElement;
   private spectatorRow: HTMLElement;
   private spectatorVal: HTMLElement;
+  private connRow: HTMLElement;
+  private connVal: HTMLElement;
+  private conn: "online" | "connecting" | "offline" = "connecting";
   private roomStart = performance.now();
   private roomSlug = "";
   private timerHandle = 0;
@@ -57,6 +60,11 @@ export class Header {
           <span class="header__menu-icon">${ICON_EYE}</span>
           <span class="header__menu-label" data-i18n="ui.spectators">${esc(t("ui.spectators"))}</span>
           <span class="header__code" data-role="spectators">0</span>
+        </div>
+        <div class="header__menu-row header__menu-row--static" data-role="conn-row" data-conn="connecting">
+          <span class="header__menu-icon"><span class="conn-dot" aria-hidden="true"></span></span>
+          <span class="header__menu-label" data-i18n="ui.connection">${esc(t("ui.connection"))}</span>
+          <span class="header__code header__code--plain" data-role="conn">${esc(t("ui.connConnecting"))}</span>
         </div>
         <div class="header__menu-divider"></div>
         <button type="button" class="header__menu-row" data-action="settings" role="menuitem">
@@ -96,6 +104,8 @@ export class Header {
     this.roomVal = this.menu.querySelector<HTMLElement>('[data-role="room"]')!;
     this.spectatorRow = this.menu.querySelector<HTMLElement>('[data-role="spectator-row"]')!;
     this.spectatorVal = this.menu.querySelector<HTMLElement>('[data-role="spectators"]')!;
+    this.connRow = this.menu.querySelector<HTMLElement>('[data-role="conn-row"]')!;
+    this.connVal = this.menu.querySelector<HTMLElement>('[data-role="conn"]')!;
     this.bind();
     this.refreshLocale();
     this.startTimer();
@@ -217,6 +227,16 @@ export class Header {
     if (tLabel) tLabel.textContent = t("ui.timer");
     this.menu.querySelector<HTMLButtonElement>('[data-action="room-copy"]')?.setAttribute("title", t("ui.copyLink"));
     this.menu.querySelector<HTMLButtonElement>('[data-action="room-paste"]')?.setAttribute("title", t("ui.pasteJoin"));
+    this.setConnection(this.conn);
+  }
+
+  /** Reflect the realtime connection state (green online / amber connecting /
+   *  red offline) so a player can tell at a glance whether live sync is active. */
+  setConnection(s: "online" | "connecting" | "offline"): void {
+    this.conn = s;
+    this.connRow.dataset.conn = s;
+    const key = s === "online" ? "ui.connOnline" : s === "offline" ? "ui.connOffline" : "ui.connConnecting";
+    this.connVal.textContent = t(key);
   }
 
   setRoom(slug: string): void {
