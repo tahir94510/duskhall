@@ -1,4 +1,4 @@
-import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EYE } from "./icons.js";
+import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EYE, ICON_EXIT } from "./icons.js";
 import { t } from "../i18n/index.js";
 import { inviteUrl, parseRoomInput } from "../net/room.js";
 import { flashConfirm } from "./feedback.js";
@@ -38,12 +38,13 @@ export class Header {
       </span>
       <button type="button" class="icon-btn header__more" data-action="more" aria-label="${esc(t("ui.menu"))}" aria-haspopup="true" aria-expanded="false">
         ${ICON_MORE}
+        <span class="icon-btn__badge" data-role="more-badge" aria-hidden="true">1</span>
       </button>
       <div class="header__menu" role="menu">
         <div class="header__menu-row header__menu-row--static">
           <span class="header__menu-icon">${ICON_ROOM}</span>
           <span class="header__menu-label" data-i18n="ui.roomCode">${esc(t("ui.roomCode"))}</span>
-          <span class="header__code" data-role="room">------</span>
+          <button type="button" class="header__code header__code--secret is-blurred" data-role="room" data-action="room-reveal" title="${esc(t("ui.reveal"))}" aria-label="${esc(t("ui.reveal"))}">------</button>
           <button type="button" class="icon-btn icon-btn--sm" data-action="room-copy" aria-label="${esc(t("ui.copyLink"))}" title="${esc(t("ui.copyLink"))}">${ICON_COPY}</button>
           <button type="button" class="icon-btn icon-btn--sm" data-action="room-paste" aria-label="${esc(t("ui.pasteJoin"))}" title="${esc(t("ui.pasteJoin"))}">${ICON_PASTE}</button>
         </div>
@@ -69,6 +70,7 @@ export class Header {
         <button type="button" class="header__menu-row header__menu-row--badge" data-action="support" role="menuitem">
           <span class="header__menu-icon">${ICON_SUPPORT}</span>
           <span class="header__menu-label" data-i18n="ui.support">${esc(t("ui.support"))}</span>
+          <span class="header__row-badge" aria-hidden="true">1</span>
         </button>
         <button type="button" class="header__menu-row" data-action="shortcuts" role="menuitem">
           <span class="header__menu-icon">${ICON_SHORTCUTS}</span>
@@ -80,8 +82,8 @@ export class Header {
           <span class="header__menu-label" data-i18n="ui.resetDeck">${esc(t("ui.resetDeck"))}</span>
         </button>
         <button type="button" class="header__menu-row header__menu-row--danger" data-action="reset" role="menuitem" data-role="reset-room">
-          <span class="header__menu-icon">${ICON_RESET}</span>
-          <span class="header__menu-label" data-i18n="ui.reset">${esc(t("ui.reset"))}</span>
+          <span class="header__menu-icon">${ICON_EXIT}</span>
+          <span class="header__menu-label" data-i18n="ui.exit">${esc(t("ui.exit"))}</span>
         </button>
       </div>
     `;
@@ -156,9 +158,18 @@ export class Header {
         return;
       }
       flashConfirm(btn);
-      if (code === this.roomSlug) { toast(t("ui.joined")); this.closeMenu(); return; }
-      this.closeMenu();
+      // Do NOT close the menu on paste: the user may want to copy/verify or paste
+      // again. Joining a new room reopens behind the loader anyway.
+      if (code === this.roomSlug) { toast(t("ui.joined")); return; }
       this.hooks.onJoinRoom(code);
+    });
+
+    // Room code is blurred by default; clicking it reveals, clicking again hides.
+    // It re-blurs every time the menu (re)opens (see openMenu).
+    this.roomVal.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.roomVal.classList.toggle("is-blurred");
     });
   }
 
@@ -171,6 +182,9 @@ export class Header {
     this.menu.inert = false;
     this.menu.classList.add("is-visible");
     this.moreBtn.setAttribute("aria-expanded", "true");
+    // Without exception, the room code is blurred on every open; the user taps it
+    // to reveal. This keeps the code from being exposed at a glance to onlookers.
+    this.roomVal.classList.add("is-blurred");
   }
   private closeMenu(): void {
     this.menuOpen = false;

@@ -39,12 +39,21 @@ const SEAT_COLORS = ["#f3efe5", "#cdc8bc", "#a09c92", "#79766f"];
 const ANIM_Z_BASE = 500;
 // Animation durations (kept slightly above the CSS transition/keyframe lengths
 // so the z-elevation never clears before the visual settles).
-const FLIP_ANIM_MS = 340;
+const FLIP_ANIM_MS = 380;
 const SHUFFLE_ANIM_MS = 400;
 const SS_SNAPSHOT_PREFIX = "kabal:snap:";
 const SS_SEAT_PREFIX = "kabal:seat:";
 const SS_CLIENT_ID = "kabal:cid";
 const LIVE_CID_PREFIX = "kabal:livecid:";
+// Room-scoped identity (id + name + seat) in localStorage. Unlike the
+// sessionStorage seat/cid (which only survive a same-tab reload), this lets a
+// player who fully CLOSED the browser, lost the network, or otherwise dropped
+// return to the SAME room with the same id and name and reclaim their "away"
+// seat — exactly the persistence the table promises. Kept fresh for 24h.
+const LS_IDENT_PREFIX = "kabal:ident:";
+const IDENT_TTL_MS = 24 * 60 * 60 * 1000;
+
+interface RoomIdentity { id: string; name: string; seat: number; ts: number; }
 
 export interface GameDeps {
   host: HTMLElement;
@@ -128,10 +137,24 @@ export class Game {
     this.room = getOrCreateRoom();
     this.header.setRoom(this.room);
     this.installZoneActions();
-    // Reclaim our previous seat for this room (set on a same-tab reload) so a
-    // refresh re-asserts the same seat instead of grabbing a new one.
-    this.self.seat = this.readSeat(this.room);
+    // Recover a persisted identity for this room first: a player who fully closed
+    // the browser (or dropped) returns with the SAME id and name and reclaims the
+    // seat that is currently showing as "away", instead of grabbing a fresh one.
+    const ident = this.readIdentity(this.room);
+    if (ident) {
+      this.self.id = ident.id;
+      this.self.name = ident.name;
+      this.self.seat = ident.seat >= 0 ? ident.seat : this.readSeat(this.room);
+      // Keep the per-tab client-id store in sync so reload logic stays coherent.
+      try { sessionStorage.setItem(SS_CLIENT_ID, this.self.id); } catch {}
+    } else {
+      // Reclaim our previous seat for this room (set on a same-tab reload) so a
+      // refresh re-asserts the same seat instead of grabbing a new one.
+      this.self.seat = this.readSeat(this.room);
+    }
     this.claimSeat = this.self.seat;
+    this.self.color = SEAT_COLORS[this.self.seat] ?? SEAT_COLORS[0]!;
+    this.writeIdentity();
 
     // Apply perspective transform first, then measure: the rect we read out
     // belongs to the rotated layout so all canonical math lines up.
@@ -234,6 +257,22 @@ export class Game {
 
   private applyBoardPerspective(): void {
     this.refs.board.style.setProperty("--board-rot", `${seatRotationDeg(this.self.seat as Seat)}deg`);
+  }
+
+  // The cumulative `rot` value (quarter-turns) that makes a card appear UPRIGHT
+  // from THIS viewer's perspective. A card's on-screen angle is
+  // rot*90 + boardRot(viewerSeat); upright means that sum ≡ 0 (mod 360). We pick
+  // the value congruent to the viewer's upright residue that is NEAREST to
+  // `currentRot`, so straightening a pile never sends it on a long multi-turn
+  // spin — it just squares up by the shortest path. Because rot is shared, peers
+  // see the pile at whatever angle their own seat implies, which is exactly the
+  // intended per-viewer ("relative") behaviour.
+  private viewerUprightRot(currentRot: number): number {
+    const boardRot = seatRotationDeg(this.self.seat as Seat); // 0 / 180 / -90 / 90
+    const residue = (((-boardRot / 90) % 4) + 4) % 4; // 0..3
+    let delta = (((residue - currentRot) % 4) + 4) % 4; // 0..3 forward
+    if (delta > 2) delta -= 4; // take the shortest direction (−1 instead of +3)
+    return currentRot + delta;
   }
 
   // Centre of the cards layer in viewport pixels. Rotation is applied about
@@ -483,12 +522,19 @@ export class Game {
       if (this.wheelCooldown()) return;
 
       if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
-        // Shift + scroll: rotate the card 90° in its own plane. We store rot
-        // CUMULATIVELY so the visual rotation always continues forward instead
-        // of snapping back through modulo at 360°.
+        // Shift + scroll: rotate EVERY card under the cursor (the whole stack)
+        // 90° in its own plane, by the same direction, so a pile turns together.
+        // rot is stored CUMULATIVELY so the visual rotation always continues
+        // forward instead of snapping back through modulo at 360°.
         const dir = e.deltaY > 0 ? 1 : -1;
-        top.rot = top.rot + dir;
-        this.dirtyIds.add(top.id);
+        const stack = findStackOverlapping(this.state, this.boardSize, top.id);
+        if (this.stackBlocked(stack)) { return; }
+        for (const cid of stack) {
+          const c = this.state.cards.get(cid);
+          if (!c) continue;
+          c.rot = c.rot + dir;
+          this.dirtyIds.add(cid);
+        }
         this.scheduleFlush();
         void this.audio.play("flip");
       } else if (e.ctrlKey || e.metaKey) {
@@ -500,6 +546,9 @@ export class Game {
         this.dirtyIds.add(top.id);
         this.scheduleFlush();
         void this.audio.play("flip");
+        // Re-arm the hover tooltip in place so a card flipped face-up shows its
+        // info after the usual delay, without the cursor leaving and re-entering.
+        this.rearmTooltipAtPointer();
       }
     }, { passive: false });
 
@@ -566,10 +615,29 @@ export class Game {
         pending = 0;
         this.measureBoard();
         repaintSlots(this.refs);
+        // Card positions are canonical [0,1] fractions, so moved cards stay put
+        // proportionally. But the deck/discard PILE was laid out from a
+        // card-width-relative offset (deckBaseNx), which changes with the board
+        // size; re-snap any untouched pile card so it always lines up with the
+        // CSS dock markers after a resize / resolution / zoom change.
+        this.recenterDeckPile();
         this.renderAllCards();
       }, 50);
     });
     ro.observe(this.refs.cardsLayer);
+    // A window resize / orientation change does not always retrigger the layer's
+    // ResizeObserver synchronously on every browser; bind it too so the board is
+    // re-measured and re-aligned whenever the viewport metrics change.
+    window.addEventListener("resize", () => {
+      if (pending) return;
+      pending = window.setTimeout(() => {
+        pending = 0;
+        this.measureBoard();
+        repaintSlots(this.refs);
+        this.recenterDeckPile();
+        this.renderAllCards();
+      }, 50);
+    }, { passive: true });
   }
 
   private installAudioBoot(): void {
@@ -603,6 +671,32 @@ export class Game {
     try {
       if (this.spectator) sessionStorage.removeItem(SS_SEAT_PREFIX + this.room);
       else sessionStorage.setItem(SS_SEAT_PREFIX + this.room, String(this.self.seat));
+    } catch {}
+    this.writeIdentity();
+  }
+
+  private identKey(room: string): string { return LS_IDENT_PREFIX + room; }
+
+  // Persisted room identity, used so a player who fully closed the browser (or
+  // dropped) returns with the SAME id/name and reclaims their "away" seat.
+  private readIdentity(room: string): RoomIdentity | null {
+    try {
+      const raw = localStorage.getItem(this.identKey(room));
+      if (!raw) return null;
+      const v = JSON.parse(raw) as Partial<RoomIdentity>;
+      if (typeof v.id !== "string" || typeof v.name !== "string") return null;
+      if (typeof v.ts !== "number" || Date.now() - v.ts > IDENT_TTL_MS) return null;
+      const seat = typeof v.seat === "number" && v.seat >= 0 && v.seat < SEAT_COUNT ? v.seat : 0;
+      return { id: v.id, name: v.name, seat, ts: v.ts };
+    } catch { return null; }
+  }
+
+  private writeIdentity(): void {
+    try {
+      // Spectators hold no seat to reclaim, so we don't pin one for them.
+      const seat = this.spectator ? -1 : this.self.seat;
+      const ident: RoomIdentity = { id: this.self.id, name: this.self.name, seat, ts: Date.now() };
+      localStorage.setItem(this.identKey(this.room), JSON.stringify(ident));
     } catch {}
   }
 
@@ -720,6 +814,21 @@ export class Game {
     this.dirtyIds.add(id);
     this.scheduleFlush();
     void this.audio.play("flip");
+    this.rearmTooltipAtPointer();
+  }
+
+  // After a flip/turn that may have revealed a card's face, re-probe the tooltip
+  // at the current pointer so its info appears after the usual hover delay —
+  // without forcing the user to move the cursor out and back in. The probe is
+  // delayed slightly past the flip animation so the card reads as face-up and
+  // is no longer concealed/animating when the tooltip resolves.
+  private rearmTooltipAtPointer(): void {
+    const pt = this.lastPointer;
+    if (!pt) return;
+    window.setTimeout(() => {
+      const p = this.lastPointer;
+      if (p) this.tooltip.probeAt(p.x, p.y);
+    }, FLIP_ANIM_MS + 20);
   }
 
   private toggleStackFlip(id: string): void {
@@ -759,6 +868,7 @@ export class Game {
     }
     this.scheduleFlush();
     void this.audio.play("flip");
+    this.rearmTooltipAtPointer();
   }
 
   // A stack cannot be gathered/shuffled/flipped if any card in it belongs to a
@@ -778,7 +888,10 @@ export class Game {
     if (!stack.length) return;
     if (this.stackBlocked(stack)) return;
     const seed = this.state.cards.get(id);
-    if (seed) gatherStack(this.state, stack, seed.x, seed.y);
+    // Square the pile up to the angle that reads upright for THIS viewer, so a
+    // jumble of 90°/180° cards becomes a clean stack from where they're sitting.
+    const upright = this.viewerUprightRot(seed ? seed.rot : 0);
+    if (seed) gatherStack(this.state, stack, seed.x, seed.y, upright);
     for (const cid of stack) this.dirtyIds.add(cid);
     this.scheduleFlush();
     void this.audio.play("gather");
@@ -788,7 +901,10 @@ export class Game {
     const stack = findStackOverlapping(this.state, this.boardSize, id);
     if (stack.length < 2) return;
     if (this.stackBlocked(stack)) return;
-    shuffleStack(this.state, stack);
+    // Straighten the shuffled pile to the viewer's upright angle (see gatherAt).
+    const seed = this.state.cards.get(id);
+    const upright = this.viewerUprightRot(seed ? seed.rot : 0);
+    shuffleStack(this.state, stack, upright);
     this.elevateDuringAnim(stack, SHUFFLE_ANIM_MS);
     this.applyShuffleJitter(stack);
     for (const cid of stack) this.dirtyIds.add(cid);
@@ -1084,8 +1200,13 @@ export class Game {
   // broadcasts our `left`, freeing our seat for the others).
   private handleKicked(k: KickMsg): void {
     if (k.target !== this.self.id) return;
-    toast(t("kick.kicked"));
-    void this.joinRoom(newRoom());
+    // Drop the persisted identity for the room we're being removed from so we
+    // don't try to reclaim that seat later, then move to a fresh empty room.
+    try { localStorage.removeItem(this.identKey(this.room)); } catch {}
+    // Show the notice AFTER we land in the new room: a toast raised now would
+    // sit behind the loader the room switch puts up. joinRoom resolves once the
+    // fresh table is revealed.
+    void this.joinRoom(newRoom()).then(() => toast(t("kick.kicked")));
   }
 
   // Host-only: confirm, then ask the player on `seat` to leave.
@@ -1390,10 +1511,24 @@ export class Game {
       this.resetTable();
       this.room = slug;
       this.selfJoinedAt = Date.now();
-      this.self.seat = this.readSeat(this.room);
+      // Recover a persisted identity for the room we're joining (so returning to
+      // a room we previously held reclaims that id/name/seat), else start fresh.
+      const ident = this.readIdentity(this.room);
+      if (ident) {
+        this.self.id = ident.id;
+        this.self.name = ident.name;
+        this.self.seat = ident.seat >= 0 ? ident.seat : this.readSeat(this.room);
+        try { sessionStorage.setItem(SS_CLIENT_ID, this.self.id); } catch {}
+      } else {
+        this.self.seat = this.readSeat(this.room);
+      }
       this.claimSeat = this.self.seat;
+      this.self.color = SEAT_COLORS[this.self.seat] ?? SEAT_COLORS[0]!;
+      this.writeIdentity();
       this.applyBoardPerspective();
+      this.measureBoard();
       this.header.setRoom(this.room);
+      this.header.resetTimer();
       const restored = this.tryRestoreSnapshot();
       if (!restored) this.initialDealLocal();
       this.refreshZones();
@@ -1409,24 +1544,50 @@ export class Game {
   private async handleReset(): Promise<void> {
     openLeaveConfirm(this.modal, this.room, async () => {
       void this.audio.play("ui-close");
-      try { localStorage.removeItem(this.snapshotKey()); } catch {}
-      try { sessionStorage.removeItem(SS_SEAT_PREFIX + this.room); } catch {}
-      // Tell peers we are LEAVING (not merely dropping): they free our seat and
-      // release every card we owned so the table is interactable again.
-      if (this.claimSeat >= 0) this.bus.sendLeft({ id: this.self.id, seat: this.claimSeat });
-      this.seatClaims.clear();
-      // Fresh room → fresh handle. The next visit rolls a new KABAL name.
-      resetName();
-      this.self.name = getOrAssignName();
-      this.selfJoinedAt = Date.now();
-      this.self.seat = 0; this.claimSeat = 0;
-      await this.bus.disconnect();
-      this.resetTable();
-      this.room = newRoom();
-      this.header.setRoom(this.room);
-      this.initialDealLocal();
-      toast(t("ui.newRoom"));
-      await this.bus.connect(this.room, this.presencePayload());
+      // Behind the loader: leaving the old room, rotating our perspective back to
+      // seat 0 (we become the host of the fresh room) and dealing a new board all
+      // happen out of sight, so the table is final and upright the instant the
+      // loader lifts — no visible re-rotation or reshuffle.
+      showLoader();
+      try {
+        try { localStorage.removeItem(this.snapshotKey()); } catch {}
+        try { sessionStorage.removeItem(SS_SEAT_PREFIX + this.room); } catch {}
+        // We're leaving on purpose: drop the persisted identity for THIS room so
+        // we don't later try to reclaim a seat we deliberately vacated.
+        try { localStorage.removeItem(this.identKey(this.room)); } catch {}
+        // Tell peers we are LEAVING (not merely dropping): they free our seat and
+        // release every card we owned so the table is interactable again.
+        if (this.claimSeat >= 0) this.bus.sendLeft({ id: this.self.id, seat: this.claimSeat });
+        this.seatClaims.clear();
+        // Fresh room → fresh handle. The next visit rolls a new KABAL name.
+        resetName();
+        this.self.name = getOrAssignName();
+        this.selfJoinedAt = Date.now();
+        // We open the new room as its host: seat 0, first-player perspective.
+        this.self.seat = 0; this.claimSeat = 0;
+        this.self.color = SEAT_COLORS[0]!;
+        this.spectator = false;
+        this.header.setSpectatorMode(false);
+        await this.bus.disconnect();
+        this.resetTable();
+        this.room = newRoom();
+        this.writeIdentity();
+        // Re-apply the (now seat-0) perspective and re-measure BEFORE laying the
+        // deck out, so the pile geometry is computed against the upright board.
+        this.applyBoardPerspective();
+        this.measureBoard();
+        this.header.setRoom(this.room);
+        this.header.resetTimer();
+        this.initialDealLocal();
+        this.refreshZones();
+        await this.preloadAssets();
+        this.armFirstSync();
+        void this.bus.connect(this.room, this.presencePayload());
+        await Promise.race([this.firstSync, delay(1800)]);
+        toast(t("ui.newRoom"));
+      } finally {
+        hideLoader();
+      }
     });
   }
 

@@ -8,8 +8,9 @@
     "menu": "Menü",
     "rules": "Kurallar",
     "support": "Destek",
-    "leave": "Odayı sıfırla",
-    "reset": "Odayı sıfırla",
+    "leave": "Odadan çık",
+    "reset": "Odadan çık",
+    "exit": "Odadan çık",
     "resetDeck": "Desteyi sıfırla",
     "deckReset": "Deste toplanıp yeniden karıştırıldı.",
     "settings": "Ayarlar",
@@ -90,9 +91,9 @@
     "mobileNote": "Dokunmatik cihazlarda kartın üstüne uzun basarak eylem çubuğunu aç."
   },
   "leaveConfirm": {
-    "title": "Odayı sıfırla?",
-    "body": "Bu odadan ayrılırsın ve yeni bağlantıyla taze bir oda açılır. Burada sana ait kartlar diğer oyunculara serbest bırakılır.",
-    "leave": "Sıfırla"
+    "title": "Odadan çık?",
+    "body": "Bu odadan ayrılırsın ve yeni bağlantıyla taze bir oda açılır; oranın sahibi (host) sen olursun. Burada sana ait kartlar diğer oyunculara serbest bırakılır.",
+    "leave": "Çık"
   },
   "settings": {
     "title": "Ayarlar",

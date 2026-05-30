@@ -45,7 +45,7 @@ export function findStackOverlapping(state: BoardState, board: BoardSize, seedId
  * to the centroid of the stack. Z-indices are reassigned in order so the
  * gathered stack always sits on top of whatever else is on the board.
  */
-export function gatherStack(state: BoardState, ids: string[], focusNx?: number, focusNy?: number): void {
+export function gatherStack(state: BoardState, ids: string[], focusNx?: number, focusNy?: number, unifyRot?: number): void {
   if (!ids.length) return;
   let cx: number;
   let cy: number;
@@ -68,10 +68,13 @@ export function gatherStack(state: BoardState, ids: string[], focusNx?: number, 
     .map((id) => state.cards.get(id))
     .filter((c): c is CardState => !!c)
     .sort((a, b) => a.z - b.z);
-  // Unify orientation to the top card (highest z) so a pile of mixed 90°/180°
-  // cards squares up into one clean, aligned stack, the way you'd straighten a
-  // deck by hand.
-  const topRot = ordered.length ? ordered[ordered.length - 1]!.rot : 0;
+  // Unify orientation so a pile of mixed 90°/180° cards squares up into one
+  // clean, aligned stack, the way you'd straighten a deck by hand. When the
+  // caller supplies `unifyRot` (the angle that reads upright for the acting
+  // viewer) we use it; otherwise we fall back to the top card's rotation.
+  const topRot = unifyRot !== undefined
+    ? unifyRot
+    : (ordered.length ? ordered[ordered.length - 1]!.rot : 0);
   // v3.7: every card lands exactly on the focus point so the stack is a
   // single tight pile with no diagonal tail. Z is the only visual stride.
   for (const c of ordered) {
@@ -93,7 +96,7 @@ export function gatherStack(state: BoardState, ids: string[], focusNx?: number, 
  * environments without it) so a long-running session never hits 32-bit clock
  * overflow.
  */
-export function shuffleStack(state: BoardState, ids: string[]): void {
+export function shuffleStack(state: BoardState, ids: string[], unifyRot?: number): void {
   if (ids.length < 2) return;
   const rng = mulberry32(randomSeed());
   const order = ids.slice();
@@ -103,13 +106,15 @@ export function shuffleStack(state: BoardState, ids: string[]): void {
     order[i] = order[j]!;
     order[j] = tmp;
   }
-  // Unify orientation to the current top card, then face every card down.
+  // Unify orientation (viewer-upright when supplied, else the current top card),
+  // then face every card down.
   let topRot = 0;
   let topZ = -Infinity;
   for (const id of ids) {
     const c = state.cards.get(id);
     if (c && c.z > topZ) { topZ = c.z; topRot = c.rot; }
   }
+  if (unifyRot !== undefined) topRot = unifyRot;
   // Reassign z-indices in the new order, preserving positions
   const minZ = Math.min(...ids.map((id) => state.cards.get(id)?.z ?? 0));
   for (let i = 0; i < order.length; i++) {

@@ -96,8 +96,11 @@ export class RealtimeBus {
   private presenceListeners = new Set<Listener<PresencePlayer[]>>();
   private statusListeners = new Set<Listener<Status>>();
   private status: Status = "offline";
-  private cursorBucket = new TokenBucket(30, 30);
-  private opsBucket = new TokenBucket(10, 10);
+  private cursorBucket = new TokenBucket(40, 40);
+  // Card ops (patches): drag previews fire ~30/s plus commits, so a 10/s cap was
+  // silently dropping most movement/flip packets. Sized to comfortably carry a
+  // live drag without throttling, while still capping a runaway sender.
+  private opsBucket = new TokenBucket(60, 45);
   private holdBucket = new TokenBucket(20, 20);
   private patchVersion = 0;
 
@@ -163,7 +166,7 @@ export class RealtimeBus {
       if (!this.client) {
         this.client = createClient(this.config.supabaseUrl, this.config.supabaseAnonKey, {
           auth: { persistSession: false, autoRefreshToken: false, storageKey: "kabal-rt" },
-          realtime: { params: { eventsPerSecond: 20 } }
+          realtime: { params: { eventsPerSecond: 60 } }
         });
       }
       this.teardownChannel();
@@ -313,8 +316,9 @@ export class RealtimeBus {
     let b = this.recvBuckets.get(id);
     if (!b) {
       // Generous ceilings (well above legitimate send rates) that still cap a
-      // hostile peer: ~20 patch msgs/s, ~45 cursor msgs/s per sender.
-      b = { patch: new TokenBucket(40, 20), cursor: new TokenBucket(60, 45) };
+      // hostile peer. The patch ceiling must clear a live drag (~30/s previews
+      // plus commits) or peers would see stuttering, half-applied movement.
+      b = { patch: new TokenBucket(90, 60), cursor: new TokenBucket(80, 60) };
       this.recvBuckets.set(id, b);
     }
     return b;
