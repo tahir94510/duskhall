@@ -56,6 +56,11 @@
   width: 20px;
   height: 20px;
   margin-left: 8px;
+  /* The 14px glyph is centred in a 20px tap target, leaving a 3px optical gap to
+     the box edge. Pull the box 3px past the rail's right inset so the glyph's
+     outer edge lands exactly on the 14px inset — mirroring the player name + dot
+     at the other end of the rail (equal margins both sides). */
+  margin-right: -3px;
   border: 0;
   background: transparent;
   color: var(--ivory-dim);
