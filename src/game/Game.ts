@@ -68,6 +68,9 @@ export class Game {
   private tooltip!: Tooltip;
   private room = "";
   private patchVersion = 0;
+  // Monotonic logical clock for last-write-wins. Seeded from wall-clock but
+  // always advanced past anything we receive, so clock skew can't drop edits.
+  private clock = Date.now();
   private dirtyIds = new Set<string>();
   private flushHandle = 0;
   private dragPreviewIds = new Set<string>();
@@ -737,6 +740,23 @@ export class Game {
     // Keep the whole pile floating above the table, in order, while the 3D flip
     // plays so undercards never flash above a still-turning card.
     this.elevateDuringAnim(stack, FLIP_ANIM_MS);
+    // Real-pile flip: only the new top card (highest z after the flip) is visible
+    // mid-rotation; the rest are hidden so no underlying face ever shows through.
+    if (stack.length > 1) {
+      let topId = stack[0]!;
+      let topZ = -Infinity;
+      for (const cid of stack) {
+        const c = this.state.cards.get(cid);
+        if (c && c.z > topZ) { topZ = c.z; topId = cid; }
+      }
+      for (const cid of stack) {
+        if (cid !== topId) this.cardEls.get(cid)?.classList.add("is-flip-quiet");
+      }
+      window.setTimeout(() => {
+        for (const cid of stack) this.cardEls.get(cid)?.classList.remove("is-flip-quiet");
+        this.requestRender();
+      }, FLIP_ANIM_MS);
+    }
     this.scheduleFlush();
     void this.audio.play("flip");
   }
@@ -813,14 +833,23 @@ export class Game {
     }, 40);
   }
 
+  // Monotonic timestamp for a local edit; always ahead of anything received so
+  // a continuously-edited card converges regardless of cross-client clock skew.
+  private stamp(): number {
+    this.clock = Math.max(this.clock + 1, Date.now());
+    return this.clock;
+  }
+
   private flush(): void {
     if (!this.dirtyIds.size) return;
     this.patchVersion++;
-    const now = Date.now();
+    const now = this.stamp();
     const cards = Array.from(this.dirtyIds).slice(0, 200).map((id) => {
       const c = this.state.cards.get(id)!;
-      // Stamp the write time so peers can reject this if a newer edit beats it.
+      // Stamp with the monotonic clock + our id so peers resolve conflicts
+      // deterministically and skew can never reject this as stale.
       c.ts = now;
+      c.by = this.self.id;
       return { id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat, ts: c.ts };
     });
     this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards });
@@ -837,11 +866,12 @@ export class Game {
 
   private flushDragPreview(): void {
     if (!this.dragPreviewIds.size) return;
-    const now = Date.now();
+    const now = this.stamp();
     const cards = Array.from(this.dragPreviewIds).slice(0, 200).map((id) => {
       const c = this.state.cards.get(id);
       if (!c) return null;
       c.ts = now;
+      c.by = this.self.id;
       return { id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat, ts: c.ts };
     }).filter((c): c is PatchCard => !!c);
     if (cards.length === 0) { this.dragPreviewIds.clear(); return; }
@@ -964,12 +994,13 @@ export class Game {
     if (l.seat < 0) return;
     this.seatClaims.delete(l.seat);
     this.activeSeats.delete(l.seat);
-    const now = Date.now();
+    const now = this.stamp();
     let released = 0;
     for (const c of this.state.cards.values()) {
       if (c.ownerSeat === l.seat) {
         c.ownerSeat = null;
         c.ts = now;
+        c.by = this.self.id;
         this.dirtyIds.add(c.id);
         released++;
       }
@@ -1157,10 +1188,18 @@ export class Game {
   // packet can never clobber a newer local or remote edit.
   private applyPatch(p: CardPatch, isSnapshot: boolean): void {
     this.patchVersion = Math.max(this.patchVersion, p.v);
+    const writer = p.by || "";
     for (const upd of p.cards) {
       const c = this.state.cards.get(upd.id);
       if (!c) continue;
-      if (!isSnapshot && upd.ts < c.ts) continue; // reject stale write
+      // Never let a remote/stale packet disturb a card we are actively holding.
+      if (this.myHeldIds.includes(upd.id)) continue;
+      if (!isSnapshot) {
+        // Skew-proof LWW: newer ts wins; equal ts broken by writer id. Advancing
+        // our clock past everything we see lets our next edit win in turn.
+        const newer = upd.ts > c.ts || (upd.ts === c.ts && writer > (c.by ?? ""));
+        if (!newer) continue;
+      }
       c.x = upd.x;
       c.y = upd.y;
       c.z = upd.z;
@@ -1168,6 +1207,8 @@ export class Game {
       c.faceUp = upd.faceUp;
       c.ownerSeat = upd.ownerSeat;
       c.ts = upd.ts;
+      c.by = writer;
+      if (upd.ts > this.clock) this.clock = upd.ts;
       if (c.z > this.state.topZ) this.state.topZ = c.z;
     }
     // The authoritative board has arrived: the loader can lift without a jump.
