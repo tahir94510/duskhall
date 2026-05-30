@@ -86,9 +86,24 @@ or per-card extensions:
 
 Recommended: 640 × 928 px WebP under ~100 KB. See `public/cards/README.md`.
 
+### Table background (`public/background/`)
+
+Drop a single image to set the table surface. It is painted on the rotating
+board, so every seat shares the same surface turned to their own viewpoint, and
+it is kept separate from the card art and card backs so the sets never mix. Only
+the first image is used; when the folder is empty the default noble dark surface
+shows through and nothing is fetched.
+
+```json
+{ "available": [{ "id": "felt", "ext": "webp" }] }
+```
+
+Recommended: a roughly square image, 1600 × 1600 px or larger, calm and
+mid-to-dark so cards stay legible. See `public/background/README.md`.
+
 ### Audio (`public/audio/`)
 
-Effects and music live in separate folders — just drop files in, the manifest regenerates on build/dev:
+Effects and music live in separate folders. Just drop files in and the manifest regenerates on build/dev:
 
 ```
 public/audio/

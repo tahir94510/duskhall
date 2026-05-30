@@ -40,33 +40,6 @@ export function findStackOverlapping(state: BoardState, board: BoardSize, seedId
   return out;
 }
 
-export function topCardAtPoint(
-  state: BoardState,
-  boardEl: HTMLElement,
-  clientX: number,
-  clientY: number
-): CardState | null {
-  const rect = boardEl.getBoundingClientRect();
-  const localX = clientX - rect.left;
-  const localY = clientY - rect.top;
-  const { w, h } = cardSize();
-  let pick: CardState | null = null;
-  for (const c of state.cards.values()) {
-    const px = c.x * rect.width;
-    const py = c.y * rect.height;
-    if (localX >= px && localX <= px + w && localY >= py && localY <= py + h) {
-      if (!pick || c.z > pick.z) pick = c;
-    }
-  }
-  return pick;
-}
-
-export function findStackAtPoint(state: BoardState, boardEl: HTMLElement, clientX: number, clientY: number): string[] {
-  const top = topCardAtPoint(state, boardEl, clientX, clientY);
-  if (!top) return [];
-  return findStackOverlapping(state, { width: boardEl.clientWidth, height: boardEl.clientHeight }, top.id);
-}
-
 /**
  * Gather the stack around (focusNx, focusNy). When focus is omitted we fall back
  * to the centroid of the stack. Z-indices are reassigned in order so the
@@ -108,10 +81,16 @@ export function gatherStack(state: BoardState, ids: string[], focusNx?: number, 
 /**
  * Shuffle the stack in place. Cards do not move; only z-order and face-up state
  * are randomised. Visual jitter is applied via a CSS class by the caller.
+ *
+ * The shuffle runs only on the initiating client; the resulting z-order and
+ * face-down state are broadcast as a patch, so every peer ends up with the same
+ * pile. The seed is drawn from the crypto RNG (falling back to Math.random in
+ * environments without it) so a long-running session never hits 32-bit clock
+ * overflow.
  */
 export function shuffleStack(state: BoardState, ids: string[]): void {
   if (ids.length < 2) return;
-  const rng = mulberry32((performance.now() * 1000) | 0);
+  const rng = mulberry32(randomSeed());
   const order = ids.slice();
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
@@ -129,10 +108,37 @@ export function shuffleStack(state: BoardState, ids: string[]): void {
   }
 }
 
-export function setStackFaceUp(state: BoardState, ids: string[], faceUp: boolean): void {
-  for (const id of ids) {
-    const c = state.cards.get(id);
-    if (!c) continue;
-    c.faceUp = faceUp;
+/**
+ * Turn a whole stack over, the way you would flip a real pile of cards by hand.
+ * Two things happen at once:
+ *   1. The depth order reverses, so the card that sat on the bottom is now on
+ *      top (and vice versa).
+ *   2. Every card's face is toggled, so a face-down pile becomes face-up and a
+ *      face-up pile becomes face-down.
+ * The set of z slots the stack occupies is preserved, so the pile keeps sitting
+ * at the same layer relative to the rest of the board. A single card simply
+ * flips its face, matching `flipCard`.
+ */
+export function flipStackOver(state: BoardState, ids: string[]): void {
+  const ordered = ids
+    .map((id) => state.cards.get(id))
+    .filter((c): c is CardState => !!c)
+    .sort((a, b) => a.z - b.z);
+  if (!ordered.length) return;
+  const zSlots = ordered.map((c) => c.z);
+  const n = ordered.length;
+  for (let i = 0; i < n; i++) {
+    const c = ordered[i]!;
+    c.z = zSlots[n - 1 - i]!;
+    c.faceUp = !c.faceUp;
   }
+}
+
+// Seed source for the shuffle. Prefers the crypto RNG; degrades gracefully.
+function randomSeed(): number {
+  const c = (globalThis as { crypto?: Crypto }).crypto;
+  if (c && typeof c.getRandomValues === "function") {
+    return c.getRandomValues(new Uint32Array(1))[0]!;
+  }
+  return (Math.random() * 0x100000000) >>> 0;
 }

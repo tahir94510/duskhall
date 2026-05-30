@@ -1,6 +1,6 @@
 # Card front art
 
-**Just drop one image per card here — it works.** A build step scans this
+**Just drop one image per card here and it works.** A build step scans this
 folder and regenerates `manifest.json` automatically (no manual editing). Name
 the file with the card's `defId` and any accepted extension; the runtime loads
 it on the card's front face. Cards with no image show a clean blank front, and
@@ -14,7 +14,7 @@ manifest regenerates. On Vercel this happens automatically on every deploy.
 ## Specification
 
 - **Aspect ratio**: 1 : 1.45 (vertical). The runtime card frame uses this exact ratio.
-- **Recommended size**: **640 × 928 px** (WebP, lossy, q=85) — keeps each file under ~100 KB.
+- **Recommended size**: **640 × 928 px** (WebP, lossy, q=85), which keeps each file under ~100 KB.
 - **Bleed**: design to the edges; the front face is clipped to the card's 8 px corner radius.
 - **No transparency**: the back of the card is shown when the card is face-down, so the front art does not need transparency. Solid background recommended.
 - **Naming**: lowercase `defId`. The full list is below.

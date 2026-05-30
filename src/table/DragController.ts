@@ -1,7 +1,7 @@
 import type { BoardState } from "./types.js";
 
 export interface DragHooks {
-  /** False for spectators (room full) — blocks all card manipulation. */
+  /** False for spectators (room full), blocks all card manipulation. */
   canInteract(): boolean;
   getSelfSeat(): number;
   pointInSelfZone(x: number, y: number): boolean;
@@ -24,7 +24,7 @@ export interface DragHooks {
   /** Broadcast that we've grabbed / released these cards (ephemeral lock). */
   beginHold(ids: string[]): void;
   endHold(ids: string[]): void;
-  /** True if a peer currently holds this card — block local interaction. */
+  /** True if a peer currently holds this card, block local interaction. */
   isLocked(id: string): boolean;
   showContextBar(id: string, x: number, y: number): void;
   hideContextBar(): void;
@@ -212,7 +212,7 @@ export class DragController {
     this.hooks.endHold(s.ids);
 
     if (!s.dragging) {
-      // Mere click on a card — no drag, no place. Drop the held class and exit.
+      // Mere click on a card, no drag, no place. Drop the held class and exit.
       for (const id of s.ids) {
         const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
         if (el) el.classList.remove("is-held");
@@ -248,7 +248,7 @@ export class DragController {
       }
     }
 
-    // THEN write the final inline transform and toggle classes — all in the
+    // THEN write the final inline transform and toggle classes, all in the
     // same frame so the next render does not race against drop state.
     const m = this.hooks.boardMetrics();
     for (const id of s.ids) {

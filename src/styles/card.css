@@ -28,7 +28,7 @@
   transition: box-shadow var(--dur) var(--ease), filter var(--dur) var(--ease);
 }
 
-/* During a riffle the keyframe owns the transform — no competing transition. */
+/* During a riffle the keyframe owns the transform, so no competing transition. */
 .card.is-shuffling { transition: none; }
 
 /* A peer is holding this card: a subtle ivory dashed ring + not-allowed cursor
@@ -63,7 +63,7 @@
 
 /* Card back: a noble branded deck back. Deep black ground with a soft centre
    vignette, a fine inner frame, and the KABAL rhombus emblem centred at low
-   opacity — consistent with the logo, calm and elegant (no nested clutter). */
+   opacity, consistent with the logo, calm and elegant (no nested clutter). */
 .card__face--back {
   background:
     radial-gradient(120% 90% at 50% 50%, rgba(243, 239, 229, 0.05) 0%, rgba(243, 239, 229, 0) 58%),

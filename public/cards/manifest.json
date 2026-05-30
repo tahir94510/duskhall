@@ -1,47 +1,7 @@
 {
   "available": [
     {
-      "id": "timeRift",
-      "ext": "webp"
-    },
-    {
-      "id": "veilOfVoid",
-      "ext": "webp"
-    },
-    {
-      "id": "crimsonMonolith",
-      "ext": "webp"
-    },
-    {
-      "id": "necromancersEye",
-      "ext": "webp"
-    },
-    {
-      "id": "etherStrike",
-      "ext": "webp"
-    },
-    {
-      "id": "shadowTheft",
-      "ext": "webp"
-    },
-    {
       "id": "ancientSight",
-      "ext": "webp"
-    },
-    {
-      "id": "mindParasite",
-      "ext": "webp"
-    },
-    {
-      "id": "twistOfFate",
-      "ext": "webp"
-    },
-    {
-      "id": "silence",
-      "ext": "webp"
-    },
-    {
-      "id": "karmicReflection",
       "ext": "webp"
     },
     {
@@ -49,7 +9,11 @@
       "ext": "webp"
     },
     {
-      "id": "runicWarden",
+      "id": "crimsonMonolith",
+      "ext": "webp"
+    },
+    {
+      "id": "etherStrike",
       "ext": "webp"
     },
     {
@@ -57,7 +21,43 @@
       "ext": "webp"
     },
     {
+      "id": "karmicReflection",
+      "ext": "webp"
+    },
+    {
+      "id": "mindParasite",
+      "ext": "webp"
+    },
+    {
+      "id": "necromancersEye",
+      "ext": "webp"
+    },
+    {
+      "id": "runicWarden",
+      "ext": "webp"
+    },
+    {
       "id": "shadowSlayer",
+      "ext": "webp"
+    },
+    {
+      "id": "shadowTheft",
+      "ext": "webp"
+    },
+    {
+      "id": "silence",
+      "ext": "webp"
+    },
+    {
+      "id": "timeRift",
+      "ext": "webp"
+    },
+    {
+      "id": "twistOfFate",
+      "ext": "webp"
+    },
+    {
+      "id": "veilOfVoid",
       "ext": "webp"
     }
   ]

@@ -1,5 +1,5 @@
 :root {
-  /* Ink & ivory: pure neutral greys — no blue/purple cast. */
+  /* Ink and ivory: pure neutral greys, no blue/purple cast. */
   --ink: #000000;
   --ink-2: #060606;
   --ash: #111111;
@@ -27,7 +27,7 @@
   --r-zone: 12px;
   --r-pill: 999px;
 
-  /* Shadow — restrained */
+  /* Shadow: restrained */
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.45);
   --shadow-card-held: 0 14px 32px rgba(0, 0, 0, 0.55);
   --shadow-panel: 0 20px 50px rgba(0, 0, 0, 0.55);
@@ -53,7 +53,7 @@
   --z-toast: 1100;
   --z-held: 9999;
 
-  /* Type — single family, restrained spacing */
+  /* Type: single family, restrained spacing */
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "Inter", system-ui, sans-serif;
 }

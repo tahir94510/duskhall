@@ -19,7 +19,7 @@ import {
   findStackOverlapping,
   gatherStack,
   shuffleStack,
-  setStackFaceUp
+  flipStackOver
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, type Seat } from "../table/rotation.js";
 import { DECK_NX, DECK_NY } from "../table/constants.js";
@@ -227,7 +227,7 @@ export class Game {
       showContextBar: (id, x, y) => this.contextBar.show(id, x, y),
       hideContextBar: () => this.contextBar.hide(),
       emitCursor: (x, y) => {
-        // Spectators are silent observers — never broadcast a cursor (that was
+        // Spectators are silent observers, never broadcast a cursor (that was
         // the source of the seat-0 "impostor" ghost).
         if (this.spectator) return;
         // hide cursor when pointer is inside our own zone
@@ -278,7 +278,7 @@ export class Game {
     const baseNy = DECK_NY - cardH / (2 * this.boardSize.height);
     let z = 1;
     for (const card of deck) {
-      // Every card sits exactly on the Deck slot centre — a clean single pile,
+      // Every card sits exactly on the Deck slot centre, a clean single pile,
       // no diagonal fan. Depth is conveyed purely by z-order.
       const cardState: CardState = {
         id: card.instanceId,
@@ -356,7 +356,7 @@ export class Game {
     }, { passive: true });
 
     // Wheel interactions. A single global cooldown means every tick behaves
-    // identically — no "first three work then it breaks" inconsistency.
+    // identically, no "first three work then it breaks" inconsistency.
     window.addEventListener("wheel", (e) => {
       if (this.modal.isOpen()) return;
       if (this.spectator) return;
@@ -429,7 +429,7 @@ export class Game {
       const a1 = (4 + Math.random() * 4) * (Math.random() < 0.5 ? 1 : -1);
       const a2 = (3 + Math.random() * 3) * (a1 > 0 ? -1 : 1);
       // The keyframe owns the transform while shuffling, so it must carry the
-      // card's translate too — otherwise it would snap to 0,0 and just spin.
+      // card's translate too, otherwise it would snap to 0,0 and just spin.
       el.style.setProperty("--tx", `${c.x * w}px`);
       el.style.setProperty("--ty", `${c.y * h}px`);
       el.style.setProperty("--base-rot", `${c.rot * 90}deg`);
@@ -571,17 +571,9 @@ export class Game {
       if (c && c.ownerSeat != null && c.ownerSeat !== this.self.seat) return;
       if (this.isLockedByOther(cid)) return;
     }
-    // Target orientation is the inverse of the topmost (highest-z) card. This
-    // keeps mixed stacks consistent and gives uniform stacks a clean toggle.
-    let topCard = this.state.cards.get(id);
-    for (const cid of stack) {
-      const c = this.state.cards.get(cid);
-      if (!c) continue;
-      if (!topCard || c.z > topCard.z) topCard = c;
-    }
-    if (!topCard) return;
-    const target = !topCard.faceUp;
-    setStackFaceUp(this.state, stack, target);
+    // Turn the whole pile over like a real stack of cards: the depth order
+    // reverses (the bottom card ends up on top) and every face is toggled.
+    flipStackOver(this.state, stack);
     for (const cid of stack) this.dirtyIds.add(cid);
     this.scheduleFlush();
     void this.audio.play("flip");
@@ -704,7 +696,7 @@ export class Game {
   private applyPresence(players: PresencePlayer[]): void {
       // Stable seating by join time: the earliest joiner takes seat 0, next
       // seat 1, etc. A player leaving never reshuffles the seats of those who
-      // remain — their joinedAt timestamps are unchanged. Ties (e.g. two
+      // remain, their joinedAt timestamps are unchanged. Ties (e.g. two
       // clients with identical clocks) break deterministically on id.
       const roster = players.length ? players.slice() : [this.presencePayload()];
       if (!roster.some((p) => p.id === this.self.id)) roster.push(this.presencePayload());
@@ -744,7 +736,7 @@ export class Game {
         }
       }
       this.refreshZoneActivity();
-      // Seat / concealment / perspective may have changed — repaint.
+      // Seat / concealment / perspective may have changed, repaint.
       this.requestRender();
   }
 
@@ -757,7 +749,7 @@ export class Game {
     });
     this.bus.onCursor((c) => this.renderCursor(c));
     this.bus.onStatus((s) => {
-      // NOTE: we deliberately do NOT push a snapshot on connect — a fresh
+      // NOTE: we deliberately do NOT push a snapshot on connect, a fresh
       // joiner pushing their just-dealt board would clobber the live game.
       // Instead the bus sends `hello` on every (re)connect and the authoritative
       // peer answers it (see respondToHello), which also recovers state after a
@@ -773,7 +765,7 @@ export class Game {
 
   // Exactly one authoritative peer answers a newcomer's hello (the lowest-seated
   // player OTHER than the asker), so a join/reconnect pulls one snapshot instead
-  // of an N-peer storm — and the asker never answers itself.
+  // of an N-peer storm, and the asker never answers itself.
   private respondToHello(askerId: string): void {
     if (this.spectator) return;
     const otherSeats = Array.from(this.players.values())

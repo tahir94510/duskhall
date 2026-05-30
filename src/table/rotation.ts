@@ -30,7 +30,7 @@ export function seatRotationDeg(mySeat: Seat): number {
 // board is rotated by CSS about the cards-layer centre, so screen<->canonical
 // mapping must rotate the pixel offset from that centre. (An earlier version
 // rotated the [0,1] fraction about (0.5, 0.5), which silently assumed a SQUARE
-// board and skewed cursors/drops on the ±90° side seats — that is removed.)
+// board and skewed cursors/drops on the ±90° side seats, that is removed.)
 export function rotateVec(dx: number, dy: number, deg: number): [number, number] {
   const rad = (deg * Math.PI) / 180;
   const cos = Math.cos(rad);

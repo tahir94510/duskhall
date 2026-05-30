@@ -27,7 +27,7 @@ export interface PatchCard {
   rot: number;
   faceUp: boolean;
   ownerSeat: number | null;
-  /** Last-write-wins stamp (wall-clock ms) — receivers reject stale updates. */
+  /** Last-write-wins stamp (wall-clock ms), receivers reject stale updates. */
   ts: number;
 }
 
@@ -116,8 +116,8 @@ export class RealtimeBus {
     await this.openChannel();
   }
 
-  /** Update the presence payload used on (re)connections — e.g. after a reseat
-   *  or rename — without forcing an immediate rejoin. */
+  /** Update the presence payload used on (re)connections, e.g. after a reseat
+   *  or rename, without forcing an immediate rejoin. */
   updateMe(me: PresencePlayer): void {
     this.desiredMe = me;
     if (this.channel && this.status === "online") void this.channel.track(me).catch(() => {});

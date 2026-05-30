@@ -131,12 +131,12 @@ export class AudioEngine {
 
   async play(name: SfxName): Promise<void> {
     if (this.muted) return;
-    // Never create / touch an AudioContext before the first user gesture —
+    // Never create / touch an AudioContext before the first user gesture,
     // otherwise the browser logs "AudioContext was not allowed to start".
     if (!this.booted) return;
 
     // Debounce machine-gun retriggers of the SAME sound. This is what keeps
-    // rapid actions from doubling into a distorted blast — without ever cutting
+    // rapid actions from doubling into a distorted blast, without ever cutting
     // a sound short (which is what produced the choppy/clicky audio before).
     const nowMs = performance.now();
     const last = this.lastPlayedAt.get(name) ?? 0;
@@ -262,7 +262,7 @@ export class AudioEngine {
           }
         }
 
-        // Legacy { available: [...] } — flat /audio/<name>.<ext> layout.
+        // Legacy { available: [...] }, flat /audio/<name>.<ext> layout.
         if (Array.isArray(data.available)) {
           for (const e of data.available as Array<string | { id: string; ext?: string }>) {
             const id = typeof e === "string" ? e : e?.id;
@@ -500,7 +500,7 @@ export class AudioEngine {
       el.volume = this.effectiveMusic();
     }
     el.play().catch(() => {
-      // Autoplay blocked — retry once on the next user gesture.
+      // Autoplay blocked, retry once on the next user gesture.
       const retry = () => {
         el.play().catch(() => {});
         window.removeEventListener("pointerdown", retry);
