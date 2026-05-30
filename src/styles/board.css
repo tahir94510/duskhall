@@ -29,25 +29,43 @@
   pointer-events: none;
 }
 
+/* While the loader is still up, apply the seat rotation instantly (no animation)
+   so the board is already at the correct angle the instant it is revealed, and
+   re-seats only animate during live play. */
+body:not(.is-ready) .board__perspective { transition: none; }
+
 .board__perspective > * { pointer-events: auto; }
 
-/* Table-surface background. Sits behind the slots and cards and rotates with
-   the board, so every seat shares one global surface turned to their own view.
-   Empty by default: the noble dark ground shows through until an image is
-   dropped into public/background/. The art is faded in once it has loaded. */
-.board__bg {
-  position: absolute;
+/* Full-bleed, viewport-fixed background behind everything. It does NOT rotate
+   with the board, so it always covers the whole screen at any seat with no
+   black bars and never clips. When no image is configured an elegant built-in
+   gradient surface shows; a dropped image replaces it via inline background-image. */
+.app-bg {
+  position: fixed;
   inset: 0;
+  z-index: var(--z-bg);
   pointer-events: none;
   background-repeat: no-repeat;
-  background-position: center;
+  background-position: center center;
   background-size: cover;
-  opacity: 0;
-  transition: opacity var(--dur-slow) var(--ease);
-  border-radius: var(--r-card);
+  background-color: #050507;
+  background-image:
+    radial-gradient(120% 90% at 50% 36%, rgba(74, 66, 98, 0.20) 0%, rgba(20, 18, 28, 0) 56%),
+    radial-gradient(150% 120% at 50% 122%, rgba(42, 37, 58, 0.26) 0%, rgba(8, 8, 12, 0) 62%),
+    linear-gradient(180deg, #08070b 0%, #050506 52%, #030304 100%);
 }
 
-.board__bg.is-loaded { opacity: 1; }
+/* Gentle scrim above the background and below the play surface: softens bright
+   art and steadies contrast for card legibility, without hiding deck/discard. */
+.app-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-scrim);
+  pointer-events: none;
+  background:
+    radial-gradient(118% 100% at 50% 50%, rgba(0, 0, 0, 0) 44%, rgba(0, 0, 0, 0.34) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.20) 0%, rgba(0, 0, 0, 0.04) 24%, rgba(0, 0, 0, 0.04) 76%, rgba(0, 0, 0, 0.24) 100%);
+}
 
 .board__layer {
   position: absolute;
@@ -84,15 +102,26 @@
   pointer-events: none;
 }
 
+/* Deck and discard markers: centred on the board, placed half a card plus a
+   fixed gutter to either side of centre. Because the offset is in card-relative
+   pixels, they stay snugly side-by-side and never overlap at any screen size. */
 .dock__slot {
   position: absolute;
+  left: 50%;
+  top: 50%;
   width: var(--card-w);
   height: var(--card-h);
   border-radius: var(--r-card);
   border: 1px dashed rgba(243, 239, 229, 0.08);
   background: transparent;
-  transform: translate(-50%, -50%);
   transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+
+.dock__slot--deck {
+  transform: translate(calc(-50% - (var(--card-w) + var(--dock-gutter)) / 2), -50%);
+}
+.dock__slot--discard {
+  transform: translate(calc(-50% + (var(--card-w) + var(--dock-gutter)) / 2), -50%);
 }
 
 .dock__slot.is-hot {

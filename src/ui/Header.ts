@@ -1,5 +1,6 @@
-import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER } from "./icons.js";
+import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_JOIN, ICON_COPY } from "./icons.js";
 import { t, getLocale, loadLocale, type Locale } from "../i18n/index.js";
+import { inviteUrl } from "../net/room.js";
 
 export interface HeaderHooks {
   onRules(): void;
@@ -9,15 +10,19 @@ export interface HeaderHooks {
   onSettings(): void;
   onShortcuts(): void;
   onLangChange(loc: Locale): void;
+  /** Connect to a specific room by its 6-char code. */
+  onJoinRoom(code: string): void;
 }
 
 export class Header {
   el: HTMLElement;
   private moreBtn: HTMLButtonElement;
   private menu: HTMLDivElement;
-  private timerVal: HTMLSpanElement;
+  private timerVal: HTMLElement;
+  private roomVal: HTMLElement;
   private brandLink: HTMLAnchorElement;
   private roomStart = performance.now();
+  private roomSlug = "";
   private timerHandle = 0;
   private menuOpen = false;
 
@@ -33,11 +38,22 @@ export class Header {
         <span class="icon-btn__badge">1</span>
       </button>
       <div class="header__menu" role="menu">
-        <div class="header__menu-row header__menu-timer">
+        <div class="header__menu-row header__menu-row--static">
+          <span class="header__menu-icon">${ICON_ROOM}</span>
+          <span class="header__menu-label" data-i18n="ui.roomCode">${esc(t("ui.roomCode"))}</span>
+          <button type="button" class="header__secret is-blurred" data-action="reveal" data-role="room" title="${esc(t("ui.reveal"))}">------</button>
+          <button type="button" class="icon-btn icon-btn--sm" data-action="room-copy" aria-label="${esc(t("ui.copyLink"))}" title="${esc(t("ui.copyLink"))}">${ICON_COPY}</button>
+        </div>
+        <div class="header__menu-row header__menu-row--static header__menu-timer">
           <span class="header__menu-icon">${ICON_TIMER}</span>
           <span class="header__menu-label">${esc(t("ui.timer"))}</span>
-          <span class="header__menu-value" data-role="timer">00:00</span>
+          <button type="button" class="header__secret is-blurred" data-action="reveal" data-role="timer">00:00</button>
         </div>
+        <form class="header__join" data-role="join-form">
+          <input class="header__join-input" data-role="join-input" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${esc(t("ui.joinPlaceholder"))}" aria-label="${esc(t("ui.joinAria"))}" />
+          <button type="submit" class="header__join-btn" data-action="join" title="${esc(t("ui.join"))}">${ICON_JOIN}<span data-i18n="ui.join">${esc(t("ui.join"))}</span></button>
+        </form>
+        <div class="header__menu-divider"></div>
         <button type="button" class="header__menu-row" data-action="settings" role="menuitem">
           <span class="header__menu-icon">${ICON_SETTINGS}</span>
           <span class="header__menu-label" data-i18n="ui.settings">${esc(t("ui.settings"))}</span>
@@ -78,7 +94,8 @@ export class Header {
     // AND hides them from assistive tech, so focus can never get stuck inside a
     // hidden subtree (the cause of the "aria-hidden on a focused element" warn).
     this.menu.inert = true;
-    this.timerVal = this.menu.querySelector<HTMLSpanElement>('[data-role="timer"]')!;
+    this.timerVal = this.menu.querySelector<HTMLElement>('[data-role="timer"]')!;
+    this.roomVal = this.menu.querySelector<HTMLElement>('[data-role="room"]')!;
     this.bind();
     this.refreshLocale();
     this.startTimer();
@@ -124,6 +141,45 @@ export class Header {
     };
     this.menu.querySelector<HTMLButtonElement>('[data-lang="en"]')?.addEventListener("click", switchLang("en"));
     this.menu.querySelector<HTMLButtonElement>('[data-lang="tr"]')?.addEventListener("click", switchLang("tr"));
+
+    // Reveal/blur a secret (room code or timer) on click; the menu does not
+    // close so you can read it, copy it, then re-blur with another click.
+    this.menu.querySelectorAll<HTMLButtonElement>('[data-action="reveal"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        btn.classList.toggle("is-blurred");
+      });
+    });
+
+    // Copy the invite link for the current room.
+    this.menu.querySelector<HTMLButtonElement>('[data-action="room-copy"]')?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!this.roomSlug) return;
+      void navigator.clipboard?.writeText(inviteUrl(this.roomSlug)).catch(() => {});
+    });
+
+    // Join a room by code.
+    const joinForm = this.menu.querySelector<HTMLFormElement>('[data-role="join-form"]');
+    const joinInput = this.menu.querySelector<HTMLInputElement>('[data-role="join-input"]');
+    joinForm?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const code = (joinInput?.value || "").trim().toUpperCase();
+      if (!/^[A-Z0-9]{6}$/.test(code)) {
+        joinInput?.classList.add("is-error");
+        window.setTimeout(() => joinInput?.classList.remove("is-error"), 600);
+        return;
+      }
+      if (code === this.roomSlug) { this.closeMenu(); return; }
+      if (joinInput) joinInput.value = "";
+      this.closeMenu();
+      this.hooks.onJoinRoom(code);
+    });
+    // Keep typing inside the input from bubbling out and closing the menu.
+    joinInput?.addEventListener("keydown", (e) => e.stopPropagation());
+    joinInput?.addEventListener("pointerdown", (e) => e.stopPropagation());
   }
 
   private toggleMenu(): void {
@@ -135,6 +191,8 @@ export class Header {
     this.menu.inert = false;
     this.menu.classList.add("is-visible");
     this.moreBtn.setAttribute("aria-expanded", "true");
+    // Secrets (room code, timer) always start blurred each time the menu opens.
+    this.menu.querySelectorAll<HTMLElement>(".header__secret").forEach((s) => s.classList.add("is-blurred"));
   }
   private closeMenu(): void {
     this.menuOpen = false;
@@ -165,7 +223,9 @@ export class Header {
     }
   }
 
-  setRoom(_slug: string): void {
+  setRoom(slug: string): void {
+    this.roomSlug = slug;
+    this.roomVal.textContent = slug || "------";
     this.roomStart = performance.now();
     this.tick();
   }

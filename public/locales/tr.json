@@ -19,6 +19,11 @@
     "cancel": "Vazgeç",
     "confirm": "Onayla",
     "room": "Oda",
+    "roomCode": "Oda kodu",
+    "reveal": "Göstermek veya gizlemek için dokun",
+    "join": "Katıl",
+    "joinPlaceholder": "Oda kodu",
+    "joinAria": "Katılmak için oda kodunu gir",
     "copyLink": "Davet bağlantısını kopyala",
     "linkCopied": "Davet bağlantısı kopyalandı",
     "newRoom": "Yeni bir oda açıldı.",
@@ -30,10 +35,7 @@
     "deck": "Deste",
     "open": "Açık",
     "discard": "Çöplük",
-    "seatSelf": "Sen",
-    "seatOpponent": "Karşı",
-    "seatLeft": "Sol",
-    "seatRight": "Sağ"
+    "youSuffix": " (sen)"
   },
   "shortcutsList": {
     "title": "Kısayollar",

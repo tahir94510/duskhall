@@ -90,16 +90,16 @@ export class DragController {
 
     // Ownership guard: a card claimed by a rival seat cannot be picked up or
     // flipped by anyone else. Sahipsiz (ownerSeat=null) kart serbest kalır.
+    // Rejection is SILENT: no sound, no flip, no effect, so clicking a rival's
+    // private card does nothing at all.
     const seedCard = this.state.cards.get(id);
     if (seedCard && seedCard.ownerSeat != null && seedCard.ownerSeat !== this.hooks.getSelfSeat()) {
       e.preventDefault();
-      this.hooks.playSfx("snap");
       return;
     }
     // Hold-lock: a card a peer is actively holding is off-limits until released.
     if (this.hooks.isLocked(id)) {
       e.preventDefault();
-      this.hooks.playSfx("snap");
       return;
     }
 

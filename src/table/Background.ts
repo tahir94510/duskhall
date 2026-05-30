@@ -1,12 +1,12 @@
-// Table-surface background art. Drop one image into public/background/ and list
-// it in public/background/manifest.json (the Vite plugin writes that file for
-// you from whatever is in the folder). The image is painted on a layer inside
-// the rotating board, so it behaves as the shared table felt: every seat sees
-// the same surface, turned to match their own viewpoint. This is intentionally
-// separate from the card backs (public/cards/) so the two asset sets never mix.
+// Full-bleed table background art. Drop one image into public/background/ and
+// list it in public/background/manifest.json (the Vite plugin writes that file
+// for you from whatever is in the folder). The image is painted on a fixed,
+// viewport-filling layer behind everything, so it covers the whole screen at any
+// seat with no black bars and never clips. It is intentionally separate from the
+// card art (public/cards/) and the card back, so the two asset sets never mix.
 //
-// When the folder is empty no request is made and the board keeps its default
-// noble dark surface, so a fresh checkout shows zero 404s in the console.
+// When the folder is empty no request is made and an elegant built-in gradient
+// surface (defined in CSS) shows through, so a fresh checkout shows zero 404s.
 
 interface BackgroundManifest {
   available: Array<{ id: string; ext: string }> | string[];
@@ -30,20 +30,24 @@ function resolveBackgroundUrl(): Promise<string | null> {
   return urlPromise;
 }
 
-// Paint the resolved background onto the given layer. If no image is configured
-// the layer stays empty and the default surface (defined in CSS) shows through.
+// Resolve, preload and paint the background onto the given layer. The returned
+// promise settles once the image has loaded (or once we know there is none), so
+// the loading screen can wait on it and the surface never flashes in half-drawn.
+// If no image is configured, the built-in CSS gradient stays in place.
 export function applyTableBackground(layer: HTMLElement): Promise<void> {
-  return resolveBackgroundUrl().then((url) => {
-    if (!url) return;
-    // Preload first so the felt never flashes a half-loaded image.
-    const probe = new Image();
-    probe.onload = () => {
-      layer.style.backgroundImage = `url("${url}")`;
-      layer.classList.add("is-loaded");
-    };
-    probe.onerror = () => {
-      // Keep the default surface; stay quiet so the console stays clean.
-    };
-    probe.src = url;
-  });
+  return resolveBackgroundUrl().then(
+    (url) =>
+      new Promise<void>((resolve) => {
+        if (!url) { resolve(); return; }
+        const probe = new Image();
+        probe.onload = () => {
+          layer.style.backgroundImage = `url("${url}")`;
+          layer.classList.add("is-loaded");
+          resolve();
+        };
+        // Keep the default gradient surface on error; stay quiet for a clean console.
+        probe.onerror = () => resolve();
+        probe.src = url;
+      })
+  );
 }

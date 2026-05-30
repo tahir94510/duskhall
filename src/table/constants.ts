@@ -1,13 +1,12 @@
-// Canonical normalised positions for the central dock. Slot DOM and snap
-// math both read from this single source of truth so they can never drift.
+// Central dock geometry. The deck and discard sit side-by-side, centred on the
+// board, separated by a fixed pixel gutter so they are always visually adjacent
+// yet never overlap, from a 320px phone up to 4K. The CSS markers (board.css)
+// and the deal/​reset math (Game.ts) both derive from these same numbers so they
+// can never drift apart.
 
-// Deck and discard sit symmetrically either side of centre with a real gap.
-// (They were 0.48 / 0.52, only 4% apart, which makes the two slots overlap at
-//  every realistic board size, worst of all on phones. 0.40 / 0.60 keeps them
-//  central but visually distinct from 320px up to 4K.)
-export const DECK_NX = 0.40;
+// Vertical centre line of the dock (canonical fraction).
 export const DECK_NY = 0.5;
-export const DISCARD_NX = 0.60;
 export const DISCARD_NY = 0.5;
 
-export const DOCK_SNAP_RADIUS = 0.09;
+// Gap in CSS pixels between the deck and discard cards.
+export const DOCK_GUTTER_PX = 14;

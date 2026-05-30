@@ -49,6 +49,15 @@ export function newRoom(): string {
   return slug;
 }
 
+// Switch the URL to an explicit room code (used by "join by code"). Returns the
+// normalised slug, or null if the code is not a valid 6-char room code.
+export function setRoomSlug(slug: string): string | null {
+  const s = slug.trim().toUpperCase();
+  if (!SLUG_RE.test(s)) return null;
+  writeSlugToUrl(s);
+  return s;
+}
+
 export function inviteUrl(slug: string): string {
   const origin = window.location.origin;
   return `${origin}/${slug}`;

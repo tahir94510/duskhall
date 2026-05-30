@@ -4,6 +4,7 @@ import { detectLocale, loadLocale, t } from "./i18n/index.js";
 import { loadConfig, type RuntimeConfig } from "./net/config.js";
 import { RealtimeBus } from "./net/realtime.js";
 import { Game } from "./game/Game.js";
+import { hideLoader } from "./ui/loader.js";
 
 function setMeta(name: string, content: string, attr: "name" | "property" = "name"): void {
   let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${name}"]`);
@@ -55,10 +56,13 @@ async function boot(): Promise<void> {
   if (!host) return;
   const game = new Game({ host, bus, config });
   await game.mount();
+  hideLoader();
 }
 
 function showBootFail(err: unknown): void {
   console.error("KABAL boot failed", err);
+  // Drop the loader so the failure card is visible.
+  document.getElementById("kabal-loader")?.remove();
   const fail = document.getElementById("boot-fail");
   if (!fail) return;
   fail.removeAttribute("hidden");

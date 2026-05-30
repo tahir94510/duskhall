@@ -88,18 +88,18 @@ Recommended: 640 × 928 px WebP under ~100 KB. See `public/cards/README.md`.
 
 ### Table background (`public/background/`)
 
-Drop a single image to set the table surface. It is painted on the rotating
-board, so every seat shares the same surface turned to their own viewpoint, and
-it is kept separate from the card art and card backs so the sets never mix. Only
-the first image is used; when the folder is empty the default noble dark surface
-shows through and nothing is fetched.
+Drop a single image to set the backdrop. It is painted full-bleed and fixed
+behind everything, so it covers the whole screen at every seat with no black bars
+(it does not rotate with the board). It is kept separate from the card art and
+card backs so the sets never mix. Only the first image is used; when the folder
+is empty an elegant built-in gradient backdrop is used and nothing is fetched.
 
 ```json
-{ "available": [{ "id": "felt", "ext": "webp" }] }
+{ "available": [{ "id": "backdrop", "ext": "webp" }] }
 ```
 
-Recommended: a roughly square image, 1600 × 1600 px or larger, calm and
-mid-to-dark so cards stay legible. See `public/background/README.md`.
+Recommended: a large image, 1600 px or wider, calm and mid-to-dark so cards stay
+legible (a scrim already darkens the edges). See `public/background/README.md`.
 
 ### Audio (`public/audio/`)
 
