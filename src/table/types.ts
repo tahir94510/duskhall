@@ -10,11 +10,12 @@ export interface CardState {
   rot: number;
   faceUp: boolean;
   ownerSeat: number | null;
-  // Last-write-wins logical stamp: wall-clock ms of the last edit to this card.
-  // A patch is applied to a card only when its stamp is >= the local one, so a
-  // late/out-of-order packet can never clobber a newer state. (Replaces the old
-  // unused `v` field, which was set but never compared.)
+  // Last-write-wins logical stamp: a monotonic clock (seeded from wall-clock ms
+  // but always advanced past anything received) so cross-client clock skew can
+  // never make a peer reject a newer edit as "stale". Ties broken by writer id.
   ts: number;
+  // Id of the client that last wrote this card; the tiebreaker for equal ts.
+  by?: string;
 }
 
 export interface BoardState {

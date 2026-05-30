@@ -34,6 +34,11 @@
    never flash above a still-animating card. */
 .card.is-animating { z-index: var(--z-anim); }
 
+/* During a STACK flip only the new top card animates; the rest are hidden for the
+   flip so no underlying face ever shows through the rotation (a real pile turns
+   over as one piece). Restored the instant the flip settles. */
+.card.is-flip-quiet { visibility: hidden; }
+
 /* During a riffle the keyframe owns the transform, so no competing transition. */
 .card.is-shuffling { transition: none; }
 
