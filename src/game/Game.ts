@@ -9,6 +9,7 @@ import { Modal } from "../ui/Modal.js";
 import { openRulesModal } from "../ui/RulesModal.js";
 import { openSupportModal } from "../ui/SupportModal.js";
 import { openLeaveConfirm } from "../ui/LeaveConfirm.js";
+import { openConfirm } from "../ui/ConfirmModal.js";
 import { openShortcutsModal } from "../ui/ShortcutsPanel.js";
 import { openSettingsModal } from "../ui/SettingsModal.js";
 import { ContextBar } from "../ui/ContextBar.js";
@@ -25,14 +26,23 @@ import {
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, type Seat } from "../table/rotation.js";
 import { DECK_NY, DOCK_GUTTER_PX } from "../table/constants.js";
-import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, HoldMsg } from "../net/realtime.js";
+import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, HoldMsg, LeftMsg, SeatClaim } from "../net/realtime.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
 import { getOrAssignName, resetName } from "../util/names.js";
 
 const SEAT_COUNT = 4;
 const SEAT_COLORS = ["#f3efe5", "#cdc8bc", "#a09c92", "#79766f"];
+// Temporary z-band for cards mid-animation (flip/shuffle/held). Sits above the
+// static card layer (--z-card) but below cursors (--z-cursor: 600), so an
+// animating pile floats over the table yet never covers peer cursors/header.
+const ANIM_Z_BASE = 500;
+// Animation durations (kept slightly above the CSS transition/keyframe lengths
+// so the z-elevation never clears before the visual settles).
+const FLIP_ANIM_MS = 340;
+const SHUFFLE_ANIM_MS = 400;
 const SS_SNAPSHOT_PREFIX = "kabal:snap:";
+const SS_SEAT_PREFIX = "kabal:seat:";
 const SS_CLIENT_ID = "kabal:cid";
 const LIVE_CID_PREFIX = "kabal:livecid:";
 
@@ -74,8 +84,12 @@ export class Game {
   private spectator = false;
   private cursorHiddenSent = false;
   private selfJoinedAt = Date.now();
-  private lastSeenAt = new Map<string, number>();
-  private staleSweepHandle = 0;
+  // Persistent seat ownership keyed by seat index. A claim survives a network
+  // drop (the seat shows as "dropped"/dimmed) and is only cleared by an explicit
+  // `left` broadcast, so a disconnected player never loses their seat or cards.
+  private seatClaims = new Map<number, { id: string; name: string; joinedAt: number }>();
+  private activeSeats = new Set<number>();
+  private lastRoster: PresencePlayer[] = [];
 
   constructor(deps: GameDeps) {
     this.host = deps.host;
@@ -98,11 +112,10 @@ export class Game {
     this.header = new Header({
       onRules: () => { void this.audio.play("ui-open"); openRulesModal(this.modal); },
       onSupport: () => { void this.audio.play("ui-open"); openSupportModal(this.modal, this.config.supportUrl); },
-      onReset: () => { void this.audio.play("ui-open"); this.handleReset(); },
-      onResetDeck: () => { if (!this.spectator) this.resetDeck(); },
-      onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio); },
+      onReset: () => { if (this.spectator) return; void this.audio.play("ui-open"); this.handleReset(); },
+      onResetDeck: () => { if (this.spectator) return; this.confirmResetDeck(); },
+      onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio, () => this.onLocale()); },
       onShortcuts: () => { void this.audio.play("ui-open"); openShortcutsModal(this.modal); },
-      onLangChange: () => this.onLocale(),
       onJoinRoom: (code) => { void this.joinRoom(code); }
     });
     document.body.appendChild(this.header.el);
@@ -111,6 +124,10 @@ export class Game {
 
     this.room = getOrCreateRoom();
     this.header.setRoom(this.room);
+    // Reclaim our previous seat for this room (set on a same-tab reload) so a
+    // refresh re-asserts the same seat instead of grabbing a new one.
+    this.self.seat = this.readSeat(this.room);
+    this.claimSeat = this.self.seat;
 
     // Apply perspective transform first, then measure: the rect we read out
     // belongs to the rotated layout so all canonical math lines up.
@@ -167,11 +184,16 @@ export class Game {
     ]);
   }
 
+  // The seat we publish/claim to peers. -1 while spectating; otherwise our held
+  // seat. Distinct from self.seat, which is the perspective seat (a spectator
+  // still watches from seat 0's POV but must not claim it).
+  private claimSeat = 0;
+
   private presencePayload(): PresencePlayer {
     return {
       id: this.self.id,
       name: this.self.name,
-      seat: this.self.seat,
+      seat: this.claimSeat,
       color: this.self.color,
       joinedAt: this.selfJoinedAt
     };
@@ -189,6 +211,21 @@ export class Game {
   // board.css (.dock__slot--deck), so the pile and the marker always line up.
   private deckBaseNx(cardW: number): number {
     return 0.5 - (2 * cardW + DOCK_GUTTER_PX) / (2 * this.boardSize.width);
+  }
+
+  // The on-screen card size in real pixels. Reading the --card-w custom property
+  // returns the UNRESOLVED clamp() expression (so parseFloat -> NaN), which is
+  // why the pile geometry and hit-testing used a wrong fixed 96px and the deck
+  // never sat exactly in its slot. Measuring a live card gives the exact size
+  // the browser actually painted, matching the CSS markers to the pixel.
+  private cardMetrics(): { w: number; h: number } {
+    for (const el of this.cardEls.values()) {
+      const w = el.offsetWidth;
+      if (w > 0) return { w, h: el.offsetHeight || w * 1.45 };
+    }
+    const probe = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w"));
+    const w = Number.isFinite(probe) && probe > 0 ? probe : 96;
+    return { w, h: w * 1.45 };
   }
 
   private applyBoardPerspective(): void {
@@ -301,8 +338,7 @@ export class Game {
     const { nx, ny } = this.screenToCanonical(clientX, clientY);
     const w = this.boardSize.width;
     const h = this.boardSize.height;
-    const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
-    const cardH = cardW * 1.45;
+    const { w: cardW, h: cardH } = this.cardMetrics();
     let pick: CardState | null = null;
     for (const c of this.state.cards.values()) {
       // bbox in canonical coords
@@ -338,8 +374,7 @@ export class Game {
   private initialDealLocal(): void {
     const deck = seededDeck(this.room);
     // Pile origin: card top-left so its centre lands on (DECK_NX, DECK_NY).
-    const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
-    const cardH = cardW * 1.45;
+    const { w: cardW, h: cardH } = this.cardMetrics();
     const baseNx = this.deckBaseNx(cardW);
     const baseNy = DECK_NY - cardH / (2 * this.boardSize.height);
     let z = 1;
@@ -381,8 +416,7 @@ export class Game {
   private recenterDeckPile(): void {
     this.measureBoard();
     if (this.boardSize.width < 50 || this.boardSize.height < 50) return;
-    const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
-    const cardH = cardW * 1.45;
+    const { w: cardW, h: cardH } = this.cardMetrics();
     const baseNx = this.deckBaseNx(cardW);
     const baseNy = DECK_NY - cardH / (2 * this.boardSize.height);
     for (const c of this.state.cards.values()) {
@@ -471,7 +505,8 @@ export class Game {
     // When the tab is hidden, push the cursor off-board so peers stop showing
     // a frozen ghost; it reappears on the next pointer move when we return.
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) this.bus.sendCursor({ id: this.self.id, x: -10, y: -10, seat: this.self.seat });
+      // Spectators never broadcast a cursor at all.
+      if (document.hidden && !this.spectator) this.bus.sendCursor({ id: this.self.id, x: -10, y: -10, seat: this.claimSeat });
     });
   }
 
@@ -551,6 +586,59 @@ export class Game {
   }
 
   private snapshotKey(): string { return SS_SNAPSHOT_PREFIX + this.room; }
+
+  private readSeat(room: string): number {
+    try {
+      const v = sessionStorage.getItem(SS_SEAT_PREFIX + room);
+      const n = v == null ? -1 : parseInt(v, 10);
+      return Number.isFinite(n) && n >= 0 && n < SEAT_COUNT ? n : 0;
+    } catch { return 0; }
+  }
+  private writeSeat(): void {
+    try {
+      if (this.spectator) sessionStorage.removeItem(SS_SEAT_PREFIX + this.room);
+      else sessionStorage.setItem(SS_SEAT_PREFIX + this.room, String(this.self.seat));
+    } catch {}
+  }
+
+  // Ask before reshuffling the whole table back into the deck — a destructive,
+  // shared action, so it routes through the same plain confirm dialog as leave.
+  private confirmResetDeck(): void {
+    void this.audio.play("ui-open");
+    openConfirm(this.modal, {
+      title: t("resetDeckConfirm.title"),
+      body: t("resetDeckConfirm.body"),
+      confirmLabel: t("resetDeckConfirm.confirm"),
+      danger: true
+    }, () => { void this.audio.play("ui-close"); this.resetDeck(); });
+  }
+
+  // Float an animating set of cards above the static table for `durMs`, keeping
+  // their mutual order, so a flip/shuffle never lets an undercard flash above a
+  // card that is still mid-transition. The render loop is told to leave their
+  // z-index alone while `.is-animating` is set (see renderAllCards).
+  private animTimers = new Map<string, number>();
+  private elevateDuringAnim(ids: string[], durMs: number): void {
+    // Preserve internal order by current z so the pile keeps its stacking.
+    const ordered = ids
+      .map((id) => ({ id, z: this.state.cards.get(id)?.z ?? 0 }))
+      .sort((a, b) => a.z - b.z);
+    let i = 0;
+    for (const { id } of ordered) {
+      const el = this.cardEls.get(id);
+      if (!el) continue;
+      el.classList.add("is-animating");
+      el.style.zIndex = String(ANIM_Z_BASE + i++);
+      const prev = this.animTimers.get(id);
+      if (prev) window.clearTimeout(prev);
+      const handle = window.setTimeout(() => {
+        el.classList.remove("is-animating");
+        this.animTimers.delete(id);
+        this.requestRender();
+      }, durMs);
+      this.animTimers.set(id, handle);
+    }
+  }
 
   private saveSnapshot(): void {
     try {
@@ -644,6 +732,9 @@ export class Game {
     // reverses (the bottom card ends up on top) and every face is toggled.
     flipStackOver(this.state, stack);
     for (const cid of stack) this.dirtyIds.add(cid);
+    // Keep the whole pile floating above the table, in order, while the 3D flip
+    // plays so undercards never flash above a still-turning card.
+    this.elevateDuringAnim(stack, FLIP_ANIM_MS);
     this.scheduleFlush();
     void this.audio.play("flip");
   }
@@ -676,6 +767,7 @@ export class Game {
     if (stack.length < 2) return;
     if (this.stackBlocked(stack)) return;
     shuffleStack(this.state, stack);
+    this.elevateDuringAnim(stack, SHUFFLE_ANIM_MS);
     this.applyShuffleJitter(stack);
     for (const cid of stack) this.dirtyIds.add(cid);
     this.scheduleFlush();
@@ -686,8 +778,7 @@ export class Game {
   // slot. A one-click "new game" without leaving the room.
   private resetDeck(): void {
     const order = seededDeck(`${this.room}:${Date.now()}`);
-    const cardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-w")) || 96;
-    const cardH = cardW * 1.45;
+    const { w: cardW, h: cardH } = this.cardMetrics();
     const baseNx = this.deckBaseNx(cardW);
     const baseNy = DECK_NY - cardH / (2 * this.boardSize.height);
     let z = 1;
@@ -775,41 +866,82 @@ export class Game {
   private presenceDebounce = 0;
 
   private applyPresence(players: PresencePlayer[]): void {
-      // Stable seating by join time: the earliest joiner takes seat 0, next
-      // seat 1, etc. A player leaving never reshuffles the seats of those who
-      // remain, their joinedAt timestamps are unchanged. Ties (e.g. two
-      // clients with identical clocks) break deterministically on id.
+      // Stable, claim-based seating. Each client publishes the seat it holds; a
+      // seat, once held, is NEVER taken from its owner by someone else leaving —
+      // a departure only frees that owner's own seat. So a disconnected player
+      // keeps their seat ("dropped") and reclaims it on reconnect; only an
+      // explicit `left` (applyLeft) actually vacates a seat.
       const roster = players.length ? players.slice() : [this.presencePayload()];
       if (!roster.some((p) => p.id === this.self.id)) roster.push(this.presencePayload());
-      roster.sort((a, b) => (a.joinedAt - b.joinedAt) || a.id.localeCompare(b.id));
+      // Deterministic order so two clients racing the same seat resolve the same
+      // way everywhere: earliest joiner (then id) wins the contested seat.
+      const sorted = roster.slice().sort((a, b) => (a.joinedAt - b.joinedAt) || a.id.localeCompare(b.id));
+      this.lastRoster = sorted;
 
+      // 1) Honour each present client's published seat; resolve collisions and
+      // assign any unseated/overflow clients to the lowest free seat.
+      const bySeat = new Map<number, PresencePlayer>();
+      const unseated: PresencePlayer[] = [];
+      for (const p of sorted) {
+        const want = typeof p.seat === "number" && p.seat >= 0 && p.seat < SEAT_COUNT ? p.seat : -1;
+        if (want >= 0 && !bySeat.has(want)) bySeat.set(want, p);
+        else unseated.push(p);
+      }
+      for (const p of unseated) {
+        let free = -1;
+        for (let s = 0; s < SEAT_COUNT; s++) if (!bySeat.has(s)) { free = s; break; }
+        if (free >= 0) bySeat.set(free, p); // else: spectator (no seat)
+      }
+      const resolved = new Map<string, number>();
+      for (const [seat, p] of bySeat) resolved.set(p.id, seat);
+
+      // 2) Present seated players (re)assert their persistent claim. Absent
+      // claimants are left in place → their seat reads as "dropped".
+      this.activeSeats = new Set(bySeat.keys());
+      for (const [seat, p] of bySeat) this.seatClaims.set(seat, { id: p.id, name: p.name, joinedAt: p.joinedAt });
+      // Drop any claim now held by a DIFFERENT present id (id changed seats).
+      for (const [seat, claim] of this.seatClaims) {
+        const occupant = bySeat.get(seat);
+        if (occupant && occupant.id !== claim.id) this.seatClaims.set(seat, { id: occupant.id, name: occupant.name, joinedAt: occupant.joinedAt });
+      }
+
+      // 3) Publish the roster with resolved seats for labels/colours.
       this.players.clear();
-      let mySeat = -1;
-      const now = Date.now();
-      roster.forEach((p, idx) => {
-        const seat = idx < SEAT_COUNT ? idx : -1;
+      let spectatorCount = 0;
+      for (const p of sorted) {
+        const seat = resolved.has(p.id) ? resolved.get(p.id)! : -1;
         p.seat = seat;
         p.color = seat >= 0 ? (SEAT_COLORS[seat] ?? SEAT_COLORS[0]!) : "#7a766f";
         this.players.set(p.id, p);
-        if (seat >= 0) this.lastSeenAt.set(`seat-${seat}`, now);
-        if (p.id === this.self.id) mySeat = seat;
-      });
+        if (seat < 0) spectatorCount++;
+      }
 
+      const mySeat = resolved.has(this.self.id) ? resolved.get(this.self.id)! : -1;
       const wasSpectator = this.spectator;
+      const prevClaim = this.claimSeat;
       this.spectator = mySeat < 0;
-      const resolvedSeat = mySeat < 0 ? 0 : mySeat; // spectators watch from seat 0
-      if (resolvedSeat !== this.self.seat) {
-        this.self.seat = resolvedSeat;
-        this.self.color = SEAT_COLORS[resolvedSeat] ?? SEAT_COLORS[0]!;
+      this.claimSeat = mySeat; // -1 while spectating
+      const perspectiveSeat = mySeat < 0 ? 0 : mySeat; // spectators watch from seat 0
+      if (perspectiveSeat !== this.self.seat) {
+        this.self.seat = perspectiveSeat;
+        this.self.color = SEAT_COLORS[perspectiveSeat] ?? SEAT_COLORS[0]!;
         this.applyBoardPerspective();
-        // Publish our new seat so peers label our cursor correctly.
+      }
+      // Re-publish ONLY when our resolved claim changed (e.g. we were bumped to a
+      // different seat or became/ceased to be a spectator). Publishing every
+      // sync would re-track presence and spin a feedback loop.
+      if (this.claimSeat !== prevClaim) {
         this.bus.updateMe(this.presencePayload());
+        this.writeSeat();
       }
       if (this.spectator && !wasSpectator) toast(t("ui.roomFull"));
 
+      this.header.setSpectatorMode(this.spectator);
+      this.header.setSpectators(spectatorCount);
+
       // Remove ghost cursors for players who are no longer present, so a
       // reconnecting peer never leaves a stale duplicate (e.g. two "P2").
-      const presentIds = new Set(roster.map((p) => p.id));
+      const presentIds = new Set(sorted.map((p) => p.id));
       for (const [id, el] of this.cursorEls) {
         if (!presentIds.has(id)) {
           el.remove();
@@ -819,9 +951,48 @@ export class Game {
       this.refreshZones();
       // If we're the only one here there's no peer to fetch a board from, so the
       // first-sync gate can release immediately (our local board is final).
-      if (roster.length <= 1) this.resolveFirstSync();
+      if (sorted.length <= 1) this.resolveFirstSync();
       // Seat / concealment / perspective may have changed, repaint.
       this.requestRender();
+  }
+
+  // Handle an explicit departure: free the seat and release every card that
+  // seat owned so the table becomes public/interactable again.
+  private applyLeft(l: LeftMsg): void {
+    if (l.seat < 0) return;
+    this.seatClaims.delete(l.seat);
+    this.activeSeats.delete(l.seat);
+    const now = Date.now();
+    let released = 0;
+    for (const c of this.state.cards.values()) {
+      if (c.ownerSeat === l.seat) {
+        c.ownerSeat = null;
+        c.ts = now;
+        this.dirtyIds.add(c.id);
+        released++;
+      }
+    }
+    // Remove the leaver's ghost cursor and any holds they had.
+    const el = this.cursorEls.get(l.id);
+    if (el) { el.remove(); this.cursorEls.delete(l.id); }
+    // Re-evaluate seating now that a seat opened (e.g. a spectator can sit).
+    this.applyPresence(this.lastRoster);
+    if (released) this.scheduleFlush();
+    this.requestRender();
+  }
+
+  // Merge seat claims taught to us by an authoritative peer's snapshot, so a
+  // newcomer learns about players who dropped before we joined.
+  private mergeClaims(claims: SeatClaim[]): void {
+    let changed = false;
+    for (const c of claims) {
+      if (c.seat < 0 || c.seat >= SEAT_COUNT) continue;
+      if (!this.seatClaims.has(c.seat)) {
+        this.seatClaims.set(c.seat, { id: c.id, name: c.name, joinedAt: 0 });
+        changed = true;
+      }
+    }
+    if (changed) this.refreshZones();
   }
 
   private bindRealtimeEvents(): void {
@@ -829,6 +1000,7 @@ export class Game {
       if (msg.type === "patch") this.applyPatch(msg.payload, false);
       else if (msg.type === "snapshot") this.applyPatch(msg.payload, true);
       else if (msg.type === "hold") this.applyHold(msg.payload);
+      else if (msg.type === "left") this.applyLeft(msg.payload);
       else if (msg.type === "hello") this.respondToHello(msg.payload.id);
     });
     this.bus.onCursor((c) => this.renderCursor(c));
@@ -929,7 +1101,10 @@ export class Game {
     const cards: PatchCard[] = Array.from(this.state.cards.values()).slice(0, 200).map((c) => ({
       id: c.id, x: c.x, y: c.y, z: c.z, rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat, ts: c.ts
     }));
-    this.bus.sendSnapshot({ v: this.patchVersion, by: this.self.id, cards });
+    // Teach the receiver our known seat claims so a player who dropped before
+    // they joined still shows as a reserved (dimmed) seat, not an empty one.
+    const claims: SeatClaim[] = Array.from(this.seatClaims.entries()).map(([seat, c]) => ({ seat, id: c.id, name: c.name }));
+    this.bus.sendSnapshot({ v: this.patchVersion, by: this.self.id, cards, claims });
   }
 
   // Apply an incoming patch or snapshot. A snapshot is authoritative full
@@ -952,7 +1127,10 @@ export class Game {
       if (c.z > this.state.topZ) this.state.topZ = c.z;
     }
     // The authoritative board has arrived: the loader can lift without a jump.
-    if (isSnapshot) this.resolveFirstSync();
+    if (isSnapshot) {
+      if (p.claims && p.claims.length) this.mergeClaims(p.claims);
+      this.resolveFirstSync();
+    }
     this.requestRender();
   }
 
@@ -981,14 +1159,22 @@ export class Game {
       el.style.display = "none";
       return;
     }
+    // c.x / c.y are canonical fractions; re-project into our own rotated view
+    // in real pixel space so the ghost lands exactly where CSS paints cards.
+    const { px, py } = this.canonicalToScreen(c.x, c.y);
+    // Privacy (receiver side): never show a peer's cursor while it is over OUR
+    // own private area. The sender hides its own ghost when inside its zone, and
+    // this covers the reciprocal — a peer's pointer that, in our rotated view,
+    // falls over our private zone would otherwise reveal where we're hovering.
+    if (!this.spectator && this.pointInZone(this.self.seat, px, py)) {
+      el.style.display = "none";
+      return;
+    }
     el.style.display = "";
     el.style.setProperty("--cursor-color", SEAT_COLORS[seat] ?? SEAT_COLORS[0]!);
     const label = el.querySelector(".cursor-ghost__label");
     const peerName = this.players.get(c.id)?.name || `P${seat + 1}`;
     if (label) label.textContent = peerName;
-    // c.x / c.y are canonical fractions; re-project into our own rotated view
-    // in real pixel space so the ghost lands exactly where CSS paints cards.
-    const { px, py } = this.canonicalToScreen(c.x, c.y);
     el.style.transform = `translate(${px}px, ${py}px)`;
   }
 
@@ -1012,7 +1198,8 @@ export class Game {
     for (const c of this.state.cards.values()) {
       const el = this.cardEls.get(c.id);
       if (!el) continue;
-      if (!el.classList.contains("is-held") && !el.classList.contains("is-shuffling")) {
+      const busy = el.classList.contains("is-held") || el.classList.contains("is-shuffling") || el.classList.contains("is-animating");
+      if (!busy) {
         const transform = `translate3d(${c.x * w}px, ${c.y * h}px, 0) rotate(${c.rot * 90}deg)`;
         // Dedup writes so a transition (added in card.css) only fires on a real
         // change, and idle frames do no layout work.
@@ -1020,17 +1207,21 @@ export class Game {
           el.style.transform = transform;
           el.dataset.tf = transform;
         }
+        // Only write the resting z-index when the card is NOT mid-animation/held,
+        // otherwise the RAF loop would stomp the temporary elevation band and the
+        // pile would flicker.
+        const zStr = String(c.z);
+        if (el.style.zIndex !== zStr) el.style.zIndex = zStr;
       }
-      const zStr = String(c.z);
-      if (el.style.zIndex !== zStr) el.style.zIndex = zStr;
       const wasFaceUp = el.classList.contains("is-faceup");
       el.classList.toggle("is-faceup", c.faceUp);
       // If a card just turned face-down, dismiss any tooltip it was showing.
       if (wasFaceUp && !c.faceUp) this.tooltip.hide();
       // A card owned by any rival seat is ALWAYS shown to us as its back, blurred
       // (see .is-concealed in card.css), no matter how the owner placed or flipped
-      // it. Only the owner sees their own card face. Unowned table cards stay open.
-      const hidden = c.ownerSeat !== null && c.ownerSeat !== this.self.seat;
+      // it. Only the owner sees their own card face. A spectator owns no seat, so
+      // EVERY owned card is concealed from them — no private area ever leaks.
+      const hidden = c.ownerSeat !== null && (this.spectator || c.ownerSeat !== this.self.seat);
       el.classList.toggle("is-concealed", hidden);
       // Busy indicator while a peer is holding this card.
       el.classList.toggle("is-locked", this.isLockedByOther(c.id));
@@ -1043,42 +1234,35 @@ export class Game {
   // their own area at the bottom while the others sit around the table exactly
   // where the rotated board places their cards.
   private refreshZones(): void {
-    const now = Date.now();
-    const STALE_GRACE_MS = 15000;
     const youSuffix = t("table.youSuffix");
-    let anyStale = false;
+    const droppedSuffix = t("table.droppedSuffix");
     for (let seat = 0; seat < SEAT_COUNT; seat++) {
       const z = this.physicalZoneForSeat(seat);
       if (!z) continue;
       const occupant = Array.from(this.players.values()).find((p) => p.seat === seat) || null;
       const isSelfSeat = !this.spectator && seat === this.self.seat;
-      const hasPlayer = !!occupant;
-      const lastSeen = this.lastSeenAt.get(`seat-${seat}`) ?? 0;
-      const isStale = !hasPlayer && !isSelfSeat && lastSeen > 0 && (now - lastSeen) < STALE_GRACE_MS;
-      if (isStale) anyStale = true;
+      const isActive = this.activeSeats.has(seat) || isSelfSeat;
+      const claim = this.seatClaims.get(seat) || null;
+      // Dropped: a seat whose owner has a persistent claim but is not currently
+      // present (network drop / closed tab). It stays reserved & dimmed until
+      // that player rejoins or explicitly leaves — their cards remain private.
+      const isDropped = !isActive && !!claim;
 
       z.style.setProperty("--seat-color", `var(--seat-${seat})`);
       z.dataset.seat = String(seat);
-      z.classList.toggle("zone--empty", !hasPlayer && !isSelfSeat && !isStale);
-      z.classList.toggle("zone--active", hasPlayer || isSelfSeat);
-      z.classList.toggle("zone--stale", isStale);
-      z.dataset.state = hasPlayer ? "active" : isStale ? "stale" : isSelfSeat ? "active" : "vacant";
+      z.classList.toggle("zone--empty", !isActive && !isDropped);
+      z.classList.toggle("zone--active", isActive);
+      z.classList.toggle("zone--dropped", isDropped);
+      z.dataset.state = isActive ? "active" : isDropped ? "dropped" : "vacant";
 
       const nameEl = z.querySelector<HTMLElement>('[data-role="name"]');
       if (nameEl) {
         let label = "";
         if (occupant) label = occupant.id === this.self.id ? `${occupant.name}${youSuffix}` : occupant.name;
         else if (isSelfSeat) label = `${this.self.name}${youSuffix}`;
+        else if (isDropped && claim) label = `${claim.name}${droppedSuffix}`;
         if (nameEl.textContent !== label) nameEl.textContent = label;
       }
-    }
-    // While any zone is in stale grace, schedule a re-check at the grace
-    // boundary so the fade settles to vacant without further presence updates.
-    if (anyStale && !this.staleSweepHandle) {
-      this.staleSweepHandle = window.setTimeout(() => {
-        this.staleSweepHandle = 0;
-        this.refreshZones();
-      }, 1500);
     }
   }
 
@@ -1092,10 +1276,16 @@ export class Game {
     showLoader();
     void this.audio.play("ui-close");
     try {
+      // Leaving the current room: free our seat there before hopping over.
+      if (this.claimSeat >= 0) this.bus.sendLeft({ id: this.self.id, seat: this.claimSeat });
+      this.seatClaims.clear();
       await this.bus.disconnect();
       this.resetTable();
       this.room = slug;
       this.selfJoinedAt = Date.now();
+      this.self.seat = this.readSeat(this.room);
+      this.claimSeat = this.self.seat;
+      this.applyBoardPerspective();
       this.header.setRoom(this.room);
       const restored = this.tryRestoreSnapshot();
       if (!restored) this.initialDealLocal();
@@ -1113,10 +1303,16 @@ export class Game {
     openLeaveConfirm(this.modal, this.room, async () => {
       void this.audio.play("ui-close");
       try { localStorage.removeItem(this.snapshotKey()); } catch {}
+      try { sessionStorage.removeItem(SS_SEAT_PREFIX + this.room); } catch {}
+      // Tell peers we are LEAVING (not merely dropping): they free our seat and
+      // release every card we owned so the table is interactable again.
+      if (this.claimSeat >= 0) this.bus.sendLeft({ id: this.self.id, seat: this.claimSeat });
+      this.seatClaims.clear();
       // Fresh room → fresh handle. The next visit rolls a new KABAL name.
       resetName();
       this.self.name = getOrAssignName();
       this.selfJoinedAt = Date.now();
+      this.self.seat = 0; this.claimSeat = 0;
       await this.bus.disconnect();
       this.resetTable();
       this.room = newRoom();

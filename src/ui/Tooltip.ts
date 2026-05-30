@@ -12,6 +12,9 @@ export class Tooltip {
   private active: ActiveTip | null = null;
   private mouseX = 0;
   private mouseY = 0;
+  // True while a pointer button is held down anywhere: during a drag/hold we
+  // never want the info panel to appear over the card in hand.
+  private pressed = false;
 
   constructor(private host: HTMLElement) {
     this.el = document.createElement("div");
@@ -25,24 +28,33 @@ export class Tooltip {
     this.host.addEventListener("pointerover", this.onOver, { passive: true });
     this.host.addEventListener("pointerout", this.onOut, { passive: true });
     this.host.addEventListener("pointermove", this.onMove, { passive: true });
-    this.host.addEventListener("pointerdown", this.hide, { passive: true });
+    this.host.addEventListener("pointerdown", this.onDown, { passive: true });
+    // Clear the pressed flag on release no matter where the pointer ends up.
+    window.addEventListener("pointerup", this.onUp, { passive: true });
+    window.addEventListener("pointercancel", this.onUp, { passive: true });
     // Safety net: leaving the board entirely always dismisses the tooltip.
     this.host.addEventListener("pointerleave", this.hide, { passive: true });
     window.addEventListener("scroll", this.hide, { passive: true });
     window.addEventListener("blur", this.hide);
   }
 
+  private onDown = (): void => { this.pressed = true; this.hide(); };
+  private onUp = (): void => { this.pressed = false; };
+
   private resolve(target: Element): { defId: string; cardEl: HTMLElement } | null {
     const cardEl = target.closest<HTMLElement>(".card");
     if (!cardEl) return null;
     if (!cardEl.classList.contains("is-faceup")) return null;
     if (cardEl.classList.contains("is-concealed")) return null;
+    // Never show while a card is in hand (being dragged/held).
+    if (cardEl.classList.contains("is-held")) return null;
     const defId = cardEl.dataset.def;
     if (!defId) return null;
     return { defId, cardEl };
   }
 
   private onOver = (e: PointerEvent): void => {
+    if (this.pressed) return;
     const data = this.resolve(e.target as Element);
     if (!data) return;
     this.mouseX = e.clientX;

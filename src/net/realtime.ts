@@ -31,10 +31,29 @@ export interface PatchCard {
   ts: number;
 }
 
+/** A persistent seat ownership: which stable client id holds a seat. Taught to
+ *  newcomers on snapshots so a player who dropped (but did not leave) is still
+ *  shown as a dimmed, reserved seat rather than vanishing. */
+export interface SeatClaim {
+  seat: number;
+  id: string;
+  name: string;
+}
+
 export interface CardPatch {
   v: number;
   by: string;
   cards: PatchCard[];
+  /** Only populated on snapshots: the authoritative peer's known seat claims. */
+  claims?: SeatClaim[];
+}
+
+/** Broadcast when a player INTENTIONALLY leaves (reset/leave or hops rooms), as
+ *  opposed to merely dropping. Receivers free the seat and release every card
+ *  that seat owned so the table becomes interactable again. */
+export interface LeftMsg {
+  id: string;
+  seat: number;
 }
 
 /** Ephemeral "this card is being held by seat N until `until`" lock. Broadcast
@@ -52,6 +71,7 @@ export type GameMsg =
   | { type: "patch"; payload: CardPatch }
   | { type: "snapshot"; payload: CardPatch }
   | { type: "hold"; payload: HoldMsg }
+  | { type: "left"; payload: LeftMsg }
   | { type: "hello"; payload: { id: string } };
 
 type Listener<T> = (msg: T) => void;
@@ -267,6 +287,14 @@ export class RealtimeBus {
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "hold", payload: h } as GameMsg });
   }
 
+  /** Announce an intentional departure so peers free the seat and release its
+   *  cards. Not rate-limited (one-shot, rare) but still byte-capped. */
+  sendLeft(l: LeftMsg): void {
+    if (!this.channel || this.status !== "online") return;
+    if (!withinByteCap(l)) return;
+    this.channel.send({ type: "broadcast", event: "game", payload: { type: "left", payload: l } as GameMsg });
+  }
+
   private bucketFor(id: string): { patch: TokenBucket; cursor: TokenBucket } {
     let b = this.recvBuckets.get(id);
     if (!b) {
@@ -292,6 +320,15 @@ export class RealtimeBus {
     }));
   }
 
+  private sanitizeClaims(raw: unknown): SeatClaim[] {
+    if (!Array.isArray(raw)) return [];
+    return (raw as Array<Partial<SeatClaim>>).slice(0, 4).map((c) => ({
+      seat: typeof c.seat === "number" ? Math.max(0, Math.min(3, Math.round(c.seat))) : 0,
+      id: safeString(c.id, 40),
+      name: safeString(c.name, 24) || "Player"
+    })).filter((c) => !!c.id);
+  }
+
   private handleGame(payload: unknown): void {
     if (!payload || typeof payload !== "object") return;
     const msg = payload as { type?: string; payload?: unknown };
@@ -304,7 +341,17 @@ export class RealtimeBus {
       // and exempt so a reconnect resync is never throttled away.
       if (msg.type === "patch" && by && !this.bucketFor(by).patch.consume()) return;
       const sanitized: CardPatch = { v: safeNumber(p.v), by, cards: this.sanitizeCards(p.cards) };
+      if (msg.type === "snapshot" && p.claims) sanitized.claims = this.sanitizeClaims(p.claims);
       for (const l of this.gameListeners) l({ type: msg.type, payload: sanitized });
+    } else if (msg.type === "left") {
+      const l0 = msg.payload as Partial<LeftMsg> | undefined;
+      if (!l0 || typeof l0.id !== "string") return;
+      const safe: LeftMsg = {
+        id: safeString(l0.id, 40),
+        seat: typeof l0.seat === "number" ? Math.max(-1, Math.min(3, Math.round(l0.seat))) : -1
+      };
+      if (!safe.id) return;
+      for (const l of this.gameListeners) l({ type: "left", payload: safe });
     } else if (msg.type === "hold") {
       const h = msg.payload as Partial<HoldMsg> | undefined;
       if (!h || !Array.isArray(h.ids)) return;

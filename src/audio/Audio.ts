@@ -20,14 +20,16 @@ const PROCEDURAL: Record<SfxName, ProceduralSpec> = {
   "ui-close": { type: "chime", freq: 440 }
 };
 
-// Balanced defaults: sfx sits above music so effects never get buried, and
-// the master leaves headroom for the limiter.
-const SFX_DEFAULT = 0.7;
-const MUSIC_DEFAULT = 0.35;
-const MASTER_DEFAULT = 0.8;
-// The "auto-balance" target ratio (music vs sfx); master is left to the user.
-export const BALANCED_MUSIC = 0.35;
-export const BALANCED_SFX = 0.7;
+// Player-friendly defaults: the music sits gently in the background while the
+// effects stay clear and present without ever overpowering the table. The
+// master leaves headroom for the limiter.
+const SFX_DEFAULT = 0.55;
+const MUSIC_DEFAULT = 0.22;
+const MASTER_DEFAULT = 0.75;
+// The "restore defaults" targets — the whole recommended mix, master included.
+export const BALANCED_MUSIC = MUSIC_DEFAULT;
+export const BALANCED_SFX = SFX_DEFAULT;
+export const BALANCED_MASTER = MASTER_DEFAULT;
 
 const LS_SFX = "kabal:vol:sfx";
 const LS_MUSIC = "kabal:vol:music";
@@ -420,6 +422,15 @@ export class AudioEngine {
 
   // Set music + sfx to the balanced ratio; master is left to the user.
   autoBalance(): void {
+    this.setMusicVolume(BALANCED_MUSIC);
+    this.setSfxVolume(BALANCED_SFX);
+  }
+
+  // Restore the entire mix (master + music + sfx) to the recommended defaults
+  // and unmute. Used by the Settings "restore defaults" button.
+  restoreDefaults(): void {
+    if (this.muted) this.setMuted(false);
+    this.setMasterVolume(BALANCED_MASTER);
     this.setMusicVolume(BALANCED_MUSIC);
     this.setSfxVolume(BALANCED_SFX);
   }

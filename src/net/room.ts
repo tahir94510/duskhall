@@ -62,3 +62,37 @@ export function inviteUrl(slug: string): string {
   const origin = window.location.origin;
   return `${origin}/${slug}`;
 }
+
+// Accept anything a user might paste and extract a valid room code from it:
+//  - a bare 6-char code ("P86B3T"), case/space tolerant
+//  - a full invite link ("https://host/P86B3T")
+//  - a legacy query link ("https://host/?r=KBL-P86B3T" or "?r=P86B3T")
+// Returns the normalised uppercase slug, or null if no valid code is found.
+export function parseRoomInput(text: string): string | null {
+  if (!text) return null;
+  const raw = text.trim();
+
+  // Bare code (optionally with surrounding whitespace/quotes).
+  const bare = raw.replace(/['"]/g, "").trim().toUpperCase();
+  if (SLUG_RE.test(bare)) return bare;
+
+  // Try to parse it as a URL and read the path / ?r= just like the address bar.
+  try {
+    const url = new URL(raw);
+    const fromPath = url.pathname.replace(/^\//, "").toUpperCase();
+    if (SLUG_RE.test(fromPath)) return fromPath;
+    const legacy = url.searchParams.get("r");
+    if (legacy) {
+      const cleaned = legacy.replace(/^KBL-/i, "").toUpperCase();
+      if (SLUG_RE.test(cleaned)) return cleaned;
+    }
+  } catch {
+    /* not a URL — fall through to a loose scan */
+  }
+
+  // Last resort: scan for the first standalone 6-char code in the string,
+  // tolerating a "KBL-" prefix from old links.
+  const m = raw.toUpperCase().match(/(?:KBL-)?([A-Z0-9]{6})/);
+  if (m && SLUG_RE.test(m[1]!)) return m[1]!;
+  return null;
+}
