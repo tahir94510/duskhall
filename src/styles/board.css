@@ -3,7 +3,9 @@
   inset: 0;
   display: grid;
   grid-template-columns: minmax(150px, 17vw) 1fr minmax(150px, 17vw);
-  grid-template-rows: minmax(110px, 16vh) 1fr minmax(140px, 20vh);
+  /* Symmetric top/bottom rows (and equal left/right columns) so every player's
+     zone is the same size whichever seat they sit in — a balanced diamond. */
+  grid-template-rows: minmax(140px, 18vh) 1fr minmax(140px, 18vh);
   gap: clamp(8px, 1.4vmin, 18px);
   padding:
     max(env(safe-area-inset-top), 14px)

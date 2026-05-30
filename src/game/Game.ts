@@ -173,6 +173,7 @@ export class Game {
     this.installVisibility();
     this.refreshZones();
     this.startRenderLoop();
+    this.startReconcile();
 
     // Preload the art that's actually on the table plus the background BEFORE
     // the loading screen lifts, so nothing pops in after the board is shown.
@@ -609,11 +610,21 @@ export class Game {
   }
 
   private installVisibility(): void {
-    // When the tab is hidden, push the cursor off-board so peers stop showing
-    // a frozen ghost; it reappears on the next pointer move when we return.
     document.addEventListener("visibilitychange", () => {
-      // Spectators never broadcast a cursor at all.
-      if (document.hidden && !this.spectator) this.bus.sendCursor({ id: this.self.id, x: -10, y: -10, seat: this.claimSeat });
+      if (document.hidden) {
+        // Hidden: push the cursor off-board so peers stop showing a frozen ghost;
+        // it reappears on the next pointer move when we return.
+        if (!this.spectator) this.bus.sendCursor({ id: this.self.id, x: -10, y: -10, seat: this.claimSeat });
+        return;
+      }
+      // Visible again: the requestAnimationFrame render loop was paused while
+      // backgrounded, so force an immediate repaint, then re-ask the
+      // authoritative peer for a snapshot. This heals anything that arrived (or
+      // was dropped) while hidden WITHOUT needing a page refresh — switching
+      // back to the tab is now enough. requestSync is a no-op when offline/alone
+      // and respondToHello de-dupes to a single responder, so it cannot storm.
+      this.renderAllCards();
+      this.bus.requestSync();
     });
   }
 
@@ -1081,7 +1092,7 @@ export class Game {
       this.presenceDebounce = window.setTimeout(() => {
         this.presenceDebounce = 0;
         this.applyPresence(this.pendingPresence);
-      }, 350);
+      }, 200);
     });
     this.bindRealtimeEvents();
   }
@@ -1103,7 +1114,12 @@ export class Game {
       this.lastRoster = sorted;
 
       // 1) Honour each present client's published seat; resolve collisions and
-      // assign any unseated/overflow clients to the lowest free seat.
+      // assign any unseated/overflow clients to the lowest free seat. A seat
+      // reserved by an AWAY player (a persistent claim whose owner is not
+      // currently present) is NOT free — skipping it keeps a dropped player's
+      // area reserved when an unrelated seat opens (e.g. someone is kicked), so
+      // a kick never collaterally evicts other away players.
+      const presentIds = new Set(sorted.map((q) => q.id));
       const bySeat = new Map<number, PresencePlayer>();
       const unseated: PresencePlayer[] = [];
       for (const p of sorted) {
@@ -1113,7 +1129,13 @@ export class Game {
       }
       for (const p of unseated) {
         let free = -1;
-        for (let s = 0; s < SEAT_COUNT; s++) if (!bySeat.has(s)) { free = s; break; }
+        for (let s = 0; s < SEAT_COUNT; s++) {
+          if (bySeat.has(s)) continue;
+          const claim = this.seatClaims.get(s);
+          if (claim && !presentIds.has(claim.id)) continue; // reserved by an away player
+          free = s;
+          break;
+        }
         if (free >= 0) bySeat.set(free, p); // else: spectator (no seat)
       }
       const resolved = new Map<string, number>();
@@ -1165,7 +1187,7 @@ export class Game {
 
       // Remove ghost cursors for players who are no longer present, so a
       // reconnecting peer never leaves a stale duplicate (e.g. two "P2").
-      const presentIds = new Set(sorted.map((p) => p.id));
+      // (presentIds was computed above for seat reservation.)
       for (const [id, el] of this.cursorEls) {
         if (!presentIds.has(id)) {
           el.remove();
@@ -1491,6 +1513,28 @@ export class Game {
       this.renderAllCards();
     };
     tick();
+  }
+
+  // Self-healing live sync: every ~2s the HOST (lowest active seat) re-broadcasts
+  // the whole board as an ordinary patch, so any move/flip a peer missed (a
+  // dropped packet, a tab that was briefly backgrounded) converges within a
+  // couple of seconds WITHOUT a page refresh. It carries each card's STORED ts
+  // (never re-stamped), so the receiver's last-write-wins gate (applyPatch) only
+  // accepts it where its own copy is older — it can never clobber a newer local
+  // or remote edit, and held cards are skipped. Sent as a patch (NOT a snapshot,
+  // which would apply wholesale and could revert fresh edits). Guards keep it
+  // inert when alone, backgrounded, spectating, or not the host; sendPatch is
+  // itself a no-op while offline, so the timer can run for the whole session.
+  private reconcileTimer = 0;
+  private startReconcile(): void {
+    window.clearInterval(this.reconcileTimer);
+    this.reconcileTimer = window.setInterval(() => {
+      if (document.hidden || this.spectator) return;
+      if (this.activeSeats.size <= 1 || !this.isHost()) return;
+      this.patchVersion++;
+      const cards = Array.from(this.state.cards.values()).slice(0, 200).map((c) => this.wireCard(c));
+      this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards });
+    }, 2000);
   }
 
   private renderAllCards(): void {
