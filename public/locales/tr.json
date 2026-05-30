@@ -42,6 +42,14 @@
     "youSuffix": " (sen)",
     "droppedSuffix": " (uzakta)"
   },
+  "kick": {
+    "title": "Oyuncuyu çıkar",
+    "body": "{name} masadan çıkarılsın mı? Yeni ve boş bir odaya gönderilecek.",
+    "confirm": "Çıkar",
+    "aria": "{name} oyuncusunu çıkar",
+    "done": "{name} masadan çıkarıldı.",
+    "kicked": "Oda sahibi seni masadan çıkardı."
+  },
   "shortcutsList": {
     "title": "Kısayollar",
     "subtitle": "Hedef imleçtir; boş alanda hiçbir şey olmaz.",

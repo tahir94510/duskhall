@@ -68,11 +68,16 @@ export function gatherStack(state: BoardState, ids: string[], focusNx?: number, 
     .map((id) => state.cards.get(id))
     .filter((c): c is CardState => !!c)
     .sort((a, b) => a.z - b.z);
+  // Unify orientation to the top card (highest z) so a pile of mixed 90°/180°
+  // cards squares up into one clean, aligned stack, the way you'd straighten a
+  // deck by hand.
+  const topRot = ordered.length ? ordered[ordered.length - 1]!.rot : 0;
   // v3.7: every card lands exactly on the focus point so the stack is a
   // single tight pile with no diagonal tail. Z is the only visual stride.
   for (const c of ordered) {
     c.x = cx;
     c.y = cy;
+    c.rot = topRot;
     state.topZ++;
     c.z = state.topZ;
   }
@@ -98,6 +103,13 @@ export function shuffleStack(state: BoardState, ids: string[]): void {
     order[i] = order[j]!;
     order[j] = tmp;
   }
+  // Unify orientation to the current top card, then face every card down.
+  let topRot = 0;
+  let topZ = -Infinity;
+  for (const id of ids) {
+    const c = state.cards.get(id);
+    if (c && c.z > topZ) { topZ = c.z; topRot = c.rot; }
+  }
   // Reassign z-indices in the new order, preserving positions
   const minZ = Math.min(...ids.map((id) => state.cards.get(id)?.z ?? 0));
   for (let i = 0; i < order.length; i++) {
@@ -105,6 +117,7 @@ export function shuffleStack(state: BoardState, ids: string[]): void {
     if (!c) continue;
     c.z = minZ + i;
     c.faceUp = false;
+    c.rot = topRot;
   }
 }
 

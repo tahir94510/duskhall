@@ -1,4 +1,4 @@
-import { buildTable, repaintSlots, type BoardRefs } from "../table/Board.js";
+import { buildTable, repaintSlots, refreshDockLabels, type BoardRefs } from "../table/Board.js";
 import { createCardElement, refreshCardLabel, preloadCardArt } from "../table/Card.js";
 import { applyTableBackground } from "../table/Background.js";
 import type { BoardState, CardState, SelfPlayer } from "../table/types.js";
@@ -26,7 +26,7 @@ import {
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, type Seat } from "../table/rotation.js";
 import { DECK_NY, DOCK_GUTTER_PX } from "../table/constants.js";
-import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, HoldMsg, LeftMsg, SeatClaim } from "../net/realtime.js";
+import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, HoldMsg, LeftMsg, KickMsg, SeatClaim } from "../net/realtime.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
 import { getOrAssignName, resetName } from "../util/names.js";
@@ -124,6 +124,7 @@ export class Game {
 
     this.room = getOrCreateRoom();
     this.header.setRoom(this.room);
+    this.installZoneActions();
     // Reclaim our previous seat for this room (set on a same-tab reload) so a
     // refresh re-asserts the same seat instead of grabbing a new one.
     this.self.seat = this.readSeat(this.room);
@@ -289,6 +290,7 @@ export class Game {
         for (const id of ids) this.dirtyIds.add(id);
         this.scheduleFlush();
       },
+      onReleased: (x, y) => this.tooltip.probeAt(x, y),
       onDragProgress: (ids) => {
         for (const id of ids) this.dragPreviewIds.add(id);
         this.scheduleDragPreview();
@@ -1001,6 +1003,7 @@ export class Game {
       else if (msg.type === "snapshot") this.applyPatch(msg.payload, true);
       else if (msg.type === "hold") this.applyHold(msg.payload);
       else if (msg.type === "left") this.applyLeft(msg.payload);
+      else if (msg.type === "kick") this.handleKicked(msg.payload);
       else if (msg.type === "hello") this.respondToHello(msg.payload.id);
     });
     this.bus.onCursor((c) => this.renderCursor(c));
@@ -1032,6 +1035,47 @@ export class Game {
       .map((p) => p.seat);
     if (!otherSeats.length) return; // asker is alone (or only spectators present)
     if (this.self.seat === Math.min(...otherSeats)) this.sendSnapshot();
+  }
+
+  // The host is the room's "owner": the present player on the lowest active seat
+  // (the creator, while they're here). It transfers automatically to the next
+  // lowest seat when the host leaves. Only the host can kick.
+  private hostSeat(): number {
+    let min = Infinity;
+    for (const s of this.activeSeats) min = Math.min(min, s);
+    return Number.isFinite(min) ? min : -1;
+  }
+  private isHost(): boolean {
+    return !this.spectator && this.claimSeat >= 0 && this.claimSeat === this.hostSeat();
+  }
+
+  // We were kicked by the host: leave quietly to a fresh, empty room (this also
+  // broadcasts our `left`, freeing our seat for the others).
+  private handleKicked(k: KickMsg): void {
+    if (k.target !== this.self.id) return;
+    toast(t("kick.kicked"));
+    void this.joinRoom(newRoom());
+  }
+
+  // Host-only: confirm, then ask the player on `seat` to leave.
+  private confirmKick(seat: number): void {
+    if (!this.isHost() || seat === this.self.seat) return;
+    const target = Array.from(this.players.values()).find((p) => p.seat === seat);
+    if (!target) return;
+    void this.audio.play("ui-open");
+    openConfirm(
+      this.modal,
+      {
+        title: t("kick.title"),
+        body: t("kick.body").replace("{name}", target.name),
+        confirmLabel: t("kick.confirm"),
+        danger: true
+      },
+      () => {
+        this.bus.sendKick(target.id, this.self.id);
+        toast(t("kick.done").replace("{name}", target.name));
+      }
+    );
   }
 
   // --- Ephemeral hold-lock: a card a peer is holding can't be grabbed/edited
@@ -1233,9 +1277,22 @@ export class Game {
   // local player's own seat always maps to the bottom slot, each player reads
   // their own area at the bottom while the others sit around the table exactly
   // where the rotated board places their cards.
+  // Delegated click handler for the per-zone host "kick" button.
+  private installZoneActions(): void {
+    this.refs.root.addEventListener("click", (e) => {
+      const btn = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-action="kick"]') : null;
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const seat = parseInt(btn.dataset.seat || "-1", 10);
+      if (seat >= 0) this.confirmKick(seat);
+    });
+  }
+
   private refreshZones(): void {
     const youSuffix = t("table.youSuffix");
     const droppedSuffix = t("table.droppedSuffix");
+    const host = this.isHost();
     for (let seat = 0; seat < SEAT_COUNT; seat++) {
       const z = this.physicalZoneForSeat(seat);
       if (!z) continue;
@@ -1262,6 +1319,15 @@ export class Game {
         else if (isSelfSeat) label = `${this.self.name}${youSuffix}`;
         else if (isDropped && claim) label = `${claim.name}${droppedSuffix}`;
         if (nameEl.textContent !== label) nameEl.textContent = label;
+      }
+
+      // Host-only kick control, on an occupied rival seat only.
+      const kickBtn = z.querySelector<HTMLButtonElement>('[data-action="kick"]');
+      if (kickBtn) {
+        const canKick = host && !!occupant && seat !== this.self.seat;
+        kickBtn.hidden = !canKick;
+        kickBtn.dataset.seat = String(seat);
+        if (canKick && occupant) kickBtn.setAttribute("aria-label", t("kick.aria").replace("{name}", occupant.name));
       }
     }
   }
@@ -1338,6 +1404,7 @@ export class Game {
   private onLocale(): void {
     this.header.refreshLocale();
     this.refreshZones();
+    refreshDockLabels(this.refs);
     for (const el of this.refs.cardsLayer.querySelectorAll<HTMLDivElement>(".card")) {
       const def = el.dataset.def;
       if (def) refreshCardLabel(el, def);

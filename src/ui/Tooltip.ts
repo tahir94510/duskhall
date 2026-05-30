@@ -63,6 +63,19 @@ export class Tooltip {
     this.showTimer = window.setTimeout(() => this.show(data), HOVER_DELAY);
   };
 
+  // Re-arm the hover tooltip at a point WITHOUT a pointerover (used right after a
+  // card is dropped, so its info shows without the cursor leaving and re-entering).
+  probeAt(x: number, y: number): void {
+    this.pressed = false;
+    const el = document.elementFromPoint(x, y);
+    const data = el ? this.resolve(el) : null;
+    if (!data) return;
+    this.mouseX = x;
+    this.mouseY = y;
+    window.clearTimeout(this.showTimer);
+    this.showTimer = window.setTimeout(() => this.show(data), HOVER_DELAY);
+  }
+
   private onOut = (e: PointerEvent): void => {
     const cardEl = (e.target instanceof Element ? e.target.closest(".card") : null) as HTMLElement | null;
     if (!cardEl) return;

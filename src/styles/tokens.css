@@ -51,8 +51,8 @@
   /* z layers */
   --z-bg: -2;
   --z-scrim: -1;
-  --z-board: 1;
   --z-zone: 2;
+  --z-board: 5;
   --z-card: 10;
   /* Cards mid-animation or in hand float in this band: above the resting card
      layer but below cursors/header so they never cover a peer's cursor. */

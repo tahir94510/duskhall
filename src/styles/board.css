@@ -17,7 +17,10 @@
   grid-row: 1 / span 3;
   position: relative;
   pointer-events: none;
-  z-index: 0;
+  /* Above the zone panels, so cards (and the deck/discard dock) render on top of
+     the frosted zone glass: a card dragged over a rival zone shows ON TOP, and
+     the dock stays visible. Concealment is a per-card blur, independent of this. */
+  z-index: var(--z-board);
 }
 
 .board__perspective {
@@ -112,9 +115,25 @@ body:not(.is-ready) .board__perspective { transition: none; }
   width: var(--card-w);
   height: var(--card-h);
   border-radius: var(--r-card);
-  border: 1px dashed rgba(243, 239, 229, 0.08);
-  background: transparent;
+  /* Clearly visible but quiet: a solid hairline frame, a faint fill and a centred
+     label, so the deck/discard zones read as real drop targets. */
+  border: 1px solid rgba(243, 239, 229, 0.22);
+  background: radial-gradient(120% 90% at 50% 50%, rgba(243, 239, 229, 0.05) 0%, rgba(243, 239, 229, 0) 70%);
+  display: grid;
+  place-items: center;
   transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+
+.dock__label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ivory-mute);
+  opacity: 0.85;
+  pointer-events: none;
+  user-select: none;
 }
 
 .dock__slot--deck {
@@ -125,6 +144,6 @@ body:not(.is-ready) .board__perspective { transition: none; }
 }
 
 .dock__slot.is-hot {
-  border-color: rgba(243, 239, 229, 0.4);
-  background: rgba(243, 239, 229, 0.04);
+  border-color: rgba(243, 239, 229, 0.5);
+  background: rgba(243, 239, 229, 0.06);
 }

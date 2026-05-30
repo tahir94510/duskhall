@@ -42,6 +42,14 @@
     "youSuffix": " (you)",
     "droppedSuffix": " (away)"
   },
+  "kick": {
+    "title": "Remove player",
+    "body": "Remove {name} from the table? They will be sent to a new, empty room.",
+    "confirm": "Remove",
+    "aria": "Remove {name}",
+    "done": "{name} was removed from the table.",
+    "kicked": "The host removed you from the table."
+  },
   "shortcutsList": {
     "title": "Shortcuts",
     "subtitle": "The cursor target wins; empty space does nothing.",

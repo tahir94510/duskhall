@@ -1,5 +1,7 @@
 import { slotsForSeat } from "./SlotGrid.js";
 import type { Seat } from "./rotation.js";
+import { t } from "../i18n/index.js";
+import { ICON_CLOSE } from "../ui/icons.js";
 
 export interface BoardRefs {
   root: HTMLDivElement;
@@ -43,7 +45,9 @@ export function buildTable(host: HTMLElement): BoardRefs {
   for (let i = 0; i < seats.length; i++) {
     const z = document.createElement("div");
     z.className = `${seats[i]!.cls} zone--empty`;
-    z.innerHTML = `<div class="zone__rail"><span class="zone__name" data-role="name"></span></div>`;
+    // Kick button is hidden by default; Game.refreshZones reveals it only for the
+    // host on an occupied rival seat.
+    z.innerHTML = `<div class="zone__rail"><span class="zone__name" data-role="name"></span><button class="zone__kick" type="button" data-action="kick" hidden>${ICON_CLOSE}</button></div>`;
     root.appendChild(z);
     zones.push(z);
   }
@@ -55,8 +59,8 @@ export function buildTable(host: HTMLElement): BoardRefs {
       <div class="board__slots" data-role="slots"></div>
       <div class="board__layer board__cards" data-role="cards"></div>
       <div class="dock dock--canonical" data-role="dock">
-        <div class="dock__slot dock__slot--deck" data-role="deck"></div>
-        <div class="dock__slot dock__slot--discard" data-role="discard"></div>
+        <div class="dock__slot dock__slot--deck" data-role="deck"><span class="dock__label">${escapeHtml(t("table.deck"))}</span></div>
+        <div class="dock__slot dock__slot--discard" data-role="discard"><span class="dock__label">${escapeHtml(t("table.discard"))}</span></div>
       </div>
     </div>
   `;
@@ -98,4 +102,16 @@ function paintSlotGrid(refs: BoardRefs): void {
 
 export function repaintSlots(refs: BoardRefs): void {
   paintSlotGrid(refs);
+}
+
+// Re-label the deck/discard markers when the language changes.
+export function refreshDockLabels(refs: BoardRefs): void {
+  const deck = refs.deckSlot.querySelector<HTMLElement>(".dock__label");
+  const discard = refs.discardSlot.querySelector<HTMLElement>(".dock__label");
+  if (deck) deck.textContent = t("table.deck");
+  if (discard) discard.textContent = t("table.discard");
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
