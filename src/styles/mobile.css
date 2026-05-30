@@ -52,7 +52,8 @@
 @media (max-width: 760px) {
   .table {
     grid-template-columns: minmax(86px, 14vw) 1fr minmax(86px, 14vw);
-    grid-template-rows: minmax(86px, 14vh) 1fr minmax(110px, 22vh);
+    /* Symmetric top/bottom so opposing players' zones match on phones too. */
+    grid-template-rows: minmax(110px, 18vh) 1fr minmax(110px, 18vh);
   }
   .header__menu { min-width: 200px; max-width: calc(100vw - 28px); }
   .modal { max-height: 90vh; }
