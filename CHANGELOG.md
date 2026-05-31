@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.5.0 — Production-ready multiplayer
+
+Builds on the 0.4.0 sync fix to make the live, multi-device experience solid.
+
+### Player lifecycle (drop vs exit) and empty seats
+- **Empty seats are open table.** Zone hit-testing and card concealment now key off
+  whether a player actually holds the seat, not the physical zone div. A seat nobody
+  occupies (never sat, or the player left/was kicked) accepts card drops and shows its
+  cards as public — exactly like the center table. Centralized in `occupancy.ts`
+  (`seatIsOwned` / `seatIsRival` / `cardIsRivalOwned`), unit-tested.
+- **Drop (away) vs exit (leave/kick) are clean and distinct.** A dropped player (closed
+  tab / lost network) keeps their seat and private cards and resumes on return with the
+  same identity. An exited player's seat fully frees and their cards become public.
+- **Kick is reliable.** The kicked player is removed on every screen immediately
+  (including the kicker's), their freed cards' hold-locks release at once, and a
+  12-second tombstone stops a lagging presence sync from resurrecting them.
+
+### Feedback, security, mobile
+- **Feedback channel**: optional `ISSUES_URL` (GitHub Issues) and `FEEDBACK_URL`
+  (anonymous form); a Feedback row in the menu opens whichever is configured.
+- **Security**: the connection self-test masks the project URL (`unizx….supabase.co`);
+  SECURITY.md documents that the anon/publishable key is public by design and warns
+  against using a secret key. Both `anon` and `sb_publishable_` keys are accepted.
+- **Mobile/touch**: no sticky hover after a tap (`@media (hover)`), ≥40–44px touch
+  targets, and the long-press action bar wraps instead of overflowing on small phones.
+- **Perf**: removed a per-card-per-frame Set allocation from the render hot path.
+
 ## 0.4.0 — Vaerum
 
 This release renames the project and, more importantly, fixes the root cause behind

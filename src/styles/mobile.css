@@ -34,7 +34,15 @@
   transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
 
-.context-bar__btn:hover,
+/* Hover only on devices with a real hovering pointer (mouse). On touch, a tapped
+   button would otherwise keep the hover style "stuck" until the next tap. */
+@media (hover: hover) {
+  .context-bar__btn:hover {
+    color: var(--ivory);
+    border-color: var(--line-3);
+    background: rgba(28, 28, 28, 0.78);
+  }
+}
 .context-bar__btn:active {
   color: var(--ivory);
   border-color: var(--line-3);
@@ -92,8 +100,24 @@
   :root { --card-w: clamp(46px, 10vmin, 76px); }
 }
 
+/* On touch devices (no hovering pointer) neutralize hover styles that would
+   otherwise "stick" on the persistent controls after a tap, until the next tap
+   elsewhere. Press feedback still comes from :active. Scoped to the controls that
+   stay on screen; transient tap-to-dismiss menu items are harmless. */
+@media (hover: none) {
+  .icon-btn:hover { background: rgba(22, 22, 22, 0.55); color: var(--ivory-dim); border-color: var(--line-2); }
+  .zone__kick:hover { color: var(--ivory-dim); }
+}
+
 @media (pointer: coarse) {
-  .icon-btn:hover { background: rgba(18, 18, 18, 0.55); }
+  /* Comfortable ≥44px touch targets for the long-press action bar, and cap its
+     width so the (up to 6) buttons wrap to a tidy second row near a screen edge
+     instead of overflowing off-screen. */
+  .context-bar { max-width: min(92vw, 320px); justify-content: center; }
+  .context-bar__btn { width: 44px; height: 44px; }
+  .context-bar__btn svg { width: 18px; height: 18px; }
+  /* The header icon buttons are also primary touch targets. */
+  .icon-btn { width: 40px; height: 40px; }
 }
 
 /* Very small screens (≤400px): tighten paddings further. */
@@ -103,8 +127,10 @@
   .icon-btn svg { width: 16px; height: 16px; }
   .modal__head { padding: 14px 16px 10px; }
   .modal__foot { padding: 12px 16px; }
-  .context-bar { gap: 4px; padding: 5px; }
-  .context-bar__btn { width: 32px; height: 32px; }
+  .context-bar { gap: 4px; padding: 5px; max-width: 96vw; }
+  /* Keep buttons tappable (≥40px) even on the smallest phones; the bar wraps
+     rather than shrinking targets below a usable size. */
+  .context-bar__btn { width: 40px; height: 40px; }
   .settings__row { grid-template-columns: 56px 1fr 28px; gap: 10px; }
   /* Shrink cards on tiny phones so the deck and discard dock slots never
      overlap visually. Below ~360px the default clamp puts them too close. */

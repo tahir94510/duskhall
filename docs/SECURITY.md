@@ -29,15 +29,30 @@ Web clients can never be made 100% tamper-proof. The following layers reduce com
 
 Every broadcast message is treated as untrusted.
 
-- Token-bucket rate limit on **send**: cursors 30 Hz, ops 10 Hz, holds 20 Hz.
-- Token-bucket rate limit on **receive, per sender**: a flooding/buggy peer is
-  throttled (≈20 patch msgs/s, ≈45 cursor msgs/s) before dispatch, and its
-  bucket is pruned when it leaves presence, so one peer can't pin every client's CPU.
-- Byte cap: 6 KB per payload.
+- Token-bucket rate limit on **send** and on **receive, per sender**: a flooding or
+  buggy peer is throttled before dispatch, and its bucket is pruned when it leaves
+  presence, so one peer can't pin every client's CPU.
+- Byte cap: 32 KB per payload (clears a full 72-card snapshot with headroom).
 - Card array cap: 200 entries per patch.
-- Coordinate clamp: ±5000 px.
+- **Field-appropriate validation** (`safeNumber` / `safeStamp` / `safeInt`): each
+  field is bounded by what it is, never one blanket clamp. Coordinates (`x`,`y`) are
+  clamped to a near-board range; the last-write-wins timestamp (`ts`) and z-order
+  (`z`) and patch version keep their true magnitude (validated as finite, not clamped)
+  — clamping `ts` to the coordinate range was the bug that silently dropped every
+  card update between players.
 - Schema check: every field must be the right primitive; unknown fields are dropped.
 - Seat index clamped to `[-1, 3]` (`-1` = spectator).
+
+### The Supabase anon / publishable key is public by design
+
+The browser key (`SUPABASE_ANON_KEY` or an `sb_publishable_…` key) is **meant** to
+ship to the client — `@supabase/supabase-js` puts it in the websocket connection, so
+it is always visible in devtools regardless of how it's delivered. It grants only what
+Realtime Broadcast + Presence allow (no tables, no RLS‑protected data in this app), so
+exposure is not a vulnerability. The in‑app connection self‑test never prints the key,
+and it shows the project URL **masked** (`unizx….supabase.co`) so a shared screen or
+recording doesn't reveal the project ref. The `service_role` / `sb_secret_…` keys must
+**never** be used in the browser; the self‑test warns if one is detected.
 
 ## State sync & resilience
 

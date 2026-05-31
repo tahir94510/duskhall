@@ -8,6 +8,8 @@
     "menu": "Menu",
     "rules": "Rules",
     "support": "Support",
+    "feedback": "Feedback",
+    "legal": "About & legal",
     "leave": "Exit room",
     "reset": "Exit room",
     "exit": "Exit room",
@@ -138,6 +140,60 @@
     "cta": "Open support page",
     "noUrl": "A support page is not configured yet. Please check back later.",
     "thanks": "Thank you for keeping the table alive."
+  },
+  "feedback": {
+    "title": "Send feedback",
+    "intro": "Found a bug, or have an idea or request? Tell us, it helps shape the game.",
+    "form": "Open the feedback form",
+    "issues": "Report on GitHub",
+    "none": "No feedback channel is configured yet. Please check back later."
+  },
+  "legalDoc": {
+    "title": "About & Legal",
+    "subtitle": "What Vaerum is, and how it treats your data.",
+    "intro": "Vaerum is a free, browser-based digital card table for playing with friends. This page explains what it is, what data it does and does not handle, and the terms of use.",
+    "sections": [
+      {
+        "id": "about",
+        "title": "About",
+        "body": [
+          "Vaerum: Heirs of the Ether is a digital tabletop for a 2 to 4 player strategy card game. It gives you and your friends a shared table: deal, move, flip, group and shuffle cards in real time. It does not enforce the rules for you, you follow the rulebook yourselves, exactly as you would around a physical table.",
+          "It is built as a small, fast web app and runs entirely in your browser. Live play between devices uses a real-time messaging service to relay each table's moves; there is no game server storing your play.",
+          "Vaerum is made by an independent designer. It is offered free to play."
+        ]
+      },
+      {
+        "id": "privacy",
+        "title": "Privacy",
+        "body": [
+          "Vaerum is built to need as little of your data as possible.",
+          "**No accounts.** You do not sign up or log in. There is no name, email, or password to give.",
+          "**No tracking or advertising.** Vaerum runs no analytics, no advertising, and no third-party trackers. Your play is not profiled or sold.",
+          "**What stays on your device.** Your volume settings, chosen language, a random display name, and a short-lived room identity are saved in your browser's local storage so the table remembers them between visits. You can clear them any time through your browser settings.",
+          "**What travels between players.** While a room is live, the moves on the table (card positions, flips, cursors) are relayed through a real-time messaging service so the other players in your room see them. This data is transient: it is delivered to the players present and is not stored on a server after it is sent.",
+          "**The room link.** A room is identified by a short code in its link. Anyone who has the link can join that room, so share it only with the people you want at your table."
+        ]
+      },
+      {
+        "id": "terms",
+        "title": "Terms of use",
+        "body": [
+          "Vaerum is provided for personal, non-commercial enjoyment, as is and without warranty of any kind. It may be unavailable or change at any time.",
+          "Please use it respectfully: do not abuse the service, attempt to disrupt other players' games, or use it for anything unlawful.",
+          "To the maximum extent permitted by law, the author is not liable for any loss or damage arising from the use of, or inability to use, Vaerum.",
+          "Continued use means you accept these terms."
+        ]
+      },
+      {
+        "id": "copyright",
+        "title": "Copyright",
+        "body": [
+          "The Vaerum name, the game design and rules, all card names and text, the sigils, and the visual identity are the original work of the author and are protected by copyright.",
+          "You are welcome to play Vaerum with friends and to stream or review it with credit. Reproducing, reprinting, redistributing, translating, or adapting the game or its content into any medium, or any commercial use, requires the author's written permission.",
+          "© 2026 the Vaerum author. All rights reserved."
+        ]
+      }
+    ]
   },
   "categories": {
     "seal": {

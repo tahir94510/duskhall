@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { safeNumber, safeStamp, safeInt } from "../security/inputGuard.js";
 import { isNewerWrite } from "./lww.js";
-import { classifyKey } from "./realtime.js";
+import { classifyKey, maskHost } from "./realtime.js";
 
 // A minimal unsigned JWT with a given role claim, for classifyKey tests.
 function fakeJwt(role: string): string {
@@ -102,5 +102,20 @@ describe("classifyKey accepts both browser keys, rejects secrets", () => {
   it("returns unknown for garbage so diagnostics warn", () => {
     expect(classifyKey("not-a-key")).toBe("unknown");
     expect(classifyKey("")).toBe("unknown");
+  });
+});
+
+describe("maskHost hides the project ref in the self-test", () => {
+  it("masks the ref but keeps the supabase suffix", () => {
+    const m = maskHost("https://unizxindpodcvrdynlrl.supabase.co");
+    expect(m).toBe("unizx….supabase.co");
+    expect(m).not.toContain("unizxindpodcvrdynlrl"); // full ref never shown
+  });
+  it("handles a trailing slash and other supabase TLDs", () => {
+    expect(maskHost("https://abcdef.supabase.co/")).toBe("abcde….supabase.co");
+  });
+  it("never throws on garbage", () => {
+    expect(maskHost("not a url")).toBe("••••");
+    expect(maskHost("")).toBe("••••");
   });
 });

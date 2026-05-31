@@ -1,17 +1,31 @@
+/* The play field is a CENTERED SQUARE. A square is essential: every seat rotates
+   the board 0/90/180/270° to bring its own area to the bottom, and only on a square
+   does a 90° turn map the field onto itself exactly — so all four seats share one
+   identical coordinate space and a card placed by anyone lands in the same logical
+   spot for everyone. The side is the smaller viewport dimension (minus safe-area),
+   capped so it stays elegant on large monitors. The full-bleed background (.app-bg,
+   position:fixed) is unaffected and shows on the sides of wide screens. */
 .table {
   position: fixed;
-  inset: 0;
+  top: 50%;
+  left: 50%;
+  /* Square side = min(usable width, usable height), capped. The env() insets keep
+     it clear of notches / rounded corners. */
+  --field: min(
+    calc(100vw - max(env(safe-area-inset-left), 10px) - max(env(safe-area-inset-right), 10px)),
+    calc(100dvh - max(env(safe-area-inset-top), 10px) - max(env(safe-area-inset-bottom), 10px)),
+    880px
+  );
+  width: var(--field);
+  height: var(--field);
+  transform: translate(-50%, -50%);
   display: grid;
-  grid-template-columns: minmax(150px, 17vw) 1fr minmax(150px, 17vw);
-  /* Symmetric top/bottom rows (and equal left/right columns) so every player's
-     zone is the same size whichever seat they sit in — a balanced diamond. */
-  grid-template-rows: minmax(140px, 18vh) 1fr minmax(140px, 18vh);
-  gap: clamp(8px, 1.4vmin, 18px);
-  padding:
-    max(env(safe-area-inset-top), 14px)
-    max(env(safe-area-inset-right), 14px)
-    max(env(safe-area-inset-bottom), 14px)
-    max(env(safe-area-inset-left), 14px);
+  /* Equal side columns and top/bottom rows so all four seat strips are identical
+     after any 90° rotation — the symmetry the square guarantees. */
+  grid-template-columns: minmax(64px, 19%) 1fr minmax(64px, 19%);
+  grid-template-rows: minmax(64px, 19%) 1fr minmax(64px, 19%);
+  gap: clamp(6px, 1.4vmin, 16px);
+  padding: clamp(6px, 1.4vmin, 16px);
 }
 
 .board {

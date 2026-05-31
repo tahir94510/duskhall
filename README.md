@@ -37,6 +37,10 @@ OG_IMAGE=https://vaerum.example/assets/og.svg
 # Support button link
 SUPPORT_URL=https://your-support-page
 NEXT_PUBLIC_APP_URL=https://vaerum.example
+
+# Feedback channels (optional; the Feedback menu row appears if either is set)
+ISSUES_URL=https://github.com/<you>/vaerum/issues
+FEEDBACK_URL=https://forms.gle/your-anonymous-form
 ```
 
 `/api/config` is an Edge function that reads these env vars and serves them to the client at runtime. With this path, no keys are baked into the bundle.

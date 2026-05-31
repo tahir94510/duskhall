@@ -107,6 +107,23 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   });
 }
 
+/** Mask a Supabase URL's project ref for display, e.g.
+ *  `https://unizxindpodcvrdynlrl.supabase.co` → `unizx….supabase.co`. Keeps enough
+ *  to confirm a URL arrived without exposing the full project ref on screen. */
+export function maskHost(url: string): string {
+  try {
+    const host = new URL(url).host; // e.g. unizxindpodcvrdynlrl.supabase.co
+    const dot = host.indexOf(".");
+    if (dot <= 0) return "••••";
+    const ref = host.slice(0, dot);
+    const rest = host.slice(dot); // ".supabase.co"
+    const head = ref.slice(0, Math.min(5, ref.length));
+    return `${head}…${rest}`;
+  } catch {
+    return "••••";
+  }
+}
+
 export type KeyKind = "anon" | "publishable" | "service_role" | "secret" | "unknown";
 
 /** Classify a Supabase client key by shape, with no network or signature check —
@@ -224,19 +241,20 @@ export class RealtimeBus {
       : kind === "secret" ? "WARNING: this looks like a secret key — use the anon or publishable key instead"
       : "key is not a recognised Supabase browser key — re-copy the anon or publishable key";
     const keyOk = kind === "anon" || kind === "publishable";
-    steps.push({ id: "config", ok: keyOk, detail: `URL: ${url} · ${keyNote}.` });
+    // Show a MASKED host, not the full project URL: enough for the player to see
+    // "yes, a Supabase URL arrived" without exposing the project ref to anyone
+    // glancing at the screen or a shared recording.
+    steps.push({ id: "config", ok: keyOk, detail: `URL: ${maskHost(url)} · ${keyNote}.` });
 
     // 2) Is the URL the expected Supabase project URL shape?
-    let host = "";
     let urlOk = false;
     try {
       const u = new URL(url);
-      host = u.host;
       urlOk = u.protocol === "https:" && /\.supabase\.(co|in|net)$/.test(u.host) && u.pathname.replace(/\/$/, "") === "";
     } catch { urlOk = false; }
     steps.push({
       id: "url", ok: urlOk,
-      detail: urlOk ? `Project URL looks right (${host}).`
+      detail: urlOk ? `Project URL looks right (${maskHost(url)}).`
         : "URL should be exactly https://<project-ref>.supabase.co with no path or trailing segment."
     });
     if (!urlOk) return { ok: false, steps, summary: "url-bad" };
