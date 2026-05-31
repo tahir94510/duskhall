@@ -8,6 +8,7 @@
     "menu": "Menü",
     "rules": "Kurallar",
     "support": "Destek",
+    "feedback": "Geri bildirim",
     "leave": "Odadan çık",
     "reset": "Odadan çık",
     "exit": "Odadan çık",
@@ -138,6 +139,13 @@
     "cta": "Destek sayfasını aç",
     "noUrl": "Destek sayfası henüz yapılandırılmamış. Daha sonra tekrar deneyin.",
     "thanks": "Masayı yaşatmaya devam ettiğin için teşekkürler."
+  },
+  "feedback": {
+    "title": "Geri bildirim gönder",
+    "intro": "Bir hata mı buldun ya da bir fikrin, isteğin mi var? Bize ilet; oyunu birlikte şekillendirelim.",
+    "form": "Geri bildirim formunu aç",
+    "issues": "GitHub'da bildir",
+    "none": "Henüz bir geri bildirim kanalı yapılandırılmamış. Daha sonra tekrar deneyin."
   },
   "categories": {
     "seal": {

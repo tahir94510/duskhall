@@ -8,6 +8,7 @@
     "menu": "Menu",
     "rules": "Rules",
     "support": "Support",
+    "feedback": "Feedback",
     "leave": "Exit room",
     "reset": "Exit room",
     "exit": "Exit room",
@@ -138,6 +139,13 @@
     "cta": "Open support page",
     "noUrl": "A support page is not configured yet. Please check back later.",
     "thanks": "Thank you for keeping the table alive."
+  },
+  "feedback": {
+    "title": "Send feedback",
+    "intro": "Found a bug, or have an idea or request? Tell us, it helps shape the game.",
+    "form": "Open the feedback form",
+    "issues": "Report on GitHub",
+    "none": "No feedback channel is configured yet. Please check back later."
   },
   "categories": {
     "seal": {

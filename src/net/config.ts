@@ -2,6 +2,10 @@ export interface RuntimeConfig {
   supabaseUrl: string;
   supabaseAnonKey: string;
   supportUrl: string;
+  /** GitHub Issues page for bug reports / requests (posting needs a GitHub account). */
+  issuesUrl: string;
+  /** Account-less feedback form (Google Form / Tally) for anyone to submit. */
+  feedbackUrl: string;
   appUrl: string;
   appName: string;
   siteUrl: string;
@@ -17,6 +21,8 @@ export function normalise(j: Partial<RuntimeConfig>): RuntimeConfig {
     supabaseUrl: s(j.supabaseUrl).replace(/\/+$/, ""),
     supabaseAnonKey: s(j.supabaseAnonKey),
     supportUrl: s(j.supportUrl),
+    issuesUrl: s(j.issuesUrl),
+    feedbackUrl: s(j.feedbackUrl),
     appUrl: s(j.appUrl),
     appName: s(j.appName),
     siteUrl: s(j.siteUrl),
@@ -33,6 +39,8 @@ function fromViteEnv(): Partial<RuntimeConfig> {
     supabaseUrl: env.VITE_SUPABASE_URL,
     supabaseAnonKey: env.VITE_SUPABASE_ANON_KEY,
     supportUrl: env.VITE_SUPPORT_URL,
+    issuesUrl: env.VITE_ISSUES_URL,
+    feedbackUrl: env.VITE_FEEDBACK_URL,
     appName: env.VITE_APP_NAME,
     siteUrl: env.VITE_SITE_URL,
     socialOgImage: env.VITE_OG_IMAGE
