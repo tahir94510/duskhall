@@ -1,5 +1,5 @@
 import { createClient, type RealtimeChannel, type SupabaseClient } from "@supabase/supabase-js";
-import { TokenBucket, withinByteCap, safeNumber, safeString } from "../security/inputGuard.js";
+import { TokenBucket, withinByteCap, safeNumber, safeStamp, safeInt, safeString } from "../security/inputGuard.js";
 import { LocalBus } from "./localBus.js";
 import type { RuntimeConfig } from "./config.js";
 
@@ -107,10 +107,25 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   });
 }
 
+export type KeyKind = "anon" | "publishable" | "service_role" | "secret" | "unknown";
+
+/** Classify a Supabase client key by shape, with no network or signature check —
+ *  just enough to tell the player whether they pasted a browser-safe key. Both the
+ *  legacy `anon` JWT and the newer `sb_publishable_…` key are valid in a browser;
+ *  the `service_role` JWT and `sb_secret_…` keys must never ship to one. */
+export function classifyKey(token: string): KeyKind {
+  const t = token.trim();
+  if (t.startsWith("sb_publishable_")) return "publishable";
+  if (t.startsWith("sb_secret_")) return "secret";
+  const role = decodeJwtRole(t);
+  if (role === "anon") return "anon";
+  if (role === "service_role") return "service_role";
+  return "unknown";
+}
+
 /** Read the `role` claim from a Supabase JWT (anon keys carry role "anon",
  *  service keys "service_role"). Returns null if the string is not a JWT we can
- *  decode. Pure local base64 decode — no signature check, just a shape sniff so
- *  diagnostics can tell the player they pasted the wrong key. */
+ *  decode. Pure local base64 decode — no signature check, just a shape sniff. */
 function decodeJwtRole(token: string): string | null {
   try {
     const part = token.split(".")[1];
@@ -197,15 +212,19 @@ export class RealtimeBus {
       });
       return { ok: false, steps, summary: "config-missing" };
     }
-    // Echo back WHAT arrived so the player can eyeball it: the URL, and the key's
-    // JWT role (anon keys decode to role "anon"). This catches the common mistakes
-    // of pasting the service_role key, a truncated key, or the wrong project.
-    const keyRole = decodeJwtRole(key);
-    const keyNote = keyRole === "anon" ? 'anon key looks valid'
-      : keyRole === "service_role" ? 'WARNING: this is the service_role key — use the anon/public key instead'
-      : keyRole ? `key role is "${keyRole}" (expected "anon")`
-      : "key is not a readable JWT — re-copy the anon/public key";
-    steps.push({ id: "config", ok: keyRole === "anon", detail: `URL: ${url} · ${keyNote}.` });
+    // Echo back WHAT arrived so the player can eyeball it: the URL and the key kind.
+    // Supabase issues two valid browser keys — the legacy `anon` JWT and the newer
+    // `sb_publishable_…` key — and accepts either. We flag only the genuinely wrong
+    // ones: a service_role JWT (must never ship to a browser) or unreadable garbage.
+    const kind = classifyKey(key);
+    const keyNote =
+      kind === "anon" ? "anon key looks valid"
+      : kind === "publishable" ? "publishable key looks valid"
+      : kind === "service_role" ? "WARNING: this is the secret service_role key — use the anon or publishable key instead"
+      : kind === "secret" ? "WARNING: this looks like a secret key — use the anon or publishable key instead"
+      : "key is not a recognised Supabase browser key — re-copy the anon or publishable key";
+    const keyOk = kind === "anon" || kind === "publishable";
+    steps.push({ id: "config", ok: keyOk, detail: `URL: ${url} · ${keyNote}.` });
 
     // 2) Is the URL the expected Supabase project URL shape?
     let host = "";
@@ -512,13 +531,19 @@ export class RealtimeBus {
     if (!Array.isArray(raw)) return [];
     return (raw as Array<Partial<PatchCard>>).slice(0, 200).map((c) => ({
       id: safeString(c.id, 32),
+      // x,y are canonical [0,1] fractions: clamp to a near-board range.
       x: safeNumber(c.x),
       y: safeNumber(c.y),
-      z: safeNumber(c.z, 0),
+      // z-order grows without bound over a session: validate as a wide-range int,
+      // never the coordinate clamp (which would collapse deep stacks to a ceiling).
+      z: safeInt(c.z, 0),
       rot: typeof c.rot === "number" ? Math.max(-999, Math.min(999, Math.round(c.rot))) : 0,
       faceUp: c.faceUp === true,
       ownerSeat: typeof c.ownerSeat === "number" ? Math.max(-1, Math.min(3, c.ownerSeat)) : null,
-      ts: safeNumber(c.ts, 0)
+      // ts is a wall-clock last-write-wins stamp (~1.7e12). It MUST keep its real
+      // magnitude or the LWW gate in applyPatch rejects every remote edit — the bug
+      // that made all card operations fail to sync. Never run it through safeNumber.
+      ts: safeStamp(c.ts, 0)
     }));
   }
 
@@ -542,7 +567,9 @@ export class RealtimeBus {
       // Patches are rate-limited per sender; snapshots are rare/authoritative
       // and exempt so a reconnect resync is never throttled away.
       if (msg.type === "patch" && by && !this.bucketFor(by).patch.consume()) return;
-      const sanitized: CardPatch = { v: safeNumber(p.v), by, cards: this.sanitizeCards(p.cards) };
+      // v is a monotonic patch-version counter (grows without bound), not a
+      // coordinate — validate as a wide int so it is never clamped to the board range.
+      const sanitized: CardPatch = { v: safeInt(p.v, 0), by, cards: this.sanitizeCards(p.cards) };
       if (msg.type === "snapshot" && p.claims) sanitized.claims = this.sanitizeClaims(p.claims);
       for (const l of this.gameListeners) l({ type: msg.type, payload: sanitized });
     } else if (msg.type === "left") {
@@ -569,7 +596,9 @@ export class RealtimeBus {
         ids,
         by: safeString(h.by, 40),
         seat: typeof h.seat === "number" ? Math.max(-1, Math.min(3, h.seat)) : -1,
-        until: safeNumber(h.until, 0),
+        // until is a wall-clock expiry (Date.now() + ms), not a coordinate — keep
+        // its real magnitude or the hold-lock would look permanently expired.
+        until: safeStamp(h.until, 0),
         release: h.release === true
       };
       for (const l of this.gameListeners) l({ type: "hold", payload: safe });

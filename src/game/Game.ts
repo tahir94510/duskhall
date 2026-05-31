@@ -29,6 +29,7 @@ import {
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, HoldMsg, LeftMsg, KickMsg, SeatClaim } from "../net/realtime.js";
+import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
 import { getOrAssignName, resetName } from "../util/names.js";
@@ -1482,10 +1483,10 @@ export class Game {
       // Never let a remote/stale packet disturb a card we are actively holding.
       if (this.myHeldIds.includes(upd.id)) continue;
       if (!isSnapshot) {
-        // Skew-proof LWW: newer ts wins; equal ts broken by writer id. Advancing
-        // our clock past everything we see lets our next edit win in turn.
-        const newer = upd.ts > c.ts || (upd.ts === c.ts && writer > (c.by ?? ""));
-        if (!newer) continue;
+        // Skew-proof LWW (shared, unit-tested rule): newer ts wins; equal ts broken
+        // by writer id. Advancing our clock past everything we see lets our next
+        // edit win in turn.
+        if (!isNewerWrite(upd.ts, writer, c.ts, c.by)) continue;
       }
       c.x = upd.x;
       c.y = upd.y;

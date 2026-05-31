@@ -50,8 +50,12 @@ The client resolves config from three layers, first one with Supabase creds wins
    # optional: VITE_APP_NAME, VITE_SITE_URL, VITE_OG_IMAGE, VITE_SUPPORT_URL
    ```
    These are inlined at build, so they work in `vite dev` and on hosts without the edge function.
-2. **`/api/config`** — Vercel runtime env (the `SUPABASE_URL` / `APP_NAME` / … names above). No rebuild needed to change them.
+2. **`/api/config`** — Vercel runtime env (the **non‑prefixed** `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `APP_NAME` / … names above). No rebuild needed to change them. **This is the production path.**
 3. **`public/config.local.json`** — a gitignored local fallback. Copy `public/config.local.json.example`, fill in your URL and public anon key, and never commit it.
+
+**Why some names have `VITE_` and some don't — this is intentional, not a bug.** Vite only exposes variables that start with `VITE_` to browser code, so those are the *local‑dev* names you put in `.env.local`. In production the browser never reads env directly; it fetches `/api/config`, an Edge function that reads the **plain** names (`SUPABASE_URL`, etc.) on the server and returns them. Same settings, two delivery paths. For your Vercel deployment, use the plain names — exactly the ones you already set.
+
+**Which Supabase key?** Either browser key works: the legacy **anon** key (a JWT starting `eyJ…`) or the newer **publishable** key (`sb_publishable_…`). The anon key is the simplest with the standard setup. **Never** use the `service_role` / `sb_secret_…` keys in the browser — the in‑app connection self‑test warns if you do. No SQL, tables, RLS, or auth setup is needed; the game uses only Realtime Broadcast + Presence, which are on by default.
 
 ### Troubleshooting: cards don't sync between players
 
