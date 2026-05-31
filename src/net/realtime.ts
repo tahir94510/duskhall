@@ -107,6 +107,22 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   });
 }
 
+/** Read the `role` claim from a Supabase JWT (anon keys carry role "anon",
+ *  service keys "service_role"). Returns null if the string is not a JWT we can
+ *  decode. Pure local base64 decode — no signature check, just a shape sniff so
+ *  diagnostics can tell the player they pasted the wrong key. */
+function decodeJwtRole(token: string): string | null {
+  try {
+    const part = token.split(".")[1];
+    if (!part) return null;
+    const json = atob(part.replace(/-/g, "+").replace(/_/g, "/"));
+    const claims = JSON.parse(json) as { role?: string };
+    return typeof claims.role === "string" ? claims.role : null;
+  } catch {
+    return null;
+  }
+}
+
 const CONNECT_TIMEOUT_MS = 9000;
 const RECONNECT_MAX_MS = 16000;
 
@@ -181,7 +197,15 @@ export class RealtimeBus {
       });
       return { ok: false, steps, summary: "config-missing" };
     }
-    steps.push({ id: "config", ok: true, detail: "URL and anon key are present." });
+    // Echo back WHAT arrived so the player can eyeball it: the URL, and the key's
+    // JWT role (anon keys decode to role "anon"). This catches the common mistakes
+    // of pasting the service_role key, a truncated key, or the wrong project.
+    const keyRole = decodeJwtRole(key);
+    const keyNote = keyRole === "anon" ? 'anon key looks valid'
+      : keyRole === "service_role" ? 'WARNING: this is the service_role key — use the anon/public key instead'
+      : keyRole ? `key role is "${keyRole}" (expected "anon")`
+      : "key is not a readable JWT — re-copy the anon/public key";
+    steps.push({ id: "config", ok: keyRole === "anon", detail: `URL: ${url} · ${keyNote}.` });
 
     // 2) Is the URL the expected Supabase project URL shape?
     let host = "";
