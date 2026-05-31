@@ -133,14 +133,22 @@ body:not(.is-ready) .board__perspective { transition: none; }
 
 .dock__label {
   font-family: var(--font-display);
-  font-size: 10px;
+  /* Scale with the card so a long word (e.g. Turkish "ÇÖPLÜK") never spills past
+     the marker on small phones, where --card-w clamps down to ~38px. */
+  font-size: clamp(7px, 1.6vmin, 10px);
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ivory-mute);
   opacity: 0.85;
   pointer-events: none;
   user-select: none;
+  /* Stay inside the card box: clip to the marker width and never wrap or bleed. */
+  max-width: calc(var(--card-w) - 8px);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* The marker CENTRES sit at DECK_NX / DISCARD_NX (constants.ts: 0.40 / 0.60) of

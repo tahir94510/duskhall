@@ -12,7 +12,7 @@ import { resolve } from "node:path";
 //   public/audio/music/<anything>.<ext>  music tracks (any name; play in order)
 // A flat public/audio/<file> layout is still honoured for backwards
 // compatibility, but the folders are the documented convention.
-function kabalAssetManifest(): Plugin {
+function assetManifest(): Plugin {
   const IMG_EXT = ["webp", "png", "jpg", "jpeg", "svg", "avif"];
   const AUDIO_EXT = ["mp3", "ogg", "wav", "m4a", "aac"];
   const SFX_NAMES = new Set([
@@ -106,7 +106,7 @@ function kabalAssetManifest(): Plugin {
   };
 
   return {
-    name: "kabal-asset-manifest",
+    name: "vaerum-asset-manifest",
     buildStart() { generate(); },
     configureServer() { generate(); }
   };
@@ -114,7 +114,7 @@ function kabalAssetManifest(): Plugin {
 
 export default defineConfig({
   base: "/",
-  plugins: [kabalAssetManifest()],
+  plugins: [assetManifest()],
   build: {
     target: "es2022",
     outDir: "dist",

@@ -2,7 +2,7 @@
 
 ## Balance constants
 
-All numbers live in `src/game/balance.ts` and are referenced from rules text, tooltips, and UI counters. Change once, everywhere updates.
+The canonical balance numbers live in `src/game/balance.ts`. The rulebook copy is hand-written prose (not interpolated), so a test (`src/game/balance.test.ts`) enforces that the deck composition and the quick-reference numbers in both locales stay consistent with these constants and with the actual card set in `cards.ts`. If you change a number here, update the rulebook text to match or the test fails.
 
 | Constant | Value | Rationale |
 | --- | --- | --- |

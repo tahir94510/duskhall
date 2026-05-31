@@ -145,16 +145,21 @@ export class DragController {
       relOffsets.set(cid, { dx: c.x - seed.x, dy: c.y - seed.y });
     }
 
-    // Bring all picked cards to the top: bump their resting z (so the order
-    // persists after the drop) but paint them in the elevated held band while
-    // in hand, preserving their internal order.
+    // Bring all picked cards to the top, preserving their EXISTING relative
+    // stacking. findStackOverlapping returns ids in arbitrary (map) order, so we
+    // must reassign z in ascending current-z order — otherwise a grabbed pile
+    // gets its internal order scrambled. The new resting z persists after the
+    // drop; while in hand they paint in the elevated held band, lowest-first, so
+    // the visual stack matches the logical one.
+    const ordered = ids
+      .map((cid) => this.state.cards.get(cid))
+      .filter((c): c is NonNullable<typeof c> => !!c)
+      .sort((a, b) => a.z - b.z);
     let heldIdx = 0;
-    for (const cid of ids) {
-      const c = this.state.cards.get(cid);
-      if (!c) continue;
+    for (const c of ordered) {
       this.state.topZ++;
       c.z = this.state.topZ;
-      const el = this.host.querySelector<HTMLDivElement>(`[data-id="${cid}"]`);
+      const el = this.host.querySelector<HTMLDivElement>(`[data-id="${c.id}"]`);
       if (el) {
         el.style.zIndex = String(HELD_Z_BASE + heldIdx++);
         el.classList.add("is-held");
