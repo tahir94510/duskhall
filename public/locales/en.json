@@ -437,8 +437,8 @@
         "body": [
           "KABAL on the web is a sandbox. There is no automated rules engine; players follow this rulebook themselves.",
           "Left-press drags a card. Right-click flips the stack under the cursor. Ctrl plus left-press drags the whole stack. Scroll flips a single card; Ctrl plus scroll flips the whole stack. Shift plus scroll rotates the card 90° sideways. Press G to gather the stack, M to shuffle it.",
-          "Your zone is the bottom blurred area. Cards there are private to you; rivals see only the count. Cards cannot be dropped inside an opponent's zone, leave them on the rim and the owner draws them in.",
-          "When everyone leaves, the room closes. Reset room opens a fresh one with a new link."
+          "Your zone is the blurred strip along the bottom of your screen. Cards there are private to you; rivals see only their backs and can infer the count. You cannot drop a card inside an opponent's zone; leave it on the rim and the owner draws it in.",
+          "When everyone leaves, the room closes. Leaving the room opens a fresh one with a new link, with you as its host."
         ]
       }
     ],

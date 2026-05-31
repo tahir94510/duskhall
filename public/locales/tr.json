@@ -89,16 +89,16 @@
         "desc": "İmlecin altındaki yığını çevir (tek kart yalnız çevrilir)"
       },
       {
-        "keys": "Scroll",
+        "keys": "Tekerlek",
         "desc": "İmlecin altındaki tek kartı çevir"
       },
       {
-        "keys": "Ctrl + scroll",
+        "keys": "Ctrl + tekerlek",
         "desc": "İmlecin altındaki yığını toplu çevir"
       },
       {
-        "keys": "Shift + scroll",
-        "desc": "Kartı 90° döndür (yana, çevirme değil)"
+        "keys": "Shift + tekerlek",
+        "desc": "Kartı 90° döndür (yana yatırır, yüzünü çevirmez)"
       },
       {
         "keys": "G",
@@ -436,9 +436,9 @@
         "title": "14. Dijital masa",
         "body": [
           "KABAL web sürümü serbest bir masadır. Otomatik kural motoru yoktur; oyuncular kuralları bu kitaba göre kendileri uygular.",
-          "Sol tıkla kartı sürükle. Sağ tık imleç altındaki yığını çevirir. Ctrl + sol tık yığını taşır. Scroll tek kartı çevirir; Ctrl + scroll yığını toplu çevirir. Shift + scroll kartı 90° yana döndürür. G ile yığını topla, M ile karıştır.",
-          "Kendi alanın alttaki blur'lu bölge. Oradaki kartlar sana özeldir; rakipler yalnızca sayıyı görür. Rakip alanına kart bırakılamaz, kenarda bırak, sahibi kendisi içeri çeker.",
-          "Herkes ayrıldığında oda kapanır. Odayı sıfırla tıklandığında yeni bağlantıyla taze bir oda açılır."
+          "Sol tıkla basılı tutup kartı sürükle. Sağ tık imlecin altındaki yığını toplu çevirir. Ctrl + sol tık yığının tamamını taşır. Tekerlek tek kartı çevirir; Ctrl + tekerlek yığını toplu çevirir. Shift + tekerlek kartı 90° yana yatırır. Yığını toplamak için G'ye, karıştırmak için M'ye bas.",
+          "Kendi alanın, ekranının altındaki bulanık şerittir. Oradaki kartlar sana özeldir; rakipler yalnızca kartların arkasını görür ve sayısını tahmin edebilir. Rakibin alanına kart bırakamazsın; kenarda bırak, sahibi içeri kendisi çeker.",
+          "Herkes ayrıldığında oda kapanır. Odadan ayrılmak, seni ev sahibi yapan yeni bağlantılı taze bir oda açar."
         ]
       }
     ],
