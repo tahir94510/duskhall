@@ -115,6 +115,52 @@ describe("screen <-> canonical is an exact round-trip for every seat", () => {
   });
 });
 
+describe("SQUARE field: all four seats agree on where a card is (the keystone)", () => {
+  // The play field is a centered square (board.css), so boardSize.width === height.
+  // On a square, each seat's ±90°/180° board rotation maps the field onto itself
+  // exactly, so a canonical point projected by seat A and by seat B must be the
+  // same physical point rotated by (rotB - rotA) about the shared centre. This is
+  // what makes a card placed by any player land in the same logical spot for all.
+  const sq: BoardBox = { cx: 500, cy: 500, width: 900, height: 900 };
+  const points: Array<[number, number]> = [
+    [0.5, 0.5], [0.4, 0.5], [0.6, 0.5], [0.2, 0.8], [0.85, 0.15], [0.1, 0.1]
+  ];
+
+  function rot(px: number, py: number, cx: number, cy: number, deg: number): [number, number] {
+    const r = (deg * Math.PI) / 180, c = Math.cos(r), s = Math.sin(r);
+    const dx = px - cx, dy = py - cy;
+    return [cx + dx * c - dy * s, cy + dx * s + dy * c];
+  }
+
+  it("seat 2 and seat 3 see a point exactly where seats 0/1 do, rotated by the seat delta", () => {
+    for (const [nx, ny] of points) {
+      const p0 = canonicalToScreen(nx, ny, 0, sq);
+      for (const v of [1, 2, 3] as Seat[]) {
+        const pv = canonicalToScreen(nx, ny, v, sq);
+        // pv must equal p0 rotated by (seatRot(v) - seatRot(0)) about the centre.
+        const delta = seatRotationDeg(v) - seatRotationDeg(0);
+        const [ex, ey] = rot(p0.px, p0.py, sq.cx, sq.cy, delta);
+        expect(pv.px).toBeCloseTo(ex, 6);
+        expect(pv.py).toBeCloseTo(ey, 6);
+      }
+    }
+  });
+
+  it("on a square, every seat's projection stays within the field bounds", () => {
+    // A non-square field used to push ±90° seats' points outside the short edge;
+    // on the square they always land inside [0, side].
+    for (const [nx, ny] of points) {
+      for (const v of SEATS) {
+        const { px, py } = canonicalToScreen(nx, ny, v, sq);
+        expect(px).toBeGreaterThanOrEqual(sq.cx - sq.width / 2 - 1e-6);
+        expect(px).toBeLessThanOrEqual(sq.cx + sq.width / 2 + 1e-6);
+        expect(py).toBeGreaterThanOrEqual(sq.cy - sq.height / 2 - 1e-6);
+        expect(py).toBeLessThanOrEqual(sq.cy + sq.height / 2 + 1e-6);
+      }
+    }
+  });
+});
+
 describe("four-player table reads consistently for every seat (regression)", () => {
   // The reported bug: when seats 2 and 3 fill the sides, the third player saw the
   // other seats mirrored. This pins the physically-correct reading for all four.
