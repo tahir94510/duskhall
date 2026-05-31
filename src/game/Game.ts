@@ -108,6 +108,12 @@ export class Game {
   private seatClaims = new Map<number, { id: string; name: string; joinedAt: number }>();
   private activeSeats = new Set<number>();
   private lastRoster: PresencePlayer[] = [];
+  // Recently removed client ids (kicked / left), each with an expiry. A departing
+  // player lingers in Supabase presenceState() until their untrack is processed,
+  // so a presence "sync" can briefly re-list them; we ignore tombstoned ids in
+  // applyPresence so a kicked/left player can never be resurrected by that lag.
+  private removedTombstones = new Map<string, number>();
+  private static readonly TOMBSTONE_MS = 12000;
 
   constructor(deps: GameDeps) {
     this.host = deps.host;
@@ -460,11 +466,12 @@ export class Game {
   // NOT owned, so its on-screen area behaves like open public table: cards can be
   // dropped there and any card stranded on it is public, not concealed. This is the
   // single source of truth for "does this seat's area belong to a player?".
-  // Live snapshot of seat occupancy for the pure helpers in occupancy.ts. The
-  // seatClaims map covers active AND away/dropped players (claim persists), so it
-  // is the "claimed" set; activeSeats is the present subset.
+  // Live view of seat occupancy for the pure helpers in occupancy.ts. activeSeats
+  // is the present subset; seatClaims covers active AND away/dropped players (the
+  // claim persists). Both are passed by reference as `.has(seat)` lookups — no
+  // per-call allocation, since this runs for every card every frame.
   private occupancy(): Occupancy {
-    return { activeSeats: this.activeSeats, claimedSeats: new Set(this.seatClaims.keys()), seatCount: SEAT_COUNT };
+    return { activeSeats: this.activeSeats, claimedSeats: this.seatClaims, seatCount: SEAT_COUNT };
   }
 
   // A seat owned by someone OTHER than us (and we are seated). Used to decide
@@ -1192,7 +1199,11 @@ export class Game {
       // a departure only frees that owner's own seat. So a disconnected player
       // keeps their seat ("dropped") and reclaims it on reconnect; only an
       // explicit `left` (applyLeft) actually vacates a seat.
-      const roster = players.length ? players.slice() : [this.presencePayload()];
+      // Drop anyone we just kicked/removed: they can linger in presenceState for a
+      // moment after removal, and must not be resurrected. (Never tombstone self.)
+      this.pruneTombstones();
+      const roster = (players.length ? players.slice() : [this.presencePayload()])
+        .filter((p) => p.id === this.self.id || !this.removedTombstones.has(p.id));
       if (!roster.some((p) => p.id === this.self.id)) roster.push(this.presencePayload());
       // Deterministic order so two clients racing the same seat resolve the same
       // way everywhere: earliest joiner (then id) wins the contested seat.
@@ -1297,6 +1308,15 @@ export class Game {
       this.requestRender();
   }
 
+  // Mark an id as recently removed so a lagging presence sync can't resurrect it.
+  private tombstone(id: string): void {
+    if (id && id !== this.self.id) this.removedTombstones.set(id, Date.now() + Game.TOMBSTONE_MS);
+  }
+  private pruneTombstones(): void {
+    const now = Date.now();
+    for (const [id, until] of this.removedTombstones) if (until <= now) this.removedTombstones.delete(id);
+  }
+
   // Handle an explicit departure (leave / kick): free the seat and release every
   // card that seat owned so the table becomes public/interactable again.
   private applyLeft(l: LeftMsg): void {
@@ -1313,7 +1333,9 @@ export class Game {
     this.seatClaims.delete(l.seat);
     this.activeSeats.delete(l.seat);
     // Forget the leaver entirely so a re-evaluation can't resurrect them from a
-    // stale roster (e.g. presence sync hasn't dropped them yet after a kick).
+    // stale roster (e.g. presence sync hasn't dropped them yet after a kick). The
+    // tombstone makes the next applyPresence ignore their lingering presence too.
+    this.tombstone(l.id);
     this.players.delete(l.id);
     this.lastRoster = this.lastRoster.filter((p) => p.id !== l.id);
     const now = this.stamp();
@@ -1327,9 +1349,13 @@ export class Game {
         released++;
       }
     }
-    // Remove the leaver's ghost cursor and any holds they had.
+    // Remove the leaver's ghost cursor and release any hold-locks they held, so
+    // their just-freed cards are immediately grabbable (not stuck until the 6s TTL).
     const el = this.cursorEls.get(l.id);
     if (el) { el.remove(); this.cursorEls.delete(l.id); }
+    for (const [cid, h] of this.heldByOther) {
+      if (h.seat === l.seat) this.heldByOther.delete(cid);
+    }
     // Re-evaluate seating now that a seat opened (e.g. a spectator can sit).
     this.applyPresence(this.lastRoster);
     if (released) this.scheduleFlush();

@@ -10,6 +10,16 @@ function occ(active: number[], claimed: number[]): Occupancy {
   return { activeSeats: new Set(active), claimedSeats: new Set(claimed), seatCount: 4 };
 }
 
+describe("Occupancy accepts a live Map as claimedSeats (no per-call allocation)", () => {
+  it("a Map's .has works just like a Set for claim lookups", () => {
+    const claims = new Map<number, { id: string }>([[2, { id: "x" }]]);
+    const o: Occupancy = { activeSeats: new Set([0]), claimedSeats: claims, seatCount: 4 };
+    expect(seatIsOwned(o, 2)).toBe(true);  // away player (claimed, not active)
+    expect(seatIsOwned(o, 0)).toBe(true);  // active
+    expect(seatIsOwned(o, 1)).toBe(false); // empty
+  });
+});
+
 describe("seatIsOwned", () => {
   it("an active seat is owned", () => {
     expect(seatIsOwned(occ([1], [1]), 1)).toBe(true);

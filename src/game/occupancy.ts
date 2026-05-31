@@ -7,11 +7,17 @@
 //   - A seat is EMPTY if nobody ever sat there, or the occupant explicitly left or
 //     was kicked. Its area is open public table: drops land, cards there are public.
 
+/** Anything that can answer "is this seat present?" — a Set or a Map's key view.
+ *  Lets callers pass their live Set/Map by reference without allocating a copy. */
+export interface SeatMembership {
+  has(seat: number): boolean;
+}
+
 export interface Occupancy {
   /** Seats with a player currently connected. */
-  activeSeats: ReadonlySet<number>;
+  activeSeats: SeatMembership;
   /** Seats with a persistent claim (covers active AND away/dropped players). */
-  claimedSeats: ReadonlySet<number>;
+  claimedSeats: SeatMembership;
   seatCount: number;
 }
 
