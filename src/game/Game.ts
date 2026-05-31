@@ -725,12 +725,18 @@ export class Game {
   }
 
   private installAudioBoot(): void {
+    // Browsers block audio until the first real user gesture, so we start the
+    // engine (and music) on the earliest pointer/touch/key event. touchstart is
+    // included so the very first tap on a phone — which may not raise a
+    // pointerdown before the browser's gesture gate — still unlocks audio.
     const start = () => {
       void this.audio.boot();
       window.removeEventListener("pointerdown", start);
+      window.removeEventListener("touchstart", start);
       window.removeEventListener("keydown", start);
     };
     window.addEventListener("pointerdown", start, { once: true });
+    window.addEventListener("touchstart", start, { once: true });
     window.addEventListener("keydown", start, { once: true });
   }
 
@@ -935,7 +941,10 @@ export class Game {
     // plays so undercards never flash above a still-turning card.
     this.elevateDuringAnim(stack, FLIP_ANIM_MS);
     // Real-pile flip: only the new top card (highest z after the flip) is visible
-    // mid-rotation; the rest are hidden so no underlying face ever shows through.
+    // mid-rotation; every other card is hidden for the WHOLE turn so no
+    // underlying face ever shows through — equally on opening (face-down → up)
+    // and closing (face-up → down). Each card flips its own CSS rotateY, so an
+    // un-hidden under-card would otherwise reveal its face as it spins.
     if (stack.length > 1) {
       let topId = stack[0]!;
       let topZ = -Infinity;
@@ -946,10 +955,13 @@ export class Game {
       for (const cid of stack) {
         if (cid !== topId) this.cardEls.get(cid)?.classList.add("is-flip-quiet");
       }
+      // Reveal the under-cards only AFTER the flip has fully settled and they have
+      // been repainted at rest (a small buffer past the elevate timer avoids the
+      // race where a card un-hides while its rotateY transition is still running).
       window.setTimeout(() => {
-        for (const cid of stack) this.cardEls.get(cid)?.classList.remove("is-flip-quiet");
         this.requestRender();
-      }, FLIP_ANIM_MS);
+        for (const cid of stack) this.cardEls.get(cid)?.classList.remove("is-flip-quiet");
+      }, FLIP_ANIM_MS + 40);
     }
     this.scheduleFlush();
     void this.audio.play("flip");
