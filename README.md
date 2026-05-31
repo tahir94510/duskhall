@@ -41,6 +41,18 @@ NEXT_PUBLIC_APP_URL=https://kabal.example
 
 `/api/config` is an Edge function that reads these env vars and serves them to the client at runtime. No keys are baked into the bundle.
 
+For local development without Vercel, copy `public/config.local.json.example` to `public/config.local.json` and fill in your Supabase URL and public anon key. That file is gitignored and is only read when `/api/config` is unavailable (local dev). Never commit it.
+
+### Troubleshooting: cards don't sync between players
+
+If actions never reach other players and the menu's **Connection** row reads **Offline**, the client could not reach Supabase Realtime. Check, in order:
+
+1. **Env vars are set in Vercel** (`SUPABASE_URL` and `SUPABASE_ANON_KEY`) and the project was redeployed after setting them. Open `/api/config` in the browser; both values must be present.
+2. **Realtime is enabled** for the Supabase project (Project settings → Realtime). No tables or auth are needed; the app uses only Broadcast + Presence.
+3. **CSP allows the socket** — `vercel.json` already permits `wss://*.supabase.co`; keep that entry if you fork the CSP.
+
+Two browser tabs on the **same machine** always sync, even while offline, via a local `BroadcastChannel` fallback. So if same-machine tabs sync but two separate devices do not, the cause is the Supabase connection above. The `Cookie "__cf_bm" has been rejected` console message is a harmless Cloudflare bot-management notice and does not affect the websocket.
+
 ## Vercel deployment
 
 ```
