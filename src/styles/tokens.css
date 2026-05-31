@@ -27,12 +27,14 @@
   --r-zone: 12px;
   --r-pill: 999px;
 
-  /* Shadow: soft, top-lit and restrained. Vertical (no angle) and gentle, as if
-     a single soft light sits directly above the table — never a harsh, slanted,
-     heavy drop. Held/lifted cards rise with a slightly larger but still soft
-     shadow rather than a dramatic dark one. */
-  --shadow-card: 0 2px 6px rgba(0, 0, 0, 0.3);
-  --shadow-card-held: 0 8px 20px rgba(0, 0, 0, 0.38);
+  /* Shadow: soft, top-lit and restrained. Vertical (no angle), as if one soft
+     light sits directly above the table — never harsh or slanted. The resting
+     shadow is deliberately LIGHT and tight: cards overlap heavily in a deck, and
+     each card casts its own, so a strong shadow would compound 50+ deep into a
+     black blob under a pile. A held/lifted card gets a clearly larger, soft cast
+     so it still reads as raised above the table. */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.18);
+  --shadow-card-held: 0 10px 22px rgba(0, 0, 0, 0.34);
   --shadow-panel: 0 16px 40px rgba(0, 0, 0, 0.5);
 
   /* Card sizing */
