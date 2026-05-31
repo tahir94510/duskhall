@@ -143,12 +143,12 @@ body:not(.is-ready) .board__perspective { transition: none; }
   user-select: none;
 }
 
-.dock__slot--deck {
-  transform: translate(calc(-50% - (var(--card-w) + var(--dock-gutter)) / 2), -50%);
-}
-.dock__slot--discard {
-  transform: translate(calc(-50% + (var(--card-w) + var(--dock-gutter)) / 2), -50%);
-}
+/* The marker CENTRES sit at DECK_NX / DISCARD_NX (constants.ts: 0.40 / 0.60) of
+   the board, so a dealt pile (stored at those same centre fractions) lands dead
+   centre on its marker on every device. Keep these percentages in sync with
+   constants.ts. translate(-50%, -50%) centres the box on the point. */
+.dock__slot--deck { left: 40%; transform: translate(-50%, -50%); }
+.dock__slot--discard { left: 60%; transform: translate(-50%, -50%); }
 
 .dock__slot.is-hot {
   border-color: rgba(243, 239, 229, 0.5);

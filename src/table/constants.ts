@@ -1,12 +1,15 @@
-// Central dock geometry. The deck and discard sit side-by-side, centred on the
-// board, separated by a fixed pixel gutter so they are always visually adjacent
-// yet never overlap, from a 320px phone up to 4K. The CSS markers (board.css)
-// and the deal/​reset math (Game.ts) both derive from these same numbers so they
-// can never drift apart.
+// Central dock geometry, expressed as CENTRE fractions of the board in the
+// shared canonical [0,1] frame. These are plain constants, identical on every
+// device, so a dealt pile is stored at the exact same spot for all players
+// (device-independent sync) and lines up pixel-perfectly with its CSS marker at
+// any screen size. The deck sits just left of centre and the discard just right,
+// close together as a tidy pair. board.css (.dock__slot--deck / --discard) uses
+// these very same fractions, so the pile and its marker can never drift apart.
+
+// Horizontal centres of the two shared piles (canonical fractions).
+export const DECK_NX = 0.4;
+export const DISCARD_NX = 0.6;
 
 // Vertical centre line of the dock (canonical fraction).
 export const DECK_NY = 0.5;
 export const DISCARD_NY = 0.5;
-
-// Gap in CSS pixels between the deck and discard cards.
-export const DOCK_GUTTER_PX = 14;

@@ -73,3 +73,38 @@ export function seatForLocalSlot(viewerSeat: Seat, slot: LocalSlot): Seat {
   }
   return 0;
 }
+
+// ---- Screen <-> canonical coordinate transforms (pure, unit-testable) --------
+//
+// The board is rotated by CSS about the cards-layer centre. A card's canonical
+// position is its CENTRE in the shared [0,1] frame. These two helpers convert
+// between a viewport pixel and that canonical centre, inverting the rotation in
+// real pixel space so they stay exact on a NON-square board for every seat.
+// They are exact inverses of each other (see rotation.test.ts).
+
+export interface BoardBox {
+  /** cards-layer centre in viewport pixels */
+  cx: number;
+  cy: number;
+  /** unrotated cards-layer size in pixels */
+  width: number;
+  height: number;
+}
+
+// Viewport pixel -> canonical [0,1] fraction.
+export function screenToCanonical(clientX: number, clientY: number, seat: Seat, box: BoardBox): { nx: number; ny: number } {
+  const [ux, uy] = rotateVec(clientX - box.cx, clientY - box.cy, -seatRotationDeg(seat));
+  return {
+    nx: (ux + box.width / 2) / box.width,
+    ny: (uy + box.height / 2) / box.height
+  };
+}
+
+// Canonical [0,1] fraction -> viewport pixel (matches exactly where CSS paints a
+// card centre at that canonical position).
+export function canonicalToScreen(nx: number, ny: number, seat: Seat, box: BoardBox): { px: number; py: number } {
+  const lx = nx * box.width - box.width / 2;
+  const ly = ny * box.height - box.height / 2;
+  const [sx, sy] = rotateVec(lx, ly, seatRotationDeg(seat));
+  return { px: box.cx + sx, py: box.cy + sy };
+}

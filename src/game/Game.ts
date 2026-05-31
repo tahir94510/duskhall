@@ -25,8 +25,8 @@ import {
   shuffleStack,
   flipStackOver
 } from "../table/StackOps.js";
-import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, type Seat } from "../table/rotation.js";
-import { DECK_NY, DOCK_GUTTER_PX } from "../table/constants.js";
+import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
+import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, HoldMsg, LeftMsg, KickMsg, SeatClaim } from "../net/realtime.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
@@ -250,19 +250,28 @@ export class Game {
     this.cardSizeCache = null;
   }
 
-  // Top-left canonical x for the deck pile so its centre sits on the deck marker
-  // (half a card + gutter to the left of board centre). Mirrors the CSS calc in
-  // board.css (.dock__slot--deck), so the pile and the marker always line up.
-  private deckBaseNx(cardW: number): number {
-    return 0.5 - (2 * cardW + DOCK_GUTTER_PX) / (2 * this.boardSize.width);
+  // Canonical CENTRE fraction of the deck / discard piles. Fixed constants,
+  // identical on every device, so a dealt pile is stored at the same spot for all
+  // players and lines up pixel-perfectly with its CSS marker (board.css uses the
+  // same DECK_NX / DISCARD_NX) at any screen size.
+  private deckBaseNx(): number {
+    return DECK_NX;
   }
 
-  // Top-left canonical x for the discard pile so its centre sits on the discard
-  // marker (half a card + gutter to the RIGHT of board centre). The card-width
-  // terms cancel for the right pile, leaving a clean gutter-only offset; mirrors
-  // the CSS calc in board.css (.dock__slot--discard).
   private discardBaseNx(): number {
-    return 0.5 + DOCK_GUTTER_PX / (2 * this.boardSize.width);
+    return DISCARD_NX;
+  }
+
+  // Single source of truth for a card's CSS transform. Canonical (nx, ny) is the
+  // card CENTRE in [0,1]; we convert to the layer's top-left pixel by subtracting
+  // half the measured card size (the .card box is positioned from its top-left,
+  // transform-origin: center). So the centre lands exactly on the canonical point
+  // — and on the deck/discard marker — at every viewport size and for every
+  // client, regardless of their card pixel size. rotate() spins about the centre.
+  private cardTransform(nx: number, ny: number, rot: number, cardW: number, cardH: number): string {
+    const px = nx * this.boardSize.width - cardW / 2;
+    const py = ny * this.boardSize.height - cardH / 2;
+    return `translate3d(${px}px, ${py}px, 0) rotate(${rot * 90}deg)`;
   }
 
   // Cached card pixel size. Reading offsetWidth forces a synchronous reflow, and
@@ -315,23 +324,19 @@ export class Game {
   // in real pixel space (see rotateVec) so it stays exact on a non-square board
   // for every seat. For seat 0 (no rotation) this reduces to the old
   // (clientX - left) / width mapping, so solo play is unchanged.
-  private screenToCanonical(clientX: number, clientY: number): { nx: number; ny: number } {
+  private boardBox(): BoardBox {
     const { cx, cy } = this.boardCenter();
-    const [ux, uy] = rotateVec(clientX - cx, clientY - cy, -seatRotationDeg(this.self.seat as Seat));
-    return {
-      nx: (ux + this.boardSize.width / 2) / this.boardSize.width,
-      ny: (uy + this.boardSize.height / 2) / this.boardSize.height
-    };
+    return { cx, cy, width: this.boardSize.width, height: this.boardSize.height };
+  }
+
+  private screenToCanonical(clientX: number, clientY: number): { nx: number; ny: number } {
+    return screenToCanonical(clientX, clientY, this.self.seat as Seat, this.boardBox());
   }
 
   // Canonical [0,1] fraction -> viewport pixel, matching exactly where CSS
   // paints a card at that canonical position (used to place peer cursors).
   private canonicalToScreen(nx: number, ny: number): { px: number; py: number } {
-    const { cx, cy } = this.boardCenter();
-    const lx = nx * this.boardSize.width - this.boardSize.width / 2;
-    const ly = ny * this.boardSize.height - this.boardSize.height / 2;
-    const [sx, sy] = rotateVec(lx, ly, seatRotationDeg(this.self.seat as Seat));
-    return { px: cx + sx, py: cy + sy };
+    return canonicalToScreen(nx, ny, this.self.seat as Seat, this.boardBox());
   }
 
   private bindHooks(): void {
@@ -347,7 +352,10 @@ export class Game {
         return null;
       },
       toCanonical: (clientX, clientY) => this.screenToCanonical(clientX, clientY),
-      boardMetrics: () => ({ width: this.boardSize.width, height: this.boardSize.height }),
+      boardMetrics: () => {
+        const { w, h } = this.cardMetrics();
+        return { width: this.boardSize.width, height: this.boardSize.height, cardW: w, cardH: h };
+      },
       pickStackUnder: (clientX, clientY) => {
         const top = this.topCardAtCanonicalPoint(clientX, clientY);
         if (!top) return [];
@@ -424,8 +432,8 @@ export class Game {
     const py = ny * h;
     let pick: CardState | null = null;
     for (const c of this.state.cards.values()) {
-      const ccx = c.x * w + cardW / 2;
-      const ccy = c.y * h + cardH / 2;
+      const ccx = c.x * w;
+      const ccy = c.y * h;
       const [lx, ly] = rotateVec(px - ccx, py - ccy, -c.rot * 90);
       if (Math.abs(lx) <= cardW / 2 && Math.abs(ly) <= cardH / 2) {
         if (!pick || c.z > pick.z) pick = c;
@@ -454,10 +462,11 @@ export class Game {
 
   private initialDealLocal(): void {
     const deck = seededDeck(this.room);
-    // Pile origin: card top-left so its centre lands on (DECK_NX, DECK_NY).
+    // Pile centre is the fixed canonical (DECK_NX, DECK_NY); cardTransform turns
+    // that centre into the right top-left pixel for this device's card size.
     const { w: cardW, h: cardH } = this.cardMetrics();
-    const baseNx = this.deckBaseNx(cardW);
-    const baseNy = DECK_NY - cardH / (2 * this.boardSize.height);
+    const baseNx = this.deckBaseNx();
+    const baseNy = DECK_NY;
     let z = 1;
     for (const card of deck) {
       // Every card sits exactly on the Deck slot centre, a clean single pile,
@@ -478,7 +487,7 @@ export class Game {
       el.style.zIndex = String(cardState.z);
       // Set the transform before first paint so the smooth transition does NOT
       // animate the card sliding in from the layer's top-left corner.
-      const tf = `translate3d(${baseNx * this.boardSize.width}px, ${baseNy * this.boardSize.height}px, 0) rotate(0deg)`;
+      const tf = this.cardTransform(baseNx, baseNy, 0, cardW, cardH);
       el.style.transform = tf;
       el.dataset.tf = tf;
       this.refs.cardsLayer.appendChild(el);
@@ -502,9 +511,9 @@ export class Game {
     this.measureBoard();
     if (this.boardSize.width < 50 || this.boardSize.height < 50) return;
     const { w: cardW, h: cardH } = this.cardMetrics();
-    const deckNx = this.deckBaseNx(cardW);
+    const deckNx = this.deckBaseNx();
     const discardNx = this.discardBaseNx();
-    const baseNy = DECK_NY - cardH / (2 * this.boardSize.height);
+    const baseNy = DECK_NY;
     // ~0.6 card as a canonical fraction — the tolerance for "still on the pile"
     // so only the resting piles (never a card moved away) get re-aligned.
     const tolX = (cardW * 0.6) / this.boardSize.width;
@@ -643,6 +652,7 @@ export class Game {
   private applyShuffleJitter(ids: string[]): void {
     const w = this.boardSize.width;
     const h = this.boardSize.height;
+    const { w: cardW, h: cardH } = this.cardMetrics();
     for (const id of ids) {
       const el = this.cardEls.get(id);
       const c = this.state.cards.get(id);
@@ -651,8 +661,10 @@ export class Game {
       const a2 = (3 + Math.random() * 3) * (a1 > 0 ? -1 : 1);
       // The keyframe owns the transform while shuffling, so it must carry the
       // card's translate too, otherwise it would snap to 0,0 and just spin.
-      el.style.setProperty("--tx", `${c.x * w}px`);
-      el.style.setProperty("--ty", `${c.y * h}px`);
+      // (c.x, c.y) is the card CENTRE; subtract half a card to get the same
+      // top-left pixel cardTransform uses, so the wobble pivots in place.
+      el.style.setProperty("--tx", `${c.x * w - cardW / 2}px`);
+      el.style.setProperty("--ty", `${c.y * h - cardH / 2}px`);
       el.style.setProperty("--base-rot", `${c.rot * 90}deg`);
       el.style.setProperty("--a1", `${a1}deg`);
       el.style.setProperty("--a2", `${a2}deg`);
@@ -852,7 +864,8 @@ export class Game {
         this.state.cards.set(cardState.id, cardState);
         const { el } = createCardElement(cardState.id, cardState.defId);
         el.style.zIndex = String(cardState.z);
-        const tf = `translate3d(${cardState.x * this.boardSize.width}px, ${cardState.y * this.boardSize.height}px, 0) rotate(${cardState.rot * 90}deg)`;
+        const cm = this.cardMetrics();
+        const tf = this.cardTransform(cardState.x, cardState.y, cardState.rot, cm.w, cm.h);
         el.style.transform = tf;
         el.dataset.tf = tf;
         this.refs.cardsLayer.appendChild(el);
@@ -988,9 +1001,8 @@ export class Game {
   // slot. A one-click "new game" without leaving the room.
   private resetDeck(): void {
     const order = seededDeck(`${this.room}:${Date.now()}`);
-    const { w: cardW, h: cardH } = this.cardMetrics();
-    const baseNx = this.deckBaseNx(cardW);
-    const baseNy = DECK_NY - cardH / (2 * this.boardSize.height);
+    const baseNx = this.deckBaseNx();
+    const baseNy = DECK_NY;
     let z = 1;
     for (const item of order) {
       const c = this.state.cards.get(item.instanceId);
@@ -1560,14 +1572,13 @@ export class Game {
   }
 
   private renderAllCards(): void {
-    const w = this.boardSize.width;
-    const h = this.boardSize.height;
+    const { w: cardW, h: cardH } = this.cardMetrics();
     for (const c of this.state.cards.values()) {
       const el = this.cardEls.get(c.id);
       if (!el) continue;
       const busy = el.classList.contains("is-held") || el.classList.contains("is-shuffling") || el.classList.contains("is-animating");
       if (!busy) {
-        const transform = `translate3d(${c.x * w}px, ${c.y * h}px, 0) rotate(${c.rot * 90}deg)`;
+        const transform = this.cardTransform(c.x, c.y, c.rot, cardW, cardH);
         // Dedup writes so a transition (added in card.css) only fires on a real
         // change, and idle frames do no layout work.
         if (el.dataset.tf !== transform) {

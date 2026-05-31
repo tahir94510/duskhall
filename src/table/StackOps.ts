@@ -1,13 +1,27 @@
 import type { BoardState, CardState } from "./types.js";
 import { mulberry32 } from "../game/deck.js";
 
-// Tight threshold: a card joins the stack only when its bbox overlaps the seed by ≥75 %.
-const OVERLAP_RATIO = 0.75;
+// A card joins the stack when its (rotation-aware) footprint overlaps the seed by
+// at least this fraction of the SMALLER card's area. 0.6 is deliberate: two
+// perpendicular cards (one upright, one at 90°) sharing a centre overlap by ~69 %
+// of a card — above 0.6, so a mixed-orientation pile is detected as one stack —
+// while the deck (0.40) and discard (0.60) markers never overlap at all, so the
+// two central piles can never merge. Same-orientation cards still need to sit
+// squarely on top of each other (well above 60 %) to group.
+const OVERLAP_RATIO = 0.6;
 
 interface BoardSize { width: number; height: number; }
 
 function cardPixelBox(c: CardState, board: BoardSize, cardW: number, cardH: number) {
-  return { x: c.x * board.width, y: c.y * board.height, w: cardW, h: cardH };
+  // (c.x, c.y) is the card CENTRE fraction. A card rotated by an odd quarter-turn
+  // (90°/270°) presents a swapped footprint (h x w), so its axis-aligned bounding
+  // box must swap dimensions; otherwise a rotated card on a pile is mis-measured
+  // and wrongly excluded from the stack (the cause of mixed-rotation flip flicker
+  // and "can't grab the rotated card"). Even quarter-turns keep w x h.
+  const quarter = ((Math.round(c.rot) % 2) + 2) % 2; // 0 or 1
+  const w = quarter === 1 ? cardH : cardW;
+  const h = quarter === 1 ? cardW : cardH;
+  return { x: c.x * board.width - w / 2, y: c.y * board.height - h / 2, w, h };
 }
 
 function intersectionArea(a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }): number {
@@ -39,12 +53,16 @@ export function findStackOverlapping(
   if (!seed) return [seedId];
   const { w, h } = size && size.w > 0 ? size : cardSizeFallback();
   const seedBox = cardPixelBox(seed, board, w, h);
-  const seedArea = w * h;
   const out: string[] = [];
   for (const c of state.cards.values()) {
     if (c.id === seedId) { out.push(c.id); continue; }
     const cb = cardPixelBox(c, board, w, h);
-    if (intersectionArea(seedBox, cb) / seedArea >= OVERLAP_RATIO) out.push(c.id);
+    const inter = intersectionArea(seedBox, cb);
+    if (inter <= 0) continue;
+    // Measure overlap against the SMALLER of the two footprints so a rotated card
+    // (swapped w/h) still pairs with an upright one when they sit on the same pile.
+    const minArea = Math.min(seedBox.w * seedBox.h, cb.w * cb.h);
+    if (inter / minArea >= OVERLAP_RATIO) out.push(c.id);
   }
   return out;
 }
