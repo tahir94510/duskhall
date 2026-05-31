@@ -39,9 +39,19 @@ SUPPORT_URL=https://your-support-page
 NEXT_PUBLIC_APP_URL=https://vaerum.example
 ```
 
-`/api/config` is an Edge function that reads these env vars and serves them to the client at runtime. No keys are baked into the bundle.
+`/api/config` is an Edge function that reads these env vars and serves them to the client at runtime. With this path, no keys are baked into the bundle.
 
-For local development without Vercel, copy `public/config.local.json.example` to `public/config.local.json` and fill in your Supabase URL and public anon key. That file is gitignored and is only read when `/api/config` is unavailable (local dev). Never commit it.
+The client resolves config from three layers, first one with Supabase creds wins, branding merged across all:
+
+1. **Vite build-time env** (`VITE_*`) — for local dev or any static host. Put them in `.env.local`:
+   ```
+   VITE_SUPABASE_URL=https://<project>.supabase.co
+   VITE_SUPABASE_ANON_KEY=<public anon key>
+   # optional: VITE_APP_NAME, VITE_SITE_URL, VITE_OG_IMAGE, VITE_SUPPORT_URL
+   ```
+   These are inlined at build, so they work in `vite dev` and on hosts without the edge function.
+2. **`/api/config`** — Vercel runtime env (the `SUPABASE_URL` / `APP_NAME` / … names above). No rebuild needed to change them.
+3. **`public/config.local.json`** — a gitignored local fallback. Copy `public/config.local.json.example`, fill in your URL and public anon key, and never commit it.
 
 ### Troubleshooting: cards don't sync between players
 
