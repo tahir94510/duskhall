@@ -53,18 +53,22 @@ export function findStackOverlapping(
   if (!seed) return [seedId];
   const { w, h } = size && size.w > 0 ? size : cardSizeFallback();
   const seedBox = cardPixelBox(seed, board, w, h);
-  const out: string[] = [];
+  const hits: CardState[] = [];
   for (const c of state.cards.values()) {
-    if (c.id === seedId) { out.push(c.id); continue; }
+    if (c.id === seedId) { hits.push(c); continue; }
     const cb = cardPixelBox(c, board, w, h);
     const inter = intersectionArea(seedBox, cb);
     if (inter <= 0) continue;
     // Measure overlap against the SMALLER of the two footprints so a rotated card
     // (swapped w/h) still pairs with an upright one when they sit on the same pile.
     const minArea = Math.min(seedBox.w * seedBox.h, cb.w * cb.h);
-    if (inter / minArea >= OVERLAP_RATIO) out.push(c.id);
+    if (inter / minArea >= OVERLAP_RATIO) hits.push(c);
   }
-  return out;
+  // Return ids in ascending z (bottom-to-top). Every caller (grab, gather, flip,
+  // shuffle, stack-rotate) wants the pile's real stacking order, not the arbitrary
+  // Map iteration order, so the order is correct in one place for all of them.
+  hits.sort((a, b) => a.z - b.z);
+  return hits.map((c) => c.id);
 }
 
 /**

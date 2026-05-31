@@ -36,6 +36,14 @@ describe("findStackOverlapping (rotation-aware)", () => {
     const stack = findStackOverlapping(st, BOARD, "up", SIZE);
     expect(new Set(stack)).toEqual(new Set(["up", "rot"]));
   });
+
+  it("returns ids bottom-to-top by z, not in map order", () => {
+    // Insert out of z-order on purpose; the result must be sorted by z so callers
+    // (grab/gather/flip) preserve the pile's real stacking.
+    const st = board([card("top", 0.5, 0.5, 9), card("bottom", 0.5, 0.5, 1), card("mid", 0.5, 0.5, 5)]);
+    const stack = findStackOverlapping(st, BOARD, "mid", SIZE);
+    expect(stack).toEqual(["bottom", "mid", "top"]);
+  });
 });
 
 describe("flipStackOver = real pile flip", () => {
