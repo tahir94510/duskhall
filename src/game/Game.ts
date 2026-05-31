@@ -1441,17 +1441,37 @@ export class Game {
     return !this.spectator && this.claimSeat >= 0 && this.claimSeat === this.hostSeat();
   }
 
-  // We were kicked by the host: leave quietly to a fresh, empty room (this also
-  // broadcasts our `left`, freeing our seat for the others).
+  // A kick was broadcast. Every client acts on it, not just the target:
+  //  - the TARGET leaves to a fresh room as host;
+  //  - everyone ELSE evicts that player immediately (seat freed, cards public,
+  //    tombstoned) so a kick removes them for good even if the target is offline
+  //    and never sends its own `left`. A kicked player is GONE for all, never
+  //    shown as "away".
   private handleKicked(k: KickMsg): void {
-    if (k.target !== this.self.id) return;
-    // Drop the persisted identity for the room we're being removed from so we
-    // don't try to reclaim that seat later, then move to a fresh empty room.
-    try { localStorage.removeItem(this.identKey(this.room)); } catch {}
-    // Show the notice AFTER we land in the new room: a toast raised now would
-    // sit behind the loader the room switch puts up. joinRoom resolves once the
-    // fresh table is revealed.
-    void this.joinRoom(newRoom()).then(() => toast(t("kick.kicked")));
+    // Only honour a kick issued by the current host. This blocks a forged kick from
+    // a non-host peer (the kick button is host-only in the UI, but the channel is
+    // untrusted). The host is the lowest active seat; `by` is the kicker's id.
+    const bySeat = this.seatOfId(k.by);
+    if (bySeat < 0 || bySeat !== this.hostSeat()) return;
+    if (k.target === this.self.id) {
+      // Drop the persisted identity for this room so we don't reclaim the seat,
+      // then move to a fresh empty room (we become its host).
+      try { localStorage.removeItem(this.identKey(this.room)); } catch {}
+      void this.joinRoom(newRoom()).then(() => toast(t("kick.kicked")));
+      return;
+    }
+    // A peer (not the target): find the kicked player's seat and evict them now.
+    const seat = this.seatOfId(k.target);
+    if (seat >= 0) this.applyLeft({ id: k.target, seat });
+    else { this.tombstone(k.target); this.players.delete(k.target); this.lastRoster = this.lastRoster.filter((p) => p.id !== k.target); this.requestRender(); }
+  }
+
+  // Resolve the seat a client id currently holds (active or claimed), else -1.
+  private seatOfId(id: string): number {
+    const p = this.players.get(id);
+    if (p && p.seat >= 0) return p.seat;
+    for (const [seat, claim] of this.seatClaims) if (claim.id === id) return seat;
+    return -1;
   }
 
   // Host-only: confirm, then ask the player on `seat` to leave.
