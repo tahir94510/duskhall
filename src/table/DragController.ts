@@ -33,6 +33,9 @@ export interface DragHooks {
    *  by a player (active or away). A card owned by a seat that is now empty is NOT
    *  rival-owned, so it becomes a grabbable public card. */
   isRivalOwned(id: string): boolean;
+  /** Lift these cards to the top of the z-order (preserving their mutual order), so
+   *  a dropped card/stack always lands ON TOP of whatever is at the drop spot. */
+  bringToTop(ids: string[]): void;
   showContextBar(id: string, x: number, y: number): void;
   hideContextBar(): void;
   emitCursor(x: number, y: number): void;
@@ -58,6 +61,9 @@ interface DragSession {
   startNy: number;
   /** relative offsets of every grabbed card from the seed (canonical) */
   relOffsets: Map<string, { dx: number; dy: number }>;
+  /** cached card elements, resolved once at grab — avoids a per-card querySelector
+   *  on every pointermove (the bulk-drag lag source). */
+  els: Map<string, HTMLDivElement>;
   dragging: boolean;
   longPressTimer: number;
 }
@@ -158,12 +164,14 @@ export class DragController {
       .map((cid) => this.state.cards.get(cid))
       .filter((c): c is NonNullable<typeof c> => !!c)
       .sort((a, b) => a.z - b.z);
+    const els = new Map<string, HTMLDivElement>();
     let heldIdx = 0;
     for (const c of ordered) {
       this.state.topZ++;
       c.z = this.state.topZ;
       const el = this.host.querySelector<HTMLDivElement>(`[data-id="${c.id}"]`);
       if (el) {
+        els.set(c.id, el);
         el.style.zIndex = String(HELD_Z_BASE + heldIdx++);
         el.classList.add("is-held");
       }
@@ -177,6 +185,7 @@ export class DragController {
       startNx: pointerNx,
       startNy: pointerNy,
       relOffsets,
+      els,
       dragging: false,
       longPressTimer: window.setTimeout(() => {
         if (!this.session || this.session.dragging) return;
@@ -224,9 +233,10 @@ export class DragController {
       if (!rel || !c) continue;
       c.x = seedNx + rel.dx;
       c.y = seedNy + rel.dy;
-      const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
-      // (nx, ny) is the card CENTRE; subtract half the card to get the top-left
-      // pixel, exactly as the render loop's cardTransform does.
+      // Use the element cached at grab — a per-move querySelector for every card
+      // in a large stack was the bulk-drag lag source. (nx, ny) is the card CENTRE;
+      // subtract half the card to get the top-left pixel, as cardTransform does.
+      const el = s.els.get(id);
       if (el) el.style.transform = `translate3d(${c.x * m.width - m.cardW / 2}px, ${c.y * m.height - m.cardH / 2}px, 0) rotate(${c.rot * 90}deg)`;
     }
     this.hooks.onDragProgress(s.ids);
@@ -243,7 +253,7 @@ export class DragController {
       // Mere click on a card, no drag, no place. Drop the held class, restore the
       // resting z, and exit.
       for (const id of s.ids) {
-        const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
+        const el = s.els.get(id);
         if (!el) continue;
         el.classList.remove("is-held");
         const c = this.state.cards.get(id);
@@ -281,13 +291,19 @@ export class DragController {
       }
     }
 
+    // A placed card/stack must land ON TOP of whatever is already at the drop
+    // spot (e.g. Ctrl-dragging a pile onto another pile). Re-lift to the top now,
+    // after positions are set, so the new resting z is above the target. (Skip on
+    // a snap-back: those return to their origin and keep their order.)
+    if (didPlace && !didSnapBack) this.hooks.bringToTop(s.ids);
+
     // THEN write the final inline transform and toggle classes, all in the
     // same frame so the next render does not race against drop state.
     const m = this.hooks.boardMetrics();
     for (const id of s.ids) {
       const c = this.state.cards.get(id);
       if (!c) continue;
-      const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
+      const el = s.els.get(id);
       if (!el) continue;
       el.style.transform = `translate3d(${c.x * m.width - m.cardW / 2}px, ${c.y * m.height - m.cardH / 2}px, 0) rotate(${c.rot * 90}deg)`;
       el.classList.remove("is-held");

@@ -405,6 +405,7 @@ export class Game {
       endHold: (ids) => this.broadcastHold(ids, true),
       isLocked: (id) => this.isLockedByOther(id),
       isRivalOwned: (id) => this.isRivalOwnedCard(id),
+      bringToTop: (ids) => this.bringCardsToTop(ids),
       showContextBar: (id, x, y) => this.contextBar.show(id, x, y),
       hideContextBar: () => this.contextBar.hide(),
       emitCursor: (x, y) => {
@@ -472,6 +473,19 @@ export class Game {
   // per-call allocation, since this runs for every card every frame.
   private occupancy(): Occupancy {
     return { activeSeats: this.activeSeats, claimedSeats: this.seatClaims, seatCount: SEAT_COUNT };
+  }
+
+  // Lift a set of cards above everything else, preserving their internal stacking,
+  // so a dropped card/stack rests on top of whatever was at the drop spot.
+  private bringCardsToTop(ids: string[]): void {
+    const ordered = ids
+      .map((id) => this.state.cards.get(id))
+      .filter((c): c is CardState => !!c)
+      .sort((a, b) => a.z - b.z);
+    for (const c of ordered) {
+      this.state.topZ++;
+      c.z = this.state.topZ;
+    }
   }
 
   // A seat owned by someone OTHER than us (and we are seated). Used to decide
