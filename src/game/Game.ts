@@ -12,6 +12,7 @@ import { openLeaveConfirm } from "../ui/LeaveConfirm.js";
 import { openConfirm } from "../ui/ConfirmModal.js";
 import { openShortcutsModal } from "../ui/ShortcutsPanel.js";
 import { openSettingsModal } from "../ui/SettingsModal.js";
+import { openDiagnosticsModal } from "../ui/DiagnosticsModal.js";
 import { ContextBar } from "../ui/ContextBar.js";
 import { DebugHud } from "../ui/DebugHud.js";
 import { toast } from "../ui/Toast.js";
@@ -130,7 +131,8 @@ export class Game {
       onResetDeck: () => { if (this.spectator) return; this.confirmResetDeck(); },
       onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio, () => this.onLocale()); },
       onShortcuts: () => { void this.audio.play("ui-open"); openShortcutsModal(this.modal); },
-      onJoinRoom: (code) => { void this.joinRoom(code); }
+      onJoinRoom: (code) => { void this.joinRoom(code); },
+      onDiagnose: () => { void this.audio.play("ui-open"); openDiagnosticsModal(this.modal, this.bus); }
     });
     document.body.appendChild(this.header.el);
 

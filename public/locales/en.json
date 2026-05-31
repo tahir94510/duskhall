@@ -40,6 +40,23 @@
     "connConnecting": "Connecting...",
     "connOffline": "Offline"
   },
+  "diag": {
+    "title": "Connection self-test",
+    "subtitle": "Checks whether multiplayer sync is set up correctly.",
+    "run": "Run the connection self-test",
+    "running": "Testing the connection...",
+    "stepConfig": "Settings loaded",
+    "stepUrl": "Project address",
+    "stepRest": "Project reachable",
+    "stepRealtime": "Realtime sync",
+    "verdictOk": "All good. Live multiplayer sync is working.",
+    "verdictBad": "Multiplayer sync is not working yet. See the note below.",
+    "error": "The test could not run. Please try again.",
+    "hint_config-missing": "Set SUPABASE_URL and SUPABASE_ANON_KEY in your hosting environment (Vercel), then redeploy. You can verify them by opening /api/config in your browser; both values must be filled in.",
+    "hint_url-bad": "The project address must be exactly https://your-project.supabase.co, with no extra path. Copy it from your Supabase dashboard under Project Settings, Data API.",
+    "hint_rest-failed": "The project could not be reached, or the anon key was rejected. Confirm the URL and the anon (public) key, and make sure the Supabase project is not paused.",
+    "hint_realtime-failed": "The project is reachable but the Realtime socket did not connect. In your Supabase dashboard, make sure Realtime is enabled, and check that no firewall or proxy is blocking the websocket."
+  },
   "table": {
     "deck": "Deck",
     "open": "Open",

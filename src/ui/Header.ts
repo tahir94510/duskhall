@@ -13,6 +13,8 @@ export interface HeaderHooks {
   onShortcuts(): void;
   /** Connect to a specific room by its 6-char code. */
   onJoinRoom(code: string): void;
+  /** Run the Supabase connection self-test. */
+  onDiagnose(): void;
 }
 
 export class Header {
@@ -61,11 +63,11 @@ export class Header {
           <span class="header__menu-label" data-i18n="ui.spectators">${esc(t("ui.spectators"))}</span>
           <span class="header__code" data-role="spectators">0</span>
         </div>
-        <div class="header__menu-row header__menu-row--static" data-role="conn-row" data-conn="connecting">
+        <button type="button" class="header__menu-row header__menu-row--conn" data-role="conn-row" data-action="diagnose" data-conn="connecting" title="${esc(t("diag.run"))}">
           <span class="header__menu-icon"><span class="conn-dot" aria-hidden="true"></span></span>
           <span class="header__menu-label" data-i18n="ui.connection">${esc(t("ui.connection"))}</span>
           <span class="header__code header__code--plain" data-role="conn">${esc(t("ui.connConnecting"))}</span>
-        </div>
+        </button>
         <div class="header__menu-divider"></div>
         <button type="button" class="header__menu-row" data-action="settings" role="menuitem">
           <span class="header__menu-icon">${ICON_SETTINGS}</span>
@@ -144,6 +146,13 @@ export class Header {
     this.menu.querySelector<HTMLButtonElement>('[data-action="shortcuts"]')?.addEventListener("click", wrap(this.hooks.onShortcuts));
     this.menu.querySelector<HTMLButtonElement>('[data-action="reset-deck"]')?.addEventListener("click", wrap(this.hooks.onResetDeck));
     this.menu.querySelector<HTMLButtonElement>('[data-action="reset"]')?.addEventListener("click", wrap(this.hooks.onReset));
+    // Connection row doubles as the "run the self-test" button. It does NOT close
+    // the menu — the test opens its own modal on top.
+    this.menu.querySelector<HTMLButtonElement>('[data-action="diagnose"]')?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.hooks.onDiagnose();
+    });
 
     // Copy the invite link for the current room (icon briefly turns to a check).
     this.menu.querySelector<HTMLButtonElement>('[data-action="room-copy"]')?.addEventListener("click", (e) => {

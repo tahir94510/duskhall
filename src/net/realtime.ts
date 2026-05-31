@@ -86,6 +86,27 @@ export type GameMsg =
 type Listener<T> = (msg: T) => void;
 type Status = "offline" | "connecting" | "online";
 
+/** One ordered check in the connection self-test. */
+export interface DiagnosticStep {
+  id: "config" | "url" | "rest" | "realtime";
+  ok: boolean;
+  detail: string;
+}
+export interface DiagnosticsReport {
+  ok: boolean;
+  steps: DiagnosticStep[];
+  summary: "ok" | "config-missing" | "url-bad" | "rest-failed" | "realtime-failed";
+}
+
+/** Reject a promise (here, a fetch) if it outlives `ms`, so a hung network call
+ *  can never freeze the diagnostics. */
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("timeout")), ms);
+    p.then((v) => { clearTimeout(timer); resolve(v); }, (e) => { clearTimeout(timer); reject(e); });
+  });
+}
+
 const CONNECT_TIMEOUT_MS = 9000;
 const RECONNECT_MAX_MS = 16000;
 
@@ -137,6 +158,103 @@ export class RealtimeBus {
 
   isAvailable(): boolean {
     return !!(this.config.supabaseUrl && this.config.supabaseAnonKey);
+  }
+
+  /** Live connection state, for callers that want to read it on demand. */
+  getStatus(): Status { return this.status; }
+
+  /** Actively probe the configured Supabase so a player can verify their setup
+   *  without a second device. Runs four ordered checks and returns a concrete,
+   *  human-readable report. Pure diagnostics: it opens (and tears down) its own
+   *  throwaway channel and never disturbs the live game channel. */
+  async diagnose(): Promise<DiagnosticsReport> {
+    const steps: DiagnosticStep[] = [];
+    const url = (this.config.supabaseUrl || "").trim();
+    const key = (this.config.supabaseAnonKey || "").trim();
+
+    // 1) Are the values even present?
+    if (!url || !key) {
+      steps.push({
+        id: "config", ok: false,
+        detail: !url && !key ? "Neither SUPABASE_URL nor SUPABASE_ANON_KEY reached the app."
+          : !url ? "SUPABASE_URL is missing." : "SUPABASE_ANON_KEY is missing."
+      });
+      return { ok: false, steps, summary: "config-missing" };
+    }
+    steps.push({ id: "config", ok: true, detail: "URL and anon key are present." });
+
+    // 2) Is the URL the expected Supabase project URL shape?
+    let host = "";
+    let urlOk = false;
+    try {
+      const u = new URL(url);
+      host = u.host;
+      urlOk = u.protocol === "https:" && /\.supabase\.(co|in|net)$/.test(u.host) && u.pathname.replace(/\/$/, "") === "";
+    } catch { urlOk = false; }
+    steps.push({
+      id: "url", ok: urlOk,
+      detail: urlOk ? `Project URL looks right (${host}).`
+        : "URL should be exactly https://<project-ref>.supabase.co with no path or trailing segment."
+    });
+    if (!urlOk) return { ok: false, steps, summary: "url-bad" };
+
+    // 3) Does the project answer with this key? A 200/401/403 all prove the host
+    //    and key pair reached a real Supabase project; only a network error or
+    //    404-style failure means the URL itself is wrong/unreachable.
+    let restOk = false;
+    let restDetail = "";
+    try {
+      const res = await withTimeout(
+        fetch(`${url.replace(/\/$/, "")}/auth/v1/health`, { headers: { apikey: key }, cache: "no-store" }),
+        7000
+      );
+      if (res.status === 200) { restOk = true; restDetail = "Project reachable and the anon key is accepted."; }
+      else if (res.status === 401 || res.status === 403) { restOk = false; restDetail = `Project reachable but the anon key was rejected (HTTP ${res.status}). Re-copy the anon/public key.`; }
+      else { restOk = true; restDetail = `Project reachable (HTTP ${res.status}).`; }
+    } catch {
+      restOk = false;
+      restDetail = "Could not reach the project over HTTPS. Check the URL, that the project is not paused, and your network.";
+    }
+    steps.push({ id: "rest", ok: restOk, detail: restDetail });
+    if (!restOk) return { ok: false, steps, summary: "rest-failed" };
+
+    // 4) Does Realtime actually subscribe? This is the real test — it proves the
+    //    websocket connects and Realtime is enabled. Uses a private throwaway
+    //    channel so the live game channel is untouched.
+    const rtOk = await this.probeRealtime(url, key);
+    steps.push({
+      id: "realtime", ok: rtOk,
+      detail: rtOk ? "Realtime connected — multiplayer sync is working."
+        : "Realtime did not connect. Confirm Realtime is enabled for the project and that no proxy is blocking the websocket."
+    });
+    return { ok: rtOk, steps, summary: rtOk ? "ok" : "realtime-failed" };
+  }
+
+  private async probeRealtime(url: string, key: string): Promise<boolean> {
+    let probeClient: SupabaseClient | null = null;
+    try {
+      probeClient = createClient(url, key, {
+        auth: { persistSession: false, autoRefreshToken: false, storageKey: "kabal-diag" },
+        realtime: { params: { eventsPerSecond: 1 } }
+      });
+      const ch = probeClient.channel(`kabal-diag:${Math.random().toString(36).slice(2, 8)}`);
+      const ok = await new Promise<boolean>((resolve) => {
+        let settled = false;
+        const done = (v: boolean) => { if (!settled) { settled = true; resolve(v); } };
+        const timer = setTimeout(() => done(false), 8000);
+        ch.subscribe((s: string) => {
+          if (s === "SUBSCRIBED") { clearTimeout(timer); done(true); }
+          else if (s === "CHANNEL_ERROR" || s === "TIMED_OUT" || s === "CLOSED") { clearTimeout(timer); done(false); }
+        });
+      });
+      try { await probeClient.removeChannel(ch); } catch { /* ignore */ }
+      return ok;
+    } catch {
+      return false;
+    } finally {
+      // Drop the throwaway client so it never lingers or double-subscribes.
+      probeClient = null;
+    }
   }
 
   onGame(cb: Listener<GameMsg>) { this.gameListeners.add(cb); return () => this.gameListeners.delete(cb); }

@@ -201,6 +201,19 @@
   cursor: default;
 }
 
+/* Connection row is a button (runs the self-test) but is styled like the static
+   rows; it gets a subtle hover to signal it is clickable, and never closes the
+   menu. Reset the native button look. */
+.header__menu-row--conn {
+  grid-template-columns: 22px 1fr auto;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  width: 100%;
+}
+.header__menu-row--conn:hover { background: rgba(255, 255, 255, 0.05); }
+
 /* Read-only value chip (room code, timer, spectator count). Always visible, and
    deliberately NOT selectable — the room is shared via the copy button. */
 .header__code {

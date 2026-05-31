@@ -40,6 +40,23 @@
     "connConnecting": "Bağlanıyor...",
     "connOffline": "Çevrimdışı"
   },
+  "diag": {
+    "title": "Bağlantı sınaması",
+    "subtitle": "Çok oyunculu eşitlemenin doğru kurulup kurulmadığını denetler.",
+    "run": "Bağlantı sınamasını çalıştır",
+    "running": "Bağlantı sınanıyor...",
+    "stepConfig": "Ayarlar yüklendi",
+    "stepUrl": "Proje adresi",
+    "stepRest": "Projeye erişiliyor",
+    "stepRealtime": "Gerçek zamanlı eşitleme",
+    "verdictOk": "Her şey yolunda. Canlı çok oyunculu eşitleme çalışıyor.",
+    "verdictBad": "Çok oyunculu eşitleme henüz çalışmıyor. Aşağıdaki nota bakın.",
+    "error": "Sınama çalıştırılamadı. Lütfen yeniden deneyin.",
+    "hint_config-missing": "SUPABASE_URL ve SUPABASE_ANON_KEY değerlerini barındırma ortamınızda (Vercel) tanımlayın ve yeniden dağıtın. Tarayıcınızda /api/config adresini açarak doğrulayabilirsiniz; iki değer de dolu olmalıdır.",
+    "hint_url-bad": "Proje adresi tam olarak https://projeniz.supabase.co biçiminde olmalı, sonunda fazladan bir yol bulunmamalı. Supabase panelinizde Project Settings, Data API bölümünden kopyalayın.",
+    "hint_rest-failed": "Projeye erişilemedi ya da anon anahtarı reddedildi. URL'i ve anon (public) anahtarını doğrulayın; Supabase projesinin duraklatılmadığından emin olun.",
+    "hint_realtime-failed": "Projeye erişiliyor ama Realtime soketi bağlanamadı. Supabase panelinizde Realtime'ın açık olduğundan ve bir güvenlik duvarı ya da vekil sunucunun websocket'i engellemediğinden emin olun."
+  },
   "table": {
     "deck": "Deste",
     "open": "Açık",

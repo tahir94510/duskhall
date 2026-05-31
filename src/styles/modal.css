@@ -478,3 +478,36 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   font-family: var(--font-body);
   font-size: 12px;
 }
+
+/* --- Connection self-test (diagnostics modal) --- */
+.diag__running {
+  font-size: 13px;
+  color: var(--ivory-dim);
+  padding: 8px 0;
+}
+.diag__steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.diag__step { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; }
+.diag__mark {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-top: 1px;
+}
+.diag__mark svg { width: 13px; height: 13px; }
+.diag__mark--ok { background: rgba(70, 196, 106, 0.16); color: #5fd083; }
+.diag__mark--bad { background: rgba(210, 96, 63, 0.16); color: #e8835c; }
+.diag__step-name { font-size: 13px; font-weight: 600; color: var(--ivory); }
+.diag__step-detail { font-size: 12px; line-height: 1.5; color: var(--ivory-dim); margin-top: 2px; }
+.diag__verdict {
+  margin-top: 16px;
+  padding: 11px 14px;
+  border-radius: var(--r-panel);
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--line-2);
+}
+.diag__verdict--ok { color: #5fd083; border-color: rgba(70, 196, 106, 0.35); background: rgba(70, 196, 106, 0.08); }
+.diag__verdict--bad { color: #e8835c; border-color: rgba(210, 96, 63, 0.35); background: rgba(210, 96, 63, 0.08); }
+.diag__hint { margin: 10px 0 0; font-size: 12px; line-height: 1.55; color: var(--ivory-dim); }
