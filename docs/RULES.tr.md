@@ -209,11 +209,13 @@ Kapanış sırası: önce Mühür tetikleri, sonra el limiti kontrolü.
 
 KABAL web sürümü serbest bir masadır. Otomatik kural motoru yoktur; oyuncular kuralları bu kitaba göre kendileri uygular.
 
-Sol basılı tutmak kartı sürükler. Sağ tık çevirir. Ctrl + sol tık yığını taşır. Ctrl + sağ tık yığını toplu çevirir. Ctrl + yukarı scroll yığını toplar; Ctrl + aşağı scroll yığını karıştırır.
+Fare ve klavye: imlecin altındaki kartı sol tıkla basılı tutup sürükleyerek taşırsın; sürüklerken Ctrl'ye basılı tutarsan yığının tamamını taşırsın. Sağ tık, imlecin altındaki yığını toplu çevirir (tek bir kart ise yalnızca o döner). Tekerleği kaydırmak imlecin altındaki tek kartı çevirir; Ctrl ile kaydırmak yığının tamamını çevirir. Shift ile kaydırmak kartı doksan derece yana döndürür (yüzünü çevirmez). Yığını derli toplu bir desteye toplamak için G'ye, karıştırmak için M'ye bas.
 
-Kendi alanın alttaki blur'lu bölge. Oradaki kartlar sana özeldir; rakipler yalnızca sayıyı görür. Rakip alanına kart bırakılamaz, kenarda bırak, sahibi kendisi içeri çeker.
+Dokunmatik ekranlar: kartı tek parmakla sürükleyerek taşı. Bir karta basılı tutunca, çevirme, toplu çevirme, döndürme, toplama, karıştırma ve kart bilgisi düğmelerini içeren etkileşim çubuğu açılır.
 
-Herkes ayrıldığında oda kapanır. Odayı sıfırla tıklandığında yeni bağlantıyla taze bir oda açılır.
+Kendi alanın, ekranının altındaki bulanık şeritte yer alır. Oradaki kartlar sana özeldir; rakipler yalnızca kartların arkasını görür ve sayısını tahmin edebilir. Rakibin alanına kart bırakamazsın; kenarda bırak, sahibi içeri kendisi çeker.
+
+Herkes ayrıldığında oda kapanır. Odadan ayrılmak, seni ev sahibi yapan yeni bağlantılı taze bir oda açar.
 
 
 ---

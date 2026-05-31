@@ -182,3 +182,43 @@ The runtime (`src/audio/Audio.ts`) routes every voice through a per-effect gain 
 - Ascension declaration restricted to end-of-own-turn explicitly.
 - Blood Atonement randomiser: digital table auto-shuffles and auto-discards two hand cards; physical play follows the same rule.
 - Rulebook §13 quick reference now sources its limits and totals from `balance.ts`.
+
+## Balance rationale (why the numbers are what they are)
+
+KABAL is a manual, four-category duel; balance lives in the card text and counts,
+not in an engine. The design follows current (2026) competitive-card-game thinking,
+and these are the levers that keep it fair and replayable:
+
+- **Every turn is a real decision.** Two HP per turn is the whole budget, and the
+  three actions (Create / Study / Cleanse) always compete for it: advancing a Seal,
+  casting a Spell and digging for an answer can never all happen at once. A turn is
+  never "do nothing."
+- **Nobody is idle off-turn.** Interventions cost no HP and resolve at any time, so
+  every player holds a reason to stay alert during others' turns. This is the main
+  guard against multiplayer downtime; Silence!, the most common card (×8), keeps the
+  reaction layer live.
+- **The four types form a rock-paper-scissors.** Spells answer permanents, Servants
+  blunt Spells (the Servant Shield must be cleared first), Interventions punish a
+  committed Spell, and Seals out-scale slow removal over time. No legal hand is left
+  with zero answers to a whole threat class: removal (Ether Strike) is the commonest
+  Spell, and Silence! answers anything.
+- **Ascension is a contestable climax, not a coin flip.** Declaring at three Seals
+  opens a full round in which every rival gets a real window to break it (destroy a
+  Seal to drop the declarer below three). Karmic Reflection and Blood Atonement give
+  the declarer earned defenses, so survival rewards prior play rather than luck.
+  The known risk here is *king-making* — a single out-of-contention player tipping
+  the result — so disruption is spread across categories and copies (a lone card is
+  rarely enough), not concentrated in one silver bullet.
+- **The leader faces a headwind, not the loser a handout.** Catch-up comes from the
+  leader being the obvious, declared target during the Trial, the Cosmic-Encounter /
+  Root "bash the leader" model, rather than from rubber-banding that hands resources
+  to whoever is behind. Snowball is held in check by hard caps: Seals 4, Servants 3,
+  HP 5, hand 7, so no engine runs away.
+- **Luck flavors a game; skill wins the match.** Variance comes only from the draw.
+  Cleanse (discard then draw) and Study (extra draw) let a skilled player dig out of
+  a flooded hand, so a bad opening is a setback, not a loss.
+
+Numbers worth keeping in proportion if the set is ever re-tuned: opening hand 5 with
+a max of 7 (the genre standard), 2 base actions, an Ascension threshold of 3 reached
+in roughly the back third of a 30–60 minute game, and Silence! kept as the single
+most numerous card so the reaction layer never dries up.
