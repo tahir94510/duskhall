@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "KABAL: Heirs of Ether",
+    "title": "Vaerum: Heirs of the Ether",
     "tagline": "",
     "description": "A digital card table for friends. Move and flip cards freely; follow the official rulebook yourselves."
   },
@@ -127,13 +127,13 @@
     "resetDefaultsHint": "Return music, effects and master volume to their recommended levels."
   },
   "support": {
-    "title": "Support KABAL",
-    "intro": "KABAL is built by an independent designer. Your support unlocks the next steps:",
+    "title": "Support Vaerum",
+    "intro": "Vaerum is built by an independent designer. Your support unlocks the next steps:",
     "lines": [
       "<strong>Develop the game</strong>: new card cycles, balance work, animations, and atmosphere polish.",
       "<strong>Physical card edition</strong>: custom card stock, embossed sigils, and box production.",
       "<strong>3D Steam edition</strong>: an animated 3D release with full effects and sound.",
-      "<strong>Translation</strong>: bringing KABAL to more languages."
+      "<strong>Translation</strong>: bringing Vaerum to more languages."
     ],
     "cta": "Open support page",
     "noUrl": "A support page is not configured yet. Please check back later.",
@@ -250,16 +250,16 @@
     }
   },
   "rulesDoc": {
-    "title": "KABAL: Heirs of Ether",
-    "subtitle": "The Complete Rulebook, Final Edition V8.1",
+    "title": "Vaerum: Heirs of the Ether",
+    "subtitle": "The Complete Rulebook",
     "tldr": "2 to 4 players. 30 to 60 minutes. Ages 14+.",
-    "intro": "At the centre of all things lies the Ether, a sourceless force, fractured long ago. Its shards have changed hands through silent treaties, whispered threats, and quiet betrayals. You sit at the table now: a visionary, a schemer, a member of the Kabal. There is no friendship here. There is no mercy. There is no luck. Only manipulation, strategy, and the unblinking war for power.",
+    "intro": "At the centre of all things lies the Ether, a sourceless force, fractured long ago. Its shards have changed hands through silent treaties, whispered threats, and quiet betrayals. You sit at the table now: a visionary, a schemer, one of the few who can still bend the Ether to a will. There is no friendship here. There is no mercy. There is no luck. Only manipulation, strategy, and the unblinking war for power.",
     "sections": [
       {
         "id": "components",
         "title": "1. Components",
         "body": [
-          "KABAL plays with a single deck of 72 cards. Nothing else is required.",
+          "Vaerum plays with a single deck of 72 cards. Nothing else is required.",
           "Distribution:",
           "Seal (Violet) x16: 4 unique seals, 4 copies each.",
           "Spell (Crimson) x24: 5 unique spells in counts of 2 to 8.",
@@ -435,7 +435,7 @@
         "id": "table",
         "title": "14. The digital table",
         "body": [
-          "KABAL on the web is a sandbox. There is no automated rules engine; players follow this rulebook themselves.",
+          "Vaerum on the web is a sandbox. There is no automated rules engine; players follow this rulebook themselves.",
           "Left-press drags a card. Right-click flips the stack under the cursor. Ctrl plus left-press drags the whole stack. Scroll flips a single card; Ctrl plus scroll flips the whole stack. Shift plus scroll rotates the card 90° sideways. Press G to gather the stack, M to shuffle it.",
           "Your zone is the blurred strip along the bottom of your screen. Cards there are private to you; rivals see only their backs and can infer the count. You cannot drop a card inside an opponent's zone; leave it on the rim and the owner draws it in.",
           "When everyone leaves, the room closes. Leaving the room opens a fresh one with a new link, with you as its host."

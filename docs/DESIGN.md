@@ -1,4 +1,4 @@
-# KABAL: Heirs of Ether · Design Notes
+# Vaerum: Heirs of the Ether · Design Notes
 
 ## Balance constants
 
@@ -34,14 +34,14 @@ Card positions are stored in a single canonical normalised frame `[0, 1]²` of t
 - `seatRotationDeg(mySeat)` → 0 / 180 / -90 / 90 for seats 0–3.
 - `localToCanonical(nx, ny, mySeat)` / `canonicalToLocal(...)` rotate around the board centre.
 
-Dock anchors are fixed constants in `src/table/constants.ts`:
+Card positions store the card CENTRE as a canonical fraction; the render loop turns that centre into the on-screen top-left by subtracting half the measured card size, so a pile sits on its marker identically on every device and never drifts on resize. Dock anchors are fixed CENTRE constants in `src/table/constants.ts`:
 
-- `DECK_NX = 0.42`, `DECK_NY = 0.5`
-- `DISCARD_NX = 0.58`, `DISCARD_NY = 0.5`
+- `DECK_NX = 0.40`, `DECK_NY = 0.5`
+- `DISCARD_NX = 0.60`, `DISCARD_NY = 0.5`
 
-The Board.ts dock paints the two slots from these constants via CSS `top` / `left` percentages; the initial deal pile is anchored to the same numbers.
+`board.css` paints the two dock markers at these same percentages (`left: 40%` / `60%`, centred with `translate(-50%, -50%)`), and the initial deal pile is anchored to the same numbers, so the markers and the dealt pile can never drift apart.
 
-`v3.7` removed magnet snap entirely; players place cards by hand. The dock slots remain as visual placeholders only.
+Magnet snap is removed; players place cards by hand. The dock slots are visual targets only.
 
 ## Stack interactions
 
@@ -51,7 +51,9 @@ Helpers live in `src/table/StackOps.ts`; `Game.ts` wires them to gestures.
   whole pile over the way a hand would, via `flipStackOver`. The depth order
   reverses (the bottom card ends up on top) and every face is toggled at once.
   A single card simply flips its face, matching a plain flip. Flipping a stack
-  twice returns it to its exact starting order and orientation.
+  twice returns it to its exact starting order and orientation. Stack detection
+  is rotation-aware, so a pile of mixed 0°/90° cards is still treated as one
+  stack and turns over as a single piece (no under-card faces flash through).
 - **Shuffle** (`shuffleStack`) randomises z-order with Fisher-Yates seeded from
   the crypto RNG, then sets every card face-down. Only the initiating client
   shuffles; the resulting order and orientation are broadcast as a normal patch,
@@ -185,7 +187,7 @@ The runtime (`src/audio/Audio.ts`) routes every voice through a per-effect gain 
 
 ## Balance rationale (why the numbers are what they are)
 
-KABAL is a manual, four-category duel; balance lives in the card text and counts,
+Vaerum is a manual, four-category duel; balance lives in the card text and counts,
 not in an engine. The design follows current (2026) competitive-card-game thinking,
 and these are the levers that keep it fair and replayable:
 

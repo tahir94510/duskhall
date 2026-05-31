@@ -1761,7 +1761,7 @@ export class Game {
         // release every card we owned so the table is interactable again.
         if (this.claimSeat >= 0) this.bus.sendLeft({ id: this.self.id, seat: this.claimSeat });
         this.seatClaims.clear();
-        // Fresh room → fresh handle. The next visit rolls a new KABAL name.
+        // Fresh room → fresh handle. The next visit rolls a new Vaerum name.
         resetName();
         this.self.name = getOrAssignName();
         this.selfJoinedAt = Date.now();

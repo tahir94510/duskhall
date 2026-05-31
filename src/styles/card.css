@@ -87,7 +87,7 @@
 }
 
 /* Card back: a noble branded deck back. Deep black ground with a soft centre
-   vignette, a fine inner frame, and the KABAL rhombus emblem centred at low
+   vignette, a fine inner frame, and the Vaerum rhombus emblem centred at low
    opacity, consistent with the logo, calm and elegant (no nested clutter). */
 .card__face--back {
   background:
@@ -107,7 +107,7 @@
 }
 
 .card__face--back::after {
-  /* centred KABAL sigil (vertical rhombus + axis + dot), low-opacity ivory */
+  /* centred Vaerum sigil (vertical rhombus + axis + dot), low-opacity ivory */
   content: "";
   position: absolute;
   inset: 0;

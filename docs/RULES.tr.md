@@ -1,14 +1,14 @@
-# KABAL: Eterin Vârisleri
+# Vaerum: Eterin Vârisleri
 
-_Tam Kural Kitabı, Nihai Sürüm V8.1_
+_Tam Kural Kitabı_
 
 **2 ila 4 oyuncu. 30 ila 60 dakika. 14 yaş ve üzeri.**
 
-Her şeyin merkezinde, kaynağı bilinmeyen ve çok önce paramparça olmuş bir güç vardır: Eter. Onun parçaları yüzyıllar boyunca sessiz ittifaklarla, fısıltıyla verilen sözlerle ve soğukkanlı ihanetlerle el değiştirdi. Artık sen de o masadasın: ileri görüşlü, kurnaz, Kabal'in bir vârisi. Burada dostluk yoktur, merhamet yoktur, şans yoktur. Yalnızca manipülasyon, strateji ve hiç durmayan bir güç savaşı vardır.
+Her şeyin merkezinde, kaynağı bilinmeyen ve çok önce paramparça olmuş bir güç vardır: Eter. Onun parçaları yüzyıllar boyunca sessiz ittifaklarla, fısıltıyla verilen sözlerle ve soğukkanlı ihanetlerle el değiştirdi. Artık sen de o masadasın: ileri görüşlü, kurnaz, Eter'i hâlâ kendi iradesine boyun eğdirebilen ender kişilerden biri. Burada dostluk yoktur, merhamet yoktur, şans yoktur. Yalnızca manipülasyon, strateji ve hiç durmayan bir güç savaşı vardır.
 
 ## 1. Bileşenler
 
-KABAL tek bir 72 kartlık deste ile oynanır. Başka bir bileşen gerekmez.
+Vaerum tek bir 72 kartlık deste ile oynanır. Başka bir bileşen gerekmez.
 
 Dağılım:
 
@@ -207,7 +207,7 @@ Kapanış sırası: önce Mühür tetikleri, sonra el limiti kontrolü.
 
 ## 14. Dijital masa
 
-KABAL web sürümü serbest bir masadır. Otomatik kural motoru yoktur; oyuncular kuralları bu kitaba göre kendileri uygular.
+Vaerum web sürümü serbest bir masadır. Otomatik kural motoru yoktur; oyuncular kuralları bu kitaba göre kendileri uygular.
 
 Fare ve klavye: imlecin altındaki kartı sol tıkla basılı tutup sürükleyerek taşırsın; sürüklerken Ctrl'ye basılı tutarsan yığının tamamını taşırsın. Sağ tık, imlecin altındaki yığını toplu çevirir (tek bir kart ise yalnızca o döner). Tekerleği kaydırmak imlecin altındaki tek kartı çevirir; Ctrl ile kaydırmak yığının tamamını çevirir. Shift ile kaydırmak kartı doksan derece yana döndürür (yüzünü çevirmez). Yığını derli toplu bir desteye toplamak için G'ye, karıştırmak için M'ye bas.
 

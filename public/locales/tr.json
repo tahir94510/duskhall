@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "KABAL: Eterin Vârisleri",
+    "title": "Vaerum: Eterin Vârisleri",
     "tagline": "",
     "description": "Arkadaşlar için dijital bir kart masası. Kartları serbestçe taşı ve çevir; kural kitabını kendiniz uygulayın."
   },
@@ -127,13 +127,13 @@
     "resetDefaultsHint": "Müzik, efekt ve ana ses düzeyini önerilen değerlere döndürür."
   },
   "support": {
-    "title": "KABAL'a Destek Ol",
-    "intro": "KABAL bağımsız bir tasarımcı tarafından geliştiriliyor. Desteğin şu adımları açar:",
+    "title": "Vaerum'a Destek Ol",
+    "intro": "Vaerum bağımsız bir tasarımcı tarafından geliştiriliyor. Desteğin şu adımları açar:",
     "lines": [
       "<strong>Oyunu geliştir</strong>: yeni kart döngüleri, balans çalışması, animasyon ve atmosfer cilası.",
       "<strong>Fiziksel kart sürümü</strong>: özel karton, kabartmalı sigil ve kutu üretimi.",
       "<strong>3D Steam sürümü</strong>: tam efekt ve sesle animasyonlu 3D yayın.",
-      "<strong>Çeviri</strong>: KABAL'ı daha çok dile taşımak."
+      "<strong>Çeviri</strong>: Vaerum'u daha çok dile taşımak."
     ],
     "cta": "Destek sayfasını aç",
     "noUrl": "Destek sayfası henüz yapılandırılmamış. Daha sonra tekrar deneyin.",
@@ -250,16 +250,16 @@
     }
   },
   "rulesDoc": {
-    "title": "KABAL: Eterin Vârisleri",
-    "subtitle": "Tam Kural Kitabı, Nihai Sürüm V8.1",
+    "title": "Vaerum: Eterin Vârisleri",
+    "subtitle": "Tam Kural Kitabı",
     "tldr": "2 ila 4 oyuncu. 30 ila 60 dakika. 14 yaş ve üzeri.",
-    "intro": "Her şeyin merkezinde, kaynağı bilinmeyen ve çok önce paramparça olmuş bir güç vardır: Eter. Onun parçaları yüzyıllar boyunca sessiz ittifaklarla, fısıltıyla verilen sözlerle ve soğukkanlı ihanetlerle el değiştirdi. Artık sen de o masadasın: ileri görüşlü, kurnaz, Kabal'in bir vârisi. Burada dostluk yoktur, merhamet yoktur, şans yoktur. Yalnızca manipülasyon, strateji ve hiç durmayan bir güç savaşı vardır.",
+    "intro": "Her şeyin merkezinde, kaynağı bilinmeyen ve çok önce paramparça olmuş bir güç vardır: Eter. Onun parçaları yüzyıllar boyunca sessiz ittifaklarla, fısıltıyla verilen sözlerle ve soğukkanlı ihanetlerle el değiştirdi. Artık sen de o masadasın: ileri görüşlü, kurnaz, Eter'i hâlâ kendi iradesine boyun eğdirebilen ender kişilerden biri. Burada dostluk yoktur, merhamet yoktur, şans yoktur. Yalnızca manipülasyon, strateji ve hiç durmayan bir güç savaşı vardır.",
     "sections": [
       {
         "id": "components",
         "title": "1. Bileşenler",
         "body": [
-          "KABAL tek bir 72 kartlık deste ile oynanır. Başka bir bileşen gerekmez.",
+          "Vaerum tek bir 72 kartlık deste ile oynanır. Başka bir bileşen gerekmez.",
           "Dağılım:",
           "Mühür (Mor) x16: 4 farklı mühür, her birinden 4 adet.",
           "Büyü (Kızıl) x24: 5 farklı büyü, 2 ila 8 adet.",
@@ -435,7 +435,7 @@
         "id": "table",
         "title": "14. Dijital masa",
         "body": [
-          "KABAL web sürümü serbest bir masadır. Otomatik kural motoru yoktur; oyuncular kuralları bu kitaba göre kendileri uygular.",
+          "Vaerum web sürümü serbest bir masadır. Otomatik kural motoru yoktur; oyuncular kuralları bu kitaba göre kendileri uygular.",
           "Sol tıkla basılı tutup kartı sürükle. Sağ tık imlecin altındaki yığını toplu çevirir. Ctrl + sol tık yığının tamamını taşır. Tekerlek tek kartı çevirir; Ctrl + tekerlek yığını toplu çevirir. Shift + tekerlek kartı 90° yana yatırır. Yığını toplamak için G'ye, karıştırmak için M'ye bas.",
           "Kendi alanın, ekranının altındaki bulanık şerittir. Oradaki kartlar sana özeldir; rakipler yalnızca kartların arkasını görür ve sayısını tahmin edebilir. Rakibin alanına kart bırakamazsın; kenarda bırak, sahibi içeri kendisi çeker.",
           "Herkes ayrıldığında oda kapanır. Odadan ayrılmak, seni ev sahibi yapan yeni bağlantılı taze bir oda açar."

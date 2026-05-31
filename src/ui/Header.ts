@@ -38,7 +38,7 @@ export class Header {
     this.el = document.createElement("header");
     this.el.className = "header";
     this.el.innerHTML = `
-      <span class="brand" data-role="brand" role="img" aria-label="KABAL">
+      <span class="brand" data-role="brand" role="img" aria-label="Vaerum">
         <img src="/assets/icon.svg" alt="" width="26" height="26"/>
       </span>
       <button type="button" class="icon-btn header__more" data-action="more" aria-label="${esc(t("ui.menu"))}" aria-haspopup="true" aria-expanded="false">

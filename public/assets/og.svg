@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="KABAL: Heirs of Ether">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="Vaerum: Heirs of the Ether">
   <rect width="1200" height="630" fill="#000000"/>
   <g transform="translate(220 165)" fill="#f3efe5" stroke="#f3efe5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M150 30 L260 150 L150 270 L40 150 Z" fill="none" stroke-width="4"/>
@@ -6,8 +6,8 @@
     <circle cx="150" cy="150" r="14" fill="#f3efe5"/>
   </g>
   <g fill="#f3efe5" font-family="Inter, system-ui, sans-serif">
-    <text x="560" y="290" font-size="92" font-weight="700" letter-spacing="2">KABAL</text>
-    <text x="560" y="350" font-size="34" font-weight="500" fill="#aea99d" letter-spacing="1">Heirs of Ether</text>
+    <text x="560" y="290" font-size="92" font-weight="700" letter-spacing="2">VAERUM</text>
+    <text x="560" y="350" font-size="34" font-weight="500" fill="#aea99d" letter-spacing="1">Heirs of the Ether</text>
     <text x="560" y="430" font-size="22" font-weight="400" fill="#76726a" font-family="Inter,sans-serif">A digital card table for friends.</text>
   </g>
 </svg>

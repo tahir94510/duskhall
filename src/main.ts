@@ -60,7 +60,7 @@ async function boot(): Promise<void> {
 }
 
 function showBootFail(err: unknown): void {
-  console.error("KABAL boot failed", err);
+  console.error("Vaerum boot failed", err);
   // Drop the loader so the failure card is visible.
   document.getElementById("kabal-loader")?.remove();
   const fail = document.getElementById("boot-fail");
