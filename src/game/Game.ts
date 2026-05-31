@@ -130,7 +130,7 @@ export class Game {
       onRules: () => { void this.audio.play("ui-open"); openRulesModal(this.modal); },
       onSupport: () => { void this.audio.play("ui-open"); openSupportModal(this.modal, this.config.supportUrl); },
       onReset: () => { if (this.spectator) return; void this.audio.play("ui-open"); this.handleReset(); },
-      onResetDeck: () => { if (this.spectator) return; this.confirmResetDeck(); },
+      onResetDeck: () => { if (this.spectator || !this.isHost()) return; this.confirmResetDeck(); },
       onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio, () => this.onLocale()); },
       onShortcuts: () => { void this.audio.play("ui-open"); openShortcutsModal(this.modal); },
       onJoinRoom: (code) => { void this.joinRoom(code); },
@@ -797,6 +797,9 @@ export class Game {
   // Ask before reshuffling the whole table back into the deck — a destructive,
   // shared action, so it routes through the same plain confirm dialog as leave.
   private confirmResetDeck(): void {
+    // Host-only: resetting the shared deck affects everyone, so a non-host (or a
+    // spectator) can never trigger it even if the control is reached some other way.
+    if (this.spectator || !this.isHost()) return;
     void this.audio.play("ui-open");
     openConfirm(this.modal, {
       title: t("resetDeckConfirm.title"),
@@ -1657,6 +1660,8 @@ export class Game {
     const youSuffix = t("table.youSuffix");
     const droppedSuffix = t("table.droppedSuffix");
     const host = this.isHost();
+    // Keep the menu's host-only controls (reset deck) in sync with who the host is.
+    this.header.setHostMode(host);
     for (let seat = 0; seat < SEAT_COUNT; seat++) {
       const z = this.physicalZoneForSeat(seat);
       if (!z) continue;
