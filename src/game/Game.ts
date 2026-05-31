@@ -9,6 +9,7 @@ import { Modal } from "../ui/Modal.js";
 import { openRulesModal } from "../ui/RulesModal.js";
 import { openSupportModal } from "../ui/SupportModal.js";
 import { openFeedbackModal, hasFeedbackChannel } from "../ui/FeedbackModal.js";
+import { openLegalModal } from "../ui/LegalModal.js";
 import { openLeaveConfirm } from "../ui/LeaveConfirm.js";
 import { openConfirm } from "../ui/ConfirmModal.js";
 import { openShortcutsModal } from "../ui/ShortcutsPanel.js";
@@ -139,6 +140,7 @@ export class Game {
       onRules: () => { void this.audio.play("ui-open"); openRulesModal(this.modal); },
       onSupport: () => { void this.audio.play("ui-open"); openSupportModal(this.modal, this.config.supportUrl); },
       onFeedback: () => { void this.audio.play("ui-open"); openFeedbackModal(this.modal, this.config.issuesUrl, this.config.feedbackUrl); },
+      onLegal: () => { void this.audio.play("ui-open"); openLegalModal(this.modal); },
       onReset: () => { if (this.spectator) return; void this.audio.play("ui-open"); this.handleReset(); },
       onResetDeck: () => { if (this.spectator || !this.isHost()) return; this.confirmResetDeck(); },
       onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio, () => this.onLocale()); },

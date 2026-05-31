@@ -1,4 +1,4 @@
-import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EYE, ICON_EXIT, ICON_FEEDBACK } from "./icons.js";
+import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EYE, ICON_EXIT, ICON_FEEDBACK, ICON_INFO } from "./icons.js";
 import { t } from "../i18n/index.js";
 import { inviteUrl, parseRoomInput } from "../net/room.js";
 import { flashConfirm } from "./feedback.js";
@@ -8,6 +8,7 @@ export interface HeaderHooks {
   onRules(): void;
   onSupport(): void;
   onFeedback(): void;
+  onLegal(): void;
   onReset(): void;
   onResetDeck(): void;
   onSettings(): void;
@@ -88,6 +89,10 @@ export class Header {
           <span class="header__menu-icon">${ICON_SHORTCUTS}</span>
           <span class="header__menu-label" data-i18n="ui.shortcuts">${esc(t("ui.shortcuts"))}</span>
         </button>
+        <button type="button" class="header__menu-row" data-action="legal" role="menuitem">
+          <span class="header__menu-icon">${ICON_INFO}</span>
+          <span class="header__menu-label" data-i18n="ui.legal">${esc(t("ui.legal"))}</span>
+        </button>
         <button type="button" class="header__menu-row" data-action="feedback" role="menuitem" data-role="feedback" hidden>
           <span class="header__menu-icon">${ICON_FEEDBACK}</span>
           <span class="header__menu-label" data-i18n="ui.feedback">${esc(t("ui.feedback"))}</span>
@@ -151,6 +156,7 @@ export class Header {
     this.menu.querySelector<HTMLButtonElement>('[data-action="support"]')?.addEventListener("click", wrap(this.hooks.onSupport));
     this.menu.querySelector<HTMLButtonElement>('[data-action="feedback"]')?.addEventListener("click", wrap(this.hooks.onFeedback));
     this.menu.querySelector<HTMLButtonElement>('[data-action="shortcuts"]')?.addEventListener("click", wrap(this.hooks.onShortcuts));
+    this.menu.querySelector<HTMLButtonElement>('[data-action="legal"]')?.addEventListener("click", wrap(this.hooks.onLegal));
     this.menu.querySelector<HTMLButtonElement>('[data-action="reset-deck"]')?.addEventListener("click", wrap(this.hooks.onResetDeck));
     this.menu.querySelector<HTMLButtonElement>('[data-action="reset"]')?.addEventListener("click", wrap(this.hooks.onReset));
     // Connection row doubles as the "run the self-test" button. It does NOT close

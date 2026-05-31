@@ -34,6 +34,8 @@ export const ICON_LANG = svgEl(`<circle cx="12" cy="12" r="8.5" fill="none" stro
 // Exit / leave: a door with an outward arrow. Used by the "Exit" menu row that
 // leaves the current room and opens a fresh one with you as host.
 export const ICON_EXIT = svgEl(`<path d="M14 4 H6 A2 2 0 0 0 4 6 V18 A2 2 0 0 0 6 20 H14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 12 H20 M16 8 L20 12 L16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`);
+// Info "i" in a circle: the About & legal row.
+export const ICON_INFO = svgEl(`<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 11 V16.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="7.7" r="1.05" fill="currentColor"/>`);
 // Feedback: a speech bubble for the bug-report / request row.
 export const ICON_FEEDBACK = svgEl(`<path d="M4 5 H20 A1.5 1.5 0 0 1 21.5 6.5 V15 A1.5 1.5 0 0 1 20 16.5 H9 L5 20 V16.5 H4 A1.5 1.5 0 0 1 2.5 15 V6.5 A1.5 1.5 0 0 1 4 5 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 9.5 H17 M7 12.5 H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`);
 // Eye / spectator: a calm outline eye for the spectator-count row.
