@@ -19,14 +19,18 @@ const EMPTY: RuntimeConfig = {
 };
 
 function normalise(j: Partial<RuntimeConfig>): RuntimeConfig {
+  // Trim every value: a stray space or newline pasted into a Vercel env var is a
+  // common, invisible reason the URL/key "looks right" but silently fails. Also
+  // strip a trailing slash from the Supabase URL so https://x.supabase.co/ works.
+  const s = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
   return {
-    supabaseUrl: j.supabaseUrl || "",
-    supabaseAnonKey: j.supabaseAnonKey || "",
-    supportUrl: j.supportUrl || "",
-    appUrl: j.appUrl || "",
-    appName: j.appName || "",
-    siteUrl: j.siteUrl || "",
-    socialOgImage: j.socialOgImage || ""
+    supabaseUrl: s(j.supabaseUrl).replace(/\/+$/, ""),
+    supabaseAnonKey: s(j.supabaseAnonKey),
+    supportUrl: s(j.supportUrl),
+    appUrl: s(j.appUrl),
+    appName: s(j.appName),
+    siteUrl: s(j.siteUrl),
+    socialOgImage: s(j.socialOgImage)
   };
 }
 
