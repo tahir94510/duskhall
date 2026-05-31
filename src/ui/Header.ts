@@ -33,6 +33,7 @@ export class Header {
   private timerHandle = 0;
   private menuOpen = false;
   private spectator = false;
+  private host = true;
 
   constructor(private hooks: HeaderHooks) {
     this.el = document.createElement("header");
@@ -267,13 +268,26 @@ export class Header {
   setSpectatorMode(on: boolean): void {
     this.spectator = on;
     this.el.classList.toggle("is-spectator", on);
+    this.applyPlayControls();
+    this.spectatorRow.hidden = !on && this.spectatorVal.textContent === "0";
+  }
+
+  /** Reflect host status: only the host may reset the shared deck, so that row is
+   *  hidden for non-hosts (everyone can still leave the room). */
+  setHostMode(isHost: boolean): void {
+    this.host = isHost;
+    this.applyPlayControls();
+  }
+
+  // Reset deck is host-only and never shown to spectators; Exit room is shown to
+  // every seated player (spectators can leave too, but they have no deck to reset).
+  private applyPlayControls(): void {
     const resetDeck = this.menu.querySelector<HTMLElement>('[data-role="reset-deck"]');
     const resetRoom = this.menu.querySelector<HTMLElement>('[data-role="reset-room"]');
     const divider = this.menu.querySelector<HTMLElement>('[data-role="play-divider"]');
-    if (resetDeck) resetDeck.hidden = on;
-    if (resetRoom) resetRoom.hidden = on;
-    if (divider) divider.hidden = on;
-    this.spectatorRow.hidden = !on && this.spectatorVal.textContent === "0";
+    if (resetDeck) resetDeck.hidden = this.spectator || !this.host;
+    if (resetRoom) resetRoom.hidden = this.spectator;
+    if (divider) divider.hidden = this.spectator;
   }
 
   resetTimer(): void { this.roomStart = performance.now(); this.tick(); }
