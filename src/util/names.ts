@@ -1,4 +1,4 @@
-// KABAL-themed single-word player names. Picked once per session and stored
+// Vaerum-themed single-word player names. Picked once per session and stored
 // in sessionStorage so a refresh keeps the same handle; only a room reset
 // clears it and rolls a fresh one.
 

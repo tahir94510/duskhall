@@ -1,4 +1,4 @@
-// KABAL card catalogue. Text is i18n-keyed; this module carries structural data only.
+// Vaerum card catalogue. Text is i18n-keyed; this module carries structural data only.
 
 export type CardCategory = "seal" | "spell" | "intervention" | "servant";
 

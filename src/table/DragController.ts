@@ -9,9 +9,10 @@ export interface DragHooks {
   /** Viewport-pixel cursor to canonical normalised board coords (handles the
    *  per-seat board rotation correctly, including non-square boards). */
   toCanonical(clientX: number, clientY: number): { nx: number; ny: number };
-  /** Unrotated cards-layer pixel size, used to scale canonical -> in-layer
-   *  pixels. Must match the basis the render loop uses (clientWidth/Height). */
-  boardMetrics(): { width: number; height: number };
+  /** Unrotated cards-layer pixel size plus the measured card pixel size. Used to
+   *  scale canonical -> in-layer pixels and to convert a card's CENTRE fraction
+   *  to its top-left pixel (matching the render loop's cardTransform). */
+  boardMetrics(): { width: number; height: number; cardW: number; cardH: number };
   /** Returns the cards under the pointer, tight overlap. */
   pickStackUnder(clientX: number, clientY: number): string[];
   /** Optional magnetic snap: nudge a single canonical (nx, ny) to nearest slot. */
@@ -216,7 +217,9 @@ export class DragController {
       c.x = seedNx + rel.dx;
       c.y = seedNy + rel.dy;
       const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
-      if (el) el.style.transform = `translate3d(${c.x * m.width}px, ${c.y * m.height}px, 0) rotate(${c.rot * 90}deg)`;
+      // (nx, ny) is the card CENTRE; subtract half the card to get the top-left
+      // pixel, exactly as the render loop's cardTransform does.
+      if (el) el.style.transform = `translate3d(${c.x * m.width - m.cardW / 2}px, ${c.y * m.height - m.cardH / 2}px, 0) rotate(${c.rot * 90}deg)`;
     }
     this.hooks.onDragProgress(s.ids);
   };
@@ -278,7 +281,7 @@ export class DragController {
       if (!c) continue;
       const el = this.host.querySelector<HTMLDivElement>(`[data-id="${id}"]`);
       if (!el) continue;
-      el.style.transform = `translate3d(${c.x * m.width}px, ${c.y * m.height}px, 0) rotate(${c.rot * 90}deg)`;
+      el.style.transform = `translate3d(${c.x * m.width - m.cardW / 2}px, ${c.y * m.height - m.cardH / 2}px, 0) rotate(${c.rot * 90}deg)`;
       el.classList.remove("is-held");
       // Restore the resting z immediately so there is no one-frame gap where the
       // dropped card still sits in the held band.

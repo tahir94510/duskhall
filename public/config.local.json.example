@@ -1,0 +1,9 @@
+{
+  "_comment": "Copy this file to config.local.json (same folder) for LOCAL development only. config.local.json is gitignored and must never be committed. In production these values come from Vercel environment variables via /api/config — see README.",
+  "supabaseUrl": "https://YOUR-PROJECT.supabase.co",
+  "supabaseAnonKey": "YOUR-PUBLIC-ANON-KEY",
+  "supportUrl": "",
+  "appName": "KABAL",
+  "siteUrl": "",
+  "socialOgImage": ""
+}

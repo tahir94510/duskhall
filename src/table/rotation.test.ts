@@ -4,8 +4,11 @@ import {
   seatRotationDeg,
   localSlotForSeat,
   seatForLocalSlot,
+  screenToCanonical,
+  canonicalToScreen,
   type Seat,
-  type LocalSlot
+  type LocalSlot,
+  type BoardBox
 } from "./rotation.js";
 
 const SEATS: Seat[] = [0, 1, 2, 3];
@@ -65,6 +68,76 @@ describe("seat → local slot mapping", () => {
         const slot = localSlotForSeat(v, s);
         expect(seatForLocalSlot(v, slot)).toBe(s);
       }
+    }
+  });
+});
+
+describe("screen <-> canonical is an exact round-trip for every seat", () => {
+  // A deliberately NON-square board (wide desktop) with an off-origin centre, so
+  // the test would catch the old square-board assumption bug.
+  const box: BoardBox = { cx: 960, cy: 400, width: 1600, height: 820 };
+  // Canonical points across the board, including the deck/discard centres.
+  const points: Array<[number, number]> = [
+    [0.5, 0.5], [0.4, 0.5], [0.6, 0.5], [0.1, 0.9], [0.92, 0.08], [0.0, 0.0], [1.0, 1.0]
+  ];
+
+  it("canonical -> screen -> canonical returns the original point for all seats", () => {
+    for (const v of SEATS) {
+      for (const [nx, ny] of points) {
+        const { px, py } = canonicalToScreen(nx, ny, v, box);
+        const back = screenToCanonical(px, py, v, box);
+        expect(back.nx).toBeCloseTo(nx, 6);
+        expect(back.ny).toBeCloseTo(ny, 6);
+      }
+    }
+  });
+
+  it("seat 0 reduces to the plain top-left mapping (no rotation)", () => {
+    // For seat 0, canonical (0.5,0.5) is the board centre in pixels.
+    const { px, py } = canonicalToScreen(0.5, 0.5, 0, box);
+    expect(px).toBeCloseTo(box.cx, 6);
+    expect(py).toBeCloseTo(box.cy, 6);
+  });
+
+  it("a point in front of the local seat maps to the lower half of the screen", () => {
+    // Canonical seat-0 area (y≈0.9, 'south') must appear at the bottom for seat 0
+    // and, after rotation, also in the lower half for every other viewer's OWN
+    // seat — i.e. each player sees their own front at the bottom.
+    for (const v of SEATS) {
+      // The canonical anchor of seat v (its own front), pushed toward its edge.
+      const anchor: Record<Seat, [number, number]> = {
+        0: [0.5, 0.9], 1: [0.5, 0.1], 2: [0.1, 0.5], 3: [0.9, 0.5]
+      };
+      const [nx, ny] = anchor[v];
+      const { py } = canonicalToScreen(nx, ny, v, box);
+      expect(py).toBeGreaterThan(box.cy); // below centre = bottom of screen
+    }
+  });
+});
+
+describe("four-player table reads consistently for every seat (regression)", () => {
+  // The reported bug: when seats 2 and 3 fill the sides, the third player saw the
+  // other seats mirrored. This pins the physically-correct reading for all four.
+  // Seat 0 South, 1 North, 2 West, 3 East; each viewer puts their own seat at the
+  // bottom and must see the other three where the rotated table actually places
+  // them, with no left/right swap.
+  it("every seat sees its own area at the bottom and the rest unmirrored", () => {
+    // For the LEFT-seat player (2): 0 is to their right, 1 to their left, 3 across.
+    expect(localSlotForSeat(2, 0)).toBe("right");
+    expect(localSlotForSeat(2, 1)).toBe("left");
+    expect(localSlotForSeat(2, 3)).toBe("top");
+    expect(localSlotForSeat(2, 2)).toBe("bottom");
+    // For the RIGHT-seat player (3): the exact mirror of the above.
+    expect(localSlotForSeat(3, 0)).toBe("left");
+    expect(localSlotForSeat(3, 1)).toBe("right");
+    expect(localSlotForSeat(3, 2)).toBe("top");
+    expect(localSlotForSeat(3, 3)).toBe("bottom");
+  });
+
+  it("no two seats ever collide in one viewer's layout (a 4-way bijection)", () => {
+    for (const v of SEATS) {
+      const slots = SEATS.map((s) => localSlotForSeat(v, s));
+      expect(new Set(slots).size).toBe(4); // all four screen slots used exactly once
     }
   });
 });

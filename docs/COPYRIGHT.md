@@ -1,10 +1,10 @@
-# KABAL: Copyright Notice
+# Vaerum: Copyright Notice
 
-The KABAL universe, including but not limited to:
+The Vaerum universe, including but not limited to:
 
-- The names "KABAL", "Heirs of Ether" and "Eterin Vârisleri";
+- The names "Vaerum", "Heirs of the Ether" and "Eterin Vârisleri";
 - All card names (Time Rift, Veil of Void, Crimson Monolith, Necromancer's Eye, Ether Strike, Shadow Theft, Ancient Sight, Mind Parasite, Twist of Fate, Silence!, Karmic Reflection, Blood Atonement, Runic Warden, Glacial Aberration, Shadow Slayer);
-- All card effect text, flavour text and rulebook content (V8.1);
+- All card effect text, flavour text and rulebook content;
 - The category sigils, name sigils and brand sigil designs;
 - The visual language, layout, palette and typography choices;
 
@@ -12,8 +12,8 @@ are the original creative work of the project author and are protected as such. 
 
 ## Recommended legal steps for the author
 
-1. **Trademark** the name "KABAL" and the standalone sigil in your home jurisdiction and any market you intend to sell in.
-2. **Copyright register** the V8.1 rulebook and card list at your national copyright office where deposit is supported.
+1. **Trademark** the name "Vaerum" and the standalone sigil in your home jurisdiction and any market you intend to sell in.
+2. **Copyright register** the rulebook and card list at your national copyright office where deposit is supported.
 3. **Design registration** for the physical card layouts once finalised.
 4. **NDA / IP assignment** with anyone contributing development, translation, illustration or playtest material.
 5. **Time-stamped backups** of every iteration (git tags + signed releases) act as supporting evidence of priority.
@@ -22,7 +22,7 @@ are the original creative work of the project author and are protected as such. 
 
 - Personal play between friends.
 - Reviews, video lets-plays, streaming with credit to the author.
-- Forking the source code for non-commercial study, provided the KABAL name, card content and sigils are removed before redistribution.
+- Forking the source code for non-commercial study, provided the Vaerum name, card content and sigils are removed before redistribution.
 
 ## Disclaimer
 

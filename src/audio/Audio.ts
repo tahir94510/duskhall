@@ -21,11 +21,12 @@ const PROCEDURAL: Record<SfxName, ProceduralSpec> = {
 };
 
 // Player-friendly defaults: the music sits gently in the background while the
-// effects stay clear and present without ever overpowering the table. The
-// master leaves headroom for the limiter.
-const SFX_DEFAULT = 0.55;
-const MUSIC_DEFAULT = 0.22;
-const MASTER_DEFAULT = 0.6;
+// effects stay clear and present without ever overpowering the table. Tuned
+// down from the old louder mix — the master leaves plenty of limiter headroom,
+// the effects are crisp but never harsh, and the music is a soft bed under them.
+const SFX_DEFAULT = 0.45;
+const MUSIC_DEFAULT = 0.16;
+const MASTER_DEFAULT = 0.5;
 // The "restore defaults" targets — the whole recommended mix, master included.
 export const BALANCED_MUSIC = MUSIC_DEFAULT;
 export const BALANCED_SFX = SFX_DEFAULT;

@@ -63,6 +63,20 @@ export class Tooltip {
     this.showTimer = window.setTimeout(() => this.show(data), HOVER_DELAY);
   };
 
+  // Show the panel for a specific card element on demand (touch "info" button,
+  // which has no hover). Anchors near the card and stays until dismissed by the
+  // next tap/scroll. Ignores the pressed flag and the usual hover delay.
+  showForCard(cardEl: HTMLElement): void {
+    const defId = cardEl.dataset.def;
+    if (!defId) return;
+    if (!cardEl.classList.contains("is-faceup") || cardEl.classList.contains("is-concealed")) return;
+    const r = cardEl.getBoundingClientRect();
+    this.mouseX = r.left + r.width / 2;
+    this.mouseY = r.top;
+    window.clearTimeout(this.showTimer);
+    this.show({ defId, cardEl });
+  }
+
   // Re-arm the hover tooltip at a point WITHOUT a pointerover (used right after a
   // card is dropped, so its info shows without the cursor leaving and re-entering).
   probeAt(x: number, y: number): void {

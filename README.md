@@ -1,8 +1,8 @@
-# KABAL: Heirs of Ether
+# Vaerum: Heirs of the Ether
 
 A digital card table for friends, 2 to 4 players. Free movement, no enforced rules; players follow the official rulebook themselves. Built with Vite, TypeScript, and Supabase Realtime.
 
-KABAL'ın dijital kart masası. 2 ila 4 oyuncu. Kurallar oyuncular tarafından uygulanır; site yalnızca masayı sağlar.
+Vaerumun dijital kart masası. 2 ila 4 oyuncu. Kurallar oyuncular tarafından uygulanır; site yalnızca masayı sağlar.
 
 ## Stack
 
@@ -30,16 +30,28 @@ SUPABASE_URL=https://<project>.supabase.co
 SUPABASE_ANON_KEY=<public anon key>
 
 # Branding (runtime-patched; lets you rename or move domains without a code change)
-APP_NAME=KABAL
-SITE_URL=https://kabal.example
-OG_IMAGE=https://kabal.example/assets/og.svg
+APP_NAME=Vaerum
+SITE_URL=https://vaerum.example
+OG_IMAGE=https://vaerum.example/assets/og.svg
 
 # Support button link
 SUPPORT_URL=https://your-support-page
-NEXT_PUBLIC_APP_URL=https://kabal.example
+NEXT_PUBLIC_APP_URL=https://vaerum.example
 ```
 
 `/api/config` is an Edge function that reads these env vars and serves them to the client at runtime. No keys are baked into the bundle.
+
+For local development without Vercel, copy `public/config.local.json.example` to `public/config.local.json` and fill in your Supabase URL and public anon key. That file is gitignored and is only read when `/api/config` is unavailable (local dev). Never commit it.
+
+### Troubleshooting: cards don't sync between players
+
+If actions never reach other players and the menu's **Connection** row reads **Offline**, the client could not reach Supabase Realtime. Check, in order:
+
+1. **Env vars are set in Vercel** (`SUPABASE_URL` and `SUPABASE_ANON_KEY`) and the project was redeployed after setting them. Open `/api/config` in the browser; both values must be present.
+2. **Realtime is enabled** for the Supabase project (Project settings → Realtime). No tables or auth are needed; the app uses only Broadcast + Presence.
+3. **CSP allows the socket** — `vercel.json` already permits `wss://*.supabase.co`; keep that entry if you fork the CSP.
+
+Two browser tabs on the **same machine** always sync, even while offline, via a local `BroadcastChannel` fallback. So if same-machine tabs sync but two separate devices do not, the cause is the Supabase connection above. The `Cookie "__cf_bm" has been rejected` console message is a harmless Cloudflare bot-management notice and does not affect the websocket.
 
 ## Vercel deployment
 
@@ -58,14 +70,15 @@ Output Directory: dist
 - **Interaction:**
   - Left-press + drag: move the card under the cursor
   - Ctrl + left-press + drag: move the whole stack
-  - Right-click: flip the card(s) under the cursor
+  - Right-click: flip the stack under the cursor (a single card flips alone)
   - Scroll: flip the single card under the cursor
-  - Ctrl / Shift + scroll up: gather the stack to the cursor
-  - Ctrl / Shift + scroll down: shuffle the stack in place
-  - Long-press on touch: open a context bar for the same actions
-- **Privacy:** cards you drop into your own zone are private; opponents see the count, not the contents.
-- **URL:** `https://kabal.example/P86B3T` (6-char path slug per room).
-- **Reset room:** opens a fresh room with a new link; current players stay in the old room.
+  - Ctrl + scroll: flip the whole stack under the cursor
+  - Shift + scroll: rotate the card 90° sideways
+  - G: gather the stack under the cursor; M: shuffle it
+  - Long-press on touch: open an action bar (flip, stack flip, rotate, gather, shuffle, info)
+- **Privacy:** cards you drop into your own zone are private; opponents see their backs and can infer the count, not the contents.
+- **URL:** `https://vaerum.example/P86B3T` (6-char path slug per room).
+- **Leave room:** opens a fresh room with a new link, with you as host; the others stay in the old room.
 - **Localisation:** English-primary with full Turkish parity. Auto-detected on first visit, remembered after.
 
 ## Assets
@@ -125,4 +138,4 @@ In-game **Settings** (Master / Music / Effects) sliders persist to `localStorage
 
 ## License
 
-See `LICENSE`. All KABAL game design, card names, effects, sigils, rulebook text and visual identity are copyright © 2026 the project author. Personal play permitted; commercial use, reprint, derivatives and source redistribution require written permission.
+See `LICENSE`. All Vaerum game design, card names, effects, sigils, rulebook text and visual identity are copyright © 2026 the project author. Personal play permitted; commercial use, reprint, derivatives and source redistribution require written permission.
