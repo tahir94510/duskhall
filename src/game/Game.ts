@@ -20,6 +20,7 @@ import { t, onLocaleChange } from "../i18n/index.js";
 import { getOrCreateRoom, newRoom, setRoomSlug } from "../net/room.js";
 import { showLoader, hideLoader } from "../ui/loader.js";
 import { seededDeck } from "./deck.js";
+import { seatIsRival, cardIsRivalOwned, type Occupancy } from "./occupancy.js";
 import {
   findStackOverlapping,
   gatherStack,
@@ -352,7 +353,9 @@ export class Game {
       pointInOpponentZone: (x, y) => {
         for (let i = 0; i < SEAT_COUNT; i++) {
           if (i === this.self.seat) continue;
-          if (this.pointInZone(i, x, y)) return i;
+          // Only a seat a rival actually holds blocks a drop. An empty seat's area
+          // is open public table — a card dropped there lands and stays unowned.
+          if (this.seatIsRival(i) && this.pointInZone(i, x, y)) return i;
         }
         return null;
       },
@@ -392,6 +395,7 @@ export class Game {
       beginHold: (ids) => this.broadcastHold(ids, false),
       endHold: (ids) => this.broadcastHold(ids, true),
       isLocked: (id) => this.isLockedByOther(id),
+      isRivalOwned: (id) => this.isRivalOwnedCard(id),
       showContextBar: (id, x, y) => this.contextBar.show(id, x, y),
       hideContextBar: () => this.contextBar.hide(),
       emitCursor: (x, y) => {
@@ -445,6 +449,36 @@ export class Game {
       }
     }
     return pick;
+  }
+
+  // Is a seat actually held by someone? True when a player is present on it
+  // (active) OR an away player still holds the claim (dropped but not left). An
+  // EMPTY seat — nobody ever sat, or the occupant explicitly left/was kicked — is
+  // NOT owned, so its on-screen area behaves like open public table: cards can be
+  // dropped there and any card stranded on it is public, not concealed. This is the
+  // single source of truth for "does this seat's area belong to a player?".
+  // Live snapshot of seat occupancy for the pure helpers in occupancy.ts. The
+  // seatClaims map covers active AND away/dropped players (claim persists), so it
+  // is the "claimed" set; activeSeats is the present subset.
+  private occupancy(): Occupancy {
+    return { activeSeats: this.activeSeats, claimedSeats: new Set(this.seatClaims.keys()), seatCount: SEAT_COUNT };
+  }
+
+  // A seat owned by someone OTHER than us (and we are seated). Used to decide
+  // whether dropping/interacting in that area is blocked as a rival's private zone.
+  private seatIsRival(seat: number): boolean {
+    return seatIsRival(this.occupancy(), seat, this.self.seat, this.spectator);
+  }
+
+  // Is this card in a rival's private area whose seat is still held? A card owned
+  // by a now-empty seat (owner left/kicked, or never occupied) is NOT rival-owned —
+  // it has no private zone, so it becomes a free, grabbable public card. Spectators
+  // treat every owned card as rival-owned. Single source of truth for "can I not
+  // touch this card because it's someone else's".
+  private isRivalOwnedCard(id: string): boolean {
+    const c = this.state.cards.get(id);
+    if (!c) return false;
+    return cardIsRivalOwned(this.occupancy(), c.ownerSeat, this.self.seat, this.spectator);
   }
 
   // The physical zone div (bottom/top/left/right) that an absolute seat occupies
@@ -581,9 +615,9 @@ export class Game {
       const top = this.topCardAtCanonicalPoint(pt.x, pt.y);
       if (!top) return; // empty space: do nothing
 
-      // Ownership/hold guard: a rival's owned card OR a card a peer is holding
-      // is off-limits to scroll.
-      if ((top.ownerSeat != null && top.ownerSeat !== this.self.seat) || this.isLockedByOther(top.id)) {
+      // Ownership/hold guard: a rival's private card OR a card a peer is holding
+      // is off-limits to scroll. A card on a now-empty seat is free.
+      if (this.isRivalOwnedCard(top.id) || this.isLockedByOther(top.id)) {
         e.preventDefault();
         return;
       }
@@ -898,7 +932,9 @@ export class Game {
   private canShowCardInfo(id: string): boolean {
     const c = this.state.cards.get(id);
     if (!c || !c.faceUp) return false;
-    if (c.ownerSeat !== null && (this.spectator || c.ownerSeat !== this.self.seat)) return false;
+    // Concealed rival cards (still-held seat) reveal nothing; a card on an empty
+    // seat is public, so its info is fine to show.
+    if (this.isRivalOwnedCard(id)) return false;
     return true;
   }
 
@@ -910,7 +946,7 @@ export class Game {
   private rotateCard(id: string): void {
     const c = this.state.cards.get(id);
     if (!c) return;
-    if ((c.ownerSeat != null && c.ownerSeat !== this.self.seat) || this.isLockedByOther(id)) return;
+    if (this.isRivalOwnedCard(id) || this.isLockedByOther(id)) return;
     // Cumulative rotation: keep adding turns so 270°→360°→450° flows forward
     // visually instead of teleporting back to 0°.
     c.rot = c.rot + 1;
@@ -922,7 +958,7 @@ export class Game {
   private flipCard(id: string): void {
     const c = this.state.cards.get(id);
     if (!c) return;
-    if ((c.ownerSeat != null && c.ownerSeat !== this.self.seat) || this.isLockedByOther(id)) return;
+    if (this.isRivalOwnedCard(id) || this.isLockedByOther(id)) return;
     c.faceUp = !c.faceUp;
     this.dirtyIds.add(id);
     this.scheduleFlush();
@@ -947,12 +983,11 @@ export class Game {
   private toggleStackFlip(id: string): void {
     const stack = findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics());
     if (!stack.length) return;
-    // Ownership guard: if any card in the stack belongs to a rival seat,
-    // the whole gesture is blocked. Otherwise mixed-seat flips would leak
-    // private orientation across players.
+    // Ownership guard: if any card in the stack is in a rival's (still-held)
+    // private area, the whole gesture is blocked. Otherwise mixed-seat flips would
+    // leak private orientation across players. Cards on empty seats are free.
     for (const cid of stack) {
-      const c = this.state.cards.get(cid);
-      if (c && c.ownerSeat != null && c.ownerSeat !== this.self.seat) return;
+      if (this.isRivalOwnedCard(cid)) return;
       if (this.isLockedByOther(cid)) return;
     }
     // Turn the whole pile over like a real stack of cards: the depth order
@@ -996,8 +1031,7 @@ export class Game {
   private stackBlocked(stack: string[]): boolean {
     for (const cid of stack) {
       if (this.isLockedByOther(cid)) return true;
-      const c = this.state.cards.get(cid);
-      if (c && c.ownerSeat != null && c.ownerSeat !== this.self.seat) return true;
+      if (this.isRivalOwnedCard(cid)) return true;
     }
     return false;
   }
@@ -1260,12 +1294,25 @@ export class Game {
       this.requestRender();
   }
 
-  // Handle an explicit departure: free the seat and release every card that
-  // seat owned so the table becomes public/interactable again.
+  // Handle an explicit departure (leave / kick): free the seat and release every
+  // card that seat owned so the table becomes public/interactable again.
   private applyLeft(l: LeftMsg): void {
     if (l.seat < 0) return;
+    // Guard against a stale `left`: only act if this id still holds the seat. If
+    // someone else has already reclaimed it, leave their claim untouched.
+    const claim = this.seatClaims.get(l.seat);
+    if (claim && claim.id !== l.id) {
+      // Just prune the stale leaver from the roster; don't free the new occupant.
+      this.players.delete(l.id);
+      this.lastRoster = this.lastRoster.filter((p) => p.id !== l.id);
+      return;
+    }
     this.seatClaims.delete(l.seat);
     this.activeSeats.delete(l.seat);
+    // Forget the leaver entirely so a re-evaluation can't resurrect them from a
+    // stale roster (e.g. presence sync hasn't dropped them yet after a kick).
+    this.players.delete(l.id);
+    this.lastRoster = this.lastRoster.filter((p) => p.id !== l.id);
     const now = this.stamp();
     let released = 0;
     for (const c of this.state.cards.values()) {
@@ -1394,6 +1441,13 @@ export class Game {
       },
       () => {
         this.bus.sendKick(target.id, this.self.id);
+        // Apply the eviction locally right away rather than waiting for the kicked
+        // client to echo a `left` (which races, or never arrives if they are
+        // offline): free the seat, release that seat's cards to the table, and drop
+        // them from our roster so they vanish from our screen immediately. Peers
+        // converge the same way via the kicked client's `left` and presence sync.
+        this.players.delete(target.id);
+        this.applyLeft({ id: target.id, seat });
         toast(t("kick.done").replace("{name}", target.name));
       }
     );
@@ -1629,12 +1683,14 @@ export class Game {
       el.classList.toggle("is-faceup", c.faceUp);
       // If a card just turned face-down, dismiss any tooltip it was showing.
       if (wasFaceUp && !c.faceUp) this.tooltip.hide();
-      // A card owned by any rival seat is ALWAYS shown to us as its back, blurred
-      // (see .is-concealed in card.css), no matter how the owner placed or flipped
-      // it. Only the owner sees their own card face. A spectator owns no seat, so
-      // EVERY owned card is concealed from them — no private area ever leaks.
-      const hidden = c.ownerSeat !== null && (this.spectator || c.ownerSeat !== this.self.seat);
-      el.classList.toggle("is-concealed", hidden);
+      // A card owned by a rival seat that is STILL HELD by someone (active or away)
+      // is shown to us as its blurred back, however the owner placed or flipped it.
+      // Only the owner sees their own card face. A spectator owns no seat, so every
+      // held-seat card is concealed from them. Crucially, a card whose owner seat is
+      // now EMPTY (the player left/was kicked, or nobody ever sat there) is NOT
+      // concealed — it has no private zone anymore, so it reads as a public table
+      // card that anyone can see and grab.
+      el.classList.toggle("is-concealed", this.isRivalOwnedCard(c.id));
       // Busy indicator while a peer is holding this card.
       el.classList.toggle("is-locked", this.isLockedByOther(c.id));
     }

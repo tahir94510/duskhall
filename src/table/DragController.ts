@@ -29,6 +29,10 @@ export interface DragHooks {
   endHold(ids: string[]): void;
   /** True if a peer currently holds this card, block local interaction. */
   isLocked(id: string): boolean;
+  /** True if this card is in the private area of a rival seat that is still held
+   *  by a player (active or away). A card owned by a seat that is now empty is NOT
+   *  rival-owned, so it becomes a grabbable public card. */
+  isRivalOwned(id: string): boolean;
   showContextBar(id: string, x: number, y: number): void;
   hideContextBar(): void;
   emitCursor(x: number, y: number): void;
@@ -99,12 +103,11 @@ export class DragController {
     const id = cardEl.dataset.id;
     if (!id) return;
 
-    // Ownership guard: a card claimed by a rival seat cannot be picked up or
-    // flipped by anyone else. Sahipsiz (ownerSeat=null) kart serbest kalır.
-    // Rejection is SILENT: no sound, no flip, no effect, so clicking a rival's
-    // private card does nothing at all.
-    const seedCard = this.state.cards.get(id);
-    if (seedCard && seedCard.ownerSeat != null && seedCard.ownerSeat !== this.hooks.getSelfSeat()) {
+    // Ownership guard: a card in a rival's private area (whose seat is still held)
+    // cannot be picked up or flipped by anyone else. An unowned card, or one
+    // stranded on a now-empty seat, is free. Rejection is SILENT: no sound, no
+    // flip, no effect, so clicking a rival's private card does nothing at all.
+    if (this.hooks.isRivalOwned(id)) {
       e.preventDefault();
       return;
     }
