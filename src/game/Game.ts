@@ -122,6 +122,8 @@ export class Game {
       onMix: (id) => this.shuffleAt(id),
       onStackToggleFlip: (id) => this.toggleStackFlip(id),
       onRotate: (id) => this.rotateCard(id),
+      onInfo: (id) => this.showCardInfo(id),
+      canShowInfo: (id) => this.canShowCardInfo(id),
       stackFor: (id) => findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics())
     });
     this.header = new Header({
@@ -885,6 +887,20 @@ export class Game {
       this.patchVersion = data.v || 0;
       return true;
     } catch { return false; }
+  }
+
+  // Touch "info" button: a card's details can be shown only when it reads face-up
+  // to us and is not a concealed rival card.
+  private canShowCardInfo(id: string): boolean {
+    const c = this.state.cards.get(id);
+    if (!c || !c.faceUp) return false;
+    if (c.ownerSeat !== null && (this.spectator || c.ownerSeat !== this.self.seat)) return false;
+    return true;
+  }
+
+  private showCardInfo(id: string): void {
+    const el = this.cardEls.get(id);
+    if (el && this.canShowCardInfo(id)) this.tooltip.showForCard(el);
   }
 
   private rotateCard(id: string): void {

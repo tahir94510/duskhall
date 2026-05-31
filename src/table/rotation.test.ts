@@ -115,6 +115,33 @@ describe("screen <-> canonical is an exact round-trip for every seat", () => {
   });
 });
 
+describe("four-player table reads consistently for every seat (regression)", () => {
+  // The reported bug: when seats 2 and 3 fill the sides, the third player saw the
+  // other seats mirrored. This pins the physically-correct reading for all four.
+  // Seat 0 South, 1 North, 2 West, 3 East; each viewer puts their own seat at the
+  // bottom and must see the other three where the rotated table actually places
+  // them, with no left/right swap.
+  it("every seat sees its own area at the bottom and the rest unmirrored", () => {
+    // For the LEFT-seat player (2): 0 is to their right, 1 to their left, 3 across.
+    expect(localSlotForSeat(2, 0)).toBe("right");
+    expect(localSlotForSeat(2, 1)).toBe("left");
+    expect(localSlotForSeat(2, 3)).toBe("top");
+    expect(localSlotForSeat(2, 2)).toBe("bottom");
+    // For the RIGHT-seat player (3): the exact mirror of the above.
+    expect(localSlotForSeat(3, 0)).toBe("left");
+    expect(localSlotForSeat(3, 1)).toBe("right");
+    expect(localSlotForSeat(3, 2)).toBe("top");
+    expect(localSlotForSeat(3, 3)).toBe("bottom");
+  });
+
+  it("no two seats ever collide in one viewer's layout (a 4-way bijection)", () => {
+    for (const v of SEATS) {
+      const slots = SEATS.map((s) => localSlotForSeat(v, s));
+      expect(new Set(slots).size).toBe(4); // all four screen slots used exactly once
+    }
+  });
+});
+
 describe("rotateVec is a true inverse on a non-square board", () => {
   // Pixel offsets from the board centre on a wide (non-square) board.
   const offsets: Array<[number, number]> = [

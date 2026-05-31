@@ -7,6 +7,8 @@ const ICON_STACK_FLIP = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/
 const ICON_ROTATE = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 13 A 9 9 0 0 0 12 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 13 L6 10 M3 13 L6 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`;
 const ICON_GATHER = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 3 V6 M15 3 V6 M9 18 V21 M15 18 V21 M3 9 H6 M3 15 H6 M18 9 H21 M18 15 H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
 const ICON_MIX = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 7 H7 L17 17 H21 M3 17 H7 L17 7 H21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M18 4 L21 7 L18 10 M18 14 L21 17 L18 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+// Info "i": shows the face-up card's details on touch, where there is no hover.
+const ICON_INFO = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 11 V16.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.1" fill="currentColor"/></svg>`;
 
 export interface ContextHooks {
   onFlip(id: string): void;
@@ -14,8 +16,13 @@ export interface ContextHooks {
   onMix(id: string): void;
   onStackToggleFlip(id: string): void;
   onRotate(id: string): void;
+  /** Show the card's details (touch has no hover); only when it reads face-up. */
+  onInfo(id: string): void;
   /** Returns the stack containing `id` so the bar can disable irrelevant actions. */
   stackFor(id: string): string[];
+  /** True when the card currently reads face-up to the local player, so the
+   *  Info button can disable itself on a face-down card (nothing to show). */
+  canShowInfo(id: string): boolean;
 }
 
 export class ContextBar {
@@ -31,6 +38,7 @@ export class ContextBar {
       <button type="button" class="context-bar__btn" data-act="rotate" aria-label="Rotate 90°">${ICON_ROTATE}</button>
       <button type="button" class="context-bar__btn" data-act="gather" aria-label="Gather">${ICON_GATHER}</button>
       <button type="button" class="context-bar__btn" data-act="mix" aria-label="Shuffle">${ICON_MIX}</button>
+      <button type="button" class="context-bar__btn" data-act="info" aria-label="Card info">${ICON_INFO}</button>
     `;
     document.body.appendChild(this.el);
     this.bind();
@@ -50,6 +58,7 @@ export class ContextBar {
         else if (act === "rotate") this.hooks.onRotate(id);
         else if (act === "gather") this.hooks.onGather(id);
         else if (act === "mix") this.hooks.onMix(id);
+        else if (act === "info") this.hooks.onInfo(id);
         this.hide();
       });
     });
@@ -75,6 +84,8 @@ export class ContextBar {
     setDisabled("stack-flip", !isStack);
     setDisabled("gather", !isStack);
     setDisabled("mix", !isStack);
+    // Info only makes sense for a card that currently reads face-up.
+    setDisabled("info", !this.hooks.canShowInfo(id));
   }
 
   show(id: string, clientX: number, clientY: number): void {
