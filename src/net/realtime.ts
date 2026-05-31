@@ -1,5 +1,6 @@
 import { createClient, type RealtimeChannel, type SupabaseClient } from "@supabase/supabase-js";
 import { TokenBucket, withinByteCap, safeNumber, safeString } from "../security/inputGuard.js";
+import { LocalBus } from "./localBus.js";
 import type { RuntimeConfig } from "./config.js";
 
 export interface PresencePlayer {
@@ -117,7 +118,22 @@ export class RealtimeBus {
   // because excess messages from a single id are dropped before dispatch.
   private recvBuckets = new Map<string, { patch: TokenBucket; cursor: TokenBucket }>();
 
-  constructor(private readonly config: RuntimeConfig) {}
+  // Same-device fallback transport (BroadcastChannel). It runs ALONGSIDE Supabase
+  // so two tabs/windows on one machine always sync, even when the websocket is
+  // unconfigured or blocked. Its inbound messages are fanned out to the very same
+  // listeners, and presence from both sources is merged by id, so Game.ts treats
+  // a local peer exactly like a remote one.
+  private local = new LocalBus();
+  // Latest presence rosters from each transport, merged on every emit.
+  private remotePresence: PresencePlayer[] = [];
+  private localPresence: PresencePlayer[] = [];
+
+  constructor(private readonly config: RuntimeConfig) {
+    // Wire the local transport once; it only does anything after connect().
+    this.local.onGame((msg) => { for (const l of this.gameListeners) l(msg); });
+    this.local.onCursor((c) => { for (const l of this.cursorListeners) l(c); });
+    this.local.onPresence((players) => { this.localPresence = players; this.emitMergedPresence(); });
+  }
 
   isAvailable(): boolean {
     return !!(this.config.supabaseUrl && this.config.supabaseAnonKey);
@@ -140,6 +156,9 @@ export class RealtimeBus {
     this.wantConnected = true;
     this.reconnectAttempt = 0;
     this.bindConnectivity();
+    // Always bring up the same-device channel so two local tabs sync immediately,
+    // independent of whether Supabase is configured/reachable.
+    this.local.connect(roomSlug, me);
     if (!this.isAvailable()) {
       this.setStatus("offline");
       return;
@@ -151,6 +170,7 @@ export class RealtimeBus {
    *  or rename, without forcing an immediate rejoin. */
   updateMe(me: PresencePlayer): void {
     this.desiredMe = me;
+    this.local.updateMe(me);
     if (this.channel && this.status === "online") void this.channel.track(me).catch(() => {});
   }
 
@@ -159,7 +179,11 @@ export class RealtimeBus {
    *  arrived before anyone had it in their roster, so no one answered. Safe to
    *  call repeatedly; the responder de-dupes by being the single lowest seat. */
   requestSync(): void {
-    if (!this.channel || this.status !== "online" || !this.desiredMe) return;
+    if (!this.desiredMe) return;
+    // Always ask local tabs too, so a second tab gets the authoritative board even
+    // with Supabase offline.
+    this.local.sendGame({ type: "hello", payload: { id: this.desiredMe.id } });
+    if (!this.channel || this.status !== "online") return;
     void this.channel.send({ type: "broadcast", event: "game", payload: { type: "hello", payload: { id: this.desiredMe.id } } });
   }
 
@@ -264,6 +288,8 @@ export class RealtimeBus {
     window.clearTimeout(this.reconnectTimer);
     this.reconnectTimer = 0;
     this.reconnectAttempt = 0;
+    this.local.disconnect();
+    this.localPresence = [];
     try {
       if (this.channel) {
         await this.channel.untrack().catch(() => {});
@@ -278,45 +304,52 @@ export class RealtimeBus {
     }
   }
 
+  // Every send mirrors over the same-device channel FIRST (so two local tabs sync
+  // even while Supabase is offline), then goes out over Supabase when online.
+
   sendPatch(patch: CardPatch): void {
+    if (patch.cards.length > 200 || !withinByteCap(patch)) return;
+    this.patchVersion = Math.max(this.patchVersion, patch.v);
+    this.local.sendGame({ type: "patch", payload: patch });
     if (!this.channel || this.status !== "online") return;
     if (!this.opsBucket.consume()) return;
-    if (patch.cards.length > 200) return;
-    if (!withinByteCap(patch)) return;
-    this.patchVersion = Math.max(this.patchVersion, patch.v);
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "patch", payload: patch } as GameMsg });
   }
 
   sendSnapshot(snap: CardPatch): void {
+    if (snap.cards.length > 200 || !withinByteCap(snap)) return;
+    this.local.sendGame({ type: "snapshot", payload: snap });
     if (!this.channel || this.status !== "online") return;
-    if (snap.cards.length > 200) return;
-    if (!withinByteCap(snap)) return;
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "snapshot", payload: snap } });
   }
 
   sendCursor(c: CursorMsg): void {
+    this.local.sendCursor(c);
     if (!this.channel || this.status !== "online") return;
     if (!this.cursorBucket.consume()) return;
     this.channel.send({ type: "broadcast", event: "cursor", payload: c });
   }
 
   sendHold(h: HoldMsg): void {
+    if (!withinByteCap(h)) return;
+    this.local.sendGame({ type: "hold", payload: h });
     if (!this.channel || this.status !== "online") return;
     if (!this.holdBucket.consume()) return;
-    if (!withinByteCap(h)) return;
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "hold", payload: h } as GameMsg });
   }
 
   /** Announce an intentional departure so peers free the seat and release its
    *  cards. Not rate-limited (one-shot, rare) but still byte-capped. */
   sendLeft(l: LeftMsg): void {
-    if (!this.channel || this.status !== "online") return;
     if (!withinByteCap(l)) return;
+    this.local.sendGame({ type: "left", payload: l });
+    if (!this.channel || this.status !== "online") return;
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "left", payload: l } as GameMsg });
   }
 
   /** Host-only: ask a player to leave. Only the target acts on it. */
   sendKick(target: string, by: string): void {
+    this.local.sendGame({ type: "kick", payload: { target, by } });
     if (!this.channel || this.status !== "online") return;
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "kick", payload: { target, by } } as GameMsg });
   }
@@ -442,6 +475,18 @@ export class RealtimeBus {
     }
     // Prune receive-buckets for senders no longer present (bounded memory).
     for (const id of this.recvBuckets.keys()) if (!present.has(id)) this.recvBuckets.delete(id);
-    for (const l of this.presenceListeners) l(players);
+    this.remotePresence = players;
+    this.emitMergedPresence();
+  }
+
+  // Union the Supabase and local-tab rosters by client id (Supabase wins on a tie
+  // since it carries the authoritative seat for cross-device play), then publish
+  // one combined roster. Same-machine tabs and remote peers thus seat together.
+  private emitMergedPresence(): void {
+    const byId = new Map<string, PresencePlayer>();
+    for (const p of this.localPresence) byId.set(p.id, p);
+    for (const p of this.remotePresence) byId.set(p.id, p);
+    const merged = Array.from(byId.values());
+    for (const l of this.presenceListeners) l(merged);
   }
 }
