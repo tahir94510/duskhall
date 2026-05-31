@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.6.0 — Square field, lifecycle, and legal
+
+- **Square play field.** The play area is now a centered square (capped at 880px),
+  so all four seats share one identical coordinate space. Previously the rectangular
+  field distorted the ±90° side seats, making a card's position inconsistent between
+  head-on and side players. Proven by tests: every seat agrees on where a card is.
+- **Kick is final for everyone.** A kicked player is removed on every screen at once
+  (never shown as "away"), their cards go public, and they land in a fresh room as
+  host. Only the host can kick; forged kicks are ignored. Connection drops still show
+  "away" and remain resumable — the one path that does.
+- **Smooth bulk moves.** Dragging a large stack no longer queries the DOM per card
+  per frame; element references are cached at grab.
+- **Drop lands on top.** Ctrl-dragging a card or stack onto another pile now rests on
+  top, not under it.
+- **Softer shadows** so a deep deck no longer compounds into a dark mass.
+- **About & Legal** menu entry: About, Privacy, Terms, Copyright — professional,
+  accurate content in English and Turkish.
+
 ## 0.5.0 — Production-ready multiplayer
 
 Builds on the 0.4.0 sync fix to make the live, multi-device experience solid.
