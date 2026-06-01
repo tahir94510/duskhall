@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { seatIsOwned, seatIsRival, cardIsRivalOwned, type Occupancy } from "./occupancy.js";
+import { seatIsOwned, seatIsRival, cardIsRivalOwned, hostSeat, isHostSeat, type Occupancy } from "./occupancy.js";
 
 // These rules decide whether a seat's on-screen area is a player's private zone or
 // open public table, and whether a card can be touched. The bugs they fix: empty
@@ -91,5 +91,32 @@ describe("kick/leave transition: a left seat releases its cards to the table", (
     const dropped = occ([0], [0, 1]);
     expect(cardIsRivalOwned(dropped, 1, 0, false)).toBe(true); // still private
     expect(seatIsOwned(dropped, 1)).toBe(true);
+  });
+});
+
+describe("host = lowest active seat; transfers on leave; late joiner never host", () => {
+  it("the lowest active seat is the host", () => {
+    expect(hostSeat(new Set([0, 1, 2]))).toBe(0);
+    expect(hostSeat(new Set([2, 3]))).toBe(2); // creator on seat 0/1 gone → seat 2 hosts
+  });
+  it("returns -1 when nobody is seated", () => {
+    expect(hostSeat(new Set())).toBe(-1);
+  });
+  it("transfers to the next lowest seat the moment the host leaves", () => {
+    let active = new Set([0, 1, 2]);
+    expect(hostSeat(active)).toBe(0);
+    // Host on seat 0 leaves → drops out of activeSeats.
+    active = new Set([1, 2]);
+    expect(hostSeat(active)).toBe(1); // role moved to seat 1, no manual handoff
+  });
+  it("isHostSeat: only the player on the host seat is host", () => {
+    const active = new Set([1, 2, 3]); // seat 0 empty, so seat 1 hosts
+    expect(isHostSeat(1, active, false)).toBe(true);  // seat-1 player is host
+    expect(isHostSeat(2, active, false)).toBe(false); // a later joiner is NOT host
+    expect(isHostSeat(3, active, false)).toBe(false);
+  });
+  it("a spectator (claimSeat < 0) is never host", () => {
+    expect(isHostSeat(-1, new Set([0, 1]), true)).toBe(false);
+    expect(isHostSeat(0, new Set([0, 1]), true)).toBe(false); // spectator flag wins
   });
 });

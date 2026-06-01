@@ -22,7 +22,7 @@ import { t, onLocaleChange } from "../i18n/index.js";
 import { getOrCreateRoom, newRoom, setRoomSlug } from "../net/room.js";
 import { showLoader, hideLoader } from "../ui/loader.js";
 import { seededDeck } from "./deck.js";
-import { seatIsRival, cardIsRivalOwned, type Occupancy } from "./occupancy.js";
+import { seatIsRival, cardIsRivalOwned, hostSeat, isHostSeat, type Occupancy } from "./occupancy.js";
 import {
   findStackOverlapping,
   gatherStack,
@@ -1661,12 +1661,10 @@ export class Game {
   // (the creator, while they're here). It transfers automatically to the next
   // lowest seat when the host leaves. Only the host can kick.
   private hostSeat(): number {
-    let min = Infinity;
-    for (const s of this.activeSeats) min = Math.min(min, s);
-    return Number.isFinite(min) ? min : -1;
+    return hostSeat(this.activeSeats);
   }
   private isHost(): boolean {
-    return !this.spectator && this.claimSeat >= 0 && this.claimSeat === this.hostSeat();
+    return isHostSeat(this.claimSeat, this.activeSeats, this.spectator);
   }
 
   // A kick was broadcast. Every client acts on it, not just the target:
