@@ -41,12 +41,26 @@ export interface SeatClaim {
   name: string;
 }
 
+/** Cosmetic-only hint attached to a patch so REMOTE peers replay the same flourish
+ *  the actor saw (a solid-block flip or a riffle shuffle) instead of snapping the
+ *  state. It never affects the authoritative state — the receiver still applies the
+ *  card values via LWW and reads only the direction (`toFaceUp`) from here. Old
+ *  clients ignore the field entirely. */
+export interface PatchAnim {
+  kind: "flip" | "shuffle";
+  ids: string[];
+  /** Flip direction (the final face), so the receiver stages old → new correctly. */
+  toFaceUp?: boolean;
+}
+
 export interface CardPatch {
   v: number;
   by: string;
   cards: PatchCard[];
   /** Only populated on snapshots: the authoritative peer's known seat claims. */
   claims?: SeatClaim[];
+  /** Optional cosmetic animation hint (patches only, never snapshots). */
+  anim?: PatchAnim;
 }
 
 /** Broadcast when a player INTENTIONALLY leaves (reset/leave or hops rooms), as
@@ -122,6 +136,21 @@ export function maskHost(url: string): string {
   } catch {
     return "••••";
   }
+}
+
+/** Validate a cosmetic `anim` hint off the wire (pure, unit-tested). Returns null —
+ *  hint dropped, the card STATE still applies — on anything malformed: unknown kind,
+ *  missing/empty/oversize ids, or non-string ids. `toFaceUp` is kept only if boolean. */
+export function sanitizeAnim(raw: unknown): PatchAnim | null {
+  if (!raw || typeof raw !== "object") return null;
+  const a = raw as Partial<PatchAnim>;
+  if (a.kind !== "flip" && a.kind !== "shuffle") return null;
+  if (!Array.isArray(a.ids) || a.ids.length === 0 || a.ids.length > 200) return null;
+  const ids = a.ids.map((id) => safeString(id, 32)).filter((id) => !!id);
+  if (!ids.length) return null;
+  const out: PatchAnim = { kind: a.kind, ids };
+  if (typeof a.toFaceUp === "boolean") out.toFaceUp = a.toFaceUp;
+  return out;
 }
 
 export type KeyKind = "anon" | "publishable" | "service_role" | "secret" | "unknown";
@@ -591,6 +620,10 @@ export class RealtimeBus {
     })).filter((c) => !!c.id);
   }
 
+  private sanitizeAnim(raw: unknown): PatchAnim | null {
+    return sanitizeAnim(raw);
+  }
+
   private handleGame(payload: unknown): void {
     if (!payload || typeof payload !== "object") return;
     const msg = payload as { type?: string; payload?: unknown };
@@ -606,6 +639,12 @@ export class RealtimeBus {
       // coordinate — validate as a wide int so it is never clamped to the board range.
       const sanitized: CardPatch = { v: safeInt(p.v, 0), by, cards: this.sanitizeCards(p.cards) };
       if (msg.type === "snapshot" && p.claims) sanitized.claims = this.sanitizeClaims(p.claims);
+      // The cosmetic anim hint rides on patches only (never snapshots, which apply
+      // wholesale). Sanitised so a malformed/oversize hint can never reach Game.
+      if (msg.type === "patch" && p.anim) {
+        const a = this.sanitizeAnim(p.anim);
+        if (a) sanitized.anim = a;
+      }
       for (const l of this.gameListeners) l({ type: msg.type, payload: sanitized });
     } else if (msg.type === "left") {
       const l0 = msg.payload as Partial<LeftMsg> | undefined;

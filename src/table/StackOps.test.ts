@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { BoardState, CardState } from "./types.js";
-import { findStackOverlapping, flipStackOver, gatherStack, shuffleStack, alignRotation, rotationsDiffer } from "./StackOps.js";
+import { findStackOverlapping, flipStackOver, gatherStack, shuffleStack, alignRotation, rotationsDiffer, flipVisibleCardId, isTidyStack } from "./StackOps.js";
 
 // A 1000 x 1450 board so one card-width (96) maps cleanly; card is 96 x 139.2.
 const BOARD = { width: 1000, height: 1450 };
@@ -282,5 +282,56 @@ describe("straighten phase: align orientation first, without moving cards", () =
     // All congruent to the target (0 and 8 are both ≡ 0 mod 4): no straighten needed.
     const tidy = board([card("a", 0.5, 0.5, 1, 0), card("b", 0.5, 0.5, 2, 8)]);
     expect(rotationsDiffer(tidy, ["a", "b"], 0)).toBe(false);
+  });
+});
+
+describe("flipVisibleCardId: which card stays visible so the pile turns as one block", () => {
+  // Call AFTER flipStackOver (z reversed). The visible card must show a generic back
+  // at t=0 so there's no art-swap pop.
+  it("opening (toFaceUp=true): keeps the NEW top (highest z after the reversal)", () => {
+    // Pre-flip: a(z1,down) b(z2,down) c(z3,down). After flipStackOver z reverses.
+    const st = board([card("a", 0.5, 0.5, 1, 0, false), card("b", 0.5, 0.5, 2, 0, false), card("c", 0.5, 0.5, 3, 0, false)]);
+    flipStackOver(st, ["a", "b", "c"]); // now all faceUp=true; z: a=3,b=2,c=1
+    const vis = flipVisibleCardId(st, ["a", "b", "c"], true);
+    // highest z after flip is "a" (was the bottom, now the new top)
+    expect(vis).toBe("a");
+    expect(st.cards.get("a")!.z).toBe(3);
+  });
+
+  it("closing (toFaceUp=false): keeps the OLD top (lowest z after the reversal)", () => {
+    // Pre-flip: a(z1,up) b(z2,up) c(z3,up). c is the old top the player was viewing.
+    const st = board([card("a", 0.5, 0.5, 1, 0, true), card("b", 0.5, 0.5, 2, 0, true), card("c", 0.5, 0.5, 3, 0, true)]);
+    flipStackOver(st, ["a", "b", "c"]); // now all faceUp=false; z: a=3,b=2,c=1
+    const vis = flipVisibleCardId(st, ["a", "b", "c"], false);
+    // lowest z after flip is "c" (the old top, now at the bottom) — keep it visible
+    expect(vis).toBe("c");
+    expect(st.cards.get("c")!.z).toBe(1);
+  });
+
+  it("single card returns that card; empty set returns null", () => {
+    const st = board([card("solo", 0.5, 0.5, 5, 0, true)]);
+    expect(flipVisibleCardId(st, ["solo"], true)).toBe("solo");
+    expect(flipVisibleCardId(st, ["solo"], false)).toBe("solo");
+    expect(flipVisibleCardId(st, [], true)).toBe(null);
+  });
+});
+
+describe("isTidyStack: detect an already-gathered, squared pile (skip the gather phase)", () => {
+  it("true when every card sits on (ax,ay) and is squared to target", () => {
+    const st = board([card("a", 0.5, 0.5, 1, 0), card("b", 0.5, 0.5, 2, 8), card("c", 0.5, 0.5, 3, 4)]);
+    // rots 0, 8, 4 are all ≡ 0 mod 4; all on (0.5,0.5).
+    expect(isTidyStack(st, ["a", "b", "c"], 0.5, 0.5, 0)).toBe(true);
+  });
+  it("false when a card is offset in position", () => {
+    const st = board([card("a", 0.5, 0.5, 1, 0), card("b", 0.62, 0.5, 2, 0)]);
+    expect(isTidyStack(st, ["a", "b"], 0.5, 0.5, 0)).toBe(false);
+  });
+  it("false when a card faces a different way", () => {
+    const st = board([card("a", 0.5, 0.5, 1, 0), card("b", 0.5, 0.5, 2, 1)]);
+    expect(isTidyStack(st, ["a", "b"], 0.5, 0.5, 0)).toBe(false);
+  });
+  it("tolerates sub-eps float drift", () => {
+    const st = board([card("a", 0.5, 0.5, 1, 0), card("b", 0.5 + 5e-4, 0.5 - 5e-4, 2, 0)]);
+    expect(isTidyStack(st, ["a", "b"], 0.5, 0.5, 0)).toBe(true);
   });
 });

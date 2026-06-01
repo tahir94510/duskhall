@@ -29,12 +29,14 @@ import {
   shuffleStack,
   flipStackOver,
   alignRotation,
-  rotationsDiffer
+  rotationsDiffer,
+  flipVisibleCardId,
+  isTidyStack
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
 import { pointInZoneCanonical } from "../table/SlotGrid.js";
-import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, HoldMsg, LeftMsg, KickMsg, SeatClaim } from "../net/realtime.js";
+import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim } from "../net/realtime.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
@@ -48,8 +50,12 @@ const SEAT_COLORS = ["#f3efe5", "#cdc8bc", "#a09c92", "#79766f"];
 const ANIM_Z_BASE = 500;
 // Animation durations (kept slightly above the CSS transition/keyframe lengths
 // so the z-elevation never clears before the visual settles).
-const FLIP_ANIM_MS = 380;
-const SHUFFLE_ANIM_MS = 400;
+// Flip = the .card__inner rotateY transition (--dur-flip: 320ms in card.css) plus a
+// tiny guard so the elevation never clears before the visual settles.
+const FLIP_ANIM_MS = 320;
+// Shuffle = the shuffle-spin keyframe length (380ms in card.css); keep them equal so
+// the elevation and the jitter cleanup land exactly when the animation ends.
+const SHUFFLE_ANIM_MS = 380;
 // Tidy phases for stack flip/shuffle. When the pile is fanned at mixed angles we
 // first STRAIGHTEN every card to one orientation, then GATHER them into one spot,
 // then act (flip/riffle) — three smooth, ordered beats rather than all at once.
@@ -853,7 +859,7 @@ export class Game {
         // The keyframe owned the transform; repaint so the inline transform is
         // restored cleanly now that the wobble class is gone.
         this.requestRender();
-      }, 380);
+      }, SHUFFLE_ANIM_MS);
     }
   }
 
@@ -1154,10 +1160,9 @@ export class Game {
     // was sitting in once the turn animation settles.
     this.bringCardsToTop([id]);
     this.dirtyIds.add(id);
-    // Lift the card into the animation band for the turn so it rotates cleanly
-    // above its neighbours (no one-frame z jump that lets an adjacent card clip
-    // over it) and the render loop leaves its transform alone until it settles.
-    this.elevateDuringAnim([id], FLIP_ANIM_MS);
+    // Drive the turn through the shared visual (old face → rAF → new face) so the
+    // rotateY animates now that renderAllCards no longer toggles is-faceup mid-flip.
+    this.runFlipVisual([id], id, FLIP_ANIM_MS);
     this.scheduleFlush();
     void this.audio.play("flip");
     this.rearmTooltipAtPointer();
@@ -1201,6 +1206,13 @@ export class Game {
     const anchor = this.state.cards.get(anchorId);
     if (!anchor) return;
     const target = this.viewerUprightRot(anchor.rot);
+    // Already a tidy single stack (resting deck/discard)? Skip the dead-time and
+    // turn/shuffle it instantly — only a scattered or fanned pile needs the tidy.
+    if (isTidyStack(this.state, stack, anchor.x, anchor.y, target)) {
+      this.syncTopZ();
+      act();
+      return;
+    }
     const needStraighten = rotationsDiffer(this.state, stack, target);
     const gatherMs = STACK_TIDY_MS;
     const straightenMs = needStraighten ? STACK_STRAIGHTEN_MS : 0;
@@ -1269,6 +1281,45 @@ export class Game {
   // and hide all but the card that ends up on top so the 3D turn reads as one solid
   // block (only its outer face is ever visible). Used for a lone card directly and
   // for a stack after the tidy stage.
+  // Play the 3D turn for a pile (or a single card) AFTER the state faces/z are
+  // already set. `visibleId` is the one card kept on screen (the others hide via
+  // is-flip-quiet) so the pile reads as one solid block. Because renderAllCards no
+  // longer toggles is-faceup while a card is animating, we drive the rotateY here:
+  // write each card's OLD face first, then on the next frame switch to its real
+  // (already-set) face so the CSS .card__inner transition animates. At settle the
+  // quiet class is dropped and the render loop writes the authoritative faces.
+  private runFlipVisual(ids: string[], visibleId: string | null, durMs: number): void {
+    this.elevateDuringAnim(ids, durMs);
+    // Stage the OLD face now (state already holds the NEW face → old = !current).
+    for (const id of ids) {
+      const c = this.state.cards.get(id);
+      const el = this.cardEls.get(id);
+      if (!c || !el) continue;
+      el.classList.toggle("is-faceup", !c.faceUp);
+    }
+    // Pin the visible card to the very top of the animation band so it is never
+    // covered, and hide the rest for the turn.
+    if (visibleId) {
+      this.cardEls.get(visibleId)?.style.setProperty("z-index", String(ANIM_Z_BASE + 19));
+      for (const id of ids) {
+        if (id !== visibleId) this.cardEls.get(id)?.classList.add("is-flip-quiet");
+      }
+    }
+    // Next frame: flip to the real face so the rotateY transition fires.
+    requestAnimationFrame(() => {
+      for (const id of ids) {
+        const c = this.state.cards.get(id);
+        const el = this.cardEls.get(id);
+        if (!c || !el) continue;
+        el.classList.toggle("is-faceup", c.faceUp);
+      }
+    });
+    window.setTimeout(() => {
+      for (const id of ids) this.cardEls.get(id)?.classList.remove("is-flip-quiet");
+      this.requestRender();
+    }, durMs);
+  }
+
   private performStackFlip(stack: string[]): void {
     if (!stack.length) return;
     // Re-check ownership/locks: a card could have changed hands during the tidy
@@ -1276,28 +1327,23 @@ export class Game {
     for (const cid of stack) {
       if (this.isRivalOwnedCard(cid) || this.isLockedByOther(cid)) return;
     }
+    // Direction is uniform across the pile; read it from the top card BEFORE the
+    // flip so flipVisibleCardId picks the right card to keep on screen.
+    let preTopId = stack[stack.length - 1]!;
+    let preTopZ = -Infinity;
+    for (const cid of stack) {
+      const c = this.state.cards.get(cid);
+      if (c && c.z > preTopZ) { preTopZ = c.z; preTopId = cid; }
+    }
+    const toFaceUp = !(this.state.cards.get(preTopId)?.faceUp ?? false);
     // Turn the whole pile over like a real stack of cards: the depth order
     // reverses (the bottom card ends up on top) and every face is toggled.
     flipStackOver(this.state, stack);
     for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
-    this.elevateDuringAnim(stack, FLIP_ANIM_MS);
-    // flipStackOver reverses z, so the card now on top is the one that was at the
-    // BOTTOM. Find the visible top so we hide exactly the under-cards (opacity
-    // only, never removed) — the top card is never hidden, so no "disappear" blink.
-    let topId = stack[stack.length - 1]!;
-    let topZ = -Infinity;
-    for (const cid of stack) {
-      const c = this.state.cards.get(cid);
-      if (c && c.z > topZ) { topZ = c.z; topId = cid; }
-    }
-    for (const cid of stack) {
-      if (cid !== topId) this.cardEls.get(cid)?.classList.add("is-flip-quiet");
-    }
-    window.setTimeout(() => {
-      for (const cid of stack) this.cardEls.get(cid)?.classList.remove("is-flip-quiet");
-      this.requestRender();
-    }, FLIP_ANIM_MS);
-    this.scheduleFlush();
+    const visibleId = flipVisibleCardId(this.state, stack, toFaceUp);
+    this.runFlipVisual(stack, visibleId, FLIP_ANIM_MS);
+    // Send immediately with a flip hint so peers replay the same solid-block turn.
+    this.flushWithAnim(stack, { kind: "flip", ids: stack, toFaceUp });
     void this.audio.play("flip");
     this.rearmTooltipAtPointer();
   }
@@ -1344,11 +1390,16 @@ export class Game {
     // squared-up deck. Same ordered tidy as flip, so both feel consistent.
     this.tidyStackThen(stack, id, () => {
       if (this.stackBlocked(stack)) return; // re-confirm after the tidy delay
-      shuffleStack(this.state, stack, upright);
+      shuffleStack(this.state, stack, upright); // faces every card DOWN
       for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
       this.elevateDuringAnim(stack, SHUFFLE_ANIM_MS);
+      // Show the backs for the whole riffle: the cards are now is-shuffling (busy),
+      // so the render loop won't write is-faceup — set it down ourselves, matching
+      // the new state, so a previously face-up card doesn't flash its art mid-wobble.
+      for (const cid of stack) this.cardEls.get(cid)?.classList.remove("is-faceup");
       this.applyShuffleJitter(stack); // already aligned, so just the riffle wobble
-      this.scheduleFlush();
+      // Send immediately with a shuffle hint so peers riffle the same pile.
+      this.flushWithAnim(stack, { kind: "shuffle", ids: stack });
       void this.audio.play("shuffle");
     }, SHUFFLE_ANIM_MS);
   }
@@ -1428,6 +1479,31 @@ export class Game {
     this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards });
     if (this.debug) this.debug.sent++;
     this.dirtyIds.clear();
+  }
+
+  // Send a flip/shuffle's cards IMMEDIATELY (bypassing the 40ms batch) carrying a
+  // cosmetic `anim` hint so remote peers replay the same flourish instead of
+  // snapping. The hinted ids are stamped here and REMOVED from dirtyIds so the next
+  // ordinary flush can't re-send them with a newer ts (which would double-fire /
+  // race). Any other still-dirty cards (e.g. ownership-only) flush normally after.
+  private flushWithAnim(ids: string[], anim: PatchAnim): void {
+    const now = this.stamp();
+    const cards = ids.slice(0, 200).map((id) => {
+      // Clear the dirty flag for every requested id, even one whose card vanished
+      // (a race between the gesture and a deletion), so a missing id can never
+      // linger in dirtyIds and get retried forever by the next flush.
+      this.dirtyIds.delete(id);
+      const c = this.state.cards.get(id);
+      if (!c) return null;
+      c.ts = now;
+      c.by = this.self.id;
+      return this.wireCard(c);
+    }).filter((c): c is PatchCard => !!c);
+    if (!cards.length) return;
+    this.patchVersion++;
+    this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards, anim });
+    if (this.debug) this.debug.sent++;
+    if (this.dirtyIds.size) this.scheduleFlush();
   }
 
   private scheduleDragPreview(): void {
@@ -1971,7 +2047,31 @@ export class Game {
       if (p.claims && p.claims.length) this.mergeClaims(p.claims);
       this.resolveFirstSync();
     }
+    // Replay the actor's flip/shuffle flourish on our side (state is already set;
+    // this is purely cosmetic). Snapshots carry no anim hint.
+    if (!isSnapshot && p.anim) this.playRemoteAnim(p.anim);
     this.requestRender();
+  }
+
+  // A remote peer flipped/shuffled a pile; play the same animation here. State is
+  // already applied by applyPatch, so this only drives the visual. Defensive: skip
+  // ids we don't have or aren't rendering, skip if already animating (idempotent),
+  // and NEVER animate a rival's private card (privacy — such flips are blocked
+  // upstream anyway, this is a second layer).
+  private playRemoteAnim(anim: PatchAnim): void {
+    const ids = anim.ids.filter((id) => this.state.cards.has(id) && this.cardEls.has(id));
+    if (!ids.length || this.anyAnimating(ids)) return;
+    for (const id of ids) if (this.isRivalOwnedCard(id)) return;
+    if (anim.kind === "flip") {
+      const toFaceUp = anim.toFaceUp === true;
+      const visibleId = flipVisibleCardId(this.state, ids, toFaceUp);
+      this.runFlipVisual(ids, visibleId, FLIP_ANIM_MS);
+    } else {
+      // Shuffle: state already faced the cards down; show backs and riffle.
+      this.elevateDuringAnim(ids, SHUFFLE_ANIM_MS);
+      for (const id of ids) this.cardEls.get(id)?.classList.remove("is-faceup");
+      this.applyShuffleJitter(ids);
+    }
   }
 
   // While peers are present but we have not yet received the authoritative
@@ -2090,10 +2190,18 @@ export class Game {
         const zStr = String(c.z);
         if (el.style.zIndex !== zStr) el.style.zIndex = zStr;
       }
-      const wasFaceUp = el.classList.contains("is-faceup");
-      el.classList.toggle("is-faceup", c.faceUp);
-      // If a card just turned face-down, dismiss any tooltip it was showing.
-      if (wasFaceUp && !c.faceUp) this.tooltip.hide();
+      // The face class is gated by the SAME `busy` guard as transform/z/concealment.
+      // While a card is mid-turn (is-animating), its flip is driven by runFlipVisual
+      // (old face → rAF → new face) so the rotateY actually animates. If the render
+      // loop also toggled is-faceup here, a remote/late state write would SNAP the
+      // face instantly and the turn would never play. The settle frame (busy clears)
+      // writes the authoritative face.
+      if (!busy) {
+        const wasFaceUp = el.classList.contains("is-faceup");
+        el.classList.toggle("is-faceup", c.faceUp);
+        // If a card just turned face-down, dismiss any tooltip it was showing.
+        if (wasFaceUp && !c.faceUp) this.tooltip.hide();
+      }
       // A card owned by a rival seat that is STILL HELD by someone (active or away)
       // is shown to us as its blurred back, however the owner placed or flipped it.
       // Only the owner sees their own card face. A spectator owns no seat, so every

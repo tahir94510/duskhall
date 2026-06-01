@@ -268,9 +268,9 @@ body:not(.is-ready) .board__perspective { transition: none; }
 
 .dock__label {
   font-family: var(--font-display);
-  /* Scale with the card so a long word (e.g. Turkish "ÇÖPLÜK") never spills past
-     the marker on small phones, where --card-w clamps down to ~38px. */
-  font-size: clamp(7px, 1.6vmin, 10px);
+  /* Scale with the CARD (not the viewport) so a long word (e.g. Turkish "ÇÖPLÜK")
+     never spills past the marker on small phones, where --card-w clamps down. */
+  font-size: clamp(7px, calc(var(--card-w) * 0.13), 10px);
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
