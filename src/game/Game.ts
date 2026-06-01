@@ -54,8 +54,10 @@ const SHUFFLE_ANIM_MS = 400;
 // first STRAIGHTEN every card to one orientation, then GATHER them into one spot,
 // then act (flip/riffle) — three smooth, ordered beats rather than all at once.
 // Each is just over the .card transform transition so one settles before the next.
-const STACK_STRAIGHTEN_MS = 150; // rotate-to-one-direction phase (skipped if already aligned)
-const STACK_TIDY_MS = 170;       // gather-into-one-pile phase
+// Each phase is just over the .card transform transition (--dur: 180ms) so the
+// straighten finishes before the gather starts, and the gather before the act.
+const STACK_STRAIGHTEN_MS = 200; // rotate-to-one-direction phase (skipped if already aligned)
+const STACK_TIDY_MS = 200;       // gather-into-one-pile phase
 const SS_SNAPSHOT_PREFIX = "kabal:snap:";
 const SS_SEAT_PREFIX = "kabal:seat:";
 const SS_CLIENT_ID = "kabal:cid";
@@ -1012,6 +1014,22 @@ export class Game {
     }
   }
 
+  // Write the live transform for these cards directly to their elements, so a
+  // change made while they are elevated (is-animating, where the render loop skips
+  // transform writes) still ANIMATES via the .card CSS transition instead of only
+  // jumping into place at settle. Used by the straighten/gather tidy phases.
+  private animateCardTransforms(ids: string[]): void {
+    const { w: cardW, h: cardH } = this.cardMetrics();
+    for (const id of ids) {
+      const c = this.state.cards.get(id);
+      const el = this.cardEls.get(id);
+      if (!c || !el) continue;
+      const tf = this.cardTransform(c.x, c.y, c.rot, cardW, cardH);
+      el.style.transform = tf;
+      el.dataset.tf = tf; // keep the render loop's dedup in sync
+    }
+  }
+
   private saveSnapshot(): void {
     try {
       const payload = {
@@ -1196,6 +1214,9 @@ export class Game {
       gatherStack(this.state, stack, a.x, a.y, this.viewerUprightRot(a.rot));
       for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
       this.elevateDuringAnim(stack, gatherMs + actMs);
+      // Write the gathered transforms so the cards SLIDE together via the CSS
+      // transition (the render loop skips transforms while is-animating).
+      this.animateCardTransforms(stack);
       this.scheduleFlush();
       void this.audio.play("gather");
       window.setTimeout(act, gatherMs);
@@ -1208,6 +1229,10 @@ export class Game {
       // rather than three sounds crowding into a third of a second.
       alignRotation(this.state, stack, target);
       for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
+      // Write the new (straightened) transforms NOW so the rotation actually
+      // animates via the CSS transition instead of jumping at settle — the cards
+      // are elevated (is-animating), so the render loop won't write them for us.
+      this.animateCardTransforms(stack);
       this.scheduleFlush();
       window.setTimeout(doGather, straightenMs);
     } else {
