@@ -207,6 +207,12 @@ export class Game {
       // refresh re-asserts the same seat instead of grabbing a new one.
       this.self.seat = this.readSeat(this.room);
     }
+    // Entry always WANTS a seat: publish a concrete seat (a dropped player's own seat
+    // if known, else seat 0 = "any") so resolveSeating can seat us if one is free. We
+    // only become a spectator when the room is genuinely full (applyPresence then sets
+    // it and re-publishes -1). Never carry a stale spectator state into the first sync.
+    this.self.seat = this.self.seat >= 0 ? this.self.seat : 0;
+    this.spectator = false;
     this.claimSeat = this.self.seat;
     this.self.color = SEAT_COLORS[this.self.seat] ?? SEAT_COLORS[0]!;
     this.writeIdentity();
@@ -2414,6 +2420,14 @@ export class Game {
       } else {
         this.self.seat = this.readSeat(this.room);
       }
+      // Re-entry always WANTS a seat. CRITICAL: joinRoom reuses this Game instance, so
+      // a prior session that ended as a spectator left this.spectator=true and
+      // claimSeat=-1; without this reset the first presence payload would publish -1
+      // ("established spectator") and resolveSeating would keep us out even when a seat
+      // is free. Reset to a concrete wanted seat so a returning ex-spectator can play.
+      this.self.seat = this.self.seat >= 0 ? this.self.seat : 0;
+      this.spectator = false;
+      this.header.setSpectatorMode(false);
       this.claimSeat = this.self.seat;
       this.self.color = SEAT_COLORS[this.self.seat] ?? SEAT_COLORS[0]!;
       this.writeIdentity();

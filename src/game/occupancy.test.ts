@@ -193,4 +193,23 @@ describe("resolveSeating: dedupe, own-seat reclaim, tombstone, no spectator auto
     expect(resolved.get("a")).toBe(0);
     expect(resolved.get("b")).toBe(1);
   });
+
+  it("a RETURNING ex-spectator who now WANTS a seat (publishes >=0) gets seated", () => {
+    // 'a' holds seat 0; seats 1-3 are free. The ex-spectator re-enters publishing a
+    // wanted seat (entry intent), so they take a free seat — NOT kept a spectator.
+    const roster: RosterEntry[] = [R("a", 0), R("back", 0)]; // 'back' wants a seat (>=0)
+    const claims = [{ seat: 0, id: "a" }]; // back's old claim was cleared on leave
+    const { resolved } = resolveSeating(roster, claims, noTomb, 4);
+    expect(resolved.get("a")).toBe(0);
+    expect(resolved.get("back")).toBeGreaterThanOrEqual(1); // seated (overflow), not -1
+  });
+
+  it("an ESTABLISHED spectator (publishes -1) is NOT auto-seated when a seat frees", () => {
+    // Only 'a' is seated; seats 1-3 free (others left). 'spec' was resolved a spectator
+    // earlier this session and keeps publishing -1 → stays out (no mid-session auto-seat).
+    const roster: RosterEntry[] = [R("a", 0), R("spec", -1)];
+    const claims = [{ seat: 0, id: "a" }];
+    const { resolved } = resolveSeating(roster, claims, noTomb, 4);
+    expect(resolved.get("spec")).toBe(-1);
+  });
 });
