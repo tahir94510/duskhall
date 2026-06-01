@@ -976,6 +976,13 @@ export class Game {
   // card that is still mid-transition. The render loop is told to leave their
   // z-index alone while `.is-animating` is set (see renderAllCards).
   private animTimers = new Map<string, number>();
+  // True if any of these cards is mid flip/shuffle/tidy animation. Used to ignore a
+  // repeat flip/shuffle on a pile that is still animating, so a double-click during
+  // the tidy→act window can't stack two gestures and play the turn twice.
+  private anyAnimating(ids: string[]): boolean {
+    for (const id of ids) if (this.animTimers.has(id)) return true;
+    return false;
+  }
   private elevateDuringAnim(ids: string[], durMs: number): void {
     // Preserve internal order by current z so the pile keeps its stacking.
     const ordered = ids
@@ -1169,6 +1176,9 @@ export class Game {
       if (this.isRivalOwnedCard(cid)) return;
       if (this.isLockedByOther(cid)) return;
     }
+    // Ignore a repeat while this pile is still animating (e.g. a double-click in
+    // the tidy→flip window) so the turn never plays twice.
+    if (this.anyAnimating(stack)) return;
     // A lone card just flips, no tidy needed.
     if (stack.length < 2) { this.performStackFlip(stack); return; }
     // STAGE 1 — tidy: gather every card onto the top card's spot and square each to
@@ -1200,6 +1210,11 @@ export class Game {
   // for a stack after the tidy stage.
   private performStackFlip(stack: string[]): void {
     if (!stack.length) return;
+    // Re-check ownership/locks: a card could have changed hands during the tidy
+    // delay before this stage runs.
+    for (const cid of stack) {
+      if (this.isRivalOwnedCard(cid) || this.isLockedByOther(cid)) return;
+    }
     // Turn the whole pile over like a real stack of cards: the depth order
     // reverses (the bottom card ends up on top) and every face is toggled.
     flipStackOver(this.state, stack);
@@ -1259,6 +1274,8 @@ export class Game {
     const stack = findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics());
     if (stack.length < 2) return;
     if (this.stackBlocked(stack)) return;
+    // Ignore a repeat while this pile is still tidying/shuffling.
+    if (this.anyAnimating(stack)) return;
     const seed = this.state.cards.get(id);
     if (!seed) return;
     const upright = this.viewerUprightRot(seed.rot);
