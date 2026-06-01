@@ -13,6 +13,8 @@ interface Env {
   NEXT_PUBLIC_SUPABASE_ANON_KEY?: string;
   VITE_SUPABASE_ANON_KEY?: string;
   SUPPORT_URL?: string;
+  PATREON_URL?: string;
+  BUYMEACOFFEE_URL?: string;
   ISSUES_URL?: string;
   FEEDBACK_URL?: string;
   NEXT_PUBLIC_APP_URL?: string;
@@ -35,6 +37,8 @@ export default function handler(): Response {
       v(env.VITE_SUPABASE_ANON_KEY) ||
       "",
     supportUrl: v(env.SUPPORT_URL),
+    patreonUrl: v(env.PATREON_URL),
+    buyMeACoffeeUrl: v(env.BUYMEACOFFEE_URL),
     issuesUrl: v(env.ISSUES_URL),
     feedbackUrl: v(env.FEEDBACK_URL),
     appUrl: v(env.NEXT_PUBLIC_APP_URL),

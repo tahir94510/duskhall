@@ -3,6 +3,8 @@
   "supabaseUrl": "https://YOUR-PROJECT.supabase.co",
   "supabaseAnonKey": "YOUR-PUBLIC-ANON-KEY",
   "supportUrl": "",
+  "patreonUrl": "",
+  "buyMeACoffeeUrl": "",
   "appName": "KABAL",
   "siteUrl": "",
   "socialOgImage": ""

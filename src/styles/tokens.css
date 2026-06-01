@@ -37,8 +37,10 @@
   --shadow-card-held: 0 10px 22px rgba(0, 0, 0, 0.34);
   --shadow-panel: 0 16px 40px rgba(0, 0, 0, 0.5);
 
-  /* Card sizing */
-  --card-w: clamp(58px, 7.2vmin, 104px);
+  /* Card sizing. The max grows on large monitors / fullscreen so the bigger
+     board (see --field) is filled with proportionally bigger, legible cards
+     rather than a small island in the centre. Mobile breakpoints override this. */
+  --card-w: clamp(58px, 7.6vmin, 126px);
   --card-h: calc(var(--card-w) * 1.45);
 
   /* Gap between the deck and discard markers (matches DOCK_GUTTER_PX in TS). */
@@ -56,6 +58,11 @@
   --z-zone: 2;
   --z-board: 5;
   --z-card: 10;
+  /* Seat labels (name + status light + kick) ride in their OWN non-rotating
+     layer above every resting/animated card, so a card dropped into a zone can
+     never cover the player's name or the host's kick control. It sits below
+     peer cursors / header / modals. */
+  --z-seat: 520;
   /* Cards mid-animation or in hand float in this band: above the resting card
      layer but below cursors/header so they never cover a peer's cursor. */
   --z-anim: 500;

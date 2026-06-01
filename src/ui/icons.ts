@@ -40,3 +40,8 @@ export const ICON_INFO = svgEl(`<circle cx="12" cy="12" r="9" fill="none" stroke
 export const ICON_FEEDBACK = svgEl(`<path d="M4 5 H20 A1.5 1.5 0 0 1 21.5 6.5 V15 A1.5 1.5 0 0 1 20 16.5 H9 L5 20 V16.5 H4 A1.5 1.5 0 0 1 2.5 15 V6.5 A1.5 1.5 0 0 1 4 5 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 9.5 H17 M7 12.5 H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`);
 // Eye / spectator: a calm outline eye for the spectator-count row.
 export const ICON_EYE = svgEl(`<path d="M2.5 12 C 5 7, 9 5, 12 5 C 15 5, 19 7, 21.5 12 C 19 17, 15 19, 12 19 C 9 19, 5 17, 2.5 12 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/>`);
+// Patreon: the wordmark's circle + bar, drawn in the same single-weight style as
+// the rest of the set (a filled disc beside an upright bar).
+export const ICON_PATREON = svgEl(`<circle cx="15" cy="9" r="5" fill="currentColor"/><rect x="4" y="4" width="2.6" height="16" rx="0.4" fill="currentColor"/>`);
+// Buy Me a Coffee: a simple steaming cup with a handle.
+export const ICON_COFFEE = svgEl(`<path d="M5 9 H17 V13 A4 4 0 0 1 13 17 H9 A4 4 0 0 1 5 13 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M17 10 H19 A2 2 0 0 1 19 14 H17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 3 V5.5 M11.5 3 V5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6 20 H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>`);
