@@ -75,6 +75,7 @@ const LIVE_CID_PREFIX = "kabal:livecid:";
 // seat — exactly the persistence the table promises. Kept fresh for 24h.
 const LS_IDENT_PREFIX = "kabal:ident:";
 const IDENT_TTL_MS = 24 * 60 * 60 * 1000;
+const SNAPSHOT_TTL_MS = 12 * 60 * 60 * 1000; // a saved board restores only within 12h
 
 interface RoomIdentity { id: string; name: string; seat: number; ts: number; }
 
@@ -116,6 +117,9 @@ export class Game {
   // so a still table costs nothing instead of churning every frame.
   private renderRequested = true;
   private lastPointer: { x: number; y: number } | null = null;
+  // Pointer type of the last move, so flip/rotate can avoid re-arming the HOVER
+  // tooltip on touch (where info is reached only via the ContextBar Info button).
+  private lastPointerType = "mouse";
   private boardSize = { width: 1, height: 1 };
   private spectator = false;
   private cursorHiddenSent = false;
@@ -748,6 +752,7 @@ export class Game {
 
     window.addEventListener("pointermove", (e) => {
       this.lastPointer = { x: e.clientX, y: e.clientY };
+      this.lastPointerType = e.pointerType || "mouse";
     }, { passive: true });
 
     // Wheel interactions. A single global cooldown means every tick behaves
@@ -978,6 +983,13 @@ export class Game {
             const v = JSON.parse(localStorage.getItem(key) || "{}") as { ts?: number };
             if (typeof v.ts !== "number" || now - v.ts > IDENT_TTL_MS) dead.push(key);
           } catch { dead.push(key); }
+        } else if (key.startsWith(SS_SNAPSHOT_PREFIX)) {
+          // Snapshots restore only within 12h (see tryRestoreSnapshot); drop older
+          // ones so a player who visits many rooms doesn't accumulate MBs of state.
+          try {
+            const v = JSON.parse(localStorage.getItem(key) || "{}") as { ts?: number };
+            if (typeof v.ts !== "number" || now - v.ts > SNAPSHOT_TTL_MS) dead.push(key);
+          } catch { dead.push(key); }
         } else if (key.startsWith(LIVE_CID_PREFIX)) {
           const beat = Number(localStorage.getItem(key) || 0);
           if (!beat || now - beat > 60000) dead.push(key); // 60s = many missed beats
@@ -1101,7 +1113,7 @@ export class Game {
       if (!raw) return false;
       const data = JSON.parse(raw) as { v: number; ts: number; cards: Array<Partial<CardState>> };
       if (!Array.isArray(data.cards) || data.cards.length === 0) return false;
-      if (Date.now() - data.ts > 12 * 60 * 60 * 1000) return false; // 12h freshness
+      if (Date.now() - data.ts > SNAPSHOT_TTL_MS) return false; // 12h freshness
       let z = 1;
       for (const c of data.cards) {
         if (!c.id || !c.defId) continue;
@@ -1218,9 +1230,13 @@ export class Game {
   private rearmTooltipAtPointer(): void {
     const pt = this.lastPointer;
     if (!pt) return;
+    // Hover info is a mouse affordance only. On touch (no hover), the panel must be
+    // reached solely via the ContextBar Info button — re-arming it here would pop a
+    // stale, mis-positioned box after a tap-flip. Skip touch/pen entirely.
+    if (this.lastPointerType === "touch" || this.lastPointerType === "pen") return;
     window.setTimeout(() => {
       const p = this.lastPointer;
-      if (p) this.tooltip.probeAt(p.x, p.y);
+      if (p) this.tooltip.probeAt(p.x, p.y, this.lastPointerType);
     }, FLIP_ANIM_MS + 20);
   }
 

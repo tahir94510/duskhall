@@ -171,6 +171,14 @@ describe("resolveSeating: dedupe, own-seat reclaim, tombstone, no spectator auto
     expect(resolved.get("spec")).toBe(-1); // still a spectator
   });
 
+  it("a SPECTATOR holding a STALE claim still stays a spectator (no auto-reseat)", () => {
+    // 'spec' published seat -1 but a stale claim on seat 2 lingers; must NOT be reseated.
+    const roster: RosterEntry[] = [R("a", 0), R("spec", -1)];
+    const claims = [{ seat: 0, id: "a" }, { seat: 2, id: "spec" }];
+    const { resolved } = resolveSeating(roster, claims, noTomb, 4);
+    expect(resolved.get("spec")).toBe(-1); // own-claim ignored when not seated
+  });
+
   it("a seat reserved by an AWAY player is not handed to someone else", () => {
     // 'away' is claimed on seat 0 but not present; 'join' wants any seat → gets 1, not 0.
     const roster: RosterEntry[] = [R("join", 9 /*overflow→any free*/)];

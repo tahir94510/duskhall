@@ -151,17 +151,16 @@ export function resolveSeating(
   // actually wanted a seat) the lowest free seat. A pure spectator (no wanted seat,
   // no claim) is left unseated.
   for (const p of deferred) {
+    // A client that did NOT publish a seat is a spectator and stays one — even if a
+    // stale claim lingers, we never pull a watcher back into a seat.
+    if (p.seat < 0) continue;
     const ownClaim = claimOf.get(p.id);
     if (ownClaim !== undefined && ownClaim >= 0 && ownClaim < seatCount && !bySeat.has(ownClaim)) {
-      bySeat.set(ownClaim, p.id);
+      bySeat.set(ownClaim, p.id); // returning player reclaims their own free seat
       continue;
     }
-    const wantedSeat = p.seat >= 0; // published a seat (a (re)joiner), so give one
-    if (wantedSeat) {
-      const free = firstFree();
-      if (free >= 0) bySeat.set(free, p.id);
-    }
-    // else: pure spectator → stays unseated
+    const free = firstFree();
+    if (free >= 0) bySeat.set(free, p.id);
   }
 
   const resolved = new Map<string, number>();
