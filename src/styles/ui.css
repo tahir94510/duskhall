@@ -98,6 +98,22 @@
 }
 .header__menu-row--badge { grid-template-columns: 22px 1fr auto; }
 
+/* A small, sympathetic "we're still building this, support us" note tucked under
+   the Support row. Warm amber (the same hue as the connecting status dot) with
+   dark ink text for strong contrast on the dark menu, so it reads as a friendly
+   aside rather than a system row. Non-interactive. */
+.header__menu-note {
+  margin: 3px 10px 5px 42px;
+  padding: 5px 9px;
+  border-radius: 9px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ink);
+  background: rgba(232, 153, 58, 0.92);
+  pointer-events: none;
+}
+
 /* Secret room code: a tappable chip that blurs its own text until revealed. It
    re-blurs every time the menu opens (Header.openMenu). */
 .header__code--secret {
