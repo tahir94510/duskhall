@@ -509,9 +509,20 @@ export class Game {
     return { activeSeats: this.activeSeats, claimedSeats: this.seatClaims, seatCount: SEAT_COUNT };
   }
 
+  // Ensure state.topZ is at least as high as every card on the board, so the next
+  // "lift to top" actually clears everything. topZ can lag behind reality after a
+  // remote snapshot/patch brings in higher z values, which is what let a flipped/
+  // grabbed card sink back UNDER a pile (e.g. the deck) it was sitting in.
+  private syncTopZ(): void {
+    let max = this.state.topZ;
+    for (const c of this.state.cards.values()) if (c.z > max) max = c.z;
+    this.state.topZ = max;
+  }
+
   // Lift a set of cards above everything else, preserving their internal stacking,
   // so a dropped card/stack rests on top of whatever was at the drop spot.
   private bringCardsToTop(ids: string[]): void {
+    this.syncTopZ();
     const ordered = ids
       .map((id) => this.state.cards.get(id))
       .filter((c): c is CardState => !!c)
@@ -1039,6 +1050,8 @@ export class Game {
     c.rot = c.rot + dir;
     // Interacting with a card in our own zone claims it (same as a drag-in).
     this.claimIfInOwnZone(id);
+    // A card you just turned comes to the top and stays there (see flipCard).
+    this.bringCardsToTop([id]);
     this.dirtyIds.add(id);
     this.scheduleFlush();
     void this.audio.play("flip");
@@ -1053,6 +1066,7 @@ export class Game {
     if (this.stackBlocked(stack)) return;
     const anchor = this.state.cards.get(id);
     if (!anchor) return;
+    this.syncTopZ(); // gatherStack lifts via topZ; keep it above all board cards
     gatherStack(this.state, stack, anchor.x, anchor.y, anchor.rot + dir);
     for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
     this.scheduleFlush();
@@ -1074,6 +1088,10 @@ export class Game {
     c.faceUp = !c.faceUp;
     // Interacting with a card in our own zone claims it (same as a drag-in).
     this.claimIfInOwnZone(id);
+    // A card you just flipped comes to the top and STAYS there, like turning a
+    // real card over on the table — otherwise it sinks back under a pile/deck it
+    // was sitting in once the turn animation settles.
+    this.bringCardsToTop([id]);
     this.dirtyIds.add(id);
     // Lift the card into the animation band for the turn so it rotates cleanly
     // above its neighbours (no one-frame z jump that lets an adjacent card clip
@@ -1140,6 +1158,7 @@ export class Game {
     // a smooth settle, not a hard snap.
     const top = this.state.cards.get(topId);
     if (top && stack.length > 1) {
+      this.syncTopZ(); // lift the gathered pile above every board card
       gatherStack(this.state, stack, top.x, top.y, this.viewerUprightRot(top.rot));
     }
     // Turn the whole pile over like a real stack of cards: the depth order
@@ -1195,6 +1214,7 @@ export class Game {
     // Square the pile up to the angle that reads upright for THIS viewer, so a
     // jumble of 90°/180° cards becomes a clean stack from where they're sitting.
     const upright = this.viewerUprightRot(seed ? seed.rot : 0);
+    this.syncTopZ(); // lift the gathered pile above every board card
     if (seed) gatherStack(this.state, stack, seed.x, seed.y, upright);
     for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
     this.scheduleFlush();
@@ -1211,9 +1231,16 @@ export class Game {
     // instead of snapping instantly because .is-shuffling kills the transition.
     const fromRot = new Map<string, number>();
     for (const cid of stack) fromRot.set(cid, this.state.cards.get(cid)?.rot ?? 0);
-    // Straighten the shuffled pile to the viewer's upright angle (see gatherAt).
     const seed = this.state.cards.get(id);
     const upright = this.viewerUprightRot(seed ? seed.rot : 0);
+    // Tidy the pile FIRST, exactly like a real shuffle: collect every card into one
+    // square stack on the seed's spot (gatherStack also lifts them to a clean,
+    // contiguous z-band at the top of the board). Only then randomise the order.
+    // Without this pre-gather the cards stayed scattered and shuffleStack reused
+    // their old, possibly-colliding z values, so the resulting stacking order was
+    // wrong.
+    this.syncTopZ(); // lift the gathered pile above every board card
+    if (seed) gatherStack(this.state, stack, seed.x, seed.y, upright);
     shuffleStack(this.state, stack, upright);
     for (const cid of stack) this.claimIfInOwnZone(cid);
     this.elevateDuringAnim(stack, SHUFFLE_ANIM_MS);

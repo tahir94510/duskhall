@@ -214,3 +214,42 @@ describe("shuffleStack", () => {
     expect(Math.abs(st.cards.get("b")!.rot - 9)).toBeLessThanOrEqual(2);
   });
 });
+
+describe("shuffleAt's gather-then-shuffle: tidy first, then a clean stacking order", () => {
+  // The handler now gathers the pile onto the seed BEFORE shuffling. This locks
+  // that order: scattered cards collapse onto one spot, get a contiguous z-band on
+  // top of the board, and the shuffle keeps that band (a valid, collision-free
+  // order) instead of reusing the old scattered z values.
+  it("collapses scattered cards onto the seed and yields a clean contiguous z-order", () => {
+    // Two scattered table cards (low z) plus an unrelated card far away at high z.
+    const st = board([
+      card("a", 0.40, 0.42, 1, 0, true),
+      card("b", 0.62, 0.58, 2, 1, false),
+      card("seed", 0.50, 0.50, 3, 2, true),
+      card("other", 0.05, 0.05, 99, 0, false) // a high-z card elsewhere on the table
+    ]);
+    const seed = st.cards.get("seed")!;
+    // The handler keeps state.topZ >= every card's z (syncTopZ) before gathering,
+    // so the lift clears the whole board. Mirror that invariant here.
+    st.topZ = Math.max(...[...st.cards.values()].map((c) => c.z));
+    // 1) gather onto the seed (what shuffleAt does first)
+    gatherStack(st, ["a", "b", "seed"], seed.x, seed.y, seed.rot);
+    // 2) shuffle the gathered pile
+    shuffleStack(st, ["a", "b", "seed"], seed.rot);
+
+    const sx = seed.x, sy = seed.y;
+    const zs = ["a", "b", "seed"].map((id) => st.cards.get(id)!.z);
+    for (const id of ["a", "b", "seed"]) {
+      const c = st.cards.get(id)!;
+      expect(c.x).toBeCloseTo(sx, 9); // collapsed onto one spot
+      expect(c.y).toBeCloseTo(sy, 9);
+      expect(c.faceUp).toBe(false);   // shuffle faces all down
+    }
+    // distinct, contiguous z (a valid stacking order)
+    expect(new Set(zs).size).toBe(3);
+    const sorted = [...zs].sort((p, q) => p - q);
+    expect(sorted[2]! - sorted[0]!).toBe(2); // 3 consecutive z values
+    // and the whole pile sits ABOVE the unrelated high-z card, so it is not buried
+    expect(Math.min(...zs)).toBeGreaterThan(st.cards.get("other")!.z);
+  });
+});
