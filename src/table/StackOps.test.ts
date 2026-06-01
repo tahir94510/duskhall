@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { BoardState, CardState } from "./types.js";
-import { findStackOverlapping, flipStackOver, gatherStack, shuffleStack } from "./StackOps.js";
+import { findStackOverlapping, flipStackOver, gatherStack, shuffleStack, alignRotation, rotationsDiffer } from "./StackOps.js";
 
 // A 1000 x 1450 board so one card-width (96) maps cleanly; card is 96 x 139.2.
 const BOARD = { width: 1000, height: 1450 };
@@ -251,5 +251,36 @@ describe("shuffleAt's gather-then-shuffle: tidy first, then a clean stacking ord
     expect(sorted[2]! - sorted[0]!).toBe(2); // 3 consecutive z values
     // and the whole pile sits ABOVE the unrelated high-z card, so it is not buried
     expect(Math.min(...zs)).toBeGreaterThan(st.cards.get("other")!.z);
+  });
+});
+
+describe("straighten phase: align orientation first, without moving cards", () => {
+  it("alignRotation squares every card to the target by the shortest path, leaving x/y/face", () => {
+    const st = board([
+      card("a", 0.40, 0.42, 1, 0, true),
+      card("b", 0.62, 0.58, 2, 1, false),  // 90°
+      card("c", 0.50, 0.50, 3, 9, true)    // 9 ≡ 1 mod 4, several cumulative turns in
+    ]);
+    const pos = { a: [0.40, 0.42], b: [0.62, 0.58], c: [0.50, 0.50] } as Record<string, number[]>;
+    alignRotation(st, ["a", "b", "c"], 0);
+    for (const id of ["a", "b", "c"]) {
+      const k = st.cards.get(id)!;
+      expect(((k.rot % 4) + 4) % 4).toBe(0);          // all face the same way now
+      expect(k.x).toBeCloseTo(pos[id]![0]!, 9);        // NOT moved
+      expect(k.y).toBeCloseTo(pos[id]![1]!, 9);
+    }
+    // c was at rot 9 (≡1); nearest congruent-to-0 is 8 (one quarter-turn), not 0.
+    expect(st.cards.get("c")!.rot).toBe(8);
+    // faces untouched
+    expect(st.cards.get("a")!.faceUp).toBe(true);
+    expect(st.cards.get("b")!.faceUp).toBe(false);
+  });
+
+  it("rotationsDiffer detects a mixed-angle pile and a tidy one", () => {
+    const mixed = board([card("a", 0.5, 0.5, 1, 0), card("b", 0.5, 0.5, 2, 1)]);
+    expect(rotationsDiffer(mixed, ["a", "b"], 0)).toBe(true);
+    // All congruent to the target (0 and 8 are both ≡ 0 mod 4): no straighten needed.
+    const tidy = board([card("a", 0.5, 0.5, 1, 0), card("b", 0.5, 0.5, 2, 8)]);
+    expect(rotationsDiffer(tidy, ["a", "b"], 0)).toBe(false);
   });
 });

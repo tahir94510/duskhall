@@ -83,6 +83,31 @@ export function findStackOverlapping(
 }
 
 /**
+ * Square every card's ORIENTATION to one angle, without moving or restacking
+ * them. This is the first phase of a tidy: straighten a fanned/cross-laid pile so
+ * the cards all face the same way, before they are gathered into one spot. Each
+ * card squares by the shortest path (nearestCongruentRot) so nothing spins a full
+ * extra turn. Faces and positions are untouched.
+ */
+export function alignRotation(state: BoardState, ids: string[], target: number): void {
+  for (const id of ids) {
+    const c = state.cards.get(id);
+    if (c) c.rot = nearestCongruentRot(c.rot, target);
+  }
+}
+
+/** True if the cards do NOT all share the same visual orientation (mod 4) — i.e.
+ *  there is a horizontal/angle difference that a straighten step should fix first. */
+export function rotationsDiffer(state: BoardState, ids: string[], target: number): boolean {
+  const t = ((target % 4) + 4) % 4;
+  for (const id of ids) {
+    const c = state.cards.get(id);
+    if (c && (((c.rot % 4) + 4) % 4) !== t) return true;
+  }
+  return false;
+}
+
+/**
  * Gather the stack around (focusNx, focusNy). When focus is omitted we fall back
  * to the centroid of the stack. Z-indices are reassigned in order so the
  * gathered stack always sits on top of whatever else is on the board.
