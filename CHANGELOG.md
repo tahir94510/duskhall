@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.2 — Exit propagation, scattered-pile flip, dev note
+
+- **Leaving no longer lingers as "away".** On exit or room-hop the `left` broadcast
+  is now awaited (with a 700 ms safety timeout) before the channel is torn down, so
+  peers receive it and the player vanishes immediately instead of showing "away" for
+  the grace window. (A genuine connection drop still shows "away" and resumes.)
+- **Flipping a scattered or mixed-angle pile** now gathers and squares the cards onto
+  the top card first, so the stack turns over as one solid block instead of the
+  under-cards appearing to vanish and teleport. Single-card flips are unchanged.
+- **A small "in development, support us" note** sits under the Support menu row.
+- Replaced the last user-facing em-dash placeholders (debug HUD) with plain hyphens.
+
 ## 0.7.1 — Lifecycle hardening, faithful card physics, unique names
 
 - **Leaving a room is a clean break.** Switching rooms (exit or kick) now wipes
