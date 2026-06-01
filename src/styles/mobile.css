@@ -97,8 +97,14 @@
 
 @media (max-width: 480px) {
   .table {
+    /* Give the side and top/bottom strips a touch more room on narrow phones so
+       the name + status light + kick cluster never gets cramped. Re-set the
+       shared grid variables (not the template) so the seat-label layer inherits
+       the same tracks. */
+    --grid-cols: minmax(78px, 17vw) 1fr minmax(78px, 17vw);
+    --grid-rows: minmax(120px, 19vh) 1fr minmax(120px, 19vh);
+    --grid-gap: 6px;
     padding: max(env(safe-area-inset-top), 8px) 8px max(env(safe-area-inset-bottom), 8px) 8px;
-    gap: 6px;
   }
   :root { --card-w: clamp(46px, 10vmin, 76px); }
 }
@@ -114,22 +120,26 @@
 
 @media (pointer: coarse) {
   /* Comfortable ≥44px touch targets for the long-press action bar, and cap its
-     width so the (up to 6) buttons wrap to a tidy second row near a screen edge
+     width so the five buttons wrap to a tidy second row near a screen edge
      instead of overflowing off-screen. */
-  .context-bar { max-width: min(92vw, 320px); justify-content: center; }
+  .context-bar { max-width: min(92vw, 300px); justify-content: center; }
   .context-bar__btn { width: 44px; height: 44px; }
   .context-bar__btn svg { width: 18px; height: 18px; }
   /* The header icon buttons are also primary touch targets. */
   .icon-btn { width: 40px; height: 40px; }
 }
 
-/* Very small screens (≤400px): tighten paddings further. */
+/* Very small screens (≤400px): tighten paddings further and keep modals fully
+   on-screen (the head/body/foot all shrink so even a tall rules modal fits). */
 @media (max-width: 400px) {
   .header { left: 8px; right: 8px; gap: 6px; }
   .icon-btn { width: 34px; height: 34px; }
   .icon-btn svg { width: 16px; height: 16px; }
-  .modal__head { padding: 14px 16px 10px; }
-  .modal__foot { padding: 12px 16px; }
+  .modal-backdrop { padding: 8px; }
+  .modal { max-height: min(94vh, calc(100dvh - 16px)); }
+  .modal__head { padding: 12px 14px 8px; }
+  .modal__body { padding: 14px 14px 16px; }
+  .modal__foot { padding: 10px 14px; }
   .context-bar { gap: 4px; padding: 5px; max-width: 96vw; }
   /* Keep buttons tappable (≥40px) even on the smallest phones; the bar wraps
      rather than shrinking targets below a usable size. */

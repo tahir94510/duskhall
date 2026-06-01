@@ -71,8 +71,11 @@ export function buildTable(host: HTMLElement): BoardRefs {
     <div class="board__labels" data-role="labels">
       ${["bottom", "top", "left", "right"].map((slot) => `
         <div class="seat-label seat-label--${slot}">
-          <span class="seat-label__name"><i class="seat-label__dot" aria-hidden="true"></i><span class="seat-label__text" data-role="name"></span></span>
-          <button class="seat-label__kick" type="button" data-action="kick" hidden>${ICON_CLOSE}</button>
+          <span class="seat-label__cluster">
+            <i class="seat-label__dot" aria-hidden="true"></i>
+            <span class="seat-label__text" data-role="name"></span>
+            <button class="seat-label__kick" type="button" data-action="kick" hidden>${ICON_CLOSE}</button>
+          </span>
         </div>`).join("")}
     </div>
   `;

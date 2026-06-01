@@ -9,7 +9,9 @@ interface CardManifest { available: Array<{ id: string; ext: string }> | string[
 
 let manifestPromise: Promise<Map<string, string>> | null = null;
 
-function loadManifest(): Promise<Map<string, string>> {
+// Exported so the card-info tooltip can show a slice of the same art the card
+// face uses, sharing this one cached manifest fetch (no second network call).
+export function loadManifest(): Promise<Map<string, string>> {
   if (manifestPromise) return manifestPromise;
   manifestPromise = fetch("/cards/manifest.json", { cache: "no-cache" })
     .then((r) => (r.ok ? r.json() : { available: [] } as CardManifest))

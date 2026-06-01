@@ -45,13 +45,11 @@
 .card.is-held::before { box-shadow: var(--shadow-card-held); }
 
 /* Cards mid flip/shuffle are lifted into the same band (inline z) so undercards
-   never flash above a still-animating card. */
+   never flash above a still-animating card. A whole pile flips as one: every card
+   shares the same position + rotation and turns on the same timing, so the
+   top-of-stack card's opaque face covers the rest at every angle — no card is
+   ever hidden, so the pile never blinks out of existence mid-turn. */
 .card.is-animating { z-index: var(--z-anim); }
-
-/* During a STACK flip only the new top card animates; the rest are hidden for the
-   flip so no underlying face ever shows through the rotation (a real pile turns
-   over as one piece). Restored the instant the flip settles. */
-.card.is-flip-quiet { visibility: hidden; }
 
 /* During a riffle the keyframe owns the transform, so no competing transition. */
 .card.is-shuffling { transition: none; }
@@ -164,12 +162,16 @@
    rotated 180deg, is hidden by backface-visibility. The owner is never concealed
    from themselves, so they read their own card normally. */
 .card.is-concealed { cursor: default; }
-.card.is-concealed .card__inner { transform: rotateY(0deg) !important; }
+/* Force the back to face the camera — but NOT while a flip is mid-animation, so a
+   concealment toggle that lands during a turn can't yank the card back to 0deg and
+   make it blink. A concealed card can only be flipped by its owner (who never sees
+   it concealed), so the animating+concealed pairing is harmless and brief. */
+.card.is-concealed:not(.is-animating) .card__inner { transform: rotateY(0deg) !important; }
 .card.is-concealed .card__face--back {
   visibility: visible;
   filter: blur(2.2px) saturate(0.82) brightness(0.9);
 }
-.card.is-concealed .card__face--front { visibility: hidden; }
+.card.is-concealed:not(.is-animating) .card__face--front { visibility: hidden; }
 
 /* Snap-back animation when dropped into a rival zone */
 .card.is-snapback { animation: snapback 260ms var(--ease); }

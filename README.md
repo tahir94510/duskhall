@@ -49,7 +49,7 @@ FEEDBACK_URL=https://forms.gle/your-anonymous-form
 
 The client resolves config from three layers, first one with Supabase creds wins, branding merged across all:
 
-1. **Vite build-time env** (`VITE_*`) — for local dev or any static host. Put them in `.env.local`:
+1. **Vite build-time env** (`VITE_*`): for local dev or any static host. Put them in `.env.local`:
    ```
    VITE_SUPABASE_URL=https://<project>.supabase.co
    VITE_SUPABASE_ANON_KEY=<public anon key>
@@ -57,12 +57,12 @@ The client resolves config from three layers, first one with Supabase creds wins
    #           VITE_PATREON_URL, VITE_BUYMEACOFFEE_URL
    ```
    These are inlined at build, so they work in `vite dev` and on hosts without the edge function.
-2. **`/api/config`** — Vercel runtime env (the **non‑prefixed** `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `APP_NAME` / … names above). No rebuild needed to change them. **This is the production path.**
-3. **`public/config.local.json`** — a gitignored local fallback. Copy `public/config.local.json.example`, fill in your URL and public anon key, and never commit it.
+2. **`/api/config`**: Vercel runtime env (the **non‑prefixed** `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `APP_NAME` / … names above). No rebuild needed to change them. **This is the production path.**
+3. **`public/config.local.json`**: a gitignored local fallback. Copy `public/config.local.json.example`, fill in your URL and public anon key, and never commit it.
 
-**Why some names have `VITE_` and some don't — this is intentional, not a bug.** Vite only exposes variables that start with `VITE_` to browser code, so those are the *local‑dev* names you put in `.env.local`. In production the browser never reads env directly; it fetches `/api/config`, an Edge function that reads the **plain** names (`SUPABASE_URL`, etc.) on the server and returns them. Same settings, two delivery paths. For your Vercel deployment, use the plain names — exactly the ones you already set.
+**Why some names have `VITE_` and some don't (intentional, not a bug).** Vite only exposes variables that start with `VITE_` to browser code, so those are the *local‑dev* names you put in `.env.local`. In production the browser never reads env directly; it fetches `/api/config`, an Edge function that reads the **plain** names (`SUPABASE_URL`, etc.) on the server and returns them. Same settings, two delivery paths. For your Vercel deployment, use the plain names: exactly the ones you already set.
 
-**Which Supabase key?** Either browser key works: the legacy **anon** key (a JWT starting `eyJ…`) or the newer **publishable** key (`sb_publishable_…`). The anon key is the simplest with the standard setup. **Never** use the `service_role` / `sb_secret_…` keys in the browser — the in‑app connection self‑test warns if you do. No SQL, tables, RLS, or auth setup is needed; the game uses only Realtime Broadcast + Presence, which are on by default.
+**Which Supabase key?** Either browser key works: the legacy **anon** key (a JWT starting `eyJ…`) or the newer **publishable** key (`sb_publishable_…`). The anon key is the simplest with the standard setup. **Never** use the `service_role` / `sb_secret_…` keys in the browser; the in‑app connection self‑test warns if you do. No SQL, tables, RLS, or auth setup is needed; the game uses only Realtime Broadcast + Presence, which are on by default.
 
 ### Troubleshooting: cards don't sync between players
 
@@ -70,7 +70,7 @@ If actions never reach other players and the menu's **Connection** row reads **O
 
 1. **Env vars are set in Vercel** (`SUPABASE_URL` and `SUPABASE_ANON_KEY`) and the project was redeployed after setting them. Open `/api/config` in the browser; both values must be present.
 2. **Realtime is enabled** for the Supabase project (Project settings → Realtime). No tables or auth are needed; the app uses only Broadcast + Presence.
-3. **CSP allows the socket** — `vercel.json` already permits `wss://*.supabase.co`; keep that entry if you fork the CSP.
+3. **CSP allows the socket**: `vercel.json` already permits `wss://*.supabase.co`; keep that entry if you fork the CSP.
 
 Two browser tabs on the **same machine** always sync, even while offline, via a local `BroadcastChannel` fallback. So if same-machine tabs sync but two separate devices do not, the cause is the Supabase connection above. The `Cookie "__cf_bm" has been rejected` console message is a harmless Cloudflare bot-management notice and does not affect the websocket.
 
@@ -96,7 +96,7 @@ Output Directory: dist
   - Ctrl + scroll: flip the whole stack under the cursor
   - Shift + scroll: rotate the card 90° sideways
   - G: gather the stack under the cursor; M: shuffle it
-  - Long-press on touch: open an action bar (flip, stack flip, rotate, gather, shuffle, info)
+  - Long-press on touch: open an action bar (flip, rotate, gather, shuffle, info). Flip turns the whole pile under your finger, or a lone card if that is all there is.
 - **Privacy:** cards you drop into your own zone are private; opponents see their backs and can infer the count, not the contents.
 - **URL:** `https://vaerum.example/P86B3T` (6-char path slug per room).
 - **Leave room:** opens a fresh room with a new link, with you as host; the others stay in the old room.
@@ -154,6 +154,7 @@ In-game **Settings** (Master / Music / Effects) sliders persist to `localStorage
 - `docs/RULES.en.md`: complete English V8.1 rulebook
 - `docs/RULES.tr.md`: Türkçe V8.1 kural kitabı
 - `docs/DESIGN.md`: balance numbers, palette, coordinate system, asset systems
+- `docs/ASSETS.md`: exact art/audio specs and world-consistent prompts for creating or updating assets
 - `docs/SECURITY.md`: security model, rate-limits, threat notes, Cloudflare guidance
 - `docs/COPYRIGHT.md`: copyright notice and recommended legal steps
 

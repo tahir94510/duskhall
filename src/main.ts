@@ -30,7 +30,10 @@ function applyMeta(config: RuntimeConfig): void {
   const title = config.appName || t("meta.title");
   const description = t("meta.description") || t("rulesDoc.subtitle") || title;
   const origin = config.siteUrl || window.location.origin;
-  const ogImage = config.socialOgImage || `${origin}/assets/og.svg`;
+  // A real raster image: social/link-preview scrapers (Slack, Discord, iMessage,
+  // WhatsApp, Twitter/X, Facebook) reliably render PNG but mostly reject SVG, so
+  // the preview must be the PNG to actually show a designed card.
+  const ogImage = config.socialOgImage || `${origin}/assets/og.png`;
   const canonical = `${origin}${window.location.pathname}`;
 
   document.title = title;
@@ -39,6 +42,7 @@ function applyMeta(config: RuntimeConfig): void {
   setMeta("og:title", title, "property");
   setMeta("og:description", description, "property");
   setMeta("og:image", ogImage, "property");
+  setMeta("twitter:image", ogImage);
   setMeta("og:url", canonical, "property");
   setMeta("og:type", "website", "property");
   setCanonical(canonical);

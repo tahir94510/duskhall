@@ -16,15 +16,19 @@
 .brand {
   display: inline-flex;
   align-items: center;
-  width: 26px;
-  height: 26px;
+  justify-content: center;
+  /* The emblem is a 3:4 portrait mark (icon.svg viewBox 48×64); the box matches
+     that ratio so the logo is never squished to a square (the cause of the
+     stretched/"overflowing" look). */
+  width: 24px;
+  height: 32px;
   color: var(--ivory);
   opacity: 0.8;
   /* Purely a mark, not a control: no pointer, no navigation. */
   pointer-events: none;
   user-select: none;
 }
-.brand img { width: 100%; height: 100%; }
+.brand img { width: 100%; height: 100%; object-fit: contain; }
 
 .icon-btn {
   position: relative;
@@ -332,6 +336,24 @@
   box-shadow: var(--shadow-panel);
 }
 .tooltip.is-visible { opacity: 1; transform: translateY(0); }
+
+/* A slice of the card's own art at the top of the info panel. A fixed-height band
+   cropped to the top of the image (where the subject usually sits) so the panel
+   is instantly recognisable yet never grows tall enough to spill off a small
+   screen. Shrinks on phones. */
+.tooltip__art {
+  width: 100%;
+  height: 92px;
+  margin: -2px 0 10px;
+  border-radius: calc(var(--r-panel) - 2px);
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  border: 1px solid var(--line-2);
+}
+@media (max-width: 480px) {
+  .tooltip__art { height: 64px; }
+}
 
 .tooltip__title {
   font-family: var(--font-display);

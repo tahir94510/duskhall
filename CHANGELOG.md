@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.7.0 — Seat labels, clean flips, touch polish, and a real link preview
+
+- **Player areas read clearly.** Each seat's name, status light and host kick
+  control now live in a separate upright layer above the cards, so a card dropped
+  into a zone never hides them. The cluster reads "light · name · ✕" as one unit,
+  and an empty seat shows nothing at all (no floating dot).
+- **"Away" is bounded.** A player who drops without leaving is held as away only
+  for a short grace window; if they do not return, the seat fully vacates and
+  their cards go public, so someone who truly left never lingers as "away".
+- **Bigger, sharper table.** The square field cap was raised so large monitors and
+  fullscreen fill the screen instead of cramming everyone into a small centre,
+  with the same proportions for every player.
+- **Flips no longer blink.** Turning a card or a whole pile now animates as one
+  solid piece; no card or stack flashes out of existence mid-turn, and a flip
+  during a peer's concealment update can't snap it back.
+- **Honest actions.** Gather and shuffle are multi-card actions: on a lone card
+  they do nothing and play no sound, on every input (keyboard, scroll, touch bar).
+- **Touch bar simplified.** One smart "flip" turns the whole pile under your
+  finger (or a lone card); the separate stack-flip button is gone.
+- **Card info on touch fixed.** Info shows only when you pick a card and press
+  Info, a tap anywhere outside dismisses it, and the stale hover panel on touch is
+  gone. The panel now shows a slice of the card's art above the text.
+- **Responsive from phones to TVs.** Narrow phones get roomier seat strips, modals
+  stay fully on-screen on small devices, and safe-area handling is consistent.
+- **Support options.** The Support dialog can show Patreon and Buy Me a Coffee
+  buttons alongside the generic link, each behind its own env var.
+- **Link previews actually render.** The social preview is now a real PNG (most
+  scrapers reject SVG), the home-screen icon has a proper square maskable variant,
+  and the header emblem keeps its aspect (no more squished logo).
+- **Asset guide.** `docs/ASSETS.md` documents the exact art/audio specs and gives
+  world-consistent prompts for generating card art, backgrounds and the logo.
+
 ## 0.6.0 — Square field, lifecycle, and legal
 
 - **Square play field.** The play area is now a centered square (capped at 880px),
