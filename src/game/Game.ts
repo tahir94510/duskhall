@@ -31,11 +31,12 @@ import {
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
+import { pointInZoneCanonical } from "../table/SlotGrid.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, HoldMsg, LeftMsg, KickMsg, SeatClaim } from "../net/realtime.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
-import { getOrAssignName, resetName } from "../util/names.js";
+import { getOrAssignName, resetName, pickNameExcluding, setName } from "../util/names.js";
 
 const SEAT_COUNT = 4;
 const SEAT_COLORS = ["#f3efe5", "#cdc8bc", "#a09c92", "#79766f"];
@@ -263,6 +264,29 @@ export class Game {
       color: this.self.color,
       joinedAt: this.selfJoinedAt
     };
+  }
+
+  // Guarantee our handle is unique on the table. If a peer shares our name, the
+  // LATER joiner yields (tie broken by id) so every client resolves the same
+  // loser and renames exactly one of the two. We only rename ourselves, then
+  // re-publish so peers and our persisted identity stay in sync. Our id is never
+  // touched — only the cosmetic handle changes.
+  private ensureUniqueName(roster: PresencePlayer[]): void {
+    const mine = this.self.name.toLocaleLowerCase();
+    const clash = roster.find((p) =>
+      p.id !== this.self.id &&
+      p.name.toLocaleLowerCase() === mine &&
+      // We yield only if THEY have priority: earlier joiner, or equal time + lower id.
+      (p.joinedAt < this.selfJoinedAt || (p.joinedAt === this.selfJoinedAt && p.id < this.self.id))
+    );
+    if (!clash) return;
+    const taken = roster.filter((p) => p.id !== this.self.id).map((p) => p.name);
+    const fresh = pickNameExcluding(taken);
+    if (fresh === this.self.name) return;
+    this.self.name = fresh;
+    setName(fresh);
+    this.writeIdentity();
+    this.bus.updateMe(this.presencePayload());
   }
 
   private measureBoard(): void {
@@ -513,6 +537,24 @@ export class Game {
     const c = this.state.cards.get(id);
     if (!c) return false;
     return cardIsRivalOwned(this.occupancy(), c.ownerSeat, this.self.seat, this.spectator);
+  }
+
+  // Claim a card for our seat when we interact with it AND it is sitting in our
+  // own zone. Mirrors drag-drop ownership (DragController.setOwnerSeat) so that
+  // flipping / rotating / gathering / shuffling a card in our area also makes it
+  // ours — not only dragging it in. Uses the CANONICAL zone test so it is correct
+  // for every seat and board rotation. Returns true if ownership changed. A
+  // spectator owns no seat; a card already ours or a rival's is left alone.
+  private claimIfInOwnZone(id: string): boolean {
+    if (this.spectator || this.self.seat < 0) return false;
+    const c = this.state.cards.get(id);
+    if (!c || c.ownerSeat === this.self.seat) return false;
+    // Never steal a rival's still-private card (guarded elsewhere too).
+    if (this.isRivalOwnedCard(id)) return false;
+    if (!pointInZoneCanonical(this.self.seat as Seat, c.x, c.y)) return false;
+    c.ownerSeat = this.self.seat;
+    this.dirtyIds.add(id);
+    return true;
   }
 
   // The physical zone div (bottom/top/left/right) that an absolute seat occupies
@@ -993,6 +1035,8 @@ export class Game {
     // Cumulative rotation: keep adding turns so 270°→360°→450° flows forward
     // visually instead of teleporting back to 0°.
     c.rot = c.rot + 1;
+    // Interacting with a card in our own zone claims it (same as a drag-in).
+    this.claimIfInOwnZone(id);
     this.dirtyIds.add(id);
     this.scheduleFlush();
     void this.audio.play("flip");
@@ -1003,6 +1047,8 @@ export class Game {
     if (!c) return;
     if (this.isRivalOwnedCard(id) || this.isLockedByOther(id)) return;
     c.faceUp = !c.faceUp;
+    // Interacting with a card in our own zone claims it (same as a drag-in).
+    this.claimIfInOwnZone(id);
     this.dirtyIds.add(id);
     // Lift the card into the animation band for the turn so it rotates cleanly
     // above its neighbours (no one-frame z jump that lets an adjacent card clip
@@ -1051,13 +1097,28 @@ export class Game {
     // Turn the whole pile over like a real stack of cards: the depth order
     // reverses (the bottom card ends up on top) and every face is toggled.
     flipStackOver(this.state, stack);
-    for (const cid of stack) this.dirtyIds.add(cid);
-    // Float the whole pile, in order, while the 3D flip plays. Every card in the
-    // pile shares the same position and rotation, so the top card's opaque face
-    // covers the ones beneath at every angle of the turn — no card is hidden, so
-    // the stack turns as one solid piece and never blinks out. A single repaint
-    // when the turn settles writes the final resting z/transform.
+    for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
+    // Float the whole pile, in order, while the 3D flip plays, AND hide every card
+    // except the one that ends up on top. A real pile turns as one solid block:
+    // only its outer face is ever visible. Each card flips its OWN rotateY, so at
+    // the 90° edge-on instant backface-visibility makes all faces invisible and
+    // the inner cards' fronts would leak through — hiding the under-cards (opacity
+    // only, never removed) prevents that without the old "disappear" blink, since
+    // the top card is never hidden. One aligned timer restores them at settle.
     this.elevateDuringAnim(stack, FLIP_ANIM_MS);
+    let topId = stack[stack.length - 1]!;
+    let topZ = -Infinity;
+    for (const cid of stack) {
+      const c = this.state.cards.get(cid);
+      if (c && c.z > topZ) { topZ = c.z; topId = cid; }
+    }
+    for (const cid of stack) {
+      if (cid !== topId) this.cardEls.get(cid)?.classList.add("is-flip-quiet");
+    }
+    window.setTimeout(() => {
+      for (const cid of stack) this.cardEls.get(cid)?.classList.remove("is-flip-quiet");
+      this.requestRender();
+    }, FLIP_ANIM_MS);
     this.scheduleFlush();
     void this.audio.play("flip");
     this.rearmTooltipAtPointer();
@@ -1086,7 +1147,7 @@ export class Game {
     // jumble of 90°/180° cards becomes a clean stack from where they're sitting.
     const upright = this.viewerUprightRot(seed ? seed.rot : 0);
     if (seed) gatherStack(this.state, stack, seed.x, seed.y, upright);
-    for (const cid of stack) this.dirtyIds.add(cid);
+    for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
     this.scheduleFlush();
     void this.audio.play("gather");
   }
@@ -1099,6 +1160,7 @@ export class Game {
     const seed = this.state.cards.get(id);
     const upright = this.viewerUprightRot(seed ? seed.rot : 0);
     shuffleStack(this.state, stack, upright);
+    for (const cid of stack) this.claimIfInOwnZone(cid);
     this.elevateDuringAnim(stack, SHUFFLE_ANIM_MS);
     this.applyShuffleJitter(stack);
     for (const cid of stack) this.dirtyIds.add(cid);
@@ -1290,6 +1352,13 @@ export class Game {
         if (seat < 0) spectatorCount++;
       }
 
+      // Keep every handle on the table unique. If another player shares our name,
+      // exactly ONE of us yields — the LATER joiner (tie broken by id), so all
+      // clients pick the same loser deterministically and the table never shows
+      // two identical names. We only ever rename OURSELVES (our id is unchanged),
+      // then re-publish so peers see the new handle.
+      this.ensureUniqueName(sorted);
+
       const mySeat = resolved.has(this.self.id) ? resolved.get(this.self.id)! : -1;
       const wasSpectator = this.spectator;
       const prevClaim = this.claimSeat;
@@ -1434,24 +1503,50 @@ export class Game {
     for (const [cid, h] of this.heldByOther) {
       if (h.seat === l.seat) this.heldByOther.delete(cid);
     }
-    // Re-evaluate seating now that a seat opened (e.g. a spectator can sit).
-    this.applyPresence(this.lastRoster);
+    // Free ONLY this seat and repaint. We deliberately do NOT re-run applyPresence
+    // here: it was being fed this.lastRoster (a stale snapshot), which — with the
+    // leaver already pruned from this.players — re-evaluated against an old roster
+    // and flipped still-active players to "away". The next real presence sync
+    // (debounced) re-seats correctly; a spectator taking the freed seat one sync
+    // later is a fine trade for never showing a false "everyone is away".
+    this.manageAwayTimers();
+    this.refreshZones();
     if (released) this.scheduleFlush();
     this.requestRender();
   }
 
-  // Merge seat claims taught to us by an authoritative peer's snapshot, so a
-  // newcomer learns about players who dropped before we joined.
+  // Merge seat claims taught to us by an authoritative peer's snapshot. The
+  // snapshot's sender is the host (lowest active seat), so its claims are the
+  // source of truth for AWAY seats — every client must converge on the same away
+  // picture. We overwrite our claim for any seat that is NOT currently held by an
+  // active player (an active seat's claim comes from live presence; leave it). A
+  // newcomer thus learns about players who dropped before it joined, and a stale
+  // local claim is corrected to match the host.
   private mergeClaims(claims: SeatClaim[]): void {
     let changed = false;
+    const fromSnapshot = new Set<number>();
     for (const c of claims) {
       if (c.seat < 0 || c.seat >= SEAT_COUNT) continue;
-      if (!this.seatClaims.has(c.seat)) {
-        this.seatClaims.set(c.seat, { id: c.id, name: c.name, joinedAt: 0 });
+      fromSnapshot.add(c.seat);
+      if (this.activeSeats.has(c.seat)) continue; // live presence owns active seats
+      // Don't resurrect a player we just removed (kick/leave) — tombstones win.
+      if (this.removedTombstones.has(c.id)) continue;
+      const cur = this.seatClaims.get(c.seat);
+      if (!cur || cur.id !== c.id || cur.name !== c.name) {
+        this.seatClaims.set(c.seat, { id: c.id, name: c.name, joinedAt: cur?.joinedAt ?? 0 });
         changed = true;
       }
     }
-    if (changed) this.refreshZones();
+    // A seat the authoritative snapshot does NOT claim, and that no active player
+    // holds, is genuinely empty — drop a stale local away-claim for it so we don't
+    // keep showing a dropped player the host has already let go.
+    for (const [seat] of this.seatClaims) {
+      if (!fromSnapshot.has(seat) && !this.activeSeats.has(seat)) {
+        this.seatClaims.delete(seat);
+        changed = true;
+      }
+    }
+    if (changed) { this.manageAwayTimers(); this.refreshZones(); }
   }
 
   private bindRealtimeEvents(): void {
@@ -1552,10 +1647,16 @@ export class Game {
     return -1;
   }
 
-  // Host-only: confirm, then ask the player on `seat` to leave.
+  // Host-only: confirm, then ask the player on `seat` to leave. Works on an
+  // ACTIVE occupant or a DROPPED/away seat (resolved from its persistent claim),
+  // so the host can always clear a seat — present or not.
   private confirmKick(seat: number): void {
     if (!this.isHost() || seat === this.self.seat) return;
-    const target = Array.from(this.players.values()).find((p) => p.seat === seat);
+    const occupant = Array.from(this.players.values()).find((p) => p.seat === seat);
+    const claim = this.seatClaims.get(seat);
+    const target = occupant
+      ? { id: occupant.id, name: occupant.name }
+      : (claim ? { id: claim.id, name: claim.name } : null);
     if (!target) return;
     void this.audio.play("ui-open");
     openConfirm(
@@ -1887,13 +1988,16 @@ export class Game {
           if (nameEl.textContent !== label) nameEl.textContent = label;
         }
 
-        // Host-only kick control, on an occupied rival seat only.
+        // Host-only kick control on any rival seat that is occupied OR dropped
+        // (away). The host must be able to evict a player who has gone away, not
+        // just an active one — so a stuck "away" seat can always be cleared.
         const kickBtn = labelEl.querySelector<HTMLButtonElement>('[data-action="kick"]');
         if (kickBtn) {
-          const canKick = host && !!occupant && seat !== this.self.seat;
+          const kickName = occupant ? occupant.name : (isDropped && claim ? claim.name : "");
+          const canKick = host && seat !== this.self.seat && (!!occupant || (isDropped && !!claim));
           kickBtn.hidden = !canKick;
           kickBtn.dataset.seat = String(seat);
-          if (canKick && occupant) kickBtn.setAttribute("aria-label", t("kick.aria").replace("{name}", occupant.name));
+          if (canKick && kickName) kickBtn.setAttribute("aria-label", t("kick.aria").replace("{name}", kickName));
         }
       }
     }
@@ -2005,8 +2109,18 @@ export class Game {
     this.patchVersion = 0;
     for (const el of this.cursorEls.values()) el.remove();
     this.cursorEls.clear();
-    // Leaving the room: cancel every pending away-grace countdown so a stale
-    // timer can't fire against the fresh room's seats.
+    // Leaving the room wipes ALL roster/seat state, not just the cards. Without
+    // this, the old room's players/activeSeats/claims bleed into the fresh room,
+    // so a lone host in a new room sees phantom "away" players. Clear every
+    // per-room collection here, the single point every room switch passes through.
+    this.activeSeats.clear();
+    this.players.clear();
+    this.seatClaims.clear();
+    this.lastRoster = [];
+    this.removedTombstones.clear();
+    this.heldByOther.clear();
+    // Cancel every pending away-grace countdown so a stale timer can't fire
+    // against the fresh room's seats.
     this.clearAwayTimers();
     this.requestRender();
   }

@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.7.1 — Lifecycle hardening, faithful card physics, unique names
+
+- **Leaving a room is a clean break.** Switching rooms (exit or kick) now wipes
+  the whole roster — active seats, players, claims, tombstones, holds — so a
+  player who leaves or is kicked lands in a fresh room with no phantom "away"
+  players carried over from the old one.
+- **A kick no longer makes everyone look "away".** Freeing a seat no longer
+  re-evaluates a stale presence roster (which could flip still-active players to
+  "away"); the next real presence sync re-seats correctly.
+- **Everyone sees the same "away".** Seat claims from the authoritative snapshot
+  are now the source of truth, so a player who dropped is shown as away on every
+  client — including ones that joined after the drop — and a stale claim is
+  corrected to match the host.
+- **The host can kick an away player.** The kick control now appears on a dropped
+  (away) seat too, resolved from its claim, so a stuck seat can always be cleared.
+- **Unique handles.** The name pool is much larger and de-duplicated, and the
+  table guarantees no two players share a name (the later joiner yields,
+  deterministically) — your id never changes.
+- **Interacting claims a card.** Flipping, rotating, gathering or shuffling a card
+  that sits in your own zone now makes it yours, the same as dragging it in — on
+  keyboard, scroll, right-click and the touch bar.
+- **No more stray 360° spin on shuffle.** Squaring a pile now turns every card by
+  the shortest path, so a sideways card never does a full extra turn (gather and
+  shuffle both fixed).
+- **A pile turns as one solid block.** Flipping a stack face-down no longer reveals
+  the fronts of the inner cards mid-turn; only the outer card is visible through
+  the turn (no blink, no leak).
+- **Card info reads on the art.** The info panel now uses the card's artwork as its
+  background with a dark scrim, text directly on top — no inner picture box —
+  sized so long text never overflows or scrolls.
+- **Balanced header mark.** The logo sits a touch larger, in proportion with the
+  menu button.
+
 ## 0.7.0 — Seat labels, clean flips, touch polish, and a real link preview
 
 - **Player areas read clearly.** Each seat's name, status light and host kick
