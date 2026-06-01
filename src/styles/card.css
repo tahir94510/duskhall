@@ -72,7 +72,9 @@
   inset: 0;
   border-radius: inherit;
   transform-style: preserve-3d;
-  /* default: back facing camera (no rotation) */
+  /* default: back facing camera (no rotation). The 3D flip rides --dur-slow
+     (320ms); FLIP_ANIM_MS in Game.ts is kept equal so the z-elevation clears
+     exactly when the rotateY settles, with no dead tail. */
   transition: transform var(--dur-slow) var(--ease);
 }
 

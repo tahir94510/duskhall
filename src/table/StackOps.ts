@@ -226,6 +226,56 @@ export function flipStackOver(state: BoardState, ids: string[]): void {
   }
 }
 
+/**
+ * Which card should stay VISIBLE while a pile turns over (the others are hidden so
+ * the stack reads as one solid block). Call AFTER flipStackOver (z already reversed).
+ * The visible card must present a GENERIC BACK at the turn's start so there is no
+ * art-swap pop at t=0:
+ *  - Opening (toFaceUp=true): the cards were all face-down (backs) before the flip,
+ *    so any choice is pop-free; pick the NEW top (highest z after the reversal) so
+ *    the card that ends on top is the one we keep showing.
+ *  - Closing (toFaceUp=false): the cards were face-up (art) before the flip. Keep the
+ *    OLD top — the card the player was actually looking at — visible so it turns from
+ *    its own art to a back, continuously. After the z-reversal the old top sits at
+ *    the BOTTOM (lowest z).
+ * Returns null for an empty set; the single-card case returns that card either way.
+ */
+export function flipVisibleCardId(state: BoardState, ids: string[], toFaceUp: boolean): string | null {
+  let pick: CardState | null = null;
+  for (const id of ids) {
+    const c = state.cards.get(id);
+    if (!c) continue;
+    if (!pick) { pick = c; continue; }
+    // Opening → highest z (new top); closing → lowest z (old top, now at bottom).
+    if (toFaceUp ? c.z > pick.z : c.z < pick.z) pick = c;
+  }
+  return pick ? pick.id : null;
+}
+
+/**
+ * True when the pile is ALREADY a tidy single stack at (ax, ay) with every card
+ * squared to `target` (mod 4), so the gather phase before a flip/shuffle can be
+ * skipped (a resting deck/discard turns instantly, no dead-time). `eps` tolerates
+ * sub-pixel float drift in the canonical [0,1] coordinates.
+ */
+export function isTidyStack(
+  state: BoardState,
+  ids: string[],
+  ax: number,
+  ay: number,
+  target: number,
+  eps = 1e-3
+): boolean {
+  const t = ((target % 4) + 4) % 4;
+  for (const id of ids) {
+    const c = state.cards.get(id);
+    if (!c) continue;
+    if (Math.abs(c.x - ax) > eps || Math.abs(c.y - ay) > eps) return false;
+    if ((((c.rot % 4) + 4) % 4) !== t) return false;
+  }
+  return true;
+}
+
 // Seed source for the shuffle. Prefers the crypto RNG; degrades gracefully.
 function randomSeed(): number {
   const c = (globalThis as { crypto?: Crypto }).crypto;
