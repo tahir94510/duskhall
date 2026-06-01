@@ -157,24 +157,26 @@ export class DragController {
     }
 
     // Bring all picked cards to the top, preserving their EXISTING relative
-    // stacking. findStackOverlapping returns ids in arbitrary (map) order, so we
-    // must reassign z in ascending current-z order — otherwise a grabbed pile
-    // gets its internal order scrambled. The new resting z persists after the
-    // drop; while in hand they paint in the elevated held band, lowest-first, so
-    // the visual stack matches the logical one.
+    // stacking. bringToTop syncs the board's top-z first (so the new resting z
+    // clears EVERY card, even after a remote patch raised someone else's z — the
+    // bug that left a dropped card under the deck) and reassigns z in ascending
+    // current-z order, so a grabbed pile keeps its internal order. The resting z
+    // persists after the drop; while in hand they paint in the elevated held band,
+    // lowest-first, so the visual stack matches the logical one.
     const ordered = ids
       .map((cid) => this.state.cards.get(cid))
       .filter((c): c is NonNullable<typeof c> => !!c)
       .sort((a, b) => a.z - b.z);
+    this.hooks.bringToTop(ordered.map((c) => c.id));
     const els = new Map<string, HTMLDivElement>();
     let heldIdx = 0;
     for (const c of ordered) {
-      this.state.topZ++;
-      c.z = this.state.topZ;
       const el = this.host.querySelector<HTMLDivElement>(`[data-id="${c.id}"]`);
       if (el) {
         els.set(c.id, el);
-        el.style.zIndex = String(HELD_Z_BASE + heldIdx++);
+        // Cap the offset so even a big held pile stays within [HELD_Z_BASE, seat
+        // band): the index only preserves relative order within the held pile.
+        el.style.zIndex = String(HELD_Z_BASE + Math.min(heldIdx++, 18));
         el.classList.add("is-held");
       }
     }
@@ -252,8 +254,9 @@ export class DragController {
     this.hooks.endHold(s.ids);
 
     if (!s.dragging) {
-      // Mere click on a card, no drag, no place. Drop the held class, restore the
-      // resting z, and exit.
+      // Mere click on a card, no drag, no place. Drop the held class and restore
+      // the resting z. The grab lifted these to the top; broadcast that so peers
+      // see the same stacking (otherwise a click would reorder z only locally).
       for (const id of s.ids) {
         const el = s.els.get(id);
         if (!el) continue;
@@ -261,6 +264,7 @@ export class DragController {
         const c = this.state.cards.get(id);
         if (c) el.style.zIndex = String(c.z);
       }
+      this.hooks.onCardMoved(s.ids);
       this.hooks.onReleased(e.clientX, e.clientY, e.pointerType);
       this.session = null;
       return;

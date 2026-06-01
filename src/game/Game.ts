@@ -48,6 +48,10 @@ const ANIM_Z_BASE = 500;
 // so the z-elevation never clears before the visual settles).
 const FLIP_ANIM_MS = 380;
 const SHUFFLE_ANIM_MS = 400;
+// Pre-stage for stack flip/shuffle: the pile first slides together and squares up
+// over this long, THEN it flips/riffles. Matches the .card transform transition so
+// the gather reads as a smooth settle before the second stage begins.
+const STACK_TIDY_MS = 170;
 const SS_SNAPSHOT_PREFIX = "kabal:snap:";
 const SS_SEAT_PREFIX = "kabal:seat:";
 const SS_CLIENT_ID = "kabal:cid";
@@ -509,20 +513,45 @@ export class Game {
     return { activeSeats: this.activeSeats, claimedSeats: this.seatClaims, seatCount: SEAT_COUNT };
   }
 
+  // Resting card z values must stay well BELOW the animation/held band (--z-anim:
+  // 500) and seat/cursor layers, or — after a few hundred interactions, since each
+  // lift does topZ++ — a table card's z climbs past 500 and renders OVER a held or
+  // flipping card (the "my card is under the deck while dragging" bug). We keep z
+  // in [1, CARD_Z_CEILING]; once topZ reaches the ceiling we compact the whole
+  // board back down to 1..N, preserving the exact stacking order.
+  private static readonly CARD_Z_CEILING = 400;
+
   // Ensure state.topZ is at least as high as every card on the board, so the next
   // "lift to top" actually clears everything. topZ can lag behind reality after a
   // remote snapshot/patch brings in higher z values, which is what let a flipped/
-  // grabbed card sink back UNDER a pile (e.g. the deck) it was sitting in.
+  // grabbed card sink back UNDER a pile (e.g. the deck) it was sitting in. If z has
+  // drifted up toward the animation band, compact it back to a dense 1..N first so
+  // a subsequent lift can never reach --z-anim.
   private syncTopZ(): void {
     let max = this.state.topZ;
     for (const c of this.state.cards.values()) if (c.z > max) max = c.z;
     this.state.topZ = max;
+    if (max >= Game.CARD_Z_CEILING) this.compactZ();
+  }
+
+  // Renumber every card's z to a dense 1..N by current stacking order, so the z
+  // counter never drifts up into the animation/cursor bands. Order-preserving, so
+  // nothing visibly moves. All cards are dirtied so peers converge to the same
+  // compact order (LWW by ts is fine: relative order is identical everywhere).
+  private compactZ(): void {
+    const ordered = Array.from(this.state.cards.values()).sort((a, b) => a.z - b.z);
+    let z = 1;
+    for (const c of ordered) {
+      const nz = z++;
+      if (c.z !== nz) { c.z = nz; this.dirtyIds.add(c.id); }
+    }
+    this.state.topZ = ordered.length;
   }
 
   // Lift a set of cards above everything else, preserving their internal stacking,
   // so a dropped card/stack rests on top of whatever was at the drop spot.
   private bringCardsToTop(ids: string[]): void {
-    this.syncTopZ();
+    this.syncTopZ(); // also compacts if z drifted toward the animation band
     const ordered = ids
       .map((id) => this.state.cards.get(id))
       .filter((c): c is CardState => !!c)
@@ -957,7 +986,10 @@ export class Game {
       const el = this.cardEls.get(id);
       if (!el) continue;
       el.classList.add("is-animating");
-      el.style.zIndex = String(ANIM_Z_BASE + i++);
+      // Keep the band within [ANIM_Z_BASE, --z-seat) even for a 72-card pile: the
+      // offset only needs to preserve RELATIVE order within the pile, so cap it so
+      // a big animating pile never climbs over seat labels (520) or cursors (600).
+      el.style.zIndex = String(ANIM_Z_BASE + Math.min(i++, 18));
       const prev = this.animTimers.get(id);
       if (prev) window.clearTimeout(prev);
       const handle = window.setTimeout(() => {
@@ -1137,45 +1169,47 @@ export class Game {
       if (this.isRivalOwnedCard(cid)) return;
       if (this.isLockedByOther(cid)) return;
     }
-    // Find the current top card (highest z): the pile squares up onto its
-    // position and orientation, the way you'd tap a deck straight before turning
-    // it over.
+    // A lone card just flips, no tidy needed.
+    if (stack.length < 2) { this.performStackFlip(stack); return; }
+    // STAGE 1 — tidy: gather every card onto the top card's spot and square each to
+    // the viewer-upright angle (reusing gatherStack, the same helper G uses), so a
+    // scattered/mixed-rotation pile becomes one aligned block. The cards SLIDE
+    // together via the normal .card transform transition during the elevation, so
+    // it reads as a smooth "square the deck up by hand". A soft cue marks the tidy.
     let topId = stack[stack.length - 1]!;
     let topZ = -Infinity;
     for (const cid of stack) {
       const c = this.state.cards.get(cid);
       if (c && c.z > topZ) { topZ = c.z; topId = cid; }
     }
-    // Tidy BEFORE the flip: gather every card onto the top card's spot and square
-    // each to the viewer-upright angle (reusing gatherStack, the same helper G
-    // uses). A scattered or mixed-rotation pile otherwise "vanishes and teleports"
-    // during the 3D turn — the under-cards are hidden (is-flip-quiet) while only
-    // the top card rotates, so any card poking out from under it just blinks. With
-    // the pile collapsed into one aligned block first, it turns over as a single
-    // solid object, like a real stack. gatherStack is a no-op for a lone card, so
-    // a single-card flip is unchanged. The cards tween to the gathered spot via
-    // their normal .card transform transition under the elevation, so it reads as
-    // a smooth settle, not a hard snap.
     const top = this.state.cards.get(topId);
-    if (top && stack.length > 1) {
-      this.syncTopZ(); // lift the gathered pile above every board card
-      gatherStack(this.state, stack, top.x, top.y, this.viewerUprightRot(top.rot));
-    }
+    if (!top) return;
+    this.syncTopZ(); // lift the gathered pile above every board card
+    gatherStack(this.state, stack, top.x, top.y, this.viewerUprightRot(top.rot));
+    for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
+    this.elevateDuringAnim(stack, STACK_TIDY_MS + FLIP_ANIM_MS);
+    this.scheduleFlush();
+    void this.audio.play("gather");
+    // STAGE 2 — after the pile has settled, turn it over as one solid block.
+    window.setTimeout(() => this.performStackFlip(stack), STACK_TIDY_MS);
+  }
+
+  // The flip itself: reverse depth order + toggle every face, then float the pile
+  // and hide all but the card that ends up on top so the 3D turn reads as one solid
+  // block (only its outer face is ever visible). Used for a lone card directly and
+  // for a stack after the tidy stage.
+  private performStackFlip(stack: string[]): void {
+    if (!stack.length) return;
     // Turn the whole pile over like a real stack of cards: the depth order
     // reverses (the bottom card ends up on top) and every face is toggled.
     flipStackOver(this.state, stack);
     for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
-    // Float the whole pile, in order, while the 3D flip plays, AND hide every card
-    // except the one that ends up on top. A real pile turns as one solid block:
-    // only its outer face is ever visible. Each card flips its OWN rotateY, so at
-    // the 90° edge-on instant backface-visibility makes all faces invisible and
-    // the inner cards' fronts would leak through — hiding the under-cards (opacity
-    // only, never removed) prevents that without the old "disappear" blink, since
-    // the top card is never hidden. One aligned timer restores them at settle.
     this.elevateDuringAnim(stack, FLIP_ANIM_MS);
     // flipStackOver reverses z, so the card now on top is the one that was at the
-    // BOTTOM. Recompute the visible top so we hide exactly the under-cards.
-    topZ = -Infinity;
+    // BOTTOM. Find the visible top so we hide exactly the under-cards (opacity
+    // only, never removed) — the top card is never hidden, so no "disappear" blink.
+    let topId = stack[stack.length - 1]!;
+    let topZ = -Infinity;
     for (const cid of stack) {
       const c = this.state.cards.get(cid);
       if (c && c.z > topZ) { topZ = c.z; topId = cid; }
@@ -1225,29 +1259,33 @@ export class Game {
     const stack = findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics());
     if (stack.length < 2) return;
     if (this.stackBlocked(stack)) return;
-    // Capture each card's CURRENT orientation BEFORE the shuffle squares the pile
-    // up, so the riffle keyframe can animate FROM the old angle TO the new one —
-    // a sideways card then rotates smoothly into place (exactly like gather),
-    // instead of snapping instantly because .is-shuffling kills the transition.
-    const fromRot = new Map<string, number>();
-    for (const cid of stack) fromRot.set(cid, this.state.cards.get(cid)?.rot ?? 0);
     const seed = this.state.cards.get(id);
-    const upright = this.viewerUprightRot(seed ? seed.rot : 0);
-    // Tidy the pile FIRST, exactly like a real shuffle: collect every card into one
-    // square stack on the seed's spot (gatherStack also lifts them to a clean,
-    // contiguous z-band at the top of the board). Only then randomise the order.
-    // Without this pre-gather the cards stayed scattered and shuffleStack reused
-    // their old, possibly-colliding z values, so the resulting stacking order was
-    // wrong.
-    this.syncTopZ(); // lift the gathered pile above every board card
-    if (seed) gatherStack(this.state, stack, seed.x, seed.y, upright);
-    shuffleStack(this.state, stack, upright);
-    for (const cid of stack) this.claimIfInOwnZone(cid);
-    this.elevateDuringAnim(stack, SHUFFLE_ANIM_MS);
-    this.applyShuffleJitter(stack, fromRot);
-    for (const cid of stack) this.dirtyIds.add(cid);
+    if (!seed) return;
+    const upright = this.viewerUprightRot(seed.rot);
+    // STAGE 1 — tidy: square every card to one direction and collect them into a
+    // single pile on the seed's spot, exactly like squaring a deck before shuffling.
+    // Cards SLIDE together and rotate into line via the normal .card transition.
+    // gatherStack also lifts the pile to a clean, contiguous z-band so the order is
+    // never ambiguous.
+    this.syncTopZ();
+    gatherStack(this.state, stack, seed.x, seed.y, upright);
+    for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
+    this.elevateDuringAnim(stack, STACK_TIDY_MS + SHUFFLE_ANIM_MS);
     this.scheduleFlush();
-    void this.audio.play("shuffle");
+    void this.audio.play("gather");
+    // STAGE 2 — once the pile is squared up, riffle-shuffle it: randomise order and
+    // face every card down, with the wobble keyframe. The pile is already aligned,
+    // so this reads as a clean shuffle of a tidy deck.
+    window.setTimeout(() => {
+      // Re-confirm nothing changed hands during the tidy.
+      if (this.stackBlocked(stack)) return;
+      shuffleStack(this.state, stack, upright);
+      for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
+      this.elevateDuringAnim(stack, SHUFFLE_ANIM_MS);
+      this.applyShuffleJitter(stack); // already aligned, so just the riffle wobble
+      this.scheduleFlush();
+      void this.audio.play("shuffle");
+    }, STACK_TIDY_MS);
   }
 
   // Collect every card back into a freshly shuffled face-down pile on the Deck
