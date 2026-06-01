@@ -186,12 +186,15 @@
   100% { outline: 0 solid transparent; outline-offset: 0; }
 }
 
-/* Shuffle: the card stays exactly in place and only wobbles a few degrees
-   around its own centre. No positional movement whatsoever. */
+/* Shuffle: the card stays exactly in place. It rotates from its OLD angle
+   (--from-rot) to the squared-up angle (--base-rot) — so a sideways card turns
+   smoothly into place, just like gather — while adding a small riffle wobble on
+   the way, then settles. No positional movement whatsoever. --from-rot defaults
+   to --base-rot, so a card that was already square just wobbles in place. */
 .card.is-shuffling { animation: shuffle-spin 380ms cubic-bezier(.4, .12, .2, 1); }
 @keyframes shuffle-spin {
-  0%   { transform: translate3d(var(--tx, 0), var(--ty, 0), 0) rotate(var(--base-rot, 0deg)); }
-  30%  { transform: translate3d(var(--tx, 0), var(--ty, 0), 0) rotate(calc(var(--base-rot, 0deg) + var(--a1, 5deg))); }
-  65%  { transform: translate3d(var(--tx, 0), var(--ty, 0), 0) rotate(calc(var(--base-rot, 0deg) + var(--a2, -4deg))); }
+  0%   { transform: translate3d(var(--tx, 0), var(--ty, 0), 0) rotate(var(--from-rot, var(--base-rot, 0deg))); }
+  35%  { transform: translate3d(var(--tx, 0), var(--ty, 0), 0) rotate(calc(var(--base-rot, 0deg) + var(--a1, 5deg))); }
+  68%  { transform: translate3d(var(--tx, 0), var(--ty, 0), 0) rotate(calc(var(--base-rot, 0deg) + var(--a2, -4deg))); }
   100% { transform: translate3d(var(--tx, 0), var(--ty, 0), 0) rotate(var(--base-rot, 0deg)); }
 }
