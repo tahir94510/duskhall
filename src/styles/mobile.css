@@ -59,12 +59,18 @@
 
 @media (max-width: 760px) {
   .table {
-    /* Re-set the shared grid variables (not the template directly) so the
-       non-rotating seat-label layer inherits the SAME tracks and stays aligned
-       with the zones on phones too. */
-    --grid-cols: minmax(86px, 14vw) 1fr minmax(86px, 14vw);
-    /* Symmetric top/bottom so opposing players' zones match on phones too. */
-    --grid-rows: minmax(110px, 18vh) 1fr minmax(110px, 18vh);
+    /* Field-proportional tracks (NOT vw/vh): the play field is a SQUARE
+       (--field), so the strips must be a fraction of THAT, not of the viewport.
+       Rows and cols use IDENTICAL % and px floor so the board stays square-symmetric
+       (the 90° seat-rotation perspective depends on it) and the centre 1fr never
+       collapses on a tall phone where the viewport is far from square. */
+    --grid-cols: minmax(54px, 21%) 1fr minmax(54px, 21%);
+    --grid-rows: minmax(54px, 21%) 1fr minmax(54px, 21%);
+    /* Cards scale with the square field, so the dock fits the centre row at any
+       aspect ratio and never spills into the strips. --field is .table-scoped, so
+       redefine --card-h here too (the :root calc can't see --field). */
+    --card-w: clamp(38px, calc(var(--field) * 0.15), 96px);
+    --card-h: calc(var(--card-w) * 1.45);
   }
   .header__menu { min-width: 200px; max-width: calc(100vw - 28px); }
   .modal { max-height: 90vh; }
@@ -97,16 +103,15 @@
 
 @media (max-width: 480px) {
   .table {
-    /* Give the side and top/bottom strips a touch more room on narrow phones so
-       the name + status light + kick cluster never gets cramped. Re-set the
-       shared grid variables (not the template) so the seat-label layer inherits
-       the same tracks. */
-    --grid-cols: minmax(78px, 17vw) 1fr minmax(78px, 17vw);
-    --grid-rows: minmax(120px, 19vh) 1fr minmax(120px, 19vh);
+    /* A touch more strip room for the name + status light + kick cluster, still
+       field-proportional and still rows==cols (square-symmetric). */
+    --grid-cols: minmax(50px, 22%) 1fr minmax(50px, 22%);
+    --grid-rows: minmax(50px, 22%) 1fr minmax(50px, 22%);
     --grid-gap: 6px;
+    --card-w: clamp(38px, calc(var(--field) * 0.155), 80px);
+    --card-h: calc(var(--card-w) * 1.45);
     padding: max(env(safe-area-inset-top), 8px) 8px max(env(safe-area-inset-bottom), 8px) 8px;
   }
-  :root { --card-w: clamp(46px, 10vmin, 76px); }
 }
 
 /* On touch devices (no hovering pointer) neutralize hover styles that would
@@ -145,7 +150,10 @@
      rather than shrinking targets below a usable size. */
   .context-bar__btn { width: 40px; height: 40px; }
   .settings__row { grid-template-columns: 56px 1fr 28px; gap: 10px; }
-  /* Shrink cards on tiny phones so the deck and discard dock slots never
-     overlap visually. Below ~360px the default clamp puts them too close. */
-  :root { --card-w: clamp(38px, 9vmin, 58px); }
+  /* Keep the dock slots from crowding on the tiniest phones — still field-tied
+     and .table-scoped so it matches the larger-mobile rule (and --card-h follows). */
+  .table {
+    --card-w: clamp(36px, calc(var(--field) * 0.15), 64px);
+    --card-h: calc(var(--card-w) * 1.45);
+  }
 }
