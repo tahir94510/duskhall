@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { safeNumber, safeStamp, safeInt } from "../security/inputGuard.js";
 import { isNewerWrite } from "./lww.js";
-import { classifyKey, maskHost } from "./realtime.js";
+import { classifyKey, maskHost, sanitizeAnim } from "./realtime.js";
 
 // A minimal unsigned JWT with a given role claim, for classifyKey tests.
 function fakeJwt(role: string): string {
@@ -117,5 +117,42 @@ describe("maskHost hides the project ref in the self-test", () => {
   it("never throws on garbage", () => {
     expect(maskHost("not a url")).toBe("••••");
     expect(maskHost("")).toBe("••••");
+  });
+});
+
+describe("sanitizeAnim: validate the cosmetic flip/shuffle hint", () => {
+  it("accepts a valid flip hint with direction", () => {
+    expect(sanitizeAnim({ kind: "flip", ids: ["a", "b"], toFaceUp: true }))
+      .toEqual({ kind: "flip", ids: ["a", "b"], toFaceUp: true });
+  });
+  it("accepts a valid shuffle hint (no toFaceUp)", () => {
+    expect(sanitizeAnim({ kind: "shuffle", ids: ["a"] })).toEqual({ kind: "shuffle", ids: ["a"] });
+  });
+  it("drops toFaceUp when it isn't a boolean", () => {
+    const a = sanitizeAnim({ kind: "flip", ids: ["a"], toFaceUp: "yes" });
+    expect(a).toEqual({ kind: "flip", ids: ["a"] });
+    expect(a && "toFaceUp" in a).toBe(false);
+  });
+  it("rejects an unknown kind", () => {
+    expect(sanitizeAnim({ kind: "explode", ids: ["a"] })).toBe(null);
+    expect(sanitizeAnim({ ids: ["a"] })).toBe(null);
+  });
+  it("rejects missing / empty / oversize / non-array ids", () => {
+    expect(sanitizeAnim({ kind: "flip", ids: [] })).toBe(null);
+    expect(sanitizeAnim({ kind: "flip" })).toBe(null);
+    expect(sanitizeAnim({ kind: "flip", ids: "a" })).toBe(null);
+    expect(sanitizeAnim({ kind: "flip", ids: new Array(201).fill("x") })).toBe(null);
+  });
+  it("filters non-string ids and caps id length", () => {
+    const a = sanitizeAnim({ kind: "flip", ids: ["ok", 5, null, "y"] });
+    expect(a).toEqual({ kind: "flip", ids: ["ok", "y"] });
+    const long = "z".repeat(50);
+    const b = sanitizeAnim({ kind: "shuffle", ids: [long] });
+    expect(b?.ids[0]!.length).toBe(32); // safeString caps at 32
+  });
+  it("returns null for non-objects", () => {
+    expect(sanitizeAnim(null)).toBe(null);
+    expect(sanitizeAnim("flip")).toBe(null);
+    expect(sanitizeAnim(undefined)).toBe(null);
   });
 });

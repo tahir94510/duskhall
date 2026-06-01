@@ -36,7 +36,7 @@ import {
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
 import { pointInZoneCanonical } from "../table/SlotGrid.js";
-import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, HoldMsg, LeftMsg, KickMsg, SeatClaim } from "../net/realtime.js";
+import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim } from "../net/realtime.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
@@ -1342,7 +1342,8 @@ export class Game {
     for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
     const visibleId = flipVisibleCardId(this.state, stack, toFaceUp);
     this.runFlipVisual(stack, visibleId, FLIP_ANIM_MS);
-    this.scheduleFlush();
+    // Send immediately with a flip hint so peers replay the same solid-block turn.
+    this.flushWithAnim(stack, { kind: "flip", ids: stack, toFaceUp });
     void this.audio.play("flip");
     this.rearmTooltipAtPointer();
   }
@@ -1397,7 +1398,8 @@ export class Game {
       // the new state, so a previously face-up card doesn't flash its art mid-wobble.
       for (const cid of stack) this.cardEls.get(cid)?.classList.remove("is-faceup");
       this.applyShuffleJitter(stack); // already aligned, so just the riffle wobble
-      this.scheduleFlush();
+      // Send immediately with a shuffle hint so peers riffle the same pile.
+      this.flushWithAnim(stack, { kind: "shuffle", ids: stack });
       void this.audio.play("shuffle");
     }, SHUFFLE_ANIM_MS);
   }
@@ -1477,6 +1479,28 @@ export class Game {
     this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards });
     if (this.debug) this.debug.sent++;
     this.dirtyIds.clear();
+  }
+
+  // Send a flip/shuffle's cards IMMEDIATELY (bypassing the 40ms batch) carrying a
+  // cosmetic `anim` hint so remote peers replay the same flourish instead of
+  // snapping. The hinted ids are stamped here and REMOVED from dirtyIds so the next
+  // ordinary flush can't re-send them with a newer ts (which would double-fire /
+  // race). Any other still-dirty cards (e.g. ownership-only) flush normally after.
+  private flushWithAnim(ids: string[], anim: PatchAnim): void {
+    const now = this.stamp();
+    const cards = ids.slice(0, 200).map((id) => {
+      const c = this.state.cards.get(id);
+      if (!c) return null;
+      c.ts = now;
+      c.by = this.self.id;
+      this.dirtyIds.delete(id);
+      return this.wireCard(c);
+    }).filter((c): c is PatchCard => !!c);
+    if (!cards.length) return;
+    this.patchVersion++;
+    this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards, anim });
+    if (this.debug) this.debug.sent++;
+    if (this.dirtyIds.size) this.scheduleFlush();
   }
 
   private scheduleDragPreview(): void {
@@ -2020,7 +2044,31 @@ export class Game {
       if (p.claims && p.claims.length) this.mergeClaims(p.claims);
       this.resolveFirstSync();
     }
+    // Replay the actor's flip/shuffle flourish on our side (state is already set;
+    // this is purely cosmetic). Snapshots carry no anim hint.
+    if (!isSnapshot && p.anim) this.playRemoteAnim(p.anim);
     this.requestRender();
+  }
+
+  // A remote peer flipped/shuffled a pile; play the same animation here. State is
+  // already applied by applyPatch, so this only drives the visual. Defensive: skip
+  // ids we don't have or aren't rendering, skip if already animating (idempotent),
+  // and NEVER animate a rival's private card (privacy — such flips are blocked
+  // upstream anyway, this is a second layer).
+  private playRemoteAnim(anim: PatchAnim): void {
+    const ids = anim.ids.filter((id) => this.state.cards.has(id) && this.cardEls.has(id));
+    if (!ids.length || this.anyAnimating(ids)) return;
+    for (const id of ids) if (this.isRivalOwnedCard(id)) return;
+    if (anim.kind === "flip") {
+      const toFaceUp = anim.toFaceUp === true;
+      const visibleId = flipVisibleCardId(this.state, ids, toFaceUp);
+      this.runFlipVisual(ids, visibleId, FLIP_ANIM_MS);
+    } else {
+      // Shuffle: state already faced the cards down; show backs and riffle.
+      this.elevateDuringAnim(ids, SHUFFLE_ANIM_MS);
+      for (const id of ids) this.cardEls.get(id)?.classList.remove("is-faceup");
+      this.applyShuffleJitter(ids);
+    }
   }
 
   // While peers are present but we have not yet received the authoritative
