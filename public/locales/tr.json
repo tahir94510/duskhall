@@ -118,6 +118,11 @@
     "body": "Bu odadan ayrılırsın ve yeni bağlantıyla taze bir oda açılır; oranın sahibi (host) sen olursun. Burada sana ait kartlar diğer oyunculara serbest bırakılır.",
     "leave": "Çık"
   },
+  "pasteJoin": {
+    "title": "Odaya geç?",
+    "body": "{code} odasına katıl? Şu anki masandan ayrılacaksın.",
+    "confirm": "Odaya katıl"
+  },
   "settings": {
     "title": "Ayarlar",
     "master": "Ana",

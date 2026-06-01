@@ -179,6 +179,7 @@ export class Game {
       onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio, () => this.onLocale()); },
       onShortcuts: () => { void this.audio.play("ui-open"); openShortcutsModal(this.modal); },
       onJoinRoom: (code) => { void this.joinRoom(code); },
+      onPasteJoin: (code) => { this.confirmJoinRoom(code); },
       onDiagnose: () => { void this.audio.play("ui-open"); openDiagnosticsModal(this.modal, this.bus); }
     });
     document.body.appendChild(this.header.el);
@@ -2363,6 +2364,22 @@ export class Game {
         }
       }
     }
+  }
+
+  // A pasted code/link resolved to `code`: confirm the switch with a clear modal
+  // (consistent with every other room-changing action) before leaving this table.
+  private confirmJoinRoom(code: string): void {
+    if (!code || code === this.room) return;
+    void this.audio.play("ui-open");
+    openConfirm(
+      this.modal,
+      {
+        title: t("pasteJoin.title"),
+        body: t("pasteJoin.body").replace("{code}", code),
+        confirmLabel: t("pasteJoin.confirm")
+      },
+      () => { void this.joinRoom(code); }
+    );
   }
 
   // Switch to a different room by code, behind the loading screen, without a
