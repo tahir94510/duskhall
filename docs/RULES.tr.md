@@ -209,7 +209,7 @@ Kapanış sırası: önce Mühür tetikleri, sonra el limiti kontrolü.
 
 Vaerum web sürümü serbest bir masadır. Otomatik kural motoru yoktur; oyuncular kuralları bu kitaba göre kendileri uygular.
 
-Fare ve klavye: imlecin altındaki kartı sol tıkla basılı tutup sürükleyerek taşırsın; sürüklerken Ctrl'ye basılı tutarsan yığının tamamını taşırsın. Sağ tık, imlecin altındaki yığını toplu çevirir (tek bir kart ise yalnızca o döner). Tekerleği kaydırmak imlecin altındaki tek kartı çevirir; Ctrl ile kaydırmak yığının tamamını çevirir. Shift ile kaydırmak kartı doksan derece yana döndürür (yüzünü çevirmez). Yığını derli toplu bir desteye toplamak için G'ye, karıştırmak için M'ye bas.
+Fare ve klavye: imlecin altındaki kartı sol tıkla basılı tutup sürükleyerek taşırsın; sürüklerken Ctrl'ye basılı tutarsan yığının tamamını taşırsın. Sağ tık, imlecin altındaki yığını toplu çevirir (tek bir kart ise yalnızca o döner). Tekerleği kaydırmak imlecin altındaki tek kartı çevirir; Ctrl ile kaydırmak yığının tamamını çevirir. Shift ile kaydırmak doksan derece yana döndürür (yüzünü çevirmez); yığının üzerindeyken tüm desteyi döndürüp hizalar. Yığını derli toplu bir desteye toplamak için G'ye, karıştırmak için M'ye bas.
 
 Dokunmatik ekranlar: kartı tek parmakla sürükleyerek taşı. Bir karta basılı tutunca çevirme, döndürme, toplama, karıştırma ve kart bilgisi düğmelerini içeren etkileşim çubuğu açılır. Çevir düğmesi parmağının altındaki yığının tamamını tek seferde çevirir (tek kart varsa yalnızca onu); toplama ve karıştırma tek kartta pasif kalır.
 

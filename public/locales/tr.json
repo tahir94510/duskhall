@@ -101,7 +101,7 @@
       },
       {
         "keys": "Shift + tekerlek",
-        "desc": "Kartı 90° döndür (yana yatırır, yüzünü çevirmez)"
+        "desc": "90° yana döndür (yüzünü çevirmez); yığının üzerindeyken tüm desteyi döndürüp hizalar"
       },
       {
         "keys": "G",
@@ -495,7 +495,7 @@
         "title": "14. Dijital masa",
         "body": [
           "Vaerum web sürümü serbest bir masadır. Otomatik kural motoru yoktur; oyuncular kuralları bu kitaba göre kendileri uygular.",
-          "Sol tıkla basılı tutup kartı sürükle. Sağ tık imlecin altındaki yığını toplu çevirir. Ctrl + sol tık yığının tamamını taşır. Tekerlek tek kartı çevirir; Ctrl + tekerlek yığını toplu çevirir. Shift + tekerlek kartı 90° yana yatırır. Yığını toplamak için G'ye, karıştırmak için M'ye bas.",
+          "Sol tıkla basılı tutup kartı sürükle. Sağ tık imlecin altındaki yığını toplu çevirir. Ctrl + sol tık yığının tamamını taşır. Tekerlek tek kartı çevirir; Ctrl + tekerlek yığını toplu çevirir. Shift + tekerlek 90° yana döndürür; yığının üzerindeyken tüm desteyi döndürüp hizalar. Yığını toplamak için G'ye, karıştırmak için M'ye bas.",
           "Kendi alanın, ekranının altındaki bulanık şerittir. Oradaki kartlar sana özeldir; rakipler yalnızca kartların arkasını görür ve sayısını tahmin edebilir. Rakibin alanına kart bırakamazsın; kenarda bırak, sahibi içeri kendisi çeker.",
           "Herkes ayrıldığında oda kapanır. Odadan ayrılmak, seni ev sahibi yapan yeni bağlantılı taze bir oda açar."
         ]

@@ -160,6 +160,31 @@ describe("flipping a scattered, mixed-rotation pile (toggleStackFlip's sequence)
   });
 });
 
+describe("rotating a mixed-angle pile (rotateStack's sequence) aligns it as it turns", () => {
+  // rotateStack gathers onto the anchor card and squares every card to
+  // (anchor.rot + dir), so a ragged pile turns into one aligned block, keeping
+  // faces. This reproduces that exact gatherStack call.
+  it("squares every card to anchor.rot+dir, collapses onto the anchor, keeps faces", () => {
+    const st = board([
+      card("a", 0.40, 0.42, 1, 0, true),
+      card("b", 0.62, 0.58, 2, 2, false),
+      card("anchor", 0.50, 0.50, 3, 1, true) // top card, rot = 1 (90°)
+    ]);
+    const anchor = st.cards.get("anchor")!;
+    const dir = 1;
+    const target = anchor.rot + dir; // 2 → all cards end congruent to 2 mod 4
+    gatherStack(st, ["a", "b", "anchor"], anchor.x, anchor.y, target);
+    const facesAfter = { a: true, b: false, anchor: true } as Record<string, boolean>;
+    for (const id of ["a", "b", "anchor"]) {
+      const c = st.cards.get(id)!;
+      expect(c.x).toBeCloseTo(0.50, 9);
+      expect(c.y).toBeCloseTo(0.50, 9);
+      expect(((c.rot % 4) + 4) % 4).toBe(((target % 4) + 4) % 4);
+      expect(c.faceUp).toBe(facesAfter[id]!); // faces untouched by a rotate
+    }
+  });
+});
+
 describe("shuffleStack", () => {
   it("faces every card down and squares orientation by the shortest path, keeping positions", () => {
     const st = board([card("a", 0.5, 0.5, 1, 0, true), card("b", 0.5, 0.5, 2, 1, false), card("c", 0.5, 0.5, 3, 2, true)]);
