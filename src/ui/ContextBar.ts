@@ -2,8 +2,10 @@
 // action does not apply to the current stack (e.g. you cannot shuffle a
 // single card), so the touch UI never offers something that does nothing.
 
+// A single flip icon: the touch bar offers ONE "flip" that turns the whole pile
+// under the finger (or a lone card), matching desktop right-click. No separate
+// stack-flip button — it was a frequent source of "the flip didn't turn my pile".
 const ICON_FLIP = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4 8 A 8 8 0 0 1 18 6 M20 16 A 8 8 0 0 1 6 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M18 3 V7 H14 M6 21 V17 H10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
-const ICON_STACK_FLIP = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="6" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="8" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".55"/><path d="M11 13 L13 15 L17 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ICON_ROTATE = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 13 A 9 9 0 0 0 12 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 13 L6 10 M3 13 L6 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`;
 const ICON_GATHER = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 3 V6 M15 3 V6 M9 18 V21 M15 18 V21 M3 9 H6 M3 15 H6 M18 9 H21 M18 15 H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
 const ICON_MIX = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 7 H7 L17 17 H21 M3 17 H7 L17 7 H21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M18 4 L21 7 L18 10 M18 14 L21 17 L18 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
@@ -11,10 +13,10 @@ const ICON_MIX = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ar
 const ICON_INFO = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 11 V16.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.1" fill="currentColor"/></svg>`;
 
 export interface ContextHooks {
+  /** Flip the whole pile under the finger, or a lone card if that's all there is. */
   onFlip(id: string): void;
   onGather(id: string): void;
   onMix(id: string): void;
-  onStackToggleFlip(id: string): void;
   onRotate(id: string): void;
   /** Show the card's details (touch has no hover); only when it reads face-up. */
   onInfo(id: string): void;
@@ -34,7 +36,6 @@ export class ContextBar {
     this.el.className = "context-bar";
     this.el.innerHTML = `
       <button type="button" class="context-bar__btn" data-act="flip" aria-label="Flip">${ICON_FLIP}</button>
-      <button type="button" class="context-bar__btn" data-act="stack-flip" aria-label="Flip stack">${ICON_STACK_FLIP}</button>
       <button type="button" class="context-bar__btn" data-act="rotate" aria-label="Rotate 90°">${ICON_ROTATE}</button>
       <button type="button" class="context-bar__btn" data-act="gather" aria-label="Gather">${ICON_GATHER}</button>
       <button type="button" class="context-bar__btn" data-act="mix" aria-label="Shuffle">${ICON_MIX}</button>
@@ -54,7 +55,6 @@ export class ContextBar {
         if (btn.classList.contains("is-disabled")) return;
         const act = btn.dataset.act;
         if (act === "flip") this.hooks.onFlip(id);
-        else if (act === "stack-flip") this.hooks.onStackToggleFlip(id);
         else if (act === "rotate") this.hooks.onRotate(id);
         else if (act === "gather") this.hooks.onGather(id);
         else if (act === "mix") this.hooks.onMix(id);
@@ -80,8 +80,8 @@ export class ContextBar {
       if (disabled) btn.setAttribute("aria-disabled", "true");
       else btn.removeAttribute("aria-disabled");
     };
-    // Single card: stack-flip == flip, gather/shuffle have no effect.
-    setDisabled("stack-flip", !isStack);
+    // Gather and shuffle are multi-card actions: a lone card has nothing to
+    // gather or mix, so they grey out. Flip and rotate always apply.
     setDisabled("gather", !isStack);
     setDisabled("mix", !isStack);
     // Info only makes sense for a card that currently reads face-up.

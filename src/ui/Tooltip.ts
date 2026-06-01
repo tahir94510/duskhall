@@ -1,5 +1,6 @@
 import { t } from "../i18n/index.js";
 import { CARD_DEFS } from "../game/cards.js";
+import { loadManifest } from "../table/Card.js";
 
 const HOVER_DELAY = 320;
 const OFFSET = 14;
@@ -15,12 +16,19 @@ export class Tooltip {
   // True while a pointer button is held down anywhere: during a drag/hold we
   // never want the info panel to appear over the card in hand.
   private pressed = false;
+  // True when the panel was opened by the touch "info" button (no hover). In that
+  // mode it stays put until the player taps elsewhere, and a tap anywhere outside
+  // it dismisses it — so it never gets stuck on a phone.
+  private sticky = false;
+  // Resolved art URLs by card def, shared with the card faces (one cached fetch).
+  private artUrls: Map<string, string> | null = null;
 
   constructor(private host: HTMLElement) {
     this.el = document.createElement("div");
     this.el.className = "tooltip";
     this.el.setAttribute("role", "tooltip");
     document.body.appendChild(this.el);
+    void loadManifest().then((m) => { this.artUrls = m; });
     this.bind();
   }
 
@@ -33,13 +41,27 @@ export class Tooltip {
     window.addEventListener("pointerup", this.onUp, { passive: true });
     window.addEventListener("pointercancel", this.onUp, { passive: true });
     // Safety net: leaving the board entirely always dismisses the tooltip.
-    this.host.addEventListener("pointerleave", this.hide, { passive: true });
+    this.host.addEventListener("pointerleave", this.onHostLeave, { passive: true });
     window.addEventListener("scroll", this.hide, { passive: true });
     window.addEventListener("blur", this.hide);
+    // A tap/click anywhere outside the panel dismisses a sticky (touch-opened)
+    // tooltip, so it never requires tapping the exact card again to close.
+    document.addEventListener("pointerdown", this.onDocDown, true);
   }
 
   private onDown = (): void => { this.pressed = true; this.hide(); };
   private onUp = (): void => { this.pressed = false; };
+
+  // Leaving the board dismisses a hover tooltip, but NOT a sticky touch one (the
+  // finger naturally leaves the board after tapping Info).
+  private onHostLeave = (): void => { if (!this.sticky) this.hide(); };
+
+  // Dismiss a sticky (touch) tooltip on any tap outside the panel itself.
+  private onDocDown = (e: PointerEvent): void => {
+    if (!this.sticky) return;
+    if (e.target instanceof Node && this.el.contains(e.target)) return;
+    this.hide();
+  };
 
   private resolve(target: Element): { defId: string; cardEl: HTMLElement } | null {
     const cardEl = target.closest<HTMLElement>(".card");
@@ -55,6 +77,10 @@ export class Tooltip {
 
   private onOver = (e: PointerEvent): void => {
     if (this.pressed) return;
+    // Hover is a mouse affordance only. On touch, a synthetic pointerover fires
+    // after a tap/drag and would pop the panel up at a stale position; touch users
+    // get card info through the action bar's Info button instead.
+    if (e.pointerType === "touch") return;
     const data = this.resolve(e.target as Element);
     if (!data) return;
     this.mouseX = e.clientX;
@@ -64,8 +90,8 @@ export class Tooltip {
   };
 
   // Show the panel for a specific card element on demand (touch "info" button,
-  // which has no hover). Anchors near the card and stays until dismissed by the
-  // next tap/scroll. Ignores the pressed flag and the usual hover delay.
+  // which has no hover). Anchors near the card and stays until dismissed by a tap
+  // anywhere outside it. Ignores the pressed flag and the usual hover delay.
   showForCard(cardEl: HTMLElement): void {
     const defId = cardEl.dataset.def;
     if (!defId) return;
@@ -74,12 +100,15 @@ export class Tooltip {
     this.mouseX = r.left + r.width / 2;
     this.mouseY = r.top;
     window.clearTimeout(this.showTimer);
+    this.sticky = true;
     this.show({ defId, cardEl });
   }
 
   // Re-arm the hover tooltip at a point WITHOUT a pointerover (used right after a
-  // card is dropped, so its info shows without the cursor leaving and re-entering).
-  probeAt(x: number, y: number): void {
+  // mouse drop, so its info shows without the cursor leaving and re-entering).
+  // Touch never auto-probes — info on touch is explicit via the Info button.
+  probeAt(x: number, y: number, pointerType?: string): void {
+    if (pointerType === "touch") return;
     this.pressed = false;
     const el = document.elementFromPoint(x, y);
     const data = el ? this.resolve(el) : null;
@@ -113,7 +142,15 @@ export class Tooltip {
     // Always start hidden so the first frame after innerHTML cannot leak in
     // at the previous (or default) position.
     this.el.classList.remove("is-visible");
+    // A slice of the card's own art above the text makes the panel instantly
+    // recognisable. Shown only when art exists for this card; otherwise text-only,
+    // so a fresh checkout with no art produces a clean panel and no broken image.
+    const artUrl = this.artUrls?.get(def.id);
+    const artHtml = artUrl
+      ? `<div class="tooltip__art" style="background-image:url('${encodeURI(artUrl)}')" role="img" aria-label=""></div>`
+      : "";
     this.el.innerHTML = `
+      ${artHtml}
       <div class="tooltip__title">${escapeHtml(t(`cards.${def.id}.name`))}</div>
       <div class="tooltip__type">${escapeHtml(t(`categories.${def.category}.name`))}</div>
       <div class="tooltip__body">${escapeHtml(t(`cards.${def.id}.effect`))}</div>
@@ -133,13 +170,16 @@ export class Tooltip {
     if (y < margin) y = this.mouseY + OFFSET;
     if (x + w + margin > window.innerWidth) x = this.mouseX - w - OFFSET;
     if (x < margin) x = margin;
-    if (y + h + margin > window.innerHeight) y = window.innerHeight - h - margin;
+    // Keep the whole panel on-screen vertically too, so on a short phone the
+    // bottom (flavour line) never clips below the fold.
+    if (y + h + margin > window.innerHeight) y = Math.max(margin, window.innerHeight - h - margin);
     this.el.style.transform = `translate(${x}px, ${y}px)`;
   }
 
   hide = (): void => {
     window.clearTimeout(this.showTimer);
     this.active = null;
+    this.sticky = false;
     this.el.classList.remove("is-visible");
   };
 }

@@ -18,8 +18,10 @@ export interface DragHooks {
   /** Optional magnetic snap: nudge a single canonical (nx, ny) to nearest slot. */
   applySnap(ownerSeat: number, nx: number, ny: number): { nx: number; ny: number; snapped: boolean };
   onCardMoved(ids: string[]): void;
-  /** Pointer released over (x, y): re-arm the hover tooltip without a re-enter. */
-  onReleased(x: number, y: number): void;
+  /** Pointer released over (x, y): re-arm the hover tooltip without a re-enter.
+   *  `pointerType` lets the handler skip the auto-probe on touch (info is explicit
+   *  on touch, via the action bar). */
+  onReleased(x: number, y: number, pointerType: string): void;
   onDragProgress(ids: string[]): void;
   onCardFlipped(id: string): void;
   onStackToggleFlip(id: string): void;
@@ -259,7 +261,7 @@ export class DragController {
         const c = this.state.cards.get(id);
         if (c) el.style.zIndex = String(c.z);
       }
-      this.hooks.onReleased(e.clientX, e.clientY);
+      this.hooks.onReleased(e.clientX, e.clientY, e.pointerType);
       this.session = null;
       return;
     }
@@ -321,7 +323,7 @@ export class DragController {
     else if (didPlace) this.hooks.playSfx("place");
     // Re-arm the hover tooltip at the drop point so a face-up card shows its info
     // immediately, without the pointer having to leave and re-enter.
-    this.hooks.onReleased(e.clientX, e.clientY);
+    this.hooks.onReleased(e.clientX, e.clientY, e.pointerType);
     this.session = null;
   };
 

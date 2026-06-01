@@ -211,7 +211,7 @@ Vaerum on the web is a sandbox. There is no automated rules engine; players foll
 
 Mouse and keyboard: left-press and drag moves the card under the cursor; hold Ctrl while you drag to move the whole stack. Right-click flips the stack under the cursor (a lone card flips by itself). Scroll flips the single card under the cursor; Ctrl plus scroll flips the whole stack. Shift plus scroll rotates the card ninety degrees sideways (it does not flip the face). Press G to gather the stack under the cursor into a tidy pile, and M to shuffle it.
 
-Touch screens: drag with one finger to move a card. Press and hold a card to open its action bar, with buttons for flip, stack flip, rotate, gather, shuffle and card info.
+Touch screens: drag with one finger to move a card. Press and hold a card to open its action bar, with buttons for flip, rotate, gather, shuffle and card info. Flip turns the whole pile under your finger at once, or a lone card if that is all there is; gather and shuffle are greyed out for a single card.
 
 Your zone is the blurred strip along the bottom of your screen. Cards there are private to you; rivals see only their backs and can infer the count. You cannot drop a card inside an opponent's zone; leave it on the rim and the owner draws it in.
 

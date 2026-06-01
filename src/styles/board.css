@@ -12,8 +12,8 @@
   /* Square side = min(usable width, usable height), capped. The env() insets keep
      it clear of notches / rounded corners. */
   --field: min(
-    calc(100vw - max(env(safe-area-inset-left), 10px) - max(env(safe-area-inset-right), 10px)),
-    calc(100dvh - max(env(safe-area-inset-top), 10px) - max(env(safe-area-inset-bottom), 10px)),
+    calc(100vw - max(env(safe-area-inset-left), 12px) - max(env(safe-area-inset-right), 12px)),
+    calc(100dvh - max(env(safe-area-inset-top), 12px) - max(env(safe-area-inset-bottom), 12px)),
     1180px
   );
   width: var(--field);
@@ -91,13 +91,17 @@ body:not(.is-ready) .board__perspective { transition: none; }
   color: var(--ivory-mute);
 }
 
-/* The name pill: status light + handle, kept on ONE line with an ellipsis so a
-   long or translated name never spills out of its zone. */
-.seat-label__name {
+/* One inline group: status light · name · kick, kept together on the INNER edge
+   of the seat strip (toward the table centre) so every name forms a readable
+   ring and the host's X sits right beside the name it removes. Upright for the
+   local viewer, above the cards (the layer's z-index), ellipsised so a long or
+   translated name never spills out of its zone. */
+.seat-label__cluster {
   position: absolute;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
+  max-width: calc(100% - 12px);
   padding: 1px 2px;
   font-family: var(--font-display);
   font-size: 11px;
@@ -118,7 +122,7 @@ body:not(.is-ready) .board__perspective { transition: none; }
   transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
 /* Presence light: green while active/connected, amber while "away" (a reserved,
-   dropped seat). Empty seats keep the neutral dot. */
+   dropped seat). */
 .seat-label.is-active .seat-label__dot {
   background: #46c46a;
   opacity: 1;
@@ -130,19 +134,20 @@ body:not(.is-ready) .board__perspective { transition: none; }
   box-shadow: 0 0 6px rgba(232, 153, 58, 0.5);
 }
 .seat-label.is-active { color: var(--seat-color, var(--ivory-mute)); }
-/* An empty seat carries no name — just a faint neutral light so the seat still
-   reads as "present but unclaimed", mirroring the dimmed empty zone panel. */
-.seat-label.is-empty { opacity: 0.4; }
+/* A truly empty seat (no player, no claim) shows NOTHING — no floating dot, no
+   name. The dimmed empty zone panel alone signals an open seat. */
+.seat-label.is-empty .seat-label__cluster { display: none; }
 .seat-label.is-dropped { opacity: 0.85; }
 
-/* Host-only kick control, the X on the OUTER long edge — mirrored opposite the
-   name so the two never share an edge. */
+/* Host-only kick control, immediately after the name (on the far side of the
+   status light), so it reads "● name ✕" as one unit. */
 .seat-label__kick {
-  position: absolute;
+  flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
+  margin-left: 1px;
   border: 0;
   background: transparent;
   color: var(--ivory-dim);
@@ -151,24 +156,16 @@ body:not(.is-ready) .board__perspective { transition: none; }
   transition: color var(--dur-fast) var(--ease);
 }
 .seat-label__kick[hidden] { display: none; }
-.seat-label__kick svg { width: 14px; height: 14px; }
+.seat-label__kick svg { width: 13px; height: 13px; }
 .seat-label__kick:hover { color: #ff9a9a; }
 
-/* Bottom / top: a WIDE strip — name centred on the inner horizontal edge, kick
-   centred on the opposite (outer) horizontal edge. They sit on different lines,
-   so they never collide whatever the name length. */
-.seat-label--bottom .seat-label__name { top: 6px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 16px); }
-.seat-label--bottom .seat-label__kick { bottom: 4px; left: 50%; transform: translateX(-50%); }
-.seat-label--top .seat-label__name { bottom: 6px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 16px); }
-.seat-label--top .seat-label__kick { top: 4px; left: 50%; transform: translateX(-50%); }
-
-/* Left / right: a TALL strip — name centred vertically on the inner vertical
-   edge, kick centred vertically on the outer vertical edge. The name reserves
-   room for the kick (max-width) so the two never overlap on a narrow side zone. */
-.seat-label--left .seat-label__name { right: 6px; top: 50%; transform: translateY(-50%); max-width: calc(100% - 34px); }
-.seat-label--left .seat-label__kick { left: 4px; top: 50%; transform: translateY(-50%); }
-.seat-label--right .seat-label__name { left: 6px; top: 50%; transform: translateY(-50%); max-width: calc(100% - 34px); }
-.seat-label--right .seat-label__kick { right: 4px; top: 50%; transform: translateY(-50%); }
+/* Anchor the cluster to the INNER edge of each strip (toward the board centre),
+   horizontally centred where the strip runs wide (top/bottom) and vertically
+   centred where it runs tall (left/right). */
+.seat-label--bottom .seat-label__cluster { top: 7px; left: 50%; transform: translateX(-50%); }
+.seat-label--top .seat-label__cluster { bottom: 7px; left: 50%; transform: translateX(-50%); }
+.seat-label--left .seat-label__cluster { right: 7px; top: 50%; transform: translateY(-50%); }
+.seat-label--right .seat-label__cluster { left: 7px; top: 50%; transform: translateY(-50%); }
 
 /* Full-bleed, viewport-fixed background behind everything. It does NOT rotate
    with the board, so it always covers the whole screen at any seat with no

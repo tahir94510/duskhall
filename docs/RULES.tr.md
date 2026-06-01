@@ -211,7 +211,7 @@ Vaerum web sürümü serbest bir masadır. Otomatik kural motoru yoktur; oyuncul
 
 Fare ve klavye: imlecin altındaki kartı sol tıkla basılı tutup sürükleyerek taşırsın; sürüklerken Ctrl'ye basılı tutarsan yığının tamamını taşırsın. Sağ tık, imlecin altındaki yığını toplu çevirir (tek bir kart ise yalnızca o döner). Tekerleği kaydırmak imlecin altındaki tek kartı çevirir; Ctrl ile kaydırmak yığının tamamını çevirir. Shift ile kaydırmak kartı doksan derece yana döndürür (yüzünü çevirmez). Yığını derli toplu bir desteye toplamak için G'ye, karıştırmak için M'ye bas.
 
-Dokunmatik ekranlar: kartı tek parmakla sürükleyerek taşı. Bir karta basılı tutunca, çevirme, toplu çevirme, döndürme, toplama, karıştırma ve kart bilgisi düğmelerini içeren etkileşim çubuğu açılır.
+Dokunmatik ekranlar: kartı tek parmakla sürükleyerek taşı. Bir karta basılı tutunca çevirme, döndürme, toplama, karıştırma ve kart bilgisi düğmelerini içeren etkileşim çubuğu açılır. Çevir düğmesi parmağının altındaki yığının tamamını tek seferde çevirir (tek kart varsa yalnızca onu); toplama ve karıştırma tek kartta pasif kalır.
 
 Kendi alanın, ekranının altındaki bulanık şeritte yer alır. Oradaki kartlar sana özeldir; rakipler yalnızca kartların arkasını görür ve sayısını tahmin edebilir. Rakibin alanına kart bırakamazsın; kenarda bırak, sahibi içeri kendisi çeker.
 

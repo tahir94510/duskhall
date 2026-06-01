@@ -86,6 +86,15 @@ describe("gatherStack squares the pile up", () => {
     expect(za).toBeLessThan(zb);
     expect(zb).toBeLessThan(zc);
   });
+
+  it("is a no-op on a single card (gather is a multi-card action)", () => {
+    const st = board([card("a", 0.4, 0.4, 1, 2)]);
+    gatherStack(st, ["a"], 0.6, 0.6, 0);
+    // Untouched: no move, no rotation change (mirrors shuffleStack's 2+ guard).
+    expect(st.cards.get("a")!.x).toBeCloseTo(0.4, 9);
+    expect(st.cards.get("a")!.y).toBeCloseTo(0.4, 9);
+    expect(st.cards.get("a")!.rot).toBe(2);
+  });
 });
 
 describe("shuffleStack", () => {

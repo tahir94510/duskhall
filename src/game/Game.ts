@@ -136,10 +136,9 @@ export class Game {
     this.refs = buildTable(this.host);
     this.tooltip = new Tooltip(this.refs.cardsLayer);
     this.contextBar = new ContextBar({
-      onFlip: (id) => this.flipCard(id),
+      onFlip: (id) => this.flipSmart(id),
       onGather: (id) => this.gatherAt(id),
       onMix: (id) => this.shuffleAt(id),
-      onStackToggleFlip: (id) => this.toggleStackFlip(id),
       onRotate: (id) => this.rotateCard(id),
       onInfo: (id) => this.showCardInfo(id),
       canShowInfo: (id) => this.canShowCardInfo(id),
@@ -396,7 +395,7 @@ export class Game {
         for (const id of ids) this.dirtyIds.add(id);
         this.scheduleFlush();
       },
-      onReleased: (x, y) => this.tooltip.probeAt(x, y),
+      onReleased: (x, y, pointerType) => this.tooltip.probeAt(x, y, pointerType),
       onDragProgress: (ids) => {
         for (const id of ids) this.dragPreviewIds.add(id);
         this.scheduleDragPreview();
@@ -630,12 +629,17 @@ export class Game {
       if (this.modal.isOpen() || this.spectator) return;
       const k = e.key.toLowerCase();
       // Desktop convenience: G gathers, M shuffles the stack under the cursor.
+      // Both are multi-card actions, so a single card under the cursor triggers
+      // nothing at all (no sound, no effect) — the same rule the touch bar applies
+      // by disabling these buttons for a lone card.
       if (k === "g" || k === "m") {
         const pt = this.lastPointer;
         if (!pt) return;
         // Board metrics are kept fresh by onViewportChanged; no per-key reflow.
         const top = this.topCardAtCanonicalPoint(pt.x, pt.y);
         if (!top) return;
+        const stack = findStackOverlapping(this.state, this.boardSize, top.id, this.cardMetrics());
+        if (stack.length < 2) return;
         e.preventDefault();
         if (k === "g") this.gatherAt(top.id);
         else this.shuffleAt(top.id);
@@ -688,14 +692,10 @@ export class Game {
         // Ctrl + scroll: flip the whole stack under the cursor.
         this.toggleStackFlip(top.id);
       } else {
-        // Bare scroll: flip the single card under the cursor.
-        top.faceUp = !top.faceUp;
-        this.dirtyIds.add(top.id);
-        this.scheduleFlush();
-        void this.audio.play("flip");
-        // Re-arm the hover tooltip in place so a card flipped face-up shows its
-        // info after the usual delay, without the cursor leaving and re-entering.
-        this.rearmTooltipAtPointer();
+        // Bare scroll: flip the single card under the cursor. Routes through
+        // flipCard so it gets the same clean turn animation (elevation + settle)
+        // as every other flip path.
+        this.flipCard(top.id);
       }
     }, { passive: false });
 
@@ -1004,6 +1004,10 @@ export class Game {
     if (this.isRivalOwnedCard(id) || this.isLockedByOther(id)) return;
     c.faceUp = !c.faceUp;
     this.dirtyIds.add(id);
+    // Lift the card into the animation band for the turn so it rotates cleanly
+    // above its neighbours (no one-frame z jump that lets an adjacent card clip
+    // over it) and the render loop leaves its transform alone until it settles.
+    this.elevateDuringAnim([id], FLIP_ANIM_MS);
     this.scheduleFlush();
     void this.audio.play("flip");
     this.rearmTooltipAtPointer();
@@ -1023,6 +1027,17 @@ export class Game {
     }, FLIP_ANIM_MS + 20);
   }
 
+  // One smart "flip" for the touch action bar: turn the WHOLE pile under the
+  // finger when there's more than one card there, otherwise just the single card.
+  // This matches what right-click does on desktop and is what a player expects
+  // when they flip a stack on a phone (the old bar's single-card "flip" only
+  // turned the top card).
+  private flipSmart(id: string): void {
+    const stack = findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics());
+    if (stack.length > 1) this.toggleStackFlip(id);
+    else this.flipCard(id);
+  }
+
   private toggleStackFlip(id: string): void {
     const stack = findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics());
     if (!stack.length) return;
@@ -1037,32 +1052,12 @@ export class Game {
     // reverses (the bottom card ends up on top) and every face is toggled.
     flipStackOver(this.state, stack);
     for (const cid of stack) this.dirtyIds.add(cid);
-    // Keep the whole pile floating above the table, in order, while the 3D flip
-    // plays so undercards never flash above a still-turning card.
+    // Float the whole pile, in order, while the 3D flip plays. Every card in the
+    // pile shares the same position and rotation, so the top card's opaque face
+    // covers the ones beneath at every angle of the turn — no card is hidden, so
+    // the stack turns as one solid piece and never blinks out. A single repaint
+    // when the turn settles writes the final resting z/transform.
     this.elevateDuringAnim(stack, FLIP_ANIM_MS);
-    // Real-pile flip: only the new top card (highest z after the flip) is visible
-    // mid-rotation; every other card is hidden for the WHOLE turn so no
-    // underlying face ever shows through — equally on opening (face-down → up)
-    // and closing (face-up → down). Each card flips its own CSS rotateY, so an
-    // un-hidden under-card would otherwise reveal its face as it spins.
-    if (stack.length > 1) {
-      let topId = stack[0]!;
-      let topZ = -Infinity;
-      for (const cid of stack) {
-        const c = this.state.cards.get(cid);
-        if (c && c.z > topZ) { topZ = c.z; topId = cid; }
-      }
-      for (const cid of stack) {
-        if (cid !== topId) this.cardEls.get(cid)?.classList.add("is-flip-quiet");
-      }
-      // Reveal the under-cards only AFTER the flip has fully settled and they have
-      // been repainted at rest (a small buffer past the elevate timer avoids the
-      // race where a card un-hides while its rotateY transition is still running).
-      window.setTimeout(() => {
-        this.requestRender();
-        for (const cid of stack) this.cardEls.get(cid)?.classList.remove("is-flip-quiet");
-      }, FLIP_ANIM_MS + 40);
-    }
     this.scheduleFlush();
     void this.audio.play("flip");
     this.rearmTooltipAtPointer();
@@ -1081,7 +1076,10 @@ export class Game {
 
   private gatherAt(id: string): void {
     const stack = findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics());
-    if (!stack.length) return;
+    // Gather is a multi-card action: a lone card is already "gathered". Reject
+    // silently (no sound) so a key/tap on a single card never plays a sound that
+    // does nothing — keeping the "one sound = one real action" contract.
+    if (stack.length < 2) return;
     if (this.stackBlocked(stack)) return;
     const seed = this.state.cards.get(id);
     // Square the pile up to the angle that reads upright for THIS viewer, so a
@@ -1818,8 +1816,11 @@ export class Game {
       // held-seat card is concealed from them. Crucially, a card whose owner seat is
       // now EMPTY (the player left/was kicked, or nobody ever sat there) is NOT
       // concealed — it has no private zone anymore, so it reads as a public table
-      // card that anyone can see and grab.
-      el.classList.toggle("is-concealed", this.isRivalOwnedCard(c.id));
+      // card that anyone can see and grab. Skip the toggle WHILE a turn is
+      // animating: the concealment rule forces rotateY(0), which would fight a
+      // flip mid-rotation; the very next frame after the turn settles writes the
+      // correct class.
+      if (!busy) el.classList.toggle("is-concealed", this.isRivalOwnedCard(c.id));
       // Busy indicator while a peer is holding this card.
       el.classList.toggle("is-locked", this.isLockedByOther(c.id));
     }

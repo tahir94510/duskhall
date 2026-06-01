@@ -77,7 +77,9 @@ export function findStackOverlapping(
  * gathered stack always sits on top of whatever else is on the board.
  */
 export function gatherStack(state: BoardState, ids: string[], focusNx?: number, focusNy?: number, unifyRot?: number): void {
-  if (!ids.length) return;
+  // Gather is a multi-card action; a single card is already a tidy pile of one.
+  // Mirrors shuffleStack's guard so neither op runs on a lone card.
+  if (ids.length < 2) return;
   let cx: number;
   let cy: number;
   if (focusNx !== undefined && focusNy !== undefined) {
