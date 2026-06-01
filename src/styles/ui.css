@@ -391,18 +391,20 @@
 }
 .tooltip__type {
   font-size: 10px;
-  /* A warm gold for the category label: distinct from the body, on-palette with the
-     seat/Vaerum accents, and high-contrast over the darkened scrim. */
-  color: #d9c8a4;
+  /* The category label reads as a quiet, SECONDARY line through uppercase +
+     letter-spacing + smaller size — never through colour. Kept on the ivory ramp so
+     the panel stays strictly monochrome (the app uses no decorative hue). At 6.5:1
+     over the darkened scrim it's comfortably readable yet clearly below the title. */
+  color: var(--ivory-dim);
   letter-spacing: 0.07em;
   text-transform: uppercase;
   margin-bottom: 8px;
   font-weight: 600;
 }
 .tooltip__body { font-size: 13px; color: var(--ivory); line-height: 1.55; }
-/* Flavour is the dimmest line by design (italic aside); lift it just enough off the
-   old --ivory-dim so it stays comfortably readable, never eye-straining. */
-.tooltip__flavor { margin-top: 8px; font-style: italic; color: #ccc7bb; font-size: 12px; line-height: 1.5; }
+/* Flavour shares the secondary ivory-dim tone (~6.5:1, comfortable); the italic, not a
+   different colour, sets it apart from the type label — keeping the two-tone monochrome. */
+.tooltip__flavor { margin-top: 8px; font-style: italic; color: var(--ivory-dim); font-size: 12px; line-height: 1.5; }
 
 /* Opt-in diagnostics overlay (?debug=1). Bottom-left, unobtrusive, monospace. */
 .debug-hud {
