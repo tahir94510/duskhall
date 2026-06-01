@@ -22,7 +22,7 @@ import { t, onLocaleChange } from "../i18n/index.js";
 import { getOrCreateRoom, newRoom, setRoomSlug } from "../net/room.js";
 import { showLoader, hideLoader } from "../ui/loader.js";
 import { seededDeck } from "./deck.js";
-import { seatIsRival, cardIsRivalOwned, type Occupancy } from "./occupancy.js";
+import { seatIsRival, cardIsRivalOwned, hostSeat, isHostSeat, type Occupancy } from "./occupancy.js";
 import {
   findStackOverlapping,
   gatherStack,
@@ -140,7 +140,7 @@ export class Game {
       onFlip: (id) => this.flipSmart(id),
       onGather: (id) => this.gatherAt(id),
       onMix: (id) => this.shuffleAt(id),
-      onRotate: (id) => this.rotateCard(id),
+      onRotate: (id) => this.rotateSmart(id),
       onInfo: (id) => this.showCardInfo(id),
       canShowInfo: (id) => this.canShowCardInfo(id),
       stackFor: (id) => findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics())
@@ -715,21 +715,15 @@ export class Game {
       if (this.wheelCooldown()) return;
 
       if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
-        // Shift + scroll: rotate EVERY card under the cursor (the whole stack)
-        // 90° in its own plane, by the same direction, so a pile turns together.
-        // rot is stored CUMULATIVELY so the visual rotation always continues
-        // forward instead of snapping back through modulo at 360°.
+        // Shift + scroll: turn the whole pile under the cursor 90°. rot is stored
+        // CUMULATIVELY so the visual rotation always continues forward instead of
+        // snapping back through modulo at 360°.
         const dir = e.deltaY > 0 ? 1 : -1;
         const stack = findStackOverlapping(this.state, this.boardSize, top.id, this.cardMetrics());
-        if (this.stackBlocked(stack)) { return; }
-        for (const cid of stack) {
-          const c = this.state.cards.get(cid);
-          if (!c) continue;
-          c.rot = c.rot + dir;
-          this.dirtyIds.add(cid);
-        }
-        this.scheduleFlush();
-        void this.audio.play("flip");
+        // A pile turns and aligns together; a lone card turns in place. Same
+        // helpers as the touch rotate so every input path behaves identically.
+        if (stack.length > 1) this.rotateStack(top.id, dir);
+        else this.rotateCard(top.id, dir);
       } else if (e.ctrlKey || e.metaKey) {
         // Ctrl + scroll: flip the whole stack under the cursor.
         this.toggleStackFlip(top.id);
@@ -1036,18 +1030,41 @@ export class Game {
     if (el && this.canShowCardInfo(id)) this.tooltip.showForCard(el);
   }
 
-  private rotateCard(id: string): void {
+  private rotateCard(id: string, dir = 1): void {
     const c = this.state.cards.get(id);
     if (!c) return;
     if (this.isRivalOwnedCard(id) || this.isLockedByOther(id)) return;
     // Cumulative rotation: keep adding turns so 270°→360°→450° flows forward
     // visually instead of teleporting back to 0°.
-    c.rot = c.rot + 1;
+    c.rot = c.rot + dir;
     // Interacting with a card in our own zone claims it (same as a drag-in).
     this.claimIfInOwnZone(id);
     this.dirtyIds.add(id);
     this.scheduleFlush();
     void this.audio.play("flip");
+  }
+
+  // Turn a whole pile 90° (dir = +1 / -1) like a real stack: gather onto the
+  // anchor card and square EVERY card to the new angle by the shortest path, so a
+  // ragged, mixed-angle pile aligns as it turns instead of staying crooked.
+  // gatherStack leaves faceUp untouched, so open/closed cards keep their faces.
+  private rotateStack(id: string, dir: number): void {
+    const stack = findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics());
+    if (this.stackBlocked(stack)) return;
+    const anchor = this.state.cards.get(id);
+    if (!anchor) return;
+    gatherStack(this.state, stack, anchor.x, anchor.y, anchor.rot + dir);
+    for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
+    this.scheduleFlush();
+    void this.audio.play("flip");
+  }
+
+  // Touch / single rotate dispatcher: a pile turns and aligns together; a lone
+  // card just turns in place. Mirrors flipSmart so touch and mouse agree.
+  private rotateSmart(id: string): void {
+    const stack = findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics());
+    if (stack.length > 1) this.rotateStack(id, 1);
+    else this.rotateCard(id, 1);
   }
 
   private flipCard(id: string): void {
@@ -1644,12 +1661,10 @@ export class Game {
   // (the creator, while they're here). It transfers automatically to the next
   // lowest seat when the host leaves. Only the host can kick.
   private hostSeat(): number {
-    let min = Infinity;
-    for (const s of this.activeSeats) min = Math.min(min, s);
-    return Number.isFinite(min) ? min : -1;
+    return hostSeat(this.activeSeats);
   }
   private isHost(): boolean {
-    return !this.spectator && this.claimSeat >= 0 && this.claimSeat === this.hostSeat();
+    return isHostSeat(this.claimSeat, this.activeSeats, this.spectator);
   }
 
   // A kick was broadcast. Every client acts on it, not just the target:

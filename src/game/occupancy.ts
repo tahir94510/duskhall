@@ -46,3 +46,20 @@ export function cardIsRivalOwned(
   if (!seatIsOwned(o, ownerSeat)) return false; // owner gone → public
   return spectator || ownerSeat !== selfSeat;
 }
+
+/** The host is the present player on the LOWEST active seat (the room creator
+ *  while they're here). Returns -1 when nobody is seated. Because it keys off the
+ *  lowest ACTIVE seat, the role transfers automatically the moment the current
+ *  host leaves (their seat drops out of activeSeats), and a late joiner who lands
+ *  on a higher seat is never host. Drives kick/reset-deck permissions. */
+export function hostSeat(activeSeats: Iterable<number>): number {
+  let min = Infinity;
+  for (const s of activeSeats) min = Math.min(min, s);
+  return Number.isFinite(min) ? min : -1;
+}
+
+/** Is the viewer the host? They must hold a real seat and it must be the host seat
+ *  (a spectator, seat < 0, is never host). */
+export function isHostSeat(claimSeat: number, activeSeats: Iterable<number>, spectator: boolean): boolean {
+  return !spectator && claimSeat >= 0 && claimSeat === hostSeat(activeSeats);
+}
