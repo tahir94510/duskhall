@@ -99,18 +99,21 @@
 .header__menu-row--badge { grid-template-columns: 22px 1fr auto; }
 
 /* A small, sympathetic "we're still building this, support us" note tucked under
-   the Support row. Warm amber (the same hue as the connecting status dot) with
-   dark ink text for strong contrast on the dark menu, so it reads as a friendly
-   aside rather than a system row. Non-interactive. */
+   the Support row. Restrained and on-theme: a barely-there warm tint with soft
+   warm-gold text and a hairline border, so it reads as a gentle aside rather than
+   a loud filled block. Sits flush under the Support label, wraps cleanly, and
+   stays compact on mobile. Non-interactive. */
 .header__menu-note {
-  margin: 3px 10px 5px 42px;
-  padding: 5px 9px;
-  border-radius: 9px;
+  margin: 1px 10px 4px 42px;
+  padding: 4px 9px;
+  border-radius: 8px;
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 10.5px;
   line-height: 1.4;
-  color: var(--ink);
-  background: rgba(232, 153, 58, 0.92);
+  letter-spacing: 0.01em;
+  color: #e6c79f;
+  background: rgba(232, 153, 58, 0.08);
+  border: 1px solid rgba(232, 153, 58, 0.16);
   pointer-events: none;
 }
 
