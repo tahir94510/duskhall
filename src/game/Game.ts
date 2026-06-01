@@ -27,7 +27,9 @@ import {
   findStackOverlapping,
   gatherStack,
   shuffleStack,
-  flipStackOver
+  flipStackOver,
+  alignRotation,
+  rotationsDiffer
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
@@ -48,10 +50,12 @@ const ANIM_Z_BASE = 500;
 // so the z-elevation never clears before the visual settles).
 const FLIP_ANIM_MS = 380;
 const SHUFFLE_ANIM_MS = 400;
-// Pre-stage for stack flip/shuffle: the pile first slides together and squares up
-// over this long, THEN it flips/riffles. Matches the .card transform transition so
-// the gather reads as a smooth settle before the second stage begins.
-const STACK_TIDY_MS = 170;
+// Tidy phases for stack flip/shuffle. When the pile is fanned at mixed angles we
+// first STRAIGHTEN every card to one orientation, then GATHER them into one spot,
+// then act (flip/riffle) — three smooth, ordered beats rather than all at once.
+// Each is just over the .card transform transition so one settles before the next.
+const STACK_STRAIGHTEN_MS = 150; // rotate-to-one-direction phase (skipped if already aligned)
+const STACK_TIDY_MS = 170;       // gather-into-one-pile phase
 const SS_SNAPSHOT_PREFIX = "kabal:snap:";
 const SS_SEAT_PREFIX = "kabal:seat:";
 const SS_CLIENT_ID = "kabal:cid";
@@ -1166,6 +1170,51 @@ export class Game {
     else this.flipCard(id);
   }
 
+  // Orchestrate the smooth, ORDERED tidy before a stack action (flip or shuffle):
+  //   1. STRAIGHTEN — if the cards face different ways, rotate them all to one
+  //      orientation first (no movement), so a fanned/cross-laid pile lines up.
+  //   2. GATHER — slide every card into one square pile on the anchor's spot.
+  //   3. ACT — run `act()` (flip or riffle) on the now-tidy pile.
+  // Phases that aren't needed are skipped (an already-square pile goes straight to
+  // gather; an already-tidy single-spot pile straightens in place). The pile stays
+  // elevated across all phases. `actMs` is the acting animation's length so the
+  // elevation covers it. Each phase plays its own soft cue for a clean audio flow.
+  private tidyStackThen(stack: string[], anchorId: string, act: () => void, actMs: number): void {
+    const anchor = this.state.cards.get(anchorId);
+    if (!anchor) return;
+    const target = this.viewerUprightRot(anchor.rot);
+    const needStraighten = rotationsDiffer(this.state, stack, target);
+    const gatherMs = STACK_TIDY_MS;
+    const straightenMs = needStraighten ? STACK_STRAIGHTEN_MS : 0;
+    const total = straightenMs + gatherMs + actMs;
+    this.syncTopZ();
+    this.elevateDuringAnim(stack, total);
+
+    const doGather = () => {
+      // Re-resolve the anchor's spot (it may have a fresh position) and collect.
+      const a = this.state.cards.get(anchorId) ?? anchor;
+      gatherStack(this.state, stack, a.x, a.y, this.viewerUprightRot(a.rot));
+      for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
+      this.elevateDuringAnim(stack, gatherMs + actMs);
+      this.scheduleFlush();
+      void this.audio.play("gather");
+      window.setTimeout(act, gatherMs);
+    };
+
+    if (needStraighten) {
+      // PHASE 1: straighten orientation in place (no move), then gather, then act.
+      // This phase is VISUAL only (no sound): the player hears the two events that
+      // matter — the gather swoosh and then the flip/shuffle — in a clean sequence,
+      // rather than three sounds crowding into a third of a second.
+      alignRotation(this.state, stack, target);
+      for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
+      this.scheduleFlush();
+      window.setTimeout(doGather, straightenMs);
+    } else {
+      doGather();
+    }
+  }
+
   private toggleStackFlip(id: string): void {
     const stack = findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics());
     if (!stack.length) return;
@@ -1181,27 +1230,14 @@ export class Game {
     if (this.anyAnimating(stack)) return;
     // A lone card just flips, no tidy needed.
     if (stack.length < 2) { this.performStackFlip(stack); return; }
-    // STAGE 1 — tidy: gather every card onto the top card's spot and square each to
-    // the viewer-upright angle (reusing gatherStack, the same helper G uses), so a
-    // scattered/mixed-rotation pile becomes one aligned block. The cards SLIDE
-    // together via the normal .card transform transition during the elevation, so
-    // it reads as a smooth "square the deck up by hand". A soft cue marks the tidy.
+    // The visible top card (highest z) anchors the tidy. Straighten → gather → flip.
     let topId = stack[stack.length - 1]!;
     let topZ = -Infinity;
     for (const cid of stack) {
       const c = this.state.cards.get(cid);
       if (c && c.z > topZ) { topZ = c.z; topId = cid; }
     }
-    const top = this.state.cards.get(topId);
-    if (!top) return;
-    this.syncTopZ(); // lift the gathered pile above every board card
-    gatherStack(this.state, stack, top.x, top.y, this.viewerUprightRot(top.rot));
-    for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
-    this.elevateDuringAnim(stack, STACK_TIDY_MS + FLIP_ANIM_MS);
-    this.scheduleFlush();
-    void this.audio.play("gather");
-    // STAGE 2 — after the pile has settled, turn it over as one solid block.
-    window.setTimeout(() => this.performStackFlip(stack), STACK_TIDY_MS);
+    this.tidyStackThen(stack, topId, () => this.performStackFlip(stack), FLIP_ANIM_MS);
   }
 
   // The flip itself: reverse depth order + toggle every face, then float the pile
@@ -1279,30 +1315,17 @@ export class Game {
     const seed = this.state.cards.get(id);
     if (!seed) return;
     const upright = this.viewerUprightRot(seed.rot);
-    // STAGE 1 — tidy: square every card to one direction and collect them into a
-    // single pile on the seed's spot, exactly like squaring a deck before shuffling.
-    // Cards SLIDE together and rotate into line via the normal .card transition.
-    // gatherStack also lifts the pile to a clean, contiguous z-band so the order is
-    // never ambiguous.
-    this.syncTopZ();
-    gatherStack(this.state, stack, seed.x, seed.y, upright);
-    for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
-    this.elevateDuringAnim(stack, STACK_TIDY_MS + SHUFFLE_ANIM_MS);
-    this.scheduleFlush();
-    void this.audio.play("gather");
-    // STAGE 2 — once the pile is squared up, riffle-shuffle it: randomise order and
-    // face every card down, with the wobble keyframe. The pile is already aligned,
-    // so this reads as a clean shuffle of a tidy deck.
-    window.setTimeout(() => {
-      // Re-confirm nothing changed hands during the tidy.
-      if (this.stackBlocked(stack)) return;
+    // Straighten (if angles differ) → gather into one pile → riffle-shuffle the now
+    // squared-up deck. Same ordered tidy as flip, so both feel consistent.
+    this.tidyStackThen(stack, id, () => {
+      if (this.stackBlocked(stack)) return; // re-confirm after the tidy delay
       shuffleStack(this.state, stack, upright);
       for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
       this.elevateDuringAnim(stack, SHUFFLE_ANIM_MS);
       this.applyShuffleJitter(stack); // already aligned, so just the riffle wobble
       this.scheduleFlush();
       void this.audio.play("shuffle");
-    }, STACK_TIDY_MS);
+    }, SHUFFLE_ANIM_MS);
   }
 
   // Collect every card back into a freshly shuffled face-down pile on the Deck
