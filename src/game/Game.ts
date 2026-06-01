@@ -1489,11 +1489,14 @@ export class Game {
   private flushWithAnim(ids: string[], anim: PatchAnim): void {
     const now = this.stamp();
     const cards = ids.slice(0, 200).map((id) => {
+      // Clear the dirty flag for every requested id, even one whose card vanished
+      // (a race between the gesture and a deletion), so a missing id can never
+      // linger in dirtyIds and get retried forever by the next flush.
+      this.dirtyIds.delete(id);
       const c = this.state.cards.get(id);
       if (!c) return null;
       c.ts = now;
       c.by = this.self.id;
-      this.dirtyIds.delete(id);
       return this.wireCard(c);
     }).filter((c): c is PatchCard => !!c);
     if (!cards.length) return;
