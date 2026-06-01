@@ -34,8 +34,10 @@ APP_NAME=Vaerum
 SITE_URL=https://vaerum.example
 OG_IMAGE=https://vaerum.example/assets/og.svg
 
-# Support button link
+# Support buttons (each appears in the Support dialog only when its var is set)
 SUPPORT_URL=https://your-support-page
+PATREON_URL=https://patreon.com/your-page
+BUYMEACOFFEE_URL=https://buymeacoffee.com/your-page
 NEXT_PUBLIC_APP_URL=https://vaerum.example
 
 # Feedback channels (optional; the Feedback menu row appears if either is set)
@@ -51,7 +53,8 @@ The client resolves config from three layers, first one with Supabase creds wins
    ```
    VITE_SUPABASE_URL=https://<project>.supabase.co
    VITE_SUPABASE_ANON_KEY=<public anon key>
-   # optional: VITE_APP_NAME, VITE_SITE_URL, VITE_OG_IMAGE, VITE_SUPPORT_URL
+   # optional: VITE_APP_NAME, VITE_SITE_URL, VITE_OG_IMAGE, VITE_SUPPORT_URL,
+   #           VITE_PATREON_URL, VITE_BUYMEACOFFEE_URL
    ```
    These are inlined at build, so they work in `vite dev` and on hosts without the edge function.
 2. **`/api/config`** — Vercel runtime env (the **non‑prefixed** `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `APP_NAME` / … names above). No rebuild needed to change them. **This is the production path.**

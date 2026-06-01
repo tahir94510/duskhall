@@ -19,6 +19,15 @@ describe("normalise", () => {
     expect(c.supabaseUrl).toBe("");
     expect(c.appName).toBe("");
     expect(typeof c.socialOgImage).toBe("string");
+    // The support channels default to empty strings (button hidden) when unset.
+    expect(c.patreonUrl).toBe("");
+    expect(c.buyMeACoffeeUrl).toBe("");
+  });
+
+  it("trims the support-channel URLs", () => {
+    const c = normalise({ patreonUrl: "  https://patreon.com/x \n", buyMeACoffeeUrl: " https://buymeacoffee.com/x " });
+    expect(c.patreonUrl).toBe("https://patreon.com/x");
+    expect(c.buyMeACoffeeUrl).toBe("https://buymeacoffee.com/x");
   });
 
   it("strips multiple trailing slashes but keeps the host intact", () => {

@@ -13,6 +13,9 @@ export interface BoardRefs {
   slotLayer: HTMLDivElement;
   bgLayer: HTMLDivElement;
   zones: HTMLDivElement[];
+  /** Non-rotating seat-label groups, same physical order as `zones`:
+      [bottom, top, left, right]. Each holds the name + status light + kick. */
+  labels: HTMLDivElement[];
 }
 
 export function buildTable(host: HTMLElement): BoardRefs {
@@ -45,15 +48,17 @@ export function buildTable(host: HTMLElement): BoardRefs {
   for (let i = 0; i < seats.length; i++) {
     const z = document.createElement("div");
     z.className = `${seats[i]!.cls} zone--empty`;
-    // Kick button is hidden by default; Game.refreshZones reveals it only for the
-    // host on an occupied rival seat.
-    z.innerHTML = `<div class="zone__rail"><span class="zone__name" data-role="name"></span><button class="zone__kick" type="button" data-action="kick" hidden>${ICON_CLOSE}</button></div>`;
+    // The name / status light / kick now live in the separate non-rotating label
+    // layer (built below), so the zone div is just the frosted panel.
     root.appendChild(z);
     zones.push(z);
   }
 
   const board = document.createElement("div");
   board.className = "board";
+  // The seat-label layer is a sibling of (and painted after / above) the rotating
+  // perspective, so the names/lights/kick stay upright and always above cards.
+  // Physical group order matches `zones`: [bottom, top, left, right].
   board.innerHTML = `
     <div class="board__perspective" data-role="perspective">
       <div class="board__slots" data-role="slots"></div>
@@ -62,6 +67,13 @@ export function buildTable(host: HTMLElement): BoardRefs {
         <div class="dock__slot dock__slot--deck" data-role="deck"><span class="dock__label">${escapeHtml(t("table.deck"))}</span></div>
         <div class="dock__slot dock__slot--discard" data-role="discard"><span class="dock__label">${escapeHtml(t("table.discard"))}</span></div>
       </div>
+    </div>
+    <div class="board__labels" data-role="labels">
+      ${["bottom", "top", "left", "right"].map((slot) => `
+        <div class="seat-label seat-label--${slot}">
+          <span class="seat-label__name"><i class="seat-label__dot" aria-hidden="true"></i><span class="seat-label__text" data-role="name"></span></span>
+          <button class="seat-label__kick" type="button" data-action="kick" hidden>${ICON_CLOSE}</button>
+        </div>`).join("")}
     </div>
   `;
   root.appendChild(board);
@@ -75,7 +87,8 @@ export function buildTable(host: HTMLElement): BoardRefs {
     discardSlot: board.querySelector<HTMLDivElement>('[data-role="discard"]')!,
     slotLayer: board.querySelector<HTMLDivElement>('[data-role="slots"]')!,
     bgLayer,
-    zones
+    zones,
+    labels: Array.from(board.querySelectorAll<HTMLDivElement>(".seat-label"))
   };
 
   paintSlotGrid(refs);

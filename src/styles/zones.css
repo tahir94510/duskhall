@@ -19,82 +19,11 @@
   box-shadow: inset 0 0 0 1px rgba(243, 239, 229, 0.06);
 }
 
-.zone__rail {
-  position: absolute;
-  inset: 8px 14px auto 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  pointer-events: none;
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--ivory-mute);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-/* Block + ellipsis so a long (or translated) seat name never overflows the
-   zone rail on narrow screens; the status dot rides along as an inline marker. */
-.zone__name {
-  display: block;
-  flex: 1;
-  min-width: 0;
-  max-width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Host-only kick button on an occupied rival zone rail. Frameless — just the
-   glyph — and spaced symmetrically from the zone edge so it mirrors the player
-   name at the other end of the rail (the rail already insets 14px each side). */
-.zone__kick {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  margin-left: 8px;
-  /* The 14px glyph is centred in a 20px tap target, leaving a 3px optical gap to
-     the box edge. Pull the box 3px past the rail's right inset so the glyph's
-     outer edge lands exactly on the 14px inset — mirroring the player name + dot
-     at the other end of the rail (equal margins both sides). */
-  margin-right: -3px;
-  border: 0;
-  background: transparent;
-  color: var(--ivory-dim);
-  pointer-events: auto;
-  cursor: pointer;
-  transition: color var(--dur-fast) var(--ease);
-}
-.zone__kick[hidden] { display: none; }
-.zone__kick svg { width: 14px; height: 14px; }
-.zone__kick:hover { color: #ff9a9a; }
-.zone__name::before {
-  content: "";
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.7;
-  margin-right: 8px;
-  vertical-align: middle;
-  transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
-}
-/* Presence dot: green while the player is active/connected, amber-orange while
-   they are "away" (dropped, reserved seat). Empty seats keep the neutral dot. */
-.zone--active .zone__name::before {
-  background: #46c46a;
-  opacity: 1;
-  box-shadow: 0 0 6px rgba(70, 196, 106, 0.55);
-}
-.zone--dropped .zone__name::before {
-  background: #e8993a;
-  opacity: 1;
-  box-shadow: 0 0 6px rgba(232, 153, 58, 0.5);
-}
+/* The player name, status light and host kick control no longer live inside the
+   zone panel: they render in a separate non-rotating layer above the cards (see
+   .board__labels in board.css) so a card placed in a zone can never cover them
+   and every name reads upright. The zone div itself is now purely the frosted
+   panel + its occupancy state (colour / dimming). */
 
 .zone--empty { opacity: 0.3; color: var(--ivory-mute); }
 .zone--active { color: var(--seat-color); border-color: color-mix(in oklab, var(--seat-color) 38%, transparent); opacity: 1; }

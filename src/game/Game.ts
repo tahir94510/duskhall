@@ -115,6 +115,15 @@ export class Game {
   // applyPresence so a kicked/left player can never be resurrected by that lag.
   private removedTombstones = new Map<string, number>();
   private static readonly TOMBSTONE_MS = 12000;
+  // "Away" grace: a seat whose owner dropped (closed the tab / lost the network)
+  // without sending an explicit `left` stays reserved & dimmed ONLY for this long.
+  // If they have not returned by then we vacate the seat for good — release their
+  // cards to the public table and stop showing them as "away" — so a player who
+  // truly went away never lingers forever in everyone else's view. A reconnect
+  // within the window cancels the timer and keeps their seat. Each client runs
+  // this independently and converges (claims are local; card release is LWW).
+  private awayTimers = new Map<number, number>();
+  private static readonly AWAY_GRACE_MS = 30000;
 
   constructor(deps: GameDeps) {
     this.host = deps.host;
@@ -138,7 +147,7 @@ export class Game {
     });
     this.header = new Header({
       onRules: () => { void this.audio.play("ui-open"); openRulesModal(this.modal); },
-      onSupport: () => { void this.audio.play("ui-open"); openSupportModal(this.modal, this.config.supportUrl); },
+      onSupport: () => { void this.audio.play("ui-open"); openSupportModal(this.modal, { patreonUrl: this.config.patreonUrl, buyMeACoffeeUrl: this.config.buyMeACoffeeUrl, supportUrl: this.config.supportUrl }); },
       onFeedback: () => { void this.audio.play("ui-open"); openFeedbackModal(this.modal, this.config.issuesUrl, this.config.feedbackUrl); },
       onLegal: () => { void this.audio.play("ui-open"); openLegalModal(this.modal); },
       onReset: () => { if (this.spectator) return; void this.audio.play("ui-open"); this.handleReset(); },
@@ -514,6 +523,14 @@ export class Game {
   private physicalZoneForSeat(seat: number): HTMLDivElement | null {
     const slot = localSlotForSeat(this.self.seat as Seat, seat as Seat);
     return this.refs.zones[SLOT_INDEX[slot]] ?? null;
+  }
+
+  // The non-rotating label group (name + status light + kick) for an absolute
+  // seat on THIS viewer's screen. Shares the exact physical slot mapping with
+  // physicalZoneForSeat, so the label always sits over its own zone.
+  private physicalLabelForSeat(seat: number): HTMLDivElement | null {
+    const slot = localSlotForSeat(this.self.seat as Seat, seat as Seat);
+    return this.refs.labels[SLOT_INDEX[slot]] ?? null;
   }
 
   private pointInZone(seat: number, x: number, y: number): boolean {
@@ -1313,6 +1330,10 @@ export class Game {
         }
       }
       this.refreshZones();
+      // Arm / cancel the away-grace timer per seat: a seat that is reserved by a
+      // dropped owner (claim present but not active) starts a countdown to full
+      // eviction; a seat that is active again or empty clears any pending timer.
+      this.manageAwayTimers();
       // If we're the only one here there's no peer to fetch a board from, so the
       // first-sync gate can release immediately (our local board is final).
       if (sorted.length <= 1) this.resolveFirstSync();
@@ -1333,6 +1354,46 @@ export class Game {
     for (const [id, until] of this.removedTombstones) if (until <= now) this.removedTombstones.delete(id);
   }
 
+  // Start a grace countdown for every seat that is currently "away" (a persistent
+  // claim whose owner is not present), and cancel the countdown for any seat that
+  // is active again or has become empty. When a countdown elapses the seat is
+  // vacated for good (expireSeat), so a player who really left never stays shown
+  // as "away" forever — while a quick drop+reconnect keeps their seat.
+  private manageAwayTimers(): void {
+    for (let seat = 0; seat < SEAT_COUNT; seat++) {
+      const claim = this.seatClaims.get(seat);
+      const away = !!claim && !this.activeSeats.has(seat);
+      const pending = this.awayTimers.get(seat);
+      if (away) {
+        if (pending) continue; // already counting down for this seat
+        const claimId = claim!.id;
+        const handle = window.setTimeout(() => {
+          this.awayTimers.delete(seat);
+          this.expireSeat(seat, claimId);
+        }, Game.AWAY_GRACE_MS);
+        this.awayTimers.set(seat, handle);
+      } else if (pending) {
+        window.clearTimeout(pending);
+        this.awayTimers.delete(seat);
+      }
+    }
+  }
+
+  // The away grace lapsed: if the seat is STILL held by the same dropped claim,
+  // vacate it for good. applyLeft already frees the seat, releases that seat's
+  // cards to the public table and tombstones the owner — exactly what we want.
+  private expireSeat(seat: number, claimId: string): void {
+    const claim = this.seatClaims.get(seat);
+    if (!claim || claim.id !== claimId) return; // reclaimed or already gone
+    if (this.activeSeats.has(seat)) return; // owner came back just in time
+    this.applyLeft({ id: claimId, seat });
+  }
+
+  private clearAwayTimers(): void {
+    for (const handle of this.awayTimers.values()) window.clearTimeout(handle);
+    this.awayTimers.clear();
+  }
+
   // Handle an explicit departure (leave / kick): free the seat and release every
   // card that seat owned so the table becomes public/interactable again.
   private applyLeft(l: LeftMsg): void {
@@ -1348,6 +1409,9 @@ export class Game {
     }
     this.seatClaims.delete(l.seat);
     this.activeSeats.delete(l.seat);
+    // The seat is vacated now: drop any pending away-grace countdown for it.
+    const pendingAway = this.awayTimers.get(l.seat);
+    if (pendingAway) { window.clearTimeout(pendingAway); this.awayTimers.delete(l.seat); }
     // Forget the leaver entirely so a re-evaluation can't resurrect them from a
     // stale roster (e.g. presence sync hasn't dropped them yet after a kick). The
     // tombstone makes the next applyPresence ignore their lingering presence too.
@@ -1803,22 +1867,33 @@ export class Game {
       z.classList.toggle("zone--dropped", isDropped);
       z.dataset.state = isActive ? "active" : isDropped ? "dropped" : "vacant";
 
-      const nameEl = z.querySelector<HTMLElement>('[data-role="name"]');
-      if (nameEl) {
-        let label = "";
-        if (occupant) label = occupant.id === this.self.id ? `${occupant.name}${youSuffix}` : occupant.name;
-        else if (isSelfSeat) label = `${this.self.name}${youSuffix}`;
-        else if (isDropped && claim) label = `${claim.name}${droppedSuffix}`;
-        if (nameEl.textContent !== label) nameEl.textContent = label;
-      }
+      // The name / status light / kick live in the non-rotating label layer that
+      // shares this seat's physical slot, so they stay upright and above cards.
+      const labelEl = this.physicalLabelForSeat(seat);
+      if (labelEl) {
+        labelEl.style.setProperty("--seat-color", `var(--seat-${seat})`);
+        labelEl.dataset.seat = String(seat);
+        labelEl.classList.toggle("is-empty", !isActive && !isDropped);
+        labelEl.classList.toggle("is-active", isActive);
+        labelEl.classList.toggle("is-dropped", isDropped);
 
-      // Host-only kick control, on an occupied rival seat only.
-      const kickBtn = z.querySelector<HTMLButtonElement>('[data-action="kick"]');
-      if (kickBtn) {
-        const canKick = host && !!occupant && seat !== this.self.seat;
-        kickBtn.hidden = !canKick;
-        kickBtn.dataset.seat = String(seat);
-        if (canKick && occupant) kickBtn.setAttribute("aria-label", t("kick.aria").replace("{name}", occupant.name));
+        const nameEl = labelEl.querySelector<HTMLElement>('[data-role="name"]');
+        if (nameEl) {
+          let label = "";
+          if (occupant) label = occupant.id === this.self.id ? `${occupant.name}${youSuffix}` : occupant.name;
+          else if (isSelfSeat) label = `${this.self.name}${youSuffix}`;
+          else if (isDropped && claim) label = `${claim.name}${droppedSuffix}`;
+          if (nameEl.textContent !== label) nameEl.textContent = label;
+        }
+
+        // Host-only kick control, on an occupied rival seat only.
+        const kickBtn = labelEl.querySelector<HTMLButtonElement>('[data-action="kick"]');
+        if (kickBtn) {
+          const canKick = host && !!occupant && seat !== this.self.seat;
+          kickBtn.hidden = !canKick;
+          kickBtn.dataset.seat = String(seat);
+          if (canKick && occupant) kickBtn.setAttribute("aria-label", t("kick.aria").replace("{name}", occupant.name));
+        }
       }
     }
   }
@@ -1929,6 +2004,9 @@ export class Game {
     this.patchVersion = 0;
     for (const el of this.cursorEls.values()) el.remove();
     this.cursorEls.clear();
+    // Leaving the room: cancel every pending away-grace countdown so a stale
+    // timer can't fire against the fresh room's seats.
+    this.clearAwayTimers();
     this.requestRender();
   }
 

@@ -14,17 +14,23 @@
   --field: min(
     calc(100vw - max(env(safe-area-inset-left), 10px) - max(env(safe-area-inset-right), 10px)),
     calc(100dvh - max(env(safe-area-inset-top), 10px) - max(env(safe-area-inset-bottom), 10px)),
-    880px
+    1180px
   );
   width: var(--field);
   height: var(--field);
   transform: translate(-50%, -50%);
   display: grid;
   /* Equal side columns and top/bottom rows so all four seat strips are identical
-     after any 90° rotation — the symmetry the square guarantees. */
-  grid-template-columns: minmax(64px, 19%) 1fr minmax(64px, 19%);
-  grid-template-rows: minmax(64px, 19%) 1fr minmax(64px, 19%);
-  gap: clamp(6px, 1.4vmin, 16px);
+     after any 90° rotation — the symmetry the square guarantees. Held as
+     variables so the non-rotating seat-label layer (.board__labels) can reuse the
+     EXACT same tracks/gap and stay pixel-aligned with the zones at every
+     breakpoint (mobile overrides only re-set these variables). */
+  --grid-cols: minmax(64px, 19%) 1fr minmax(64px, 19%);
+  --grid-rows: minmax(64px, 19%) 1fr minmax(64px, 19%);
+  --grid-gap: clamp(6px, 1.4vmin, 16px);
+  grid-template-columns: var(--grid-cols);
+  grid-template-rows: var(--grid-rows);
+  gap: var(--grid-gap);
   padding: clamp(6px, 1.4vmin, 16px);
 }
 
@@ -54,6 +60,115 @@
 body:not(.is-ready) .board__perspective { transition: none; }
 
 .board__perspective > * { pointer-events: auto; }
+
+/* Seat-label layer: a NON-rotating grid laid directly over the board, mirroring
+   the .table grid exactly (same tracks + gap, no padding because .board already
+   starts inside the table padding). It rides above every resting/animated card
+   (--z-seat) so a player's name, status light and the host's kick control are
+   ALWAYS visible — a card dropped into a zone can never hide them — and it does
+   NOT rotate, so every name reads upright for the local viewer while the cards
+   underneath keep the authentic per-seat rotation. */
+.board__labels {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-seat);
+  display: grid;
+  grid-template-columns: var(--grid-cols);
+  grid-template-rows: var(--grid-rows);
+  gap: var(--grid-gap);
+  pointer-events: none;
+}
+.board__labels .seat-label--bottom { grid-column: 2; grid-row: 3; }
+.board__labels .seat-label--top { grid-column: 2; grid-row: 1; }
+.board__labels .seat-label--left { grid-column: 1; grid-row: 2; }
+.board__labels .seat-label--right { grid-column: 3; grid-row: 2; }
+
+.seat-label {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  pointer-events: none;
+  color: var(--ivory-mute);
+}
+
+/* The name pill: status light + handle, kept on ONE line with an ellipsis so a
+   long or translated name never spills out of its zone. */
+.seat-label__name {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 1px 2px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.seat-label__text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seat-label__dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+  transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+/* Presence light: green while active/connected, amber while "away" (a reserved,
+   dropped seat). Empty seats keep the neutral dot. */
+.seat-label.is-active .seat-label__dot {
+  background: #46c46a;
+  opacity: 1;
+  box-shadow: 0 0 6px rgba(70, 196, 106, 0.55);
+}
+.seat-label.is-dropped .seat-label__dot {
+  background: #e8993a;
+  opacity: 1;
+  box-shadow: 0 0 6px rgba(232, 153, 58, 0.5);
+}
+.seat-label.is-active { color: var(--seat-color, var(--ivory-mute)); }
+/* An empty seat carries no name — just a faint neutral light so the seat still
+   reads as "present but unclaimed", mirroring the dimmed empty zone panel. */
+.seat-label.is-empty { opacity: 0.4; }
+.seat-label.is-dropped { opacity: 0.85; }
+
+/* Host-only kick control, the X on the OUTER long edge — mirrored opposite the
+   name so the two never share an edge. */
+.seat-label__kick {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  background: transparent;
+  color: var(--ivory-dim);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease);
+}
+.seat-label__kick[hidden] { display: none; }
+.seat-label__kick svg { width: 14px; height: 14px; }
+.seat-label__kick:hover { color: #ff9a9a; }
+
+/* Bottom / top: a WIDE strip — name centred on the inner horizontal edge, kick
+   centred on the opposite (outer) horizontal edge. They sit on different lines,
+   so they never collide whatever the name length. */
+.seat-label--bottom .seat-label__name { top: 6px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 16px); }
+.seat-label--bottom .seat-label__kick { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.seat-label--top .seat-label__name { bottom: 6px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 16px); }
+.seat-label--top .seat-label__kick { top: 4px; left: 50%; transform: translateX(-50%); }
+
+/* Left / right: a TALL strip — name centred vertically on the inner vertical
+   edge, kick centred vertically on the outer vertical edge. The name reserves
+   room for the kick (max-width) so the two never overlap on a narrow side zone. */
+.seat-label--left .seat-label__name { right: 6px; top: 50%; transform: translateY(-50%); max-width: calc(100% - 34px); }
+.seat-label--left .seat-label__kick { left: 4px; top: 50%; transform: translateY(-50%); }
+.seat-label--right .seat-label__name { left: 6px; top: 50%; transform: translateY(-50%); max-width: calc(100% - 34px); }
+.seat-label--right .seat-label__kick { right: 4px; top: 50%; transform: translateY(-50%); }
 
 /* Full-bleed, viewport-fixed background behind everything. It does NOT rotate
    with the board, so it always covers the whole screen at any seat with no
@@ -163,7 +278,15 @@ body:not(.is-ready) .board__perspective { transition: none; }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* The dock lives inside the rotating board, so the marker is angled for side /
+     top seats. Counter-rotate just the TEXT by the inverse board rotation so the
+     deck / discard label always reads upright for the local viewer, while the
+     marker box itself stays put as a drop target. */
+  transform: rotate(calc(-1 * var(--board-rot, 0deg)));
+  transform-origin: center;
+  transition: transform var(--dur-slow) var(--ease);
 }
+body:not(.is-ready) .dock__label { transition: none; }
 
 /* The marker CENTRES sit at DECK_NX / DISCARD_NX (constants.ts: 0.40 / 0.60) of
    the board, so a dealt pile (stored at those same centre fractions) lands dead

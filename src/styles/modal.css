@@ -317,7 +317,11 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   background: var(--ivory);
 }
 .support__list li strong { font-weight: 600; color: var(--ivory); }
-.support__cta { margin-top: 14px; display: flex; align-items: center; gap: 10px; }
+/* A column of full-width buttons (Patreon / Buy Me a Coffee / generic support, or
+   the feedback channels) so multiple options stack tidily and read clearly. */
+.support__cta { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+.support__cta .btn { width: 100%; height: 40px; gap: 8px; }
+.support__cta .btn svg { width: 16px; height: 16px; }
 
 /* --- Shortcuts --- */
 .shortcuts-grid {

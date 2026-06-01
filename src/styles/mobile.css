@@ -59,9 +59,12 @@
 
 @media (max-width: 760px) {
   .table {
-    grid-template-columns: minmax(86px, 14vw) 1fr minmax(86px, 14vw);
+    /* Re-set the shared grid variables (not the template directly) so the
+       non-rotating seat-label layer inherits the SAME tracks and stays aligned
+       with the zones on phones too. */
+    --grid-cols: minmax(86px, 14vw) 1fr minmax(86px, 14vw);
     /* Symmetric top/bottom so opposing players' zones match on phones too. */
-    grid-template-rows: minmax(110px, 18vh) 1fr minmax(110px, 18vh);
+    --grid-rows: minmax(110px, 18vh) 1fr minmax(110px, 18vh);
   }
   .header__menu { min-width: 200px; max-width: calc(100vw - 28px); }
   .modal { max-height: 90vh; }
@@ -106,7 +109,7 @@
    stay on screen; transient tap-to-dismiss menu items are harmless. */
 @media (hover: none) {
   .icon-btn:hover { background: rgba(22, 22, 22, 0.55); color: var(--ivory-dim); border-color: var(--line-2); }
-  .zone__kick:hover { color: var(--ivory-dim); }
+  .seat-label__kick:hover { color: var(--ivory-dim); }
 }
 
 @media (pointer: coarse) {

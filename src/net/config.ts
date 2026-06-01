@@ -1,7 +1,12 @@
 export interface RuntimeConfig {
   supabaseUrl: string;
   supabaseAnonKey: string;
+  /** Generic support / donate page (the existing "Open support page" button). */
   supportUrl: string;
+  /** Patreon page — shows a dedicated "Support on Patreon" button when set. */
+  patreonUrl: string;
+  /** Buy Me a Coffee page — shows a "Buy me a coffee" button when set. */
+  buyMeACoffeeUrl: string;
   /** GitHub Issues page for bug reports / requests (posting needs a GitHub account). */
   issuesUrl: string;
   /** Account-less feedback form (Google Form / Tally) for anyone to submit. */
@@ -21,6 +26,8 @@ export function normalise(j: Partial<RuntimeConfig>): RuntimeConfig {
     supabaseUrl: s(j.supabaseUrl).replace(/\/+$/, ""),
     supabaseAnonKey: s(j.supabaseAnonKey),
     supportUrl: s(j.supportUrl),
+    patreonUrl: s(j.patreonUrl),
+    buyMeACoffeeUrl: s(j.buyMeACoffeeUrl),
     issuesUrl: s(j.issuesUrl),
     feedbackUrl: s(j.feedbackUrl),
     appUrl: s(j.appUrl),
@@ -39,6 +46,8 @@ function fromViteEnv(): Partial<RuntimeConfig> {
     supabaseUrl: env.VITE_SUPABASE_URL,
     supabaseAnonKey: env.VITE_SUPABASE_ANON_KEY,
     supportUrl: env.VITE_SUPPORT_URL,
+    patreonUrl: env.VITE_PATREON_URL,
+    buyMeACoffeeUrl: env.VITE_BUYMEACOFFEE_URL,
     issuesUrl: env.VITE_ISSUES_URL,
     feedbackUrl: env.VITE_FEEDBACK_URL,
     appName: env.VITE_APP_NAME,
