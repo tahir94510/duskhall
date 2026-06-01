@@ -526,6 +526,23 @@ export class RealtimeBus {
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "left", payload: l } as GameMsg });
   }
 
+  /** Like sendLeft, but AWAITS the broadcast so it actually flushes before the
+   *  caller tears the channel down (disconnect on exit / room-hop). A bare
+   *  sendLeft races disconnect() — the channel is removed before the websocket
+   *  flushes the frame, so peers never get the `left` and wrongly show the
+   *  leaver "away" for the whole grace window. The local mirror is synchronous
+   *  (same-machine tabs); the remote send is raced against a short timeout so a
+   *  slow/hung socket can never freeze the exit. */
+  async sendLeftAndWait(l: LeftMsg): Promise<void> {
+    if (!withinByteCap(l)) return;
+    this.local.sendGame({ type: "left", payload: l });
+    if (!this.channel || this.status !== "online") return;
+    const send = Promise.resolve(
+      this.channel.send({ type: "broadcast", event: "game", payload: { type: "left", payload: l } as GameMsg })
+    ).catch(() => {});
+    await Promise.race([send, new Promise<void>((r) => setTimeout(r, 700))]);
+  }
+
   /** Host-only: ask a player to leave. Only the target acts on it. */
   sendKick(target: string, by: string): void {
     this.local.sendGame({ type: "kick", payload: { target, by } });

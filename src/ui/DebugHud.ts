@@ -37,8 +37,8 @@ export class DebugHud {
   markIn(): void { this.lastIn = performance.now(); }
 
   private render(): void {
-    const ago = this.lastIn ? ((performance.now() - this.lastIn) / 1000).toFixed(1) + "s" : "—";
-    const role = this.spectator ? "spectator" : this.seat >= 0 ? `seat ${this.seat}` : "—";
+    const ago = this.lastIn ? ((performance.now() - this.lastIn) / 1000).toFixed(1) + "s" : "-";
+    const role = this.spectator ? "spectator" : this.seat >= 0 ? `seat ${this.seat}` : "-";
     this.el.innerHTML =
       `<b>${this.status.toUpperCase()}</b> · ${role} · peers ${this.peers}` +
       `<br>out ${this.sent} · in p${this.recvPatch}/s${this.recvSnap}/c${this.recvCursor}` +

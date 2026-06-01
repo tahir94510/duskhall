@@ -103,6 +103,63 @@ describe("gatherStack squares the pile up", () => {
   });
 });
 
+describe("flipping a scattered, mixed-rotation pile (toggleStackFlip's sequence)", () => {
+  // toggleStackFlip now gathers+aligns the pile onto the top card BEFORE flipping
+  // it, so a scattered/odd-angle pile turns over as one solid block instead of the
+  // under-cards blinking/teleporting. This reproduces that exact state sequence.
+  it("gather-then-flip: cards share x/y, share orientation, reverse z, toggle every face", () => {
+    // Scattered positions, mixed rotations, mixed faces; "c" is the top card (z=3).
+    const st = board([
+      card("a", 0.40, 0.42, 1, 0, true),
+      card("b", 0.62, 0.58, 2, 1, false),
+      card("c", 0.51, 0.49, 3, 2, true)
+    ]);
+    const top = st.cards.get("c")!;
+    const target = top.rot; // viewer-upright stand-in: square onto the top card
+    const facesBefore = { a: true, b: false, c: true } as Record<string, boolean>;
+
+    // 1) gather onto the top card's spot + unify orientation (what the handler does)
+    gatherStack(st, ["a", "b", "c"], top.x, top.y, target);
+    // 2) turn the pile over
+    flipStackOver(st, ["a", "b", "c"]);
+
+    const tx = top.x, ty = top.y;
+    for (const id of ["a", "b", "c"]) {
+      const c = st.cards.get(id)!;
+      // collapsed into one tight, aligned block
+      expect(c.x).toBeCloseTo(tx, 9);
+      expect(c.y).toBeCloseTo(ty, 9);
+      expect(((c.rot % 4) + 4) % 4).toBe(((target % 4) + 4) % 4);
+      // every face toggled by the flip
+      expect(c.faceUp).toBe(!facesBefore[id]!);
+    }
+    // depth order reversed: the card that was on top (c) is now at the bottom
+    const za = st.cards.get("a")!.z, zb = st.cards.get("b")!.z, zc = st.cards.get("c")!.z;
+    expect(zc).toBeLessThan(zb);
+    expect(zb).toBeLessThan(za);
+  });
+
+  it("gather then flip twice = the gathered state (flip is its own inverse)", () => {
+    const st = board([
+      card("a", 0.40, 0.42, 1, 0, true),
+      card("b", 0.62, 0.58, 2, 3, false)
+    ]);
+    const top = st.cards.get("b")!;
+    gatherStack(st, ["a", "b"], top.x, top.y, top.rot);
+    const snap = ["a", "b"].map((id) => ({ ...st.cards.get(id)! }));
+    flipStackOver(st, ["a", "b"]);
+    flipStackOver(st, ["a", "b"]);
+    for (const s of snap) {
+      const c = st.cards.get(s.id)!;
+      expect(c.faceUp).toBe(s.faceUp);
+      expect(c.z).toBe(s.z);
+      expect(c.rot).toBe(s.rot);
+      expect(c.x).toBeCloseTo(s.x, 9);
+      expect(c.y).toBeCloseTo(s.y, 9);
+    }
+  });
+});
+
 describe("shuffleStack", () => {
   it("faces every card down and squares orientation by the shortest path, keeping positions", () => {
     const st = board([card("a", 0.5, 0.5, 1, 0, true), card("b", 0.5, 0.5, 2, 1, false), card("c", 0.5, 0.5, 3, 2, true)]);

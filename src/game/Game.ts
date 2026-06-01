@@ -1102,6 +1102,29 @@ export class Game {
       if (this.isRivalOwnedCard(cid)) return;
       if (this.isLockedByOther(cid)) return;
     }
+    // Find the current top card (highest z): the pile squares up onto its
+    // position and orientation, the way you'd tap a deck straight before turning
+    // it over.
+    let topId = stack[stack.length - 1]!;
+    let topZ = -Infinity;
+    for (const cid of stack) {
+      const c = this.state.cards.get(cid);
+      if (c && c.z > topZ) { topZ = c.z; topId = cid; }
+    }
+    // Tidy BEFORE the flip: gather every card onto the top card's spot and square
+    // each to the viewer-upright angle (reusing gatherStack, the same helper G
+    // uses). A scattered or mixed-rotation pile otherwise "vanishes and teleports"
+    // during the 3D turn — the under-cards are hidden (is-flip-quiet) while only
+    // the top card rotates, so any card poking out from under it just blinks. With
+    // the pile collapsed into one aligned block first, it turns over as a single
+    // solid object, like a real stack. gatherStack is a no-op for a lone card, so
+    // a single-card flip is unchanged. The cards tween to the gathered spot via
+    // their normal .card transform transition under the elevation, so it reads as
+    // a smooth settle, not a hard snap.
+    const top = this.state.cards.get(topId);
+    if (top && stack.length > 1) {
+      gatherStack(this.state, stack, top.x, top.y, this.viewerUprightRot(top.rot));
+    }
     // Turn the whole pile over like a real stack of cards: the depth order
     // reverses (the bottom card ends up on top) and every face is toggled.
     flipStackOver(this.state, stack);
@@ -1114,8 +1137,9 @@ export class Game {
     // only, never removed) prevents that without the old "disappear" blink, since
     // the top card is never hidden. One aligned timer restores them at settle.
     this.elevateDuringAnim(stack, FLIP_ANIM_MS);
-    let topId = stack[stack.length - 1]!;
-    let topZ = -Infinity;
+    // flipStackOver reverses z, so the card now on top is the one that was at the
+    // BOTTOM. Recompute the visible top so we hide exactly the under-cards.
+    topZ = -Infinity;
     for (const cid of stack) {
       const c = this.state.cards.get(cid);
       if (c && c.z > topZ) { topZ = c.z; topId = cid; }
@@ -2028,7 +2052,10 @@ export class Game {
     void this.audio.play("ui-close");
     try {
       // Leaving the current room: free our seat there before hopping over.
-      if (this.claimSeat >= 0) this.bus.sendLeft({ id: this.self.id, seat: this.claimSeat });
+      // Await the broadcast so peers actually receive the `left` before we tear
+      // the channel down — otherwise they only see a presence drop and show us
+      // "away" for the whole grace window instead of gone.
+      if (this.claimSeat >= 0) await this.bus.sendLeftAndWait({ id: this.self.id, seat: this.claimSeat });
       this.seatClaims.clear();
       await this.bus.disconnect();
       this.resetTable();
@@ -2080,7 +2107,7 @@ export class Game {
         try { localStorage.removeItem(this.identKey(this.room)); } catch {}
         // Tell peers we are LEAVING (not merely dropping): they free our seat and
         // release every card we owned so the table is interactable again.
-        if (this.claimSeat >= 0) this.bus.sendLeft({ id: this.self.id, seat: this.claimSeat });
+        if (this.claimSeat >= 0) await this.bus.sendLeftAndWait({ id: this.self.id, seat: this.claimSeat });
         this.seatClaims.clear();
         // Fresh room → fresh handle. The next visit rolls a new Vaerum name.
         resetName();

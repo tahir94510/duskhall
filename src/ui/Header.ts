@@ -85,6 +85,7 @@ export class Header {
           <span class="header__menu-label" data-i18n="ui.support">${esc(t("ui.support"))}</span>
           <span class="header__row-badge" aria-hidden="true">1</span>
         </button>
+        <p class="header__menu-note" data-i18n="ui.devNote">${esc(t("ui.devNote"))}</p>
         <button type="button" class="header__menu-row" data-action="shortcuts" role="menuitem">
           <span class="header__menu-icon">${ICON_SHORTCUTS}</span>
           <span class="header__menu-label" data-i18n="ui.shortcuts">${esc(t("ui.shortcuts"))}</span>
