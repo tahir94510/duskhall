@@ -185,6 +185,8 @@ export class Game {
     this.room = getOrCreateRoom();
     this.header.setRoom(this.room);
     this.installZoneActions();
+    // Sweep abandoned/expired kabal:* room data so storage never piles up.
+    this.pruneStaleStorage();
     // Recover a persisted identity for this room first: a player who fully closed
     // the browser (or dropped) returns with the SAME id and name and reclaims the
     // seat that is currently showing as "away", instead of grabbing a fresh one.
@@ -948,6 +950,42 @@ export class Game {
   }
 
   private identKey(room: string): string { return LS_IDENT_PREFIX + room; }
+
+  // Wipe every trace of THIS client in a room from browser storage — used on an
+  // explicit leave and on a kick, so a returning player comes back clean (a brand
+  // new presence) and nothing stale lingers to cause a duplicate/ghost. Volume,
+  // locale and other global prefs are never touched.
+  private clearRoomStorage(room: string): void {
+    try { localStorage.removeItem(this.identKey(room)); } catch {}
+    try { localStorage.removeItem(SS_SNAPSHOT_PREFIX + room); } catch {}
+    try { sessionStorage.removeItem(SS_SEAT_PREFIX + room); } catch {}
+    // Note: the livecid heartbeat is keyed by client id (not room) and our id stays
+    // live as we move to a fresh room, so it is intentionally left alone here.
+  }
+
+  // On boot, sweep expired/abandoned room data so kabal:* keys never pile up: a
+  // stale identity past its TTL, and a livecid heartbeat that hasn't beaten in a
+  // while (its tab is long gone).
+  private pruneStaleStorage(): void {
+    try {
+      const now = Date.now();
+      const dead: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (key.startsWith(LS_IDENT_PREFIX)) {
+          try {
+            const v = JSON.parse(localStorage.getItem(key) || "{}") as { ts?: number };
+            if (typeof v.ts !== "number" || now - v.ts > IDENT_TTL_MS) dead.push(key);
+          } catch { dead.push(key); }
+        } else if (key.startsWith(LIVE_CID_PREFIX)) {
+          const beat = Number(localStorage.getItem(key) || 0);
+          if (!beat || now - beat > 60000) dead.push(key); // 60s = many missed beats
+        }
+      }
+      for (const k of dead) { try { localStorage.removeItem(k); } catch {} }
+    } catch {}
+  }
 
   // Persisted room identity, used so a player who fully closed the browser (or
   // dropped) returns with the SAME id/name and reclaims their "away" seat.
@@ -1903,9 +1941,9 @@ export class Game {
     // untrusted). The host is the earliest active joiner; `by` is the kicker's id.
     if (!k.by || k.by !== this.hostId()) return;
     if (k.target === this.self.id) {
-      // Drop the persisted identity for this room so we don't reclaim the seat,
-      // then move to a fresh empty room (we become its host).
-      try { localStorage.removeItem(this.identKey(this.room)); } catch {}
+      // We were kicked: wipe ALL our data for this room so we return as a brand-new
+      // presence (and can't reclaim the seat), then move to a fresh empty room.
+      this.clearRoomStorage(this.room);
       void this.joinRoom(newRoom()).then(() => toast(t("kick.kicked")));
       return;
     }
@@ -2321,10 +2359,11 @@ export class Game {
     showLoader();
     void this.audio.play("ui-close");
     try {
-      // Leaving the current room: free our seat there before hopping over.
-      // Await the broadcast so peers actually receive the `left` before we tear
-      // the channel down — otherwise they only see a presence drop and show us
-      // "away" for the whole grace window instead of gone.
+      // Leaving the current room for another: wipe our data for the OLD room (we're
+      // deliberately leaving it) and free our seat there before hopping over. Await
+      // the broadcast so peers receive the `left` before we tear the channel down —
+      // otherwise they only see a presence drop and show us "away" for the grace.
+      this.clearRoomStorage(this.room);
       if (this.claimSeat >= 0) await this.bus.sendLeftAndWait({ id: this.self.id, seat: this.claimSeat });
       this.seatClaims.clear();
       await this.bus.disconnect();
@@ -2370,11 +2409,9 @@ export class Game {
       // loader lifts — no visible re-rotation or reshuffle.
       showLoader();
       try {
-        try { localStorage.removeItem(this.snapshotKey()); } catch {}
-        try { sessionStorage.removeItem(SS_SEAT_PREFIX + this.room); } catch {}
-        // We're leaving on purpose: drop the persisted identity for THIS room so
-        // we don't later try to reclaim a seat we deliberately vacated.
-        try { localStorage.removeItem(this.identKey(this.room)); } catch {}
+        // We're leaving on purpose: wipe ALL of our data for this room so we return
+        // as a brand-new presence and nothing stale lingers to cause a ghost.
+        this.clearRoomStorage(this.room);
         // Tell peers we are LEAVING (not merely dropping): they free our seat and
         // release every card we owned so the table is interactable again.
         if (this.claimSeat >= 0) await this.bus.sendLeftAndWait({ id: this.self.id, seat: this.claimSeat });
