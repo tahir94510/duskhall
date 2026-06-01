@@ -328,12 +328,15 @@
   left: 0;
   width: min(290px, 82vw);
   background-color: rgba(10, 10, 12, 0.96);
+  /* Art is CENTRED so the card's subject sits in the middle of the panel even
+     when the image does not fully cover it. `overflow: hidden` + border-radius
+     below clip it to the rounded panel so it never bleeds past the corners. */
   background-size: cover;
-  background-position: center top;
+  background-position: center center;
   background-repeat: no-repeat;
   border: 1px solid var(--line-2);
   border-radius: var(--r-panel);
-  padding: 13px 15px;
+  padding: 14px 16px;
   z-index: var(--z-tooltip);
   pointer-events: none;
   overflow: hidden;
@@ -345,18 +348,21 @@
 }
 .tooltip.is-visible { opacity: 1; transform: translateY(0); }
 
-/* The darkening scrim over the art: a vertical gradient that is lighter at the
-   top (so the artwork reads) and deepens toward the text block for contrast.
-   Sits BELOW the text (its own stacking via z-index) and fills the whole panel. */
+/* The darkening scrim over the art. Absolutely positioned at inset:0, it fills
+   the panel's whole padding box — the area behind every text line — so the text
+   never sits on a brighter strip outside the tint. A touch denser at top and
+   bottom so the artwork reads in the middle while every line keeps strong
+   contrast against it. */
 .tooltip__scrim {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background: linear-gradient(180deg,
-    rgba(5, 5, 7, 0.58) 0%,
-    rgba(5, 5, 7, 0.74) 42%,
-    rgba(5, 5, 7, 0.88) 100%);
+    rgba(5, 5, 7, 0.74) 0%,
+    rgba(5, 5, 7, 0.60) 30%,
+    rgba(5, 5, 7, 0.70) 70%,
+    rgba(5, 5, 7, 0.90) 100%);
 }
 /* No art: just a flat dark ground, no gradient needed. */
 .tooltip:not(.has-art) { background-image: none; }

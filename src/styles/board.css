@@ -60,6 +60,15 @@
 body:not(.is-ready) .board__perspective { transition: none; }
 
 .board__perspective > * { pointer-events: auto; }
+/* ...but the decorative scaffolding layers (slot outlines, the cards LAYER box,
+   and the deck/discard dock) must stay transparent to input. They are full-board
+   `inset:0` overlays; the dock paints LAST, so without this it would capture every
+   pointerdown/drag over the board centre (the "can't grab a card on the centre
+   crosshair" bug). Real cards re-enable pointer-events on themselves (card.css),
+   and the dock markers are purely visual drop hints, so nothing here needs input. */
+.board__perspective > .board__slots,
+.board__perspective > .board__cards,
+.board__perspective > .dock { pointer-events: none; }
 
 /* Seat-label layer: a NON-rotating grid laid directly over the board, mirroring
    the .table grid exactly (same tracks + gap, no padding because .board already

@@ -771,9 +771,11 @@ export class Game {
     return false;
   }
 
-  // Shuffle visual: cards stay exactly in place and only wobble a few degrees
-  // around their own centre, giving a riffle feel without any positional move.
-  private applyShuffleJitter(ids: string[]): void {
+  // Shuffle visual: each card rotates from its OLD angle to the squared-up angle
+  // (so a sideways card turns smoothly into place, like gather) while adding a
+  // small riffle wobble, all without any positional move. `fromRot` carries each
+  // card's pre-shuffle quarter-turn so the keyframe can start there.
+  private applyShuffleJitter(ids: string[], fromRot?: Map<string, number>): void {
     const w = this.boardSize.width;
     const h = this.boardSize.height;
     const { w: cardW, h: cardH } = this.cardMetrics();
@@ -789,6 +791,11 @@ export class Game {
       // top-left pixel cardTransform uses, so the wobble pivots in place.
       el.style.setProperty("--tx", `${c.x * w - cardW / 2}px`);
       el.style.setProperty("--ty", `${c.y * h - cardH / 2}px`);
+      // --from-rot is where the card visually starts (its OLD angle); --base-rot is
+      // the settled, squared-up angle it ends on. The keyframe eases from one to
+      // the other, so reorientation matches gather instead of snapping.
+      const startRot = fromRot?.get(id) ?? c.rot;
+      el.style.setProperty("--from-rot", `${startRot * 90}deg`);
       el.style.setProperty("--base-rot", `${c.rot * 90}deg`);
       el.style.setProperty("--a1", `${a1}deg`);
       el.style.setProperty("--a2", `${a2}deg`);
@@ -799,6 +806,7 @@ export class Game {
         el.classList.remove("is-shuffling");
         el.style.removeProperty("--tx");
         el.style.removeProperty("--ty");
+        el.style.removeProperty("--from-rot");
         el.style.removeProperty("--base-rot");
         el.style.removeProperty("--a1");
         el.style.removeProperty("--a2");
@@ -1156,13 +1164,19 @@ export class Game {
     const stack = findStackOverlapping(this.state, this.boardSize, id, this.cardMetrics());
     if (stack.length < 2) return;
     if (this.stackBlocked(stack)) return;
+    // Capture each card's CURRENT orientation BEFORE the shuffle squares the pile
+    // up, so the riffle keyframe can animate FROM the old angle TO the new one —
+    // a sideways card then rotates smoothly into place (exactly like gather),
+    // instead of snapping instantly because .is-shuffling kills the transition.
+    const fromRot = new Map<string, number>();
+    for (const cid of stack) fromRot.set(cid, this.state.cards.get(cid)?.rot ?? 0);
     // Straighten the shuffled pile to the viewer's upright angle (see gatherAt).
     const seed = this.state.cards.get(id);
     const upright = this.viewerUprightRot(seed ? seed.rot : 0);
     shuffleStack(this.state, stack, upright);
     for (const cid of stack) this.claimIfInOwnZone(cid);
     this.elevateDuringAnim(stack, SHUFFLE_ANIM_MS);
-    this.applyShuffleJitter(stack);
+    this.applyShuffleJitter(stack, fromRot);
     for (const cid of stack) this.dirtyIds.add(cid);
     this.scheduleFlush();
     void this.audio.play("shuffle");

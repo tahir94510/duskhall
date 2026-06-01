@@ -237,9 +237,9 @@ export class RealtimeBus {
     const keyNote =
       kind === "anon" ? "anon key looks valid"
       : kind === "publishable" ? "publishable key looks valid"
-      : kind === "service_role" ? "WARNING: this is the secret service_role key — use the anon or publishable key instead"
-      : kind === "secret" ? "WARNING: this looks like a secret key — use the anon or publishable key instead"
-      : "key is not a recognised Supabase browser key — re-copy the anon or publishable key";
+      : kind === "service_role" ? "WARNING: this is the secret service_role key. Use the anon or publishable key instead."
+      : kind === "secret" ? "WARNING: this looks like a secret key. Use the anon or publishable key instead."
+      : "key is not a recognised Supabase browser key. Re-copy the anon or publishable key.";
     const keyOk = kind === "anon" || kind === "publishable";
     // Show a MASKED host, not the full project URL: enough for the player to see
     // "yes, a Supabase URL arrived" without exposing the project ref to anyone
@@ -285,7 +285,7 @@ export class RealtimeBus {
     const rtOk = await this.probeRealtime(url, key);
     steps.push({
       id: "realtime", ok: rtOk,
-      detail: rtOk ? "Realtime connected — multiplayer sync is working."
+      detail: rtOk ? "Realtime connected. Multiplayer sync is working."
         : "Realtime did not connect. Confirm Realtime is enabled for the project and that no proxy is blocking the websocket."
     });
     return { ok: rtOk, steps, summary: rtOk ? "ok" : "realtime-failed" };
