@@ -358,11 +358,15 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  /* Denser, more EVEN scrim with a high alpha floor (no thin dip): bright card art
+     used to show through the old 0.60 mid-stop and drop the dim text to ~1.35:1
+     contrast (eye strain). These stops keep the art faintly visible while every
+     text line sits on a near-uniform dark ground that clears WCAG comfortably. */
   background: linear-gradient(180deg,
-    rgba(5, 5, 7, 0.74) 0%,
-    rgba(5, 5, 7, 0.60) 30%,
-    rgba(5, 5, 7, 0.70) 70%,
-    rgba(5, 5, 7, 0.90) 100%);
+    rgba(6, 6, 8, 0.90) 0%,
+    rgba(6, 6, 8, 0.82) 30%,
+    rgba(6, 6, 8, 0.86) 70%,
+    rgba(6, 6, 8, 0.96) 100%);
 }
 /* No art: just a flat dark ground, no gradient needed. */
 .tooltip:not(.has-art) { background-image: none; }
@@ -370,10 +374,13 @@
 
 /* All text rides above the scrim, with a soft shadow so it stays crisp over any
    artwork. */
+/* A tight dark halo (not a soft blur) so glyph edges stay crisp over ANY artwork
+   showing through the scrim — this is what guarantees readability without making the
+   panel pitch black. */
 .tooltip__title,
 .tooltip__type,
 .tooltip__body,
-.tooltip__flavor { position: relative; z-index: 1; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85); }
+.tooltip__flavor { position: relative; z-index: 1; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 1px rgba(0, 0, 0, 0.8); }
 
 .tooltip__title {
   font-family: var(--font-display);
@@ -384,14 +391,18 @@
 }
 .tooltip__type {
   font-size: 10px;
-  color: var(--ivory-dim);
-  letter-spacing: 0.06em;
+  /* A warm gold for the category label: distinct from the body, on-palette with the
+     seat/Vaerum accents, and high-contrast over the darkened scrim. */
+  color: #d9c8a4;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   margin-bottom: 8px;
-  font-weight: 500;
+  font-weight: 600;
 }
 .tooltip__body { font-size: 13px; color: var(--ivory); line-height: 1.55; }
-.tooltip__flavor { margin-top: 8px; font-style: italic; color: var(--ivory-dim); font-size: 12px; line-height: 1.5; }
+/* Flavour is the dimmest line by design (italic aside); lift it just enough off the
+   old --ivory-dim so it stays comfortably readable, never eye-straining. */
+.tooltip__flavor { margin-top: 8px; font-style: italic; color: #ccc7bb; font-size: 12px; line-height: 1.5; }
 
 /* Opt-in diagnostics overlay (?debug=1). Bottom-left, unobtrusive, monospace. */
 .debug-hud {

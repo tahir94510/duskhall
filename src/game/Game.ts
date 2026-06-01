@@ -22,7 +22,7 @@ import { t, onLocaleChange } from "../i18n/index.js";
 import { getOrCreateRoom, newRoom, setRoomSlug } from "../net/room.js";
 import { showLoader, hideLoader } from "../ui/loader.js";
 import { seededDeck } from "./deck.js";
-import { seatIsRival, cardIsRivalOwned, hostSeat, isHostSeat, type Occupancy } from "./occupancy.js";
+import { seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, type Occupancy, type HostCandidate, type SeatClaimEntry } from "./occupancy.js";
 import {
   findStackOverlapping,
   gatherStack,
@@ -75,6 +75,7 @@ const LIVE_CID_PREFIX = "kabal:livecid:";
 // seat — exactly the persistence the table promises. Kept fresh for 24h.
 const LS_IDENT_PREFIX = "kabal:ident:";
 const IDENT_TTL_MS = 24 * 60 * 60 * 1000;
+const SNAPSHOT_TTL_MS = 12 * 60 * 60 * 1000; // a saved board restores only within 12h
 
 interface RoomIdentity { id: string; name: string; seat: number; ts: number; }
 
@@ -116,6 +117,9 @@ export class Game {
   // so a still table costs nothing instead of churning every frame.
   private renderRequested = true;
   private lastPointer: { x: number; y: number } | null = null;
+  // Pointer type of the last move, so flip/rotate can avoid re-arming the HOVER
+  // tooltip on touch (where info is reached only via the ContextBar Info button).
+  private lastPointerType = "mouse";
   private boardSize = { width: 1, height: 1 };
   private spectator = false;
   private cursorHiddenSent = false;
@@ -131,7 +135,11 @@ export class Game {
   // so a presence "sync" can briefly re-list them; we ignore tombstoned ids in
   // applyPresence so a kicked/left player can never be resurrected by that lag.
   private removedTombstones = new Map<string, number>();
-  private static readonly TOMBSTONE_MS = 12000;
+  // Must exceed AWAY_GRACE_MS: a kicked/left client that is OFFLINE can linger in
+  // Supabase presenceState() until its untrack is processed. If the tombstone
+  // expired before the away grace, a lagging presence sync would resurrect their
+  // claim as "away". Keeping it longer than the grace closes that window for good.
+  private static readonly TOMBSTONE_MS = 35000;
   // "Away" grace: a seat whose owner dropped (closed the tab / lost the network)
   // without sending an explicit `left` stays reserved & dimmed ONLY for this long.
   // If they have not returned by then we vacate the seat for good — release their
@@ -171,6 +179,7 @@ export class Game {
       onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio, () => this.onLocale()); },
       onShortcuts: () => { void this.audio.play("ui-open"); openShortcutsModal(this.modal); },
       onJoinRoom: (code) => { void this.joinRoom(code); },
+      onPasteJoin: (code) => { this.confirmJoinRoom(code); },
       onDiagnose: () => { void this.audio.play("ui-open"); openDiagnosticsModal(this.modal, this.bus); }
     });
     document.body.appendChild(this.header.el);
@@ -181,6 +190,8 @@ export class Game {
     this.room = getOrCreateRoom();
     this.header.setRoom(this.room);
     this.installZoneActions();
+    // Sweep abandoned/expired kabal:* room data so storage never piles up.
+    this.pruneStaleStorage();
     // Recover a persisted identity for this room first: a player who fully closed
     // the browser (or dropped) returns with the SAME id and name and reclaims the
     // seat that is currently showing as "away", instead of grabbing a fresh one.
@@ -742,6 +753,7 @@ export class Game {
 
     window.addEventListener("pointermove", (e) => {
       this.lastPointer = { x: e.clientX, y: e.clientY };
+      this.lastPointerType = e.pointerType || "mouse";
     }, { passive: true });
 
     // Wheel interactions. A single global cooldown means every tick behaves
@@ -945,6 +957,49 @@ export class Game {
 
   private identKey(room: string): string { return LS_IDENT_PREFIX + room; }
 
+  // Wipe every trace of THIS client in a room from browser storage — used on an
+  // explicit leave and on a kick, so a returning player comes back clean (a brand
+  // new presence) and nothing stale lingers to cause a duplicate/ghost. Volume,
+  // locale and other global prefs are never touched.
+  private clearRoomStorage(room: string): void {
+    try { localStorage.removeItem(this.identKey(room)); } catch {}
+    try { localStorage.removeItem(SS_SNAPSHOT_PREFIX + room); } catch {}
+    try { sessionStorage.removeItem(SS_SEAT_PREFIX + room); } catch {}
+    // Note: the livecid heartbeat is keyed by client id (not room) and our id stays
+    // live as we move to a fresh room, so it is intentionally left alone here.
+  }
+
+  // On boot, sweep expired/abandoned room data so kabal:* keys never pile up: a
+  // stale identity past its TTL, and a livecid heartbeat that hasn't beaten in a
+  // while (its tab is long gone).
+  private pruneStaleStorage(): void {
+    try {
+      const now = Date.now();
+      const dead: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (key.startsWith(LS_IDENT_PREFIX)) {
+          try {
+            const v = JSON.parse(localStorage.getItem(key) || "{}") as { ts?: number };
+            if (typeof v.ts !== "number" || now - v.ts > IDENT_TTL_MS) dead.push(key);
+          } catch { dead.push(key); }
+        } else if (key.startsWith(SS_SNAPSHOT_PREFIX)) {
+          // Snapshots restore only within 12h (see tryRestoreSnapshot); drop older
+          // ones so a player who visits many rooms doesn't accumulate MBs of state.
+          try {
+            const v = JSON.parse(localStorage.getItem(key) || "{}") as { ts?: number };
+            if (typeof v.ts !== "number" || now - v.ts > SNAPSHOT_TTL_MS) dead.push(key);
+          } catch { dead.push(key); }
+        } else if (key.startsWith(LIVE_CID_PREFIX)) {
+          const beat = Number(localStorage.getItem(key) || 0);
+          if (!beat || now - beat > 60000) dead.push(key); // 60s = many missed beats
+        }
+      }
+      for (const k of dead) { try { localStorage.removeItem(k); } catch {} }
+    } catch {}
+  }
+
   // Persisted room identity, used so a player who fully closed the browser (or
   // dropped) returns with the SAME id/name and reclaims their "away" seat.
   private readIdentity(room: string): RoomIdentity | null {
@@ -1059,7 +1114,7 @@ export class Game {
       if (!raw) return false;
       const data = JSON.parse(raw) as { v: number; ts: number; cards: Array<Partial<CardState>> };
       if (!Array.isArray(data.cards) || data.cards.length === 0) return false;
-      if (Date.now() - data.ts > 12 * 60 * 60 * 1000) return false; // 12h freshness
+      if (Date.now() - data.ts > SNAPSHOT_TTL_MS) return false; // 12h freshness
       let z = 1;
       for (const c of data.cards) {
         if (!c.id || !c.defId) continue;
@@ -1176,9 +1231,13 @@ export class Game {
   private rearmTooltipAtPointer(): void {
     const pt = this.lastPointer;
     if (!pt) return;
+    // Hover info is a mouse affordance only. On touch (no hover), the panel must be
+    // reached solely via the ContextBar Info button — re-arming it here would pop a
+    // stale, mis-positioned box after a tap-flip. Skip touch/pen entirely.
+    if (this.lastPointerType === "touch" || this.lastPointerType === "pen") return;
     window.setTimeout(() => {
       const p = this.lastPointer;
-      if (p) this.tooltip.probeAt(p.x, p.y);
+      if (p) this.tooltip.probeAt(p.x, p.y, this.lastPointerType);
     }, FLIP_ANIM_MS + 20);
   }
 
@@ -1571,35 +1630,34 @@ export class Game {
       // area reserved when an unrelated seat opens (e.g. someone is kicked), so
       // a kick never collaterally evicts other away players.
       const presentIds = new Set(sorted.map((q) => q.id));
+      // Pure, tested seat resolution: dedupes one seat per id (kills the away-ghost
+      // duplicate on return), reclaims a returning player's own free seat, never
+      // seats a tombstoned (kicked/left) id, and never auto-seats a pure spectator.
+      const byId = new Map(sorted.map((p) => [p.id, p]));
+      const claimList: SeatClaimEntry[] = [...this.seatClaims].map(([seat, c]) => ({ seat, id: c.id }));
+      const seating = resolveSeating(
+        sorted.map((p) => ({ id: p.id, seat: p.seat, joinedAt: p.joinedAt })),
+        claimList,
+        this.removedTombstones,
+        SEAT_COUNT
+      );
       const bySeat = new Map<number, PresencePlayer>();
-      const unseated: PresencePlayer[] = [];
-      for (const p of sorted) {
-        const want = typeof p.seat === "number" && p.seat >= 0 && p.seat < SEAT_COUNT ? p.seat : -1;
-        if (want >= 0 && !bySeat.has(want)) bySeat.set(want, p);
-        else unseated.push(p);
-      }
-      for (const p of unseated) {
-        let free = -1;
-        for (let s = 0; s < SEAT_COUNT; s++) {
-          if (bySeat.has(s)) continue;
-          const claim = this.seatClaims.get(s);
-          if (claim && !presentIds.has(claim.id)) continue; // reserved by an away player
-          free = s;
-          break;
-        }
-        if (free >= 0) bySeat.set(free, p); // else: spectator (no seat)
-      }
-      const resolved = new Map<string, number>();
-      for (const [seat, p] of bySeat) resolved.set(p.id, seat);
+      for (const [seat, id] of seating.bySeat) { const p = byId.get(id); if (p) bySeat.set(seat, p); }
+      const resolved = seating.resolved;
 
-      // 2) Present seated players (re)assert their persistent claim. Absent
-      // claimants are left in place → their seat reads as "dropped".
+      // 2) Rebuild claims to EXACTLY match the resolved seating: a present player owns
+      // their resolved seat; a seat with no present owner keeps its away claim UNLESS
+      // that claim's id is now seated elsewhere or tombstoned (no duplicate/ghost).
       this.activeSeats = new Set(bySeat.keys());
+      const seatedIds = new Set([...bySeat.values()].map((p) => p.id));
       for (const [seat, p] of bySeat) this.seatClaims.set(seat, { id: p.id, name: p.name, joinedAt: p.joinedAt });
-      // Drop any claim now held by a DIFFERENT present id (id changed seats).
-      for (const [seat, claim] of this.seatClaims) {
-        const occupant = bySeat.get(seat);
-        if (occupant && occupant.id !== claim.id) this.seatClaims.set(seat, { id: occupant.id, name: occupant.name, joinedAt: occupant.joinedAt });
+      for (const [seat, claim] of [...this.seatClaims]) {
+        if (this.activeSeats.has(seat)) continue; // owned by a present player, fine
+        // An away claim is kept only if its owner isn't tombstoned and isn't now
+        // seated on another seat (which would make this an id-duplicate ghost).
+        if (this.removedTombstones.has(claim.id) || seatedIds.has(claim.id)) {
+          this.seatClaims.delete(seat);
+        }
       }
 
       // 3) Publish the roster with resolved seats for labels/colours.
@@ -1863,14 +1921,29 @@ export class Game {
     if (this.self.seat === Math.min(...otherSeats)) this.sendSnapshot();
   }
 
-  // The host is the room's "owner": the present player on the lowest active seat
-  // (the creator, while they're here). It transfers automatically to the next
-  // lowest seat when the host leaves. Only the host can kick.
-  private hostSeat(): number {
-    return hostSeat(this.activeSeats);
+  // The host is the room's "owner": the present, seated player who has been here the
+  // LONGEST (earliest joinedAt). It transfers to the next-oldest present player the
+  // moment the host leaves, and a returning ex-host can never steal it back (their
+  // reconnect gives them a newer joinedAt). Only the host can kick / reset the deck.
+  private hostCandidates(): HostCandidate[] {
+    const out: HostCandidate[] = [];
+    for (const p of this.players.values()) {
+      if (p.seat >= 0 && this.activeSeats.has(p.seat)) {
+        out.push({ id: p.id, joinedAt: p.joinedAt, seat: p.seat });
+      }
+    }
+    // Our own presence may not be in `players` yet on the very first paint; include
+    // self when seated so isHost() is correct immediately.
+    if (!this.spectator && this.claimSeat >= 0 && !out.some((c) => c.id === this.self.id)) {
+      out.push({ id: this.self.id, joinedAt: this.selfJoinedAt, seat: this.claimSeat });
+    }
+    return out;
+  }
+  private hostId(): string {
+    return hostId(this.hostCandidates());
   }
   private isHost(): boolean {
-    return isHostSeat(this.claimSeat, this.activeSeats, this.spectator);
+    return isHost(this.self.id, this.hostCandidates(), this.spectator);
   }
 
   // A kick was broadcast. Every client acts on it, not just the target:
@@ -1882,13 +1955,12 @@ export class Game {
   private handleKicked(k: KickMsg): void {
     // Only honour a kick issued by the current host. This blocks a forged kick from
     // a non-host peer (the kick button is host-only in the UI, but the channel is
-    // untrusted). The host is the lowest active seat; `by` is the kicker's id.
-    const bySeat = this.seatOfId(k.by);
-    if (bySeat < 0 || bySeat !== this.hostSeat()) return;
+    // untrusted). The host is the earliest active joiner; `by` is the kicker's id.
+    if (!k.by || k.by !== this.hostId()) return;
     if (k.target === this.self.id) {
-      // Drop the persisted identity for this room so we don't reclaim the seat,
-      // then move to a fresh empty room (we become its host).
-      try { localStorage.removeItem(this.identKey(this.room)); } catch {}
+      // We were kicked: wipe ALL our data for this room so we return as a brand-new
+      // presence (and can't reclaim the seat), then move to a fresh empty room.
+      this.clearRoomStorage(this.room);
       void this.joinRoom(newRoom()).then(() => toast(t("kick.kicked")));
       return;
     }
@@ -2294,6 +2366,22 @@ export class Game {
     }
   }
 
+  // A pasted code/link resolved to `code`: confirm the switch with a clear modal
+  // (consistent with every other room-changing action) before leaving this table.
+  private confirmJoinRoom(code: string): void {
+    if (!code || code === this.room) return;
+    void this.audio.play("ui-open");
+    openConfirm(
+      this.modal,
+      {
+        title: t("pasteJoin.title"),
+        body: t("pasteJoin.body").replace("{code}", code),
+        confirmLabel: t("pasteJoin.confirm")
+      },
+      () => { void this.joinRoom(code); }
+    );
+  }
+
   // Switch to a different room by code, behind the loading screen, without a
   // page reload. Mirrors the first-join logic: restore a fresh-enough local
   // snapshot for that room if we have one, otherwise lay out a fresh deck; a
@@ -2304,10 +2392,11 @@ export class Game {
     showLoader();
     void this.audio.play("ui-close");
     try {
-      // Leaving the current room: free our seat there before hopping over.
-      // Await the broadcast so peers actually receive the `left` before we tear
-      // the channel down — otherwise they only see a presence drop and show us
-      // "away" for the whole grace window instead of gone.
+      // Leaving the current room for another: wipe our data for the OLD room (we're
+      // deliberately leaving it) and free our seat there before hopping over. Await
+      // the broadcast so peers receive the `left` before we tear the channel down —
+      // otherwise they only see a presence drop and show us "away" for the grace.
+      this.clearRoomStorage(this.room);
       if (this.claimSeat >= 0) await this.bus.sendLeftAndWait({ id: this.self.id, seat: this.claimSeat });
       this.seatClaims.clear();
       await this.bus.disconnect();
@@ -2353,11 +2442,9 @@ export class Game {
       // loader lifts — no visible re-rotation or reshuffle.
       showLoader();
       try {
-        try { localStorage.removeItem(this.snapshotKey()); } catch {}
-        try { sessionStorage.removeItem(SS_SEAT_PREFIX + this.room); } catch {}
-        // We're leaving on purpose: drop the persisted identity for THIS room so
-        // we don't later try to reclaim a seat we deliberately vacated.
-        try { localStorage.removeItem(this.identKey(this.room)); } catch {}
+        // We're leaving on purpose: wipe ALL of our data for this room so we return
+        // as a brand-new presence and nothing stale lingers to cause a ghost.
+        this.clearRoomStorage(this.room);
         // Tell peers we are LEAVING (not merely dropping): they free our seat and
         // release every card we owned so the table is interactable again.
         if (this.claimSeat >= 0) await this.bus.sendLeftAndWait({ id: this.self.id, seat: this.claimSeat });

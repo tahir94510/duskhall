@@ -118,6 +118,11 @@
     "body": "You will leave this room and a fresh one opens with a new link, with you as its host. Any cards you owned here are released to the other players.",
     "leave": "Exit"
   },
+  "pasteJoin": {
+    "title": "Switch room?",
+    "body": "Join room {code}? You will leave your current table.",
+    "confirm": "Join room"
+  },
   "settings": {
     "title": "Settings",
     "master": "Master",

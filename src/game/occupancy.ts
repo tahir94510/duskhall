@@ -47,19 +47,124 @@ export function cardIsRivalOwned(
   return spectator || ownerSeat !== selfSeat;
 }
 
-/** The host is the present player on the LOWEST active seat (the room creator
- *  while they're here). Returns -1 when nobody is seated. Because it keys off the
- *  lowest ACTIVE seat, the role transfers automatically the moment the current
- *  host leaves (their seat drops out of activeSeats), and a late joiner who lands
- *  on a higher seat is never host. Drives kick/reset-deck permissions. */
-export function hostSeat(activeSeats: Iterable<number>): number {
-  let min = Infinity;
-  for (const s of activeSeats) min = Math.min(min, s);
-  return Number.isFinite(min) ? min : -1;
+/** A present, seated player for host selection. `joinedAt` is the epoch-ms when this
+ *  client first joined the room (fresh on every (re)connect), so a returning player
+ *  always has a LATER joinedAt than anyone who stayed. */
+export interface HostCandidate {
+  id: string;
+  joinedAt: number;
+  seat: number;
 }
 
-/** Is the viewer the host? They must hold a real seat and it must be the host seat
- *  (a spectator, seat < 0, is never host). */
-export function isHostSeat(claimSeat: number, activeSeats: Iterable<number>, spectator: boolean): boolean {
-  return !spectator && claimSeat >= 0 && claimSeat === hostSeat(activeSeats);
+/** The host is the present, seated player who has been here the LONGEST — the
+ *  smallest `joinedAt`, ties broken by id so every client agrees. Returns "" when
+ *  nobody is seated. Keying off continuous presence (not seat number) means the role
+ *  transfers to the next-oldest present player the moment the host leaves, AND a
+ *  returning ex-host can never steal it back (their reconnect gives them a newer
+ *  joinedAt). Drives kick / reset-deck permissions. */
+export function hostId(active: Iterable<HostCandidate>): string {
+  let best: HostCandidate | null = null;
+  for (const c of active) {
+    if (c.seat < 0) continue; // spectators never host
+    if (!best || c.joinedAt < best.joinedAt || (c.joinedAt === best.joinedAt && c.id < best.id)) {
+      best = c;
+    }
+  }
+  return best ? best.id : "";
+}
+
+/** Is `selfId` the host? They must be a seated (non-spectator) present player and be
+ *  the earliest joiner. */
+export function isHost(selfId: string, active: Iterable<HostCandidate>, spectator: boolean): boolean {
+  if (spectator) return false;
+  return selfId !== "" && hostId(active) === selfId;
+}
+
+// ---- Seat resolution --------------------------------------------------------
+// The single, pure, testable rule for "who sits where" each presence sync. It
+// fixes the duplicate-on-return and lingering-away bugs and honours the product
+// rules: a returning player reclaims their own seat if free else any free seat; a
+// kicked/left (tombstoned) id is never seated; an existing spectator is NOT pulled
+// into a freed seat (only someone who actually wants a seat takes one).
+
+export interface RosterEntry {
+  id: string;
+  /** The seat this client published it wants/holds (-1 = none / spectator). */
+  seat: number;
+  joinedAt: number;
+}
+export interface SeatClaimEntry { seat: number; id: string; }
+
+export interface SeatingResult {
+  /** seat -> id, for the present players who hold a seat this sync. */
+  bySeat: Map<number, string>;
+  /** id -> seat for everyone present (seat -1 = spectator). */
+  resolved: Map<string, number>;
+}
+
+/**
+ * Resolve seats for one presence sync.
+ *  - `roster` is the present clients (already tombstone-filtered by the caller is
+ *    fine, but we also skip tombstoned ids defensively).
+ *  - `claims` are the persistent seat claims (incl. away players' reserved seats).
+ *  - A seat reserved by an AWAY claim (claim id not present) is NOT free.
+ *  - Priority per present, non-tombstoned client: (1) the seat it published if free;
+ *    (2) its OWN existing claimed seat if free (so a returning dropped player gets
+ *    its old spot back); (3) for a client that WANTS a seat (published seat>=0 but it
+ *    was taken) the lowest free seat; (4) else spectator. A client that published
+ *    seat -1 AND holds no claim stays a spectator (never auto-seated).
+ */
+export function resolveSeating(
+  roster: RosterEntry[],
+  claims: SeatClaimEntry[],
+  tombstones: { has(id: string): boolean },
+  seatCount: number
+): SeatingResult {
+  const present = roster.filter((p) => !tombstones.has(p.id));
+  const presentIds = new Set(present.map((p) => p.id));
+  // The seat each id currently claims (if any).
+  const claimOf = new Map<string, number>();
+  for (const c of claims) if (!claimOf.has(c.id)) claimOf.set(c.id, c.seat);
+  const bySeat = new Map<number, string>();
+
+  const seatReservedAway = (s: number): boolean => {
+    const c = claims.find((x) => x.seat === s);
+    return !!c && !presentIds.has(c.id); // an away owner still reserves it
+  };
+  const firstFree = (): number => {
+    for (let s = 0; s < seatCount; s++) {
+      if (bySeat.has(s)) continue;
+      if (seatReservedAway(s)) continue;
+      return s;
+    }
+    return -1;
+  };
+
+  // Pass 1: honour a published seat that is free.
+  const deferred: RosterEntry[] = [];
+  for (const p of present) {
+    const want = p.seat >= 0 && p.seat < seatCount ? p.seat : -1;
+    if (want >= 0 && !bySeat.has(want)) bySeat.set(want, p.id);
+    else deferred.push(p);
+  }
+  // Pass 2: a deferred client takes its OWN claimed seat if free, else (only if it
+  // actually wanted a seat) the lowest free seat. A pure spectator (no wanted seat,
+  // no claim) is left unseated.
+  for (const p of deferred) {
+    // A client that did NOT publish a seat is a spectator and stays one — even if a
+    // stale claim lingers, we never pull a watcher back into a seat.
+    if (p.seat < 0) continue;
+    const ownClaim = claimOf.get(p.id);
+    if (ownClaim !== undefined && ownClaim >= 0 && ownClaim < seatCount && !bySeat.has(ownClaim)) {
+      bySeat.set(ownClaim, p.id); // returning player reclaims their own free seat
+      continue;
+    }
+    const free = firstFree();
+    if (free >= 0) bySeat.set(free, p.id);
+  }
+
+  const resolved = new Map<string, number>();
+  for (const p of present) resolved.set(p.id, -1);
+  for (const [seat, id] of bySeat) resolved.set(id, seat);
+  return { bySeat, resolved };
 }

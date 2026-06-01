@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { seatIsOwned, seatIsRival, cardIsRivalOwned, hostSeat, isHostSeat, type Occupancy } from "./occupancy.js";
+import { seatIsOwned, seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, type Occupancy, type HostCandidate, type RosterEntry } from "./occupancy.js";
 
 // These rules decide whether a seat's on-screen area is a player's private zone or
 // open public table, and whether a card can be touched. The bugs they fix: empty
@@ -94,29 +94,103 @@ describe("kick/leave transition: a left seat releases its cards to the table", (
   });
 });
 
-describe("host = lowest active seat; transfers on leave; late joiner never host", () => {
-  it("the lowest active seat is the host", () => {
-    expect(hostSeat(new Set([0, 1, 2]))).toBe(0);
-    expect(hostSeat(new Set([2, 3]))).toBe(2); // creator on seat 0/1 gone → seat 2 hosts
+describe("host = earliest active joiner; transfers on leave; returnee never steals it", () => {
+  const C = (id: string, joinedAt: number, seat: number): HostCandidate => ({ id, joinedAt, seat });
+
+  it("the earliest joiner is the host (NOT the lowest seat)", () => {
+    // Creator joined first but sits on seat 2; a later joiner holds seat 0.
+    const active = [C("creator", 1000, 2), C("late", 2000, 0)];
+    expect(hostId(active)).toBe("creator"); // earliest, regardless of seat number
   });
-  it("returns -1 when nobody is seated", () => {
-    expect(hostSeat(new Set())).toBe(-1);
+  it("returns '' when nobody is seated", () => {
+    expect(hostId([])).toBe("");
+    expect(hostId([C("spec", 1000, -1)])).toBe(""); // a lone spectator hosts nothing
   });
-  it("transfers to the next lowest seat the moment the host leaves", () => {
-    let active = new Set([0, 1, 2]);
-    expect(hostSeat(active)).toBe(0);
-    // Host on seat 0 leaves → drops out of activeSeats.
-    active = new Set([1, 2]);
-    expect(hostSeat(active)).toBe(1); // role moved to seat 1, no manual handoff
+  it("transfers to the next-oldest present player when the host leaves", () => {
+    let active = [C("a", 1000, 0), C("b", 1500, 1), C("c", 2000, 2)];
+    expect(hostId(active)).toBe("a");
+    active = active.filter((c) => c.id !== "a"); // host a leaves
+    expect(hostId(active)).toBe("b"); // role moves to the next-oldest, no handoff
   });
-  it("isHostSeat: only the player on the host seat is host", () => {
-    const active = new Set([1, 2, 3]); // seat 0 empty, so seat 1 hosts
-    expect(isHostSeat(1, active, false)).toBe(true);  // seat-1 player is host
-    expect(isHostSeat(2, active, false)).toBe(false); // a later joiner is NOT host
-    expect(isHostSeat(3, active, false)).toBe(false);
+  it("a returning ex-host does NOT regain host (their reconnect = newer joinedAt)", () => {
+    // a (oldest) leaves → b is host. a returns with a FRESH joinedAt (now the latest).
+    const afterReturn = [C("b", 1500, 1), C("c", 2000, 2), C("a", 9000, 0)];
+    expect(hostId(afterReturn)).toBe("b"); // b keeps host; a sitting on seat 0 can't steal it
   });
-  it("a spectator (claimSeat < 0) is never host", () => {
-    expect(isHostSeat(-1, new Set([0, 1]), true)).toBe(false);
-    expect(isHostSeat(0, new Set([0, 1]), true)).toBe(false); // spectator flag wins
+  it("ties on joinedAt break by id so all clients agree", () => {
+    expect(hostId([C("zeta", 1000, 0), C("alpha", 1000, 1)])).toBe("alpha");
+  });
+  it("isHost: only the earliest joiner is host; spectators never are", () => {
+    const active = [C("a", 1000, 0), C("b", 2000, 1)];
+    expect(isHost("a", active, false)).toBe(true);
+    expect(isHost("b", active, false)).toBe(false);
+    expect(isHost("a", active, true)).toBe(false); // spectator flag wins
+    expect(isHost("", active, false)).toBe(false);
+  });
+});
+
+describe("resolveSeating: dedupe, own-seat reclaim, tombstone, no spectator auto-seat", () => {
+  const R = (id: string, seat: number, joinedAt = 1000): RosterEntry => ({ id, seat, joinedAt });
+  const noTomb = { has: () => false };
+
+  it("a returning DROPPED player reclaims their OWN seat when it's free", () => {
+    // 'ret' published seat 0 (their old seat); it's free → they get it back.
+    const roster: RosterEntry[] = [R("a", 1), R("ret", 0)];
+    const claims = [{ seat: 1, id: "a" }, { seat: 0, id: "ret" }];
+    const { resolved } = resolveSeating(roster, claims, noTomb, 4);
+    expect(resolved.get("ret")).toBe(0);
+    expect(resolved.get("a")).toBe(1);
+  });
+
+  it("when the old seat is TAKEN, the returner gets another free seat — NO duplicate id", () => {
+    // 'ret' wants seat 0 but 'new' already holds it; ret falls to a free seat (2 or 3).
+    const roster: RosterEntry[] = [R("new", 0), R("a", 1), R("ret", 0)];
+    const claims = [{ seat: 0, id: "new" }, { seat: 1, id: "a" }, { seat: 0, id: "ret" }];
+    const { resolved, bySeat } = resolveSeating(roster, claims, noTomb, 4);
+    expect(resolved.get("new")).toBe(0);
+    const retSeat = resolved.get("ret")!;
+    expect(retSeat).toBeGreaterThanOrEqual(2); // a fresh free seat, not 0
+    // ret appears on exactly ONE seat (no away-ghost duplicate of the same id)
+    const seatsForRet = [...bySeat.entries()].filter(([, id]) => id === "ret").map(([s]) => s);
+    expect(seatsForRet).toEqual([retSeat]);
+  });
+
+  it("a tombstoned (kicked/left) id is never seated", () => {
+    const roster: RosterEntry[] = [R("a", 0), R("ghost", 1)];
+    const claims = [{ seat: 0, id: "a" }, { seat: 1, id: "ghost" }];
+    const { resolved, bySeat } = resolveSeating(roster, claims, { has: (id) => id === "ghost" }, 4);
+    expect(resolved.has("ghost")).toBe(false);
+    expect([...bySeat.values()]).not.toContain("ghost");
+  });
+
+  it("an existing SPECTATOR (no wanted seat, no claim) is NOT auto-seated when a seat is free", () => {
+    // 'spec' published seat -1 and holds no claim; seats 1-3 are free, but spec stays out.
+    const roster: RosterEntry[] = [R("a", 0), R("spec", -1)];
+    const claims = [{ seat: 0, id: "a" }];
+    const { resolved } = resolveSeating(roster, claims, noTomb, 4);
+    expect(resolved.get("spec")).toBe(-1); // still a spectator
+  });
+
+  it("a SPECTATOR holding a STALE claim still stays a spectator (no auto-reseat)", () => {
+    // 'spec' published seat -1 but a stale claim on seat 2 lingers; must NOT be reseated.
+    const roster: RosterEntry[] = [R("a", 0), R("spec", -1)];
+    const claims = [{ seat: 0, id: "a" }, { seat: 2, id: "spec" }];
+    const { resolved } = resolveSeating(roster, claims, noTomb, 4);
+    expect(resolved.get("spec")).toBe(-1); // own-claim ignored when not seated
+  });
+
+  it("a seat reserved by an AWAY player is not handed to someone else", () => {
+    // 'away' is claimed on seat 0 but not present; 'join' wants any seat → gets 1, not 0.
+    const roster: RosterEntry[] = [R("join", 9 /*overflow→any free*/)];
+    const claims = [{ seat: 0, id: "away" }];
+    const { resolved } = resolveSeating(roster, claims, noTomb, 4);
+    expect(resolved.get("join")).toBe(1); // seat 0 stays reserved for the away owner
+  });
+
+  it("a joiner who wants a TAKEN seat still gets a free one (overflow)", () => {
+    const roster: RosterEntry[] = [R("a", 0), R("b", 0)];
+    const { resolved } = resolveSeating(roster, [], noTomb, 4);
+    expect(resolved.get("a")).toBe(0);
+    expect(resolved.get("b")).toBe(1);
   });
 });

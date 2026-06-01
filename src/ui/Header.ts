@@ -15,6 +15,9 @@ export interface HeaderHooks {
   onShortcuts(): void;
   /** Connect to a specific room by its 6-char code. */
   onJoinRoom(code: string): void;
+  /** A pasted code/link resolved to `code`: ask the player to confirm the switch
+   *  (owns the modal in Game), then join. */
+  onPasteJoin(code: string): void;
   /** Run the Supabase connection self-test. */
   onDiagnose(): void;
 }
@@ -193,11 +196,13 @@ export class Header {
         toast(t("ui.invalidCode"));
         return;
       }
-      flashConfirm(btn);
-      // Do NOT close the menu on paste: the user may want to copy/verify or paste
-      // again. Joining a new room reopens behind the loader anyway.
+      // Already in this room: nothing to do (no modal, no spurious second control).
       if (code === this.roomSlug) { toast(t("ui.joined")); return; }
-      this.hooks.onJoinRoom(code);
+      // Ask for a clear confirmation ("Switch to room <CODE>?") before leaving the
+      // current table — Game owns the modal. The menu closes so no extra paste
+      // affordance lingers behind the dialog.
+      this.closeMenu();
+      this.hooks.onPasteJoin(code);
     });
 
     // Room code is blurred by default; clicking it reveals, clicking again hides.
