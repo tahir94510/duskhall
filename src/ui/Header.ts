@@ -42,7 +42,7 @@ export class Header {
     this.el.className = "header";
     this.el.innerHTML = `
       <span class="brand" data-role="brand" role="img" aria-label="Vaerum">
-        <img src="/assets/icon.svg" alt="" width="24" height="32"/>
+        <img src="/assets/icon.svg" alt="" width="28" height="37"/>
       </span>
       <button type="button" class="icon-btn header__more" data-action="more" aria-label="${esc(t("ui.menu"))}" aria-haspopup="true" aria-expanded="false">
         ${ICON_MORE}

@@ -73,13 +73,19 @@ describe("flipStackOver = real pile flip", () => {
 });
 
 describe("gatherStack squares the pile up", () => {
-  it("moves every card to the focus point and unifies rotation", () => {
+  it("moves every card to the focus point and unifies orientation by the shortest path", () => {
     const st = board([card("a", 0.4, 0.4, 1, 0), card("b", 0.6, 0.6, 2, 1), card("c", 0.5, 0.5, 3, 2)]);
+    const before = { a: 0, b: 1, c: 2 } as Record<string, number>;
     gatherStack(st, ["a", "b", "c"], 0.5, 0.5, 4);
     for (const id of ["a", "b", "c"]) {
-      expect(st.cards.get(id)!.x).toBeCloseTo(0.5, 9);
-      expect(st.cards.get(id)!.y).toBeCloseTo(0.5, 9);
-      expect(st.cards.get(id)!.rot).toBe(4); // all equalized to the supplied upright
+      const c = st.cards.get(id)!;
+      expect(c.x).toBeCloseTo(0.5, 9);
+      expect(c.y).toBeCloseTo(0.5, 9);
+      // Every card ends on the SAME visual orientation as the target (≡ 4 mod 4),
+      expect(((c.rot % 4) + 4) % 4).toBe(0);
+      // and moved by the SHORTEST path — at most two quarter-turns, never a full
+      // extra turn (the stray-360° bug).
+      expect(Math.abs(c.rot - before[id]!)).toBeLessThanOrEqual(2);
     }
     // Internal order preserved (a < b < c by z).
     const za = st.cards.get("a")!.z, zb = st.cards.get("b")!.z, zc = st.cards.get("c")!.z;
@@ -98,16 +104,31 @@ describe("gatherStack squares the pile up", () => {
 });
 
 describe("shuffleStack", () => {
-  it("faces every card down and equalizes rotation, keeping positions", () => {
+  it("faces every card down and squares orientation by the shortest path, keeping positions", () => {
     const st = board([card("a", 0.5, 0.5, 1, 0, true), card("b", 0.5, 0.5, 2, 1, false), card("c", 0.5, 0.5, 3, 2, true)]);
+    const before = { a: 0, b: 1, c: 2 } as Record<string, number>;
     shuffleStack(st, ["a", "b", "c"], 0);
     for (const id of ["a", "b", "c"]) {
-      expect(st.cards.get(id)!.faceUp).toBe(false);
-      expect(st.cards.get(id)!.rot).toBe(0);
-      expect(st.cards.get(id)!.x).toBeCloseTo(0.5, 9);
+      const c = st.cards.get(id)!;
+      expect(c.faceUp).toBe(false);
+      // Same visual orientation as the target (≡ 0 mod 4) ...
+      expect(((c.rot % 4) + 4) % 4).toBe(0);
+      // ... reached by the shortest path (no stray full 360° spin).
+      expect(Math.abs(c.rot - before[id]!)).toBeLessThanOrEqual(2);
+      expect(c.x).toBeCloseTo(0.5, 9);
     }
     // z-indices remain a permutation of distinct values (a valid stacking order).
     const zs = ["a", "b", "c"].map((id) => st.cards.get(id)!.z);
     expect(new Set(zs).size).toBe(3);
+  });
+
+  it("never changes a sideways card by a full turn (the stray-360 bug)", () => {
+    // A pile where one card sits at a high cumulative rot (e.g. spun several times).
+    const st = board([card("a", 0.5, 0.5, 1, 0, true), card("b", 0.5, 0.5, 2, 9, true)]);
+    shuffleStack(st, ["a", "b"], 0);
+    // b was at rot 9 (≡1 mod 4); the nearest congruent-to-0 value is 8, a single
+    // quarter-turn away — NOT 0 (which would be a 9-step, multi-turn jump).
+    expect(st.cards.get("b")!.rot).toBe(8);
+    expect(Math.abs(st.cards.get("b")!.rot - 9)).toBeLessThanOrEqual(2);
   });
 });

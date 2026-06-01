@@ -10,6 +10,17 @@ import { mulberry32 } from "../game/deck.js";
 // squarely on top of each other (well above 60 %) to group.
 const OVERLAP_RATIO = 0.6;
 
+// The cumulative quarter-turn value congruent to `target` (mod 4) that is NEAREST
+// to a card's CURRENT `rot`. `rot` is cumulative (it never wraps), so naively
+// writing the same `target` to every card can change a sideways card's value by a
+// FULL turn (a multiple of 4) — which the shuffle keyframe then animates as a
+// stray 360° spin. Snapping to the nearest congruent value keeps every card's
+// change to at most ±2 quarter-turns (the shortest path), so the pile squares up
+// cleanly with no full turn, while still landing on the same visual orientation.
+function nearestCongruentRot(current: number, target: number): number {
+  return target + 4 * Math.round((current - target) / 4);
+}
+
 interface BoardSize { width: number; height: number; }
 
 function cardPixelBox(c: CardState, board: BoardSize, cardW: number, cardH: number) {
@@ -113,7 +124,9 @@ export function gatherStack(state: BoardState, ids: string[], focusNx?: number, 
   for (const c of ordered) {
     c.x = cx;
     c.y = cy;
-    c.rot = topRot;
+    // Square up by the SHORTEST path: the congruent target nearest this card's
+    // own cumulative rot, so a sideways card never spins a full extra turn.
+    c.rot = nearestCongruentRot(c.rot, topRot);
     state.topZ++;
     c.z = state.topZ;
   }
@@ -155,7 +168,10 @@ export function shuffleStack(state: BoardState, ids: string[], unifyRot?: number
     if (!c) continue;
     c.z = minZ + i;
     c.faceUp = false;
-    c.rot = topRot;
+    // Square up by the SHORTEST path (nearest congruent angle to this card's own
+    // cumulative rot) so a sideways card never does a stray full 360° spin when
+    // the shuffle wobble plays — the bug that gather avoided only by luck.
+    c.rot = nearestCongruentRot(c.rot, topRot);
   }
 }
 

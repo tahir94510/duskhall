@@ -46,6 +46,16 @@ const ZONES: Record<Seat, ZoneRect> = {
   3: { x0: 0.78, y0: 0.22, x1: 0.96, y1: 0.78, horizontal: false }
 };
 
+// Is a canonical [0,1] point inside a seat's zone rectangle? Canonical (board-
+// shared) space, so it is correct for every viewer regardless of board rotation —
+// unlike the viewport-pixel zone hit test. Used to claim ownership when a player
+// flips / rotates / gathers / shuffles a card that is sitting in their own zone,
+// matching what a drag-drop into the zone already does.
+export function pointInZoneCanonical(seat: Seat, nx: number, ny: number): boolean {
+  const z = ZONES[seat];
+  return nx >= z.x0 && nx <= z.x1 && ny >= z.y0 && ny <= z.y1;
+}
+
 const ROW_GAP = 0.018; // gap between the two rows (Seal row vs Servant row), in canonical units
 
 // v3.2: per-seat slot grid is intentionally empty. The visual was cluttering

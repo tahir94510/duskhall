@@ -19,9 +19,10 @@
   justify-content: center;
   /* The emblem is a 3:4 portrait mark (icon.svg viewBox 48×64); the box matches
      that ratio so the logo is never squished to a square (the cause of the
-     stretched/"overflowing" look). */
-  width: 24px;
-  height: 32px;
+     stretched/"overflowing" look). Sized to sit in balance with the ~36px menu
+     button beside it without overpowering it. */
+  width: 28px;
+  height: 37px;
   color: var(--ivory);
   opacity: 0.8;
   /* Purely a mark, not a control: no pointer, no navigation. */
@@ -316,44 +317,57 @@
   font-family: var(--font-display);
 }
 
-/* Tooltip */
+/* Tooltip — the card-info panel. The card's own art is the panel BACKGROUND
+   (full-bleed, cover), and a dark scrim sits over it so the text reads directly
+   on the image with no inner picture box. A fixed, card-like width with height
+   that grows to fit the text, so long effect/flavour copy never overflows or
+   scrolls — the panel simply gets taller. */
 .tooltip {
   position: fixed;
   top: 0;
   left: 0;
-  max-width: min(320px, 80vw);
-  background: rgba(12, 12, 12, 0.94);
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-panel);
-  padding: 12px 14px;
-  z-index: var(--z-tooltip);
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(-4px);
-  transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
-  backdrop-filter: blur(14px) saturate(120%);
-  -webkit-backdrop-filter: blur(14px) saturate(120%);
-  box-shadow: var(--shadow-panel);
-}
-.tooltip.is-visible { opacity: 1; transform: translateY(0); }
-
-/* A slice of the card's own art at the top of the info panel. A fixed-height band
-   cropped to the top of the image (where the subject usually sits) so the panel
-   is instantly recognisable yet never grows tall enough to spill off a small
-   screen. Shrinks on phones. */
-.tooltip__art {
-  width: 100%;
-  height: 92px;
-  margin: -2px 0 10px;
-  border-radius: calc(var(--r-panel) - 2px);
+  width: min(290px, 82vw);
+  background-color: rgba(10, 10, 12, 0.96);
   background-size: cover;
   background-position: center top;
   background-repeat: no-repeat;
   border: 1px solid var(--line-2);
+  border-radius: var(--r-panel);
+  padding: 13px 15px;
+  z-index: var(--z-tooltip);
+  pointer-events: none;
+  overflow: hidden;
+  isolation: isolate;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  box-shadow: var(--shadow-panel);
 }
-@media (max-width: 480px) {
-  .tooltip__art { height: 64px; }
+.tooltip.is-visible { opacity: 1; transform: translateY(0); }
+
+/* The darkening scrim over the art: a vertical gradient that is lighter at the
+   top (so the artwork reads) and deepens toward the text block for contrast.
+   Sits BELOW the text (its own stacking via z-index) and fills the whole panel. */
+.tooltip__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(5, 5, 7, 0.58) 0%,
+    rgba(5, 5, 7, 0.74) 42%,
+    rgba(5, 5, 7, 0.88) 100%);
 }
+/* No art: just a flat dark ground, no gradient needed. */
+.tooltip:not(.has-art) { background-image: none; }
+.tooltip:not(.has-art) .tooltip__scrim { background: none; }
+
+/* All text rides above the scrim, with a soft shadow so it stays crisp over any
+   artwork. */
+.tooltip__title,
+.tooltip__type,
+.tooltip__body,
+.tooltip__flavor { position: relative; z-index: 1; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85); }
 
 .tooltip__title {
   font-family: var(--font-display);
@@ -364,7 +378,7 @@
 }
 .tooltip__type {
   font-size: 10px;
-  color: var(--ivory-mute);
+  color: var(--ivory-dim);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-bottom: 8px;

@@ -45,11 +45,16 @@
 .card.is-held::before { box-shadow: var(--shadow-card-held); }
 
 /* Cards mid flip/shuffle are lifted into the same band (inline z) so undercards
-   never flash above a still-animating card. A whole pile flips as one: every card
-   shares the same position + rotation and turns on the same timing, so the
-   top-of-stack card's opaque face covers the rest at every angle — no card is
-   ever hidden, so the pile never blinks out of existence mid-turn. */
+   never flash above a still-animating card. */
 .card.is-animating { z-index: var(--z-anim); }
+
+/* During a STACK flip, only the card that ends up on top stays visible and turns;
+   the rest are made transparent for the turn so no inner FRONT leaks through at
+   the 90° edge-on instant (where backface-visibility hides all faces and you'd
+   otherwise see the cards beneath). Opacity — not visibility:hidden — so there is
+   no layout/paint blink and the top card is never hidden, so the pile reads as one
+   solid block turning over. Restored at the flip's settle. */
+.card.is-flip-quiet { opacity: 0; }
 
 /* During a riffle the keyframe owns the transform, so no competing transition. */
 .card.is-shuffling { transition: none; }

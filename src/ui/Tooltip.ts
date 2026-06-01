@@ -142,15 +142,15 @@ export class Tooltip {
     // Always start hidden so the first frame after innerHTML cannot leak in
     // at the previous (or default) position.
     this.el.classList.remove("is-visible");
-    // A slice of the card's own art above the text makes the panel instantly
-    // recognisable. Shown only when art exists for this card; otherwise text-only,
-    // so a fresh checkout with no art produces a clean panel and no broken image.
+    // The card's own art becomes the PANEL BACKGROUND (full-bleed), with a dark
+    // scrim (.tooltip__scrim) painted over it so the text stays legible directly
+    // on the image — no inner picture box. When a card has no art the panel falls
+    // back to its solid dark ground (the --has-art flag drives the scrim/shadow).
     const artUrl = this.artUrls?.get(def.id);
-    const artHtml = artUrl
-      ? `<div class="tooltip__art" style="background-image:url('${encodeURI(artUrl)}')" role="img" aria-label=""></div>`
-      : "";
+    this.el.classList.toggle("has-art", !!artUrl);
+    this.el.style.backgroundImage = artUrl ? `url('${encodeURI(artUrl)}')` : "";
     this.el.innerHTML = `
-      ${artHtml}
+      <div class="tooltip__scrim" aria-hidden="true"></div>
       <div class="tooltip__title">${escapeHtml(t(`cards.${def.id}.name`))}</div>
       <div class="tooltip__type">${escapeHtml(t(`categories.${def.category}.name`))}</div>
       <div class="tooltip__body">${escapeHtml(t(`cards.${def.id}.effect`))}</div>
