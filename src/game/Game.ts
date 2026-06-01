@@ -1389,9 +1389,13 @@ export class Game {
     // squared-up deck. Same ordered tidy as flip, so both feel consistent.
     this.tidyStackThen(stack, id, () => {
       if (this.stackBlocked(stack)) return; // re-confirm after the tidy delay
-      shuffleStack(this.state, stack, upright);
+      shuffleStack(this.state, stack, upright); // faces every card DOWN
       for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
       this.elevateDuringAnim(stack, SHUFFLE_ANIM_MS);
+      // Show the backs for the whole riffle: the cards are now is-shuffling (busy),
+      // so the render loop won't write is-faceup — set it down ourselves, matching
+      // the new state, so a previously face-up card doesn't flash its art mid-wobble.
+      for (const cid of stack) this.cardEls.get(cid)?.classList.remove("is-faceup");
       this.applyShuffleJitter(stack); // already aligned, so just the riffle wobble
       this.scheduleFlush();
       void this.audio.play("shuffle");
