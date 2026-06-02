@@ -239,12 +239,12 @@
       "name": "Crimson Monolith",
       "type": "Seal",
       "effect": "During your Action phase you spend 3 HP instead of 2. Each additional copy adds +1 HP, but your total HP can never exceed 5. Becomes active from the turn AFTER it is placed.",
-      "flavor": "A throne of rust and resolve."
+      "flavor": "It still stands when all else has fallen."
     },
     "necromancersEye": {
       "name": "Necromancer's Eye",
       "type": "Seal",
-      "effect": "At the start of your Closing phase, before the hand-limit check, you MUST take the top card of the Discard into your hand. Each additional copy takes one more. If the Discard is empty the effect fizzles. Works on the very turn it is placed.",
+      "effect": "At the start of your Closing phase, before the hand-limit check, you MUST take the top card of the Discard into your hand. Each additional copy takes one more. If the Discard is empty the effect fizzles. Works on the very turn it is placed. The card you take is then an ordinary hand card: if it puts you over 7, you may discard it (or any other) during this same Closing's hand-limit step.",
       "flavor": "The dead keep their accounts in long, patient ledgers."
     },
     "etherStrike": {
@@ -275,7 +275,7 @@
       "name": "Twist of Fate",
       "type": "Spell",
       "effect": "Spend 1 HP. Exchange every card in your hand with every card in a chosen rival's hand. Tableau cards are unaffected. Hand-limit excess is resolved by each player at their next Closing phase. Cannot be cast if the target is protected by Veil of Void.",
-      "flavor": "The wheel asks no permission."
+      "flavor": "Fate's wheel turns, and asks no one."
     },
     "silence": {
       "name": "Silence!",
@@ -292,7 +292,7 @@
     "bloodAtonement": {
       "name": "Blood Atonement",
       "type": "Intervention",
-      "effect": "Costs no HP. Played ONLY when one of YOUR own Seals is about to be destroyed. Discard 2 random cards from your hand to save the Seal. If you have fewer than 2 cards in hand, this card cannot be played.",
+      "effect": "Costs no HP. Played ONLY when one of YOUR own Seals is about to be destroyed. Discard 2 random cards from your hand to save the Seal — neither player chooses which two; they leave your hand at random (the table picks them for you), so it is a real gamble. If you have fewer than 2 cards in hand, this card cannot be played.",
       "flavor": "A vow paid in heartbeats."
     },
     "runicWarden": {
@@ -370,7 +370,7 @@
           "CREATE (1 HP): cast 1 Spell from hand, or place 1 Seal or 1 Servant onto your tableau.",
           "STUDY (1 HP): draw 1 extra card from the deck.",
           "CLEANSE (1 HP): discard 1 card from your hand, then draw 1 card. The card drawn by Cleanse cannot be discarded by another Cleanse in the same turn.",
-          "PHASE 3, CLOSING: First, every active Seal trigger fires (Necromancer's Eye takes its card from the Discard now). Then check the hand limit; discard down to 7 if needed. After Closing is complete, if you have at least 3 Seals on your tableau you MAY declare Ascension (see section 10)."
+          "PHASE 3, CLOSING: First, every active Seal trigger fires (Necromancer's Eye takes its card from the Discard now). Then check the hand limit; discard down to 7 if needed — a card just taken by Necromancer's Eye counts toward the limit and may itself be the card you discard. After Closing is complete, if you have at least 3 Seals on your tableau you MAY declare Ascension (see section 10)."
         ]
       },
       {
@@ -448,7 +448,7 @@
           "Time Rift: During your Focus phase you draw 3 cards instead of 2. Each additional copy adds +1 draw (max 4 copies, 6 cards). Becomes active from the turn AFTER it is placed.",
           "Veil of Void: Your other Seals and your hand cannot be targeted by enemy spells or effects. Veil of Void itself remains targetable. Active immediately when placed. Multiple copies do not stack.",
           "Crimson Monolith: During your Action phase you spend 3 HP instead of 2. Each additional copy adds +1 HP, but your total HP can never exceed 5. Becomes active from the turn AFTER it is placed.",
-          "Necromancer's Eye: At the start of your Closing phase, before the hand-limit check, you MUST take the top card of the Discard into your hand. Each additional copy takes one more. If the Discard is empty the effect fizzles. Works on the very turn it is placed.",
+          "Necromancer's Eye: At the start of your Closing phase, before the hand-limit check, you MUST take the top card of the Discard into your hand. Each additional copy takes one more. If the Discard is empty the effect fizzles. Works on the very turn it is placed. The card you take is then an ordinary hand card: if it puts you over 7, you may discard it (or any other) during this same Closing's hand-limit step.",
           "SPELLS (24 total):",
           "Ether Strike: 1 HP. Destroy 1 card on a rival's tableau. Servant Shield applies.",
           "Shadow Theft: 1 HP. Choose a rival; their hand is turned face-down and 1 card is taken at random into your hand. Blocked by Veil of Void.",
@@ -458,7 +458,7 @@
           "INTERVENTIONS (16 total):",
           "Silence!: 0 HP. Cancel a freshly cast Spell or Intervention. Both cards go to the Discard. Universal target.",
           "Karmic Reflection: 0 HP. Selfish. Cancels an attack aimed at you or your cards in play and rebounds it onto the attacker, where the attacker's own Servant Shield applies.",
-          "Blood Atonement: 0 HP. Selfish. When one of your Seals is about to be destroyed, discard 2 random cards from hand to save it.",
+          "Blood Atonement: 0 HP. Selfish. When one of your Seals is about to be destroyed, discard 2 random cards from hand to save it. Nobody chooses the two — they go at random (the table picks them).",
           "SERVANTS (16 total):",
           "Runic Warden: While in play, ALL of your Seals gain untargetable. Servant Shield still applies, so rivals must clear your Wardens first.",
           "Glacial Aberration: When destroyed, the destroyer skips their entire next turn (Focus, Action, Closing). Interventions still allowed during the skip.",
@@ -474,10 +474,12 @@
           "Q. Two Time Rifts, how many cards? A. 4 (each copy adds +1).",
           "Q. Crimson Monolith placed this turn, does it give me 3 HP now? A. No. It activates next turn.",
           "Q. Necromancer's Eye placed this turn, does it fire at this Closing? A. Yes. Its trigger is during Closing, which is after Action.",
+          "Q. Must I keep the card Necromancer's Eye makes me take? A. No. You take it FIRST, then the hand-limit check happens — so if you are over 7 you may discard it (or any other card) that same Closing.",
           "Q. Shadow Slayer enters but no rival has Servants? A. The entry effect fizzles. Shadow Slayer still enters as a normal Servant.",
           "Q. Shadow Slayer kills a Glacial Aberration on entry, who skips? A. You do. The destroyer pays the penalty.",
           "Q. When Karmic Reflection rebounds an attack, does the attacker's Servant Shield apply? A. Yes. The rebounding attack must respect the attacker's Servant Shield, so it has to clear their Servants before it can reach their Seals.",
           "Q. Blood Atonement needs how many cards in hand? A. At least 2. With fewer, it cannot be played.",
+          "Q. Who picks the 2 cards Blood Atonement discards? A. Nobody — they leave your hand at random (the digital table picks them), so paying the cost is always a gamble.",
           "Q. Mind Parasite when your tableau already has 3 Servants? A. Cannot be cast; no HP spent.",
           "Q. Shadow Theft against a hand protected by Veil of Void? A. Not legal; cannot be cast.",
           "Q. Twist of Fate against Veil of Void? A. Not legal; the targeted player's hand is shielded.",

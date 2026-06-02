@@ -73,7 +73,7 @@ STUDY (1 HP): draw 1 extra card from the deck.
 
 CLEANSE (1 HP): discard 1 card from your hand, then draw 1 card. The card drawn by Cleanse cannot be discarded by another Cleanse in the same turn.
 
-PHASE 3, CLOSING: First, every active Seal trigger fires (Necromancer's Eye takes its card from the Discard now). Then check the hand limit; discard down to 7 if needed. After Closing is complete, if you have at least 3 Seals on your tableau you MAY declare Ascension (see section 10).
+PHASE 3, CLOSING: First, every active Seal trigger fires (Necromancer's Eye takes its card from the Discard now). Then check the hand limit; discard down to 7 if needed — a card just taken by Necromancer's Eye counts toward the limit and may itself be the card you discard. After Closing is complete, if you have at least 3 Seals on your tableau you MAY declare Ascension (see section 10).
 
 
 ## 5. Card-type rules
@@ -173,6 +173,8 @@ Q. Crimson Monolith placed this turn, does it give me 3 HP now? A. No. It activa
 
 Q. Necromancer's Eye placed this turn, does it fire at this Closing? A. Yes. Its trigger is during Closing, which is after Action.
 
+Q. Must I keep the card Necromancer's Eye makes me take? A. No. You take it FIRST, then the hand-limit check happens — so if you are over 7 you may discard it (or any other card) that same Closing.
+
 Q. Shadow Slayer enters but no rival has Servants? A. The entry effect fizzles. Shadow Slayer still enters as a normal Servant.
 
 Q. Shadow Slayer kills a Glacial Aberration on entry, who skips? A. You do. The destroyer pays the penalty.
@@ -180,6 +182,8 @@ Q. Shadow Slayer kills a Glacial Aberration on entry, who skips? A. You do. The 
 Q. When Karmic Reflection rebounds an attack, does the attacker's Servant Shield apply? A. Yes. The rebounding attack must respect the attacker's Servant Shield, so it has to clear their Servants before it can reach their Seals.
 
 Q. Blood Atonement needs how many cards in hand? A. At least 2. With fewer, it cannot be played.
+
+Q. Who picks the 2 cards Blood Atonement discards? A. Nobody — they leave your hand at random (the digital table picks them), so paying the cost is always a gamble.
 
 Q. Mind Parasite when your tableau already has 3 Servants? A. Cannot be cast; no HP spent.
 
