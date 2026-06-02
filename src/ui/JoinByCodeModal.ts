@@ -89,6 +89,9 @@ export function openJoinByCode(
   // Pre-fill from an explicit value, else best-effort from the clipboard (Chrome).
   // Never block on it: in Firefox readText rejects and the field simply stays empty.
   const prefill = (val: string): void => {
+    // The clipboard read is async, so the dialog may have been closed by the time
+    // it resolves — never write to a detached input.
+    if (!input.isConnected) return;
     const code = parseRoomInput(val);
     if (!code || code === opts.currentRoom) return;
     input.value = code;
