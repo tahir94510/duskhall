@@ -79,6 +79,11 @@ const LIVE_CID_PREFIX = "kabal:livecid:";
 const LS_IDENT_PREFIX = "kabal:ident:";
 const IDENT_TTL_MS = 24 * 60 * 60 * 1000;
 const SNAPSHOT_TTL_MS = 12 * 60 * 60 * 1000; // a saved board restores only within 12h
+// One-shot, per-device flag: set the first time this browser ever opens the app, so
+// the About panel auto-shows exactly once for a brand-new visitor and never again.
+// Not room-scoped and never swept by pruneStaleStorage / clearRoomStorage (it matches
+// none of their prefixes), so it persists across rooms, refreshes, leaves and kicks.
+const LS_SEEN_ABOUT = "kabal:seen-about";
 
 // `joinedAt` is the player's PERSISTED seniority in this room (their original join
 // time). It survives a refresh/reconnect so the host keeps host and seating order
@@ -294,6 +299,22 @@ export class Game {
     this.armFirstSync();
     void this.bus.connect(this.room, this.presencePayload());
     await Promise.race([this.firstSync, delay(1800)]);
+  }
+
+  // First-ever visit on this device: auto-open the About panel once, just after the
+  // loader lifts, so a newcomer learns what Vaerum is. A localStorage flag makes it a
+  // one-shot — every later load (refresh, new room, return) skips it silently. Called
+  // by the boot sequence right after hideLoader(); never throws (storage may be off).
+  showAboutOnFirstVisit(): void {
+    let seen = true;
+    // If storage can't be read we can't remember showing it, so default to NOT
+    // nagging on every load — only a confirmed first visit (null flag) opens it.
+    try { seen = localStorage.getItem(LS_SEEN_ABOUT) === "1"; } catch { return; }
+    if (seen) return;
+    try { localStorage.setItem(LS_SEEN_ABOUT, "1"); } catch {}
+    // A short beat after the board reveal so the modal doesn't fight the reveal
+    // animation. No sound: audio is still gated until the first user gesture.
+    window.setTimeout(() => { if (!this.modal.isOpen()) openLegalModal(this.modal); }, 500);
   }
 
   // First-sync gate: resolves once we know our seat AND have the authoritative
