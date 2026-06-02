@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { safeNumber, safeStamp, safeInt } from "../security/inputGuard.js";
 import { isNewerWrite } from "./lww.js";
-import { classifyKey, maskHost, sanitizeAnim, clampCardTs } from "./realtime.js";
+import { classifyKey, maskHost, sanitizeAnim, sanitizeRemoved, clampCardTs } from "./realtime.js";
 
 // A minimal unsigned JWT with a given role claim, for classifyKey tests.
 function fakeJwt(role: string): string {
@@ -169,5 +169,34 @@ describe("sanitizeAnim: validate the cosmetic flip/shuffle hint", () => {
     expect(sanitizeAnim(null)).toBe(null);
     expect(sanitizeAnim("flip")).toBe(null);
     expect(sanitizeAnim(undefined)).toBe(null);
+  });
+});
+
+describe("sanitizeRemoved: validate the authoritative removed-players list", () => {
+  it("keeps id, full-magnitude connAt, and clamped seat", () => {
+    const connAt = 1_700_000_000_000; // a real wall-clock stamp
+    expect(sanitizeRemoved([{ id: "abc", connAt, seat: 2 }]))
+      .toEqual([{ id: "abc", connAt, seat: 2 }]);
+  });
+  it("preserves connAt magnitude (safeStamp, not the coordinate clamp)", () => {
+    const connAt = 1_700_000_000_500;
+    expect(sanitizeRemoved([{ id: "x", connAt }])[0]!.connAt).toBe(connAt);
+  });
+  it("defaults a missing/invalid seat to -1 and drops empty ids", () => {
+    expect(sanitizeRemoved([{ id: "x" }])[0]!.seat).toBe(-1);
+    expect(sanitizeRemoved([{ id: "", connAt: 1 }, { connAt: 2 } as never])).toEqual([]);
+  });
+  it("clamps an out-of-range seat into [-1,3]", () => {
+    expect(sanitizeRemoved([{ id: "x", connAt: 1, seat: 99 }])[0]!.seat).toBe(3);
+    expect(sanitizeRemoved([{ id: "y", connAt: 1, seat: -9 }])[0]!.seat).toBe(-1);
+  });
+  it("caps the list at 16 entries so it can never bloat the payload", () => {
+    const many = Array.from({ length: 40 }, (_, i) => ({ id: `id${i}`, connAt: 1 }));
+    expect(sanitizeRemoved(many).length).toBe(16);
+  });
+  it("returns an empty array for non-arrays", () => {
+    expect(sanitizeRemoved(null)).toEqual([]);
+    expect(sanitizeRemoved("nope")).toEqual([]);
+    expect(sanitizeRemoved(undefined)).toEqual([]);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { BoardState, CardState } from "./types.js";
-import { findStackOverlapping, findConnectedStack, flipStackOver, gatherStack, shuffleStack, alignRotation, rotationsDiffer, flipVisibleCardId, isTidyStack } from "./StackOps.js";
+import { findStackOverlapping, findConnectedStack, flipStackOver, gatherStack, shuffleStack, alignRotation, rotationsDiffer, flipVisibleCardId, isTidyStack, nearestCongruentRot, setStackFace, topVisibleId } from "./StackOps.js";
 
 // A 1000 x 1450 board so one card-width (96) maps cleanly; card is 96 x 139.2.
 const BOARD = { width: 1000, height: 1450 };
@@ -366,5 +366,88 @@ describe("isTidyStack: detect an already-gathered, squared pile (skip the gather
   it("tolerates sub-eps float drift", () => {
     const st = board([card("a", 0.5, 0.5, 1, 0), card("b", 0.5 + 5e-4, 0.5 - 5e-4, 2, 0)]);
     expect(isTidyStack(st, ["a", "b"], 0.5, 0.5, 0)).toBe(true);
+  });
+});
+
+describe("nearestCongruentRot: shortest angular path (no stray long spin)", () => {
+  it("90° (rot 1) straightening to upright 0 goes BACK to 0, not forward to 4", () => {
+    expect(nearestCongruentRot(1, 0)).toBe(0);
+  });
+  it("270° (rot 3) straightening to upright 0 goes FORWARD to 4 (=360°), not back to 0", () => {
+    // The congruent value of 0 nearest to 3 is 4 (distance 1), not 0 (distance 3).
+    expect(nearestCongruentRot(3, 0)).toBe(4);
+  });
+  it("180° (rot 2) is equidistant: either ±2 is acceptable, lands congruent to target", () => {
+    const r = nearestCongruentRot(2, 0);
+    expect(Math.abs(r - 2)).toBeLessThanOrEqual(2); // never a long spin
+    expect(((r % 4) + 4) % 4).toBe(0);              // still upright
+  });
+  it("never changes a card by more than 2 quarter-turns for any start", () => {
+    for (let cur = -8; cur <= 8; cur++) {
+      for (let tgt = -8; tgt <= 8; tgt++) {
+        const r = nearestCongruentRot(cur, tgt);
+        expect(Math.abs(r - cur)).toBeLessThanOrEqual(2);
+        expect(((r - tgt) % 4 + 4) % 4).toBe(0); // congruent to target
+      }
+    }
+  });
+});
+
+describe("rotateStack turn: every card takes the SHORTEST path, none spins the long way", () => {
+  // Mirrors rotateStack: gatherStack(unifyRot = anchor.rot + dir). The anchor turns
+  // exactly `dir`; every other card squares to the anchor's new angle by the shortest
+  // arc (nearestCongruentRot keeps each within ±2 quarter-turns of its OWN angle).
+  it("a mixed [0,1,2,3] pile turned +1 about a 0° anchor never moves a card > 180°", () => {
+    const st = board([
+      card("anchor", 0.5, 0.5, 1, 0), // anchor at 0°, dir +1 → target residue 1 (90°)
+      card("b", 0.5, 0.5, 2, 1),      // 90°
+      card("c", 0.5, 0.5, 3, 2),      // 180°
+      card("d", 0.5, 0.5, 4, 3)       // 270°
+    ]);
+    const ids = ["anchor", "b", "c", "d"];
+    const before: Record<string, number> = {};
+    for (const id of ids) before[id] = st.cards.get(id)!.rot;
+    gatherStack(st, ids, 0.5, 0.5, before["anchor"]! + 1); // anchor.rot + dir
+    // Anchor turns exactly +1 (one quarter-turn).
+    expect(st.cards.get("anchor")!.rot).toBe(1);
+    // No card travels more than 2 quarter-turns (180°) from where it started.
+    for (const id of ids) {
+      expect(Math.abs(st.cards.get(id)!.rot - before[id]!)).toBeLessThanOrEqual(2);
+    }
+    // All end aligned to the anchor's new residue (the pile squares up as it turns).
+    const residues = new Set(ids.map((id) => ((st.cards.get(id)!.rot % 4) + 4) % 4));
+    expect(residues.size).toBe(1);
+    expect([...residues][0]).toBe(1);
+  });
+});
+
+describe("setStackFace: unify every face to one target, z preserved (no reversal)", () => {
+  it("sets all cards to the target face without touching z or position", () => {
+    const st = board([
+      card("a", 0.5, 0.5, 1, 0, true),
+      card("b", 0.5, 0.5, 2, 0, false),
+      card("c", 0.5, 0.5, 3, 0, true)
+    ]);
+    const ids = ["a", "b", "c"];
+    const zBefore = ids.map((id) => st.cards.get(id)!.z);
+    setStackFace(st, ids, false);
+    for (const id of ids) expect(st.cards.get(id)!.faceUp).toBe(false); // all closed now
+    expect(ids.map((id) => st.cards.get(id)!.z)).toEqual(zBefore);       // z unchanged
+    // Flipping the other way: all open.
+    setStackFace(st, ids, true);
+    for (const id of ids) expect(st.cards.get(id)!.faceUp).toBe(true);
+    expect(ids.map((id) => st.cards.get(id)!.z)).toEqual(zBefore);
+  });
+});
+
+describe("topVisibleId: the highest-z card stays visible through the turn", () => {
+  it("returns the highest-z id regardless of map insertion order", () => {
+    const st = board([card("top", 0.5, 0.5, 9), card("bottom", 0.5, 0.5, 1), card("mid", 0.5, 0.5, 5)]);
+    expect(topVisibleId(st, ["bottom", "mid", "top"])).toBe("top");
+  });
+  it("returns null for an empty set and the lone id for a single card", () => {
+    const st = board([card("solo", 0.5, 0.5, 3)]);
+    expect(topVisibleId(st, [])).toBe(null);
+    expect(topVisibleId(st, ["solo"])).toBe("solo");
   });
 });

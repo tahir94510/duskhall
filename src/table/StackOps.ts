@@ -17,7 +17,7 @@ const OVERLAP_RATIO = 0.6;
 // stray 360° spin. Snapping to the nearest congruent value keeps every card's
 // change to at most ±2 quarter-turns (the shortest path), so the pile squares up
 // cleanly with no full turn, while still landing on the same visual orientation.
-function nearestCongruentRot(current: number, target: number): number {
+export function nearestCongruentRot(current: number, target: number): number {
   return target + 4 * Math.round((current - target) / 4);
 }
 
@@ -282,6 +282,34 @@ export function flipStackOver(state: BoardState, ids: string[]): void {
     c.z = zSlots[n - 1 - i]!;
     c.faceUp = !c.faceUp;
   }
+}
+
+/**
+ * Set EVERY card in the pile to one face, without moving or restacking them. This
+ * is the "unify" turn: a deck that reads open (or closed) flips wholesale to the
+ * single target face, so a pile with mixed faces no longer stays mixed (the cause
+ * of undercards flashing through during a turn). Z-order is PRESERVED (no depth
+ * reversal), so the same card stays on top and the turn reads as one solid block.
+ */
+export function setStackFace(state: BoardState, ids: string[], faceUp: boolean): void {
+  for (const id of ids) {
+    const c = state.cards.get(id);
+    if (c) c.faceUp = faceUp;
+  }
+}
+
+/** The id of the card currently on TOP of the pile (highest z), or null for an
+ *  empty set. The unify turn keeps exactly this card visible while the rest hide,
+ *  and — because the turn no longer reverses depth — it is on top before AND after,
+ *  so there is no direction-dependent choice (unlike flipVisibleCardId). */
+export function topVisibleId(state: BoardState, ids: string[]): string | null {
+  let pick: CardState | null = null;
+  for (const id of ids) {
+    const c = state.cards.get(id);
+    if (!c) continue;
+    if (!pick || c.z > pick.z) pick = c;
+  }
+  return pick ? pick.id : null;
 }
 
 /**
