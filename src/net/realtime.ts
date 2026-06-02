@@ -8,9 +8,17 @@ export interface PresencePlayer {
   name: string;
   seat: number;
   color: string;
-  /** Local epoch ms when this client first joined; used to seat newcomers in
-   *  join order so a departure never reshuffles existing seats. */
+  /** PERSISTED seniority: epoch ms of this client's ORIGINAL join to the room. It
+   *  survives a refresh/reconnect (recovered from stored identity), so the host
+   *  keeps host and seating order never reshuffles. Reset to "now" only on a genuine
+   *  new entry. Used for host election, seat ordering, and name-clash resolution. */
   joinedAt: number;
+  /** Per-CONNECTION epoch ms, fresh on every (re)connect (never recovered). Used
+   *  only to tell a genuine reconnect from a stale presence echo: a returning client
+   *  publishes a connAt strictly newer than the one it was tombstoned with, so peers
+   *  clear the tombstone and show them at once instead of hiding them for the grace.
+   *  Defaults to `joinedAt` for old clients (degrades to the prior behaviour). */
+  connAt: number;
 }
 
 export interface CursorMsg {
@@ -186,6 +194,21 @@ function decodeJwtRole(token: string): string | null {
 
 const CONNECT_TIMEOUT_MS = 9000;
 const RECONNECT_MAX_MS = 16000;
+// A card's LWW `ts` is wall-clock ms. A peer with a badly-skewed (far-future)
+// clock would stamp edits that win forever AND bump every receiver's logical clock
+// to that future value, poisoning the whole table until someone edits each card.
+// Clamp anything more than this far ahead of our own clock back to "now" so one
+// bad device can't freeze the board. Ordinary skew (seconds) passes untouched, and
+// the host's periodic reconcile heals the rest. Card `ts` only — never `hold.until`.
+const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
+
+/** Clamp a card's LWW `ts`: real stamps pass through, but a pathological far-future
+ *  stamp (a sender with a badly-skewed clock) is pulled back to `now` so it can't
+ *  win every conflict forever and poison the receiver's logical clock. Pure +
+ *  unit-tested; see sanitizeCards. */
+export function clampCardTs(ts: number, now: number): number {
+  return ts > now + MAX_FUTURE_SKEW_MS ? now : ts;
+}
 
 export class RealtimeBus {
   private client: SupabaseClient | null = null;
@@ -524,6 +547,22 @@ export class RealtimeBus {
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "patch", payload: patch } as GameMsg });
   }
 
+  /** The host's periodic self-healing reconcile (a full-board re-broadcast every
+   *  few seconds). It is a PATCH (LWW) — every card keeps its stored `ts`, so the
+   *  receiver only adopts a card it has an older copy of, never clobbering a peer's
+   *  fresh edit (a snapshot WOULD clobber, applying wholesale). It is exempt from
+   *  the send-rate `opsBucket` because, during a busy multi-player drag, the bucket
+   *  can be empty and the reconcile would be silently dropped — leaving divergence
+   *  unresolved. It is low-frequency (≈0.5/s) and still byte-capped, and the
+   *  receive side still rate-limits it per sender, so it cannot be used to flood. */
+  sendReconcile(patch: CardPatch): void {
+    if (patch.cards.length > 200 || !withinByteCap(patch)) return;
+    this.patchVersion = Math.max(this.patchVersion, patch.v);
+    this.local.sendGame({ type: "patch", payload: patch });
+    if (!this.channel || this.status !== "online") return;
+    this.channel.send({ type: "broadcast", event: "game", payload: { type: "patch", payload: patch } as GameMsg });
+  }
+
   sendSnapshot(snap: CardPatch): void {
     if (snap.cards.length > 200 || !withinByteCap(snap)) return;
     this.local.sendGame({ type: "snapshot", payload: snap });
@@ -593,6 +632,7 @@ export class RealtimeBus {
 
   private sanitizeCards(raw: unknown): PatchCard[] {
     if (!Array.isArray(raw)) return [];
+    const now = Date.now();
     return (raw as Array<Partial<PatchCard>>).slice(0, 200).map((c) => ({
       id: safeString(c.id, 32),
       // x,y are canonical [0,1] fractions: clamp to a near-board range.
@@ -607,7 +647,8 @@ export class RealtimeBus {
       // ts is a wall-clock last-write-wins stamp (~1.7e12). It MUST keep its real
       // magnitude or the LWW gate in applyPatch rejects every remote edit — the bug
       // that made all card operations fail to sync. Never run it through safeNumber.
-      ts: safeStamp(c.ts, 0)
+      // Clamp only the pathological far-future case (a badly-skewed sender clock).
+      ts: clampCardTs(safeStamp(c.ts, 0), now)
     }));
   }
 
@@ -710,12 +751,16 @@ export class RealtimeBus {
       if (!entry) continue;
       const id = safeString(entry.id || key, 40);
       present.add(id);
+      const joinedAt = typeof entry.joinedAt === "number" && Number.isFinite(entry.joinedAt) ? entry.joinedAt : Date.now();
       players.push({
         id,
         name: safeString(entry.name, 24) || "Player",
         seat: typeof entry.seat === "number" ? Math.max(-1, Math.min(3, entry.seat)) : 0,
         color: safeString(entry.color, 16) || "#c8a45a",
-        joinedAt: typeof entry.joinedAt === "number" && Number.isFinite(entry.joinedAt) ? entry.joinedAt : Date.now()
+        joinedAt,
+        // Old clients send no connAt; fall back to joinedAt so the tombstone
+        // discriminator degrades cleanly to the prior joinedAt-based behaviour.
+        connAt: typeof entry.connAt === "number" && Number.isFinite(entry.connAt) ? entry.connAt : joinedAt
       });
     }
     // Prune receive-buckets for senders no longer present (bounded memory).

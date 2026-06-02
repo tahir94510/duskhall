@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { BoardState, CardState } from "./types.js";
-import { findStackOverlapping, flipStackOver, gatherStack, shuffleStack, alignRotation, rotationsDiffer, flipVisibleCardId, isTidyStack } from "./StackOps.js";
+import { findStackOverlapping, findConnectedStack, flipStackOver, gatherStack, shuffleStack, alignRotation, rotationsDiffer, flipVisibleCardId, isTidyStack } from "./StackOps.js";
 
 // A 1000 x 1450 board so one card-width (96) maps cleanly; card is 96 x 139.2.
 const BOARD = { width: 1000, height: 1450 };
@@ -43,6 +43,39 @@ describe("findStackOverlapping (rotation-aware)", () => {
     const st = board([card("top", 0.5, 0.5, 9), card("bottom", 0.5, 0.5, 1), card("mid", 0.5, 0.5, 5)]);
     const stack = findStackOverlapping(st, BOARD, "mid", SIZE);
     expect(stack).toEqual(["bottom", "mid", "top"]);
+  });
+});
+
+describe("findConnectedStack (transitive pile capture, span-guarded)", () => {
+  it("captures a fanned pile whose far end single-seed overlap misses", () => {
+    // a–b and b–c overlap by >60%, but a and c are too far apart to overlap.
+    const st = board([card("a", 0.40, 0.5, 1), card("b", 0.43, 0.5, 2), card("c", 0.46, 0.5, 3)]);
+    // Single-seed from 'a' only reaches 'b' (c doesn't overlap the seed itself)...
+    expect(new Set(findStackOverlapping(st, BOARD, "a", SIZE))).toEqual(new Set(["a", "b"]));
+    // ...connected capture follows the chain and gets the whole fan, bottom-to-top.
+    expect(findConnectedStack(st, BOARD, "a", SIZE)).toEqual(["a", "b", "c"]);
+  });
+
+  it("never bridges the deck (0.40) and discard (0.60) piles, even via a dense fan", () => {
+    const st = board([
+      card("d0", 0.40, 0.5, 1), card("d1", 0.43, 0.5, 2), card("d2", 0.46, 0.5, 3),
+      card("d3", 0.49, 0.5, 4), card("d4", 0.52, 0.5, 5), card("d5", 0.55, 0.5, 6),
+      card("d6", 0.58, 0.5, 7),
+      card("discard", 0.60, 0.5, 8) // overlaps d6 but lands past the span cap
+    ]);
+    const stack = findConnectedStack(st, BOARD, "d0", SIZE);
+    expect(stack).toContain("d6");        // the fan is captured up to the cap
+    expect(stack).not.toContain("discard"); // the other central pile is never pulled in
+  });
+
+  it("returns ids bottom-to-top by z (contract parity with findStackOverlapping)", () => {
+    const st = board([card("top", 0.5, 0.5, 9), card("bottom", 0.5, 0.5, 1), card("mid", 0.5, 0.5, 5)]);
+    expect(findConnectedStack(st, BOARD, "mid", SIZE)).toEqual(["bottom", "mid", "top"]);
+  });
+
+  it("a lone card returns just itself", () => {
+    const st = board([card("solo", 0.5, 0.5, 1), card("far", 0.1, 0.1, 2)]);
+    expect(findConnectedStack(st, BOARD, "solo", SIZE)).toEqual(["solo"]);
   });
 });
 

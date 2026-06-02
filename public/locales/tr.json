@@ -118,9 +118,11 @@
     "body": "Bu odadan ayrılırsın ve yeni bağlantıyla taze bir oda açılır; oranın sahibi (host) sen olursun. Burada sana ait kartlar diğer oyunculara serbest bırakılır.",
     "leave": "Çık"
   },
-  "pasteJoin": {
-    "title": "Odaya geç?",
-    "body": "{code} odasına katıl? Şu anki masandan ayrılacaksın.",
+  "joinByCode": {
+    "title": "Bir odaya katıl",
+    "body": "Aşağıya bir oda kodu veya davet bağlantısı yapıştır, sonra Katıl'a bas. Şu anki masandan ayrılacaksın.",
+    "label": "Oda kodu veya davet bağlantısı",
+    "placeholder": "örn. P86B3T",
     "confirm": "Odaya katıl"
   },
   "settings": {

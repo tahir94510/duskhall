@@ -7,7 +7,7 @@ import type { GameMsg, PresencePlayer, CardPatch } from "./realtime.js";
 // with Supabase out of the picture, a second tab still receives every action.
 
 function player(id: string, seat: number): PresencePlayer {
-  return { id, name: id, seat, color: "#fff", joinedAt: Date.now() };
+  return { id, name: id, seat, color: "#fff", joinedAt: Date.now(), connAt: Date.now() };
 }
 
 function patch(id: string): CardPatch {

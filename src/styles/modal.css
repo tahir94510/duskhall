@@ -122,6 +122,56 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
 }
 .btn--danger:hover { background: rgba(120, 40, 40, 0.35); color: #fff; }
 
+.btn:disabled,
+.btn--primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn--primary:disabled:hover { background: var(--ivory); border-color: var(--ivory); }
+
+/* --- Join-by-code dialog --- */
+.joincode__note {
+  font-size: 13px;
+  color: var(--ivory-mute);
+  line-height: 1.6;
+  margin: 0 0 14px;
+}
+.joincode__label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ivory-mute);
+  margin: 0 0 7px;
+}
+.joincode__input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 13px;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: var(--ivory);
+  background: rgba(12, 12, 12, 0.65);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  font-family: var(--font-display);
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.joincode__input::placeholder { color: var(--ivory-mute); opacity: 0.6; letter-spacing: 0.02em; }
+.joincode__input:focus {
+  outline: none;
+  border-color: var(--line-3);
+  background: rgba(20, 20, 20, 0.8);
+}
+.joincode__input[aria-invalid="true"] { border-color: rgba(220, 90, 90, 0.6); }
+.joincode__error {
+  font-size: 12px;
+  color: rgba(240, 160, 160, 0.95);
+  margin: 9px 0 0;
+}
+
 /* --- Rules typography --- */
 .rules {
   display: grid;
