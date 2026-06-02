@@ -6,6 +6,27 @@
     <meta name="theme-color" content="#000000" />
     <meta name="color-scheme" content="dark" />
     <title>Vaerum: Heirs of the Ether</title>
+    <!-- Localise the tab title BEFORE the bundle loads, using the same priority as
+         i18n.detectLocale (?lang= → localStorage "kabal:lang" → navigator language).
+         Without this, a Turkish visitor briefly sees the static English title flash to
+         the localised one once JS runs. Keep these strings in sync with meta.title in
+         public/locales/*.json (just the brand line; it changes rarely). -->
+    <script>
+      (function () {
+        try {
+          var titles = { en: "Vaerum: Heirs of the Ether", tr: "Vaerum: Eterin Vârisleri" };
+          var q = new URLSearchParams(location.search).get("lang");
+          var stored = null;
+          try { stored = localStorage.getItem("kabal:lang"); } catch (e) {}
+          var nav = (navigator.language || "en").toLowerCase();
+          var loc = (q && titles[q]) ? q
+                  : (stored && titles[stored]) ? stored
+                  : nav.indexOf("tr") === 0 ? "tr" : "en";
+          document.title = titles[loc];
+          document.documentElement.setAttribute("lang", loc);
+        } catch (e) {}
+      })();
+    </script>
     <meta name="description" content="Vaerum: Heirs of the Ether. A digital card table for friends. Move and flip cards freely, follow the official rulebook." />
     <link rel="icon" type="image/svg+xml" href="/assets/icon-dark.svg" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="/assets/icon-light.svg" media="(prefers-color-scheme: light)" />
