@@ -61,6 +61,8 @@ async function boot(): Promise<void> {
   const game = new Game({ host, bus, config });
   await game.mount();
   hideLoader();
+  // First-ever visit on this device: auto-open the About panel once (one-shot flag).
+  game.showAboutOnFirstVisit();
 }
 
 function showBootFail(err: unknown): void {
