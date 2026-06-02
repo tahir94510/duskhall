@@ -73,7 +73,7 @@ ARAŞTIR (1 HP): desteden 1 ekstra kart çekin.
 
 ARINDIR (1 HP): elinizden 1 kart atın, ardından 1 kart çekin. Arındır ile çekilen kart aynı turda başka bir Arındır ile atılamaz.
 
-AŞAMA 3, KAPANIŞ: Önce aktif tüm Mühür efektleri devreye girer (Ölüçağıranın Gözü kartını şimdi alır). Sonra el limiti kontrol edilir; 7'ye iner — Ölüçağıranın Gözü'nün yeni aldığı kart da bu limite dahildir ve atılacak kart o olabilir. Kapanış tamamlandıktan sonra masanızda en az 3 Mühür varsa Yükseliş ilan edebilirsiniz (bkz. bölüm 10).
+AŞAMA 3, KAPANIŞ: Önce aktif tüm Mühür efektleri devreye girer (Ölüçağıranın Gözü kartını şimdi alır). Sonra el limiti kontrol edilir ve 7'ye iner. Ölüçağıranın Gözü'nün yeni aldığı kart da bu limite dahildir ve atılacak kart o olabilir. Kapanış tamamlandıktan sonra masanızda en az 3 Mühür varsa Yükseliş ilan edebilirsiniz (bkz. bölüm 10).
 
 
 ## 5. Kart türü kuralları
@@ -173,7 +173,7 @@ S. Kızıl Monolit bu tur konuldu, bu tur 3 HP'yi mi kullanırım? C. Hayır. Bi
 
 S. Ölüçağıranın Gözü bu tur konuldu, bu turun Kapanış'ında kart alır mıyım? C. Evet. Tetik Kapanış'ta çalışır; Aksiyon'dan sonra gelir.
 
-S. Ölüçağıranın Gözü'nün aldırdığı kartı tutmak zorunda mıyım? C. Hayır. Önce kartı ALIRSIN, sonra el-limiti kontrolü gelir — 7'nin üstündeysen onu (ya da başka bir kartı) aynı Kapanış'ta atabilirsin.
+S. Ölüçağıranın Gözü'nün aldırdığı kartı tutmak zorunda mıyım? C. Hayır. Önce kartı alırsın, sonra el limiti kontrol edilir. 7'nin üstündeysen onu ya da başka bir kartı aynı Kapanış'ta atabilirsin.
 
 S. Gölge Katili'ni masada hiç Hizmetkâr yokken oynarsam? C. Giriş efekti boşa düşer. Gölge Katili yine masaya yerleşir.
 
@@ -183,7 +183,7 @@ S. Karmik Yansıma saldırıyı geri döndürdüğünde saldırganın Hizmetkâr
 
 S. Kan Kefareti için elimde kaç kart olmalı? C. En az 2. Daha azıyla oynanamaz.
 
-S. Kan Kefareti'nin attığı 2 kartı kim seçer? C. Kimse — kartlar elinden rastgele çıkar (dijital masa seçer), bu yüzden bedeli ödemek her zaman bir kumardır.
+S. Kan Kefareti'nin attığı 2 kartı kim seçer? C. Kimse. Kartlar elinden rastgele çıkar, bu yüzden bedeli ödemek her zaman bir risktir.
 
 S. Zihin Paraziti'ni masamda 3 Hizmetkâr varken oynayabilir miyim? C. Hayır. Çalınan Hizmetkâr limitinizi doldurur; oynanamaz, HP harcanmaz.
 
