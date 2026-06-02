@@ -928,7 +928,9 @@ export class Game {
   private turnPileFaceDown(ids: string[], done: () => void): void {
     const showing = ids.filter((id) => this.cardEls.get(id)?.classList.contains("is-faceup"));
     if (!showing.length) { done(); return; }
-    for (const id of showing) { const c = this.state.cards.get(id); if (c) c.faceUp = false; }
+    // Purely VISUAL: we only turn the painted faces down here. The authoritative
+    // face-down state is stamped + broadcast by shuffleStack's flush (actor) or was
+    // already applied by applyPatch (peer replay), so we never write unstamped state.
     this.elevateDuringAnim(ids, FLIP_ANIM_MS);
     // Next frame: drop is-faceup so the .card__inner rotateY transition runs (the
     // cards are is-animating but NOT yet is-shuffling, so the transition is live).
