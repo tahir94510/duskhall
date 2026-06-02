@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { BoardState, CardState } from "./types.js";
-import { findStackOverlapping, findConnectedStack, flipStackOver, gatherStack, shuffleStack, alignRotation, rotationsDiffer, flipVisibleCardId, isTidyStack, nearestCongruentRot, setStackFace, topVisibleId } from "./StackOps.js";
+import { findStackOverlapping, findConnectedStack, flipStackOver, gatherStack, shuffleStack, alignRotation, rotationsDiffer, flipVisibleCardId, isTidyStack, nearestCongruentRot, setStackFace, topVisibleId, turnStackOver } from "./StackOps.js";
 
 // A 1000 x 1450 board so one card-width (96) maps cleanly; card is 96 x 139.2.
 const BOARD = { width: 1000, height: 1450 };
@@ -449,5 +449,47 @@ describe("topVisibleId: the highest-z card stays visible through the turn", () =
     const st = board([card("solo", 0.5, 0.5, 3)]);
     expect(topVisibleId(st, [])).toBe(null);
     expect(topVisibleId(st, ["solo"])).toBe("solo");
+  });
+});
+
+describe("turnStackOver: physical flip — depth reverses AND faces unify to one target", () => {
+  it("reverses z (bottom↔top) and squares a MIXED pile to the target face", () => {
+    // a(z1, up) b(z2, down) c(z3, up). Top card c is up → flip target = down (closed).
+    const st = board([
+      card("a", 0.5, 0.5, 1, 0, true),
+      card("b", 0.5, 0.5, 2, 0, false),
+      card("c", 0.5, 0.5, 3, 0, true)
+    ]);
+    turnStackOver(st, ["a", "b", "c"], false);
+    // Depth reversed: a was bottom (z1) → now top (z3); c was top → now bottom (z1).
+    expect(st.cards.get("a")!.z).toBe(3);
+    expect(st.cards.get("b")!.z).toBe(2);
+    expect(st.cards.get("c")!.z).toBe(1);
+    // Every card squared to the SAME target face — the mixed pile is corrected.
+    for (const id of ["a", "b", "c"]) expect(st.cards.get(id)!.faceUp).toBe(false);
+  });
+
+  it("preserves the exact set of z slots (the pile keeps its layer)", () => {
+    const st = board([card("a", 0.5, 0.5, 5, 0, false), card("b", 0.5, 0.5, 8, 0, false), card("c", 0.5, 0.5, 13, 0, false)]);
+    turnStackOver(st, ["a", "b", "c"], true);
+    expect([st.cards.get("a")!.z, st.cards.get("b")!.z, st.cards.get("c")!.z].sort((x, y) => x - y)).toEqual([5, 8, 13]);
+    for (const id of ["a", "b", "c"]) expect(st.cards.get(id)!.faceUp).toBe(true);
+  });
+
+  it("a lone card just adopts the target face (reversal is a no-op)", () => {
+    const st = board([card("solo", 0.5, 0.5, 4, 0, true)]);
+    turnStackOver(st, ["solo"], false);
+    expect(st.cards.get("solo")!.z).toBe(4);
+    expect(st.cards.get("solo")!.faceUp).toBe(false);
+  });
+
+  it("turnStackOver then flipVisibleCardId keeps a continuous (pop-free) visible card", () => {
+    // Closing a face-up-topped pile: target=false. The OLD top (was the art we looked
+    // at) ends at the bottom and is the card kept visible, turning from its art to back.
+    const st = board([card("a", 0.5, 0.5, 1, 0, true), card("b", 0.5, 0.5, 2, 0, true), card("c", 0.5, 0.5, 3, 0, true)]);
+    turnStackOver(st, ["a", "b", "c"], false); // z: a=3,b=2,c=1 ; all faceUp=false
+    const vis = flipVisibleCardId(st, ["a", "b", "c"], false);
+    expect(vis).toBe("c");                    // old top (now lowest z)
+    expect(st.cards.get("c")!.z).toBe(1);
   });
 });

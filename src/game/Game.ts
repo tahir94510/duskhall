@@ -29,8 +29,9 @@ import {
   findConnectedStack,
   gatherStack,
   shuffleStack,
-  setStackFace,
+  turnStackOver,
   topVisibleId,
+  flipVisibleCardId,
   alignRotation,
   rotationsDiffer,
   isTidyStack
@@ -1504,13 +1505,13 @@ export class Game {
     return max >= min ? max - min : 0;
   }
 
-  // Turn an ENTIRE pile to ONE shared face with a single synchronised 3D turn (the
-  // "unify" flip). State already holds the target face (setStackFace ran first). We
-  // stage the UNIFORM old face (!targetFaceUp) on EVERY card — even ones already at
-  // the target — so the rotateY transition fires for all of them and the pile turns as
-  // one block. The visible card stays pinned on top; the rest go transparent for the
-  // turn. No depth reversal, so the same card is on top throughout and nothing flashes
-  // underneath. At settle the quiet class drops and the render loop writes the
+  // Drive the VISUAL of a pile turning to ONE shared face with a single synchronised
+  // 3D turn. The state mutation (depth reversal + unified faces) was already done by
+  // turnStackOver; this only animates it. We stage the UNIFORM old face (!targetFaceUp)
+  // on EVERY card — even ones already at the target — so the rotateY transition fires
+  // for all of them and the pile turns as one block. The single `visibleId` is pinned
+  // on top; the rest go transparent for the turn so no undercard flashes at the edge-on
+  // instant. At settle the quiet class drops and the render loop writes the
   // authoritative faces; we requestRender (never a synchronous paint) so is-animating
   // has cleared before any concealment toggle, avoiding the rotateY snap that replayed
   // the turn a second time.
@@ -1541,19 +1542,25 @@ export class Game {
     for (const cid of stack) {
       if (this.isRivalOwnedCard(cid) || this.isLockedByOther(cid)) return;
     }
-    // UNIFY the faces (not a per-card invert): a deck that reads open turns wholesale
-    // to closed and vice-versa, so a pile with mixed faces never stays mixed and no
-    // undercard flashes. The target is the toggle of the VISIBLE top card's face. Z is
-    // NOT reversed, so the same card stays on top before and after — it is the one we
-    // keep on screen through the 3D turn.
-    const visibleId = topVisibleId(this.state, stack);
-    const topCard = visibleId ? this.state.cards.get(visibleId) : null;
-    const toFaceUp = !(topCard?.faceUp ?? false);
-    setStackFace(this.state, stack, toFaceUp);
+    // Turn the pile OVER like a real stack of cards: the depth order reverses (the
+    // bottom card ends up on top, the top card you were looking at goes to the bottom)
+    // AND every card is squared to ONE consistent face. The target face is the toggle
+    // of the current TOP card (the reference): a face-up-topped pile turns to all-backs,
+    // a face-down-topped pile turns to all-faces. Squaring to one face fixes the mixed
+    // open/closed "exception" cards (no undercard flashes the wrong way), while the
+    // depth reversal keeps the move physically honest.
+    const refTopId = topVisibleId(this.state, stack);
+    const target = !(refTopId ? this.state.cards.get(refTopId)?.faceUp ?? false : false);
+    turnStackOver(this.state, stack, target);
     for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
-    this.runSameFaceTurn(stack, visibleId, toFaceUp, FLIP_ANIM_MS);
-    // Send immediately with a flip hint so peers replay the same solid-block turn.
-    this.flushWithAnim(stack, { kind: "flip", ids: stack, toFaceUp });
+    // After the reversal, pick the card that should stay visible through the 3D turn
+    // so it reads as one solid block with no art-pop: opening shows the NEW top, closing
+    // keeps the OLD top (now at the bottom).
+    const visibleId = flipVisibleCardId(this.state, stack, target);
+    this.runSameFaceTurn(stack, visibleId, target, FLIP_ANIM_MS);
+    // Send immediately with a flip hint so peers replay the same solid-block turn. The
+    // reversed z + unified faces ride in the patch; `toFaceUp` is the shared target.
+    this.flushWithAnim(stack, { kind: "flip", ids: stack, toFaceUp: target });
     void this.audio.play("flip");
     this.rearmTooltipAtPointer();
   }
@@ -2416,11 +2423,11 @@ export class Game {
     if (!ids.length || this.anyAnimating(ids)) return;
     for (const id of ids) if (this.isRivalOwnedCard(id)) return;
     if (anim.kind === "flip") {
-      // Unify turn: every card is at the shared target face (applyPatch set it); the
-      // highest-z card stays visible and the whole pile turns as one block. Because z
-      // is no longer reversed, the actor's and the peer's top card match.
+      // Physical turn-over: the patch already carries the reversed z and the unified
+      // target faces, so flipVisibleCardId picks the SAME visible card the actor saw,
+      // and the whole pile turns as one solid block to the shared face.
       const toFaceUp = anim.toFaceUp === true;
-      const visibleId = topVisibleId(this.state, ids);
+      const visibleId = flipVisibleCardId(this.state, ids, toFaceUp);
       this.runSameFaceTurn(ids, visibleId, toFaceUp, FLIP_ANIM_MS);
     } else {
       // Shuffle: turn any showing faces down smoothly first (mirrors the actor, no

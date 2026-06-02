@@ -298,10 +298,37 @@ export function setStackFace(state: BoardState, ids: string[], faceUp: boolean):
   }
 }
 
-/** The id of the card currently on TOP of the pile (highest z), or null for an
- *  empty set. The unify turn keeps exactly this card visible while the rest hide,
- *  and — because the turn no longer reverses depth — it is on top before AND after,
- *  so there is no direction-dependent choice (unlike flipVisibleCardId). */
+/**
+ * Turn a whole pile OVER the way you flip a real stack of cards by hand: the depth
+ * order REVERSES (the card on the bottom ends up on top, and the one you were looking
+ * at on top ends up on the bottom) AND every card is brought to ONE consistent face,
+ * the `target`. So a messy pile — some cards face-up, some face-down, the central
+ * exception cards — is squared to a single facing as it turns, instead of staying
+ * mixed (which would leave undercards flashing the wrong way). The set of z SLOTS the
+ * pile occupies is preserved (it keeps its layer); only their assignment reverses.
+ * Pass `target = !(top card's faceUp)` for the natural "flip what I'm looking at" turn:
+ * a face-up-topped pile turns to all-backs, a face-down-topped pile turns to all-faces.
+ * A single card simply adopts the target face.
+ */
+export function turnStackOver(state: BoardState, ids: string[], target: boolean): void {
+  const ordered = ids
+    .map((id) => state.cards.get(id))
+    .filter((c): c is CardState => !!c)
+    .sort((a, b) => a.z - b.z);
+  if (!ordered.length) return;
+  const zSlots = ordered.map((c) => c.z);
+  const n = ordered.length;
+  for (let i = 0; i < n; i++) {
+    const c = ordered[i]!;
+    c.z = zSlots[n - 1 - i]!; // reverse depth: bottom ↔ top
+    c.faceUp = target;        // unify facing to the target
+  }
+}
+
+/** The id of the card currently on TOP of the pile (highest z), or null for an empty
+ *  set. Used as the flip REFERENCE: the target face is the toggle of this card's
+ *  current face. (After the turnStackOver reversal, flipVisibleCardId — not this —
+ *  picks which card stays visible through the animation.) */
 export function topVisibleId(state: BoardState, ids: string[]): string | null {
   let pick: CardState | null = null;
   for (const id of ids) {
