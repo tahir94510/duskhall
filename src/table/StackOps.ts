@@ -82,6 +82,64 @@ export function findStackOverlapping(
   return hits.map((c) => c.id);
 }
 
+// Max canonical span (centre to centre) of one CONNECTED pile. The deck (DECK_NX
+// 0.40) and discard (DISCARD_NX 0.60) centres are 0.20 apart, so capping the pile's
+// x-span strictly under 0.20 means a wide fan can never bridge the two central
+// piles into one. y is looser (the two piles share a row, so y never bridges them)
+// but still bounded so a pile stays local and never swallows a tableau heap.
+const MAX_STACK_SPAN_X = 0.19;
+const MAX_STACK_SPAN_Y = 0.42;
+
+/**
+ * Find the whole CONNECTED pile a card belongs to: a flood-fill where a card joins
+ * if it overlaps ANY already-included card by >= OVERLAP_RATIO (of the smaller
+ * footprint), bounded by a span guard so a spread/fanned layout is gathered as one
+ * stack WITHOUT bridging the two central piles. Unlike findStackOverlapping (which
+ * tests overlap against the single seed only — correct for "grab the tight pile
+ * under the cursor"), this captures a hand-spread deck the player means to flip,
+ * shuffle, gather or rotate as a whole. Returns ids in ascending z (bottom-to-top),
+ * matching findStackOverlapping's contract.
+ */
+export function findConnectedStack(
+  state: BoardState,
+  board: BoardSize,
+  seedId: string,
+  size?: { w: number; h: number }
+): string[] {
+  const seed = state.cards.get(seedId);
+  if (!seed) return [seedId];
+  const { w, h } = size && size.w > 0 ? size : cardSizeFallback();
+  // Deterministic candidate order (z then id) so the captured set is predictable.
+  const all = Array.from(state.cards.values()).sort((a, b) => (a.z - b.z) || a.id.localeCompare(b.id));
+  const boxes = new Map<string, { x: number; y: number; w: number; h: number }>();
+  for (const c of all) boxes.set(c.id, cardPixelBox(c, board, w, h));
+
+  const included = new Set<string>([seed.id]);
+  let minX = seed.x, maxX = seed.x, minY = seed.y, maxY = seed.y;
+  const queue: CardState[] = [seed];
+  while (queue.length) {
+    const cur = queue.shift()!;
+    const curBox = boxes.get(cur.id)!;
+    for (const c of all) {
+      if (included.has(c.id)) continue;
+      const cb = boxes.get(c.id)!;
+      const inter = intersectionArea(curBox, cb);
+      if (inter <= 0) continue;
+      const minArea = Math.min(curBox.w * curBox.h, cb.w * cb.h);
+      if (inter / minArea < OVERLAP_RATIO) continue;
+      // Span guard: adding this card must keep the whole pile within the safe box,
+      // so a wide fan never reaches from one central pile into the other.
+      const nMinX = Math.min(minX, c.x), nMaxX = Math.max(maxX, c.x);
+      const nMinY = Math.min(minY, c.y), nMaxY = Math.max(maxY, c.y);
+      if (nMaxX - nMinX > MAX_STACK_SPAN_X || nMaxY - nMinY > MAX_STACK_SPAN_Y) continue;
+      included.add(c.id);
+      minX = nMinX; maxX = nMaxX; minY = nMinY; maxY = nMaxY;
+      queue.push(c);
+    }
+  }
+  return all.filter((c) => included.has(c.id)).map((c) => c.id);
+}
+
 /**
  * Square every card's ORIENTATION to one angle, without moving or restacking
  * them. This is the first phase of a tidy: straighten a fanned/cross-laid pile so

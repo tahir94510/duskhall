@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { seatIsOwned, seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, type Occupancy, type HostCandidate, type RosterEntry } from "./occupancy.js";
+import { seatIsOwned, seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, shouldClearTombstone, seniorityOnReturn, type Occupancy, type HostCandidate, type RosterEntry } from "./occupancy.js";
 
 // These rules decide whether a seat's on-screen area is a player's private zone or
 // open public table, and whether a card can be touched. The bugs they fix: empty
@@ -126,6 +126,44 @@ describe("host = earliest active joiner; transfers on leave; returnee never stea
     expect(isHost("b", active, false)).toBe(false);
     expect(isHost("a", active, true)).toBe(false); // spectator flag wins
     expect(isHost("", active, false)).toBe(false);
+  });
+});
+
+describe("seniorityOnReturn: refresh keeps host, long absence / leave does not", () => {
+  const RECOVERY = 40000; // SENIORITY_RECOVERY_MS
+  const NOW = 1_000_000;
+  const C = (id: string, joinedAt: number, seat: number): HostCandidate => ({ id, joinedAt, seat });
+
+  it("a refresh recovers the original seniority (so the host keeps host)", () => {
+    // Host joined at 1000, was active 2s ago (a quick refresh).
+    const sen = seniorityOnReturn({ joinedAt: 1000, ts: NOW - 2000 }, NOW, RECOVERY);
+    expect(sen).toBe(1000);
+    // With the recovered seniority they are still the earliest of everyone present.
+    expect(hostId([C("host", sen, 0), C("other", 5000, 1)])).toBe("host");
+  });
+
+  it("an absence longer than the window yields FRESH seniority (cannot reclaim host)", () => {
+    // Identity last active 60s ago — beyond the 40s window: treated as a new joiner.
+    const sen = seniorityOnReturn({ joinedAt: 1000, ts: NOW - 60000 }, NOW, RECOVERY);
+    expect(sen).toBe(NOW);
+    // A peer who stayed (joined at 5000) outranks the now-fresh returnee.
+    expect(hostId([C("returnee", sen, 0), C("stayed", 5000, 1)])).toBe("stayed");
+  });
+
+  it("no stored identity (a genuine leave/kick wiped it) → fresh seniority", () => {
+    expect(seniorityOnReturn(null, NOW, RECOVERY)).toBe(NOW);
+    // joinedAt 0 (corrupt / never set) is also treated as fresh.
+    expect(seniorityOnReturn({ joinedAt: 0, ts: NOW }, NOW, RECOVERY)).toBe(NOW);
+  });
+});
+
+describe("shouldClearTombstone: a returnee with a newer connAt is shown at once", () => {
+  it("a strictly newer connAt clears the tombstone (genuine reconnect)", () => {
+    expect(shouldClearTombstone(1000, 2000)).toBe(true);
+  });
+  it("the same or older connAt is a stale presence echo — stays suppressed", () => {
+    expect(shouldClearTombstone(2000, 2000)).toBe(false);
+    expect(shouldClearTombstone(2000, 1500)).toBe(false);
   });
 });
 

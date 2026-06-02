@@ -118,9 +118,11 @@
     "body": "Bu odadan ayrılırsın ve yeni bağlantıyla taze bir oda açılır; oranın sahibi (host) sen olursun. Burada sana ait kartlar diğer oyunculara serbest bırakılır.",
     "leave": "Çık"
   },
-  "pasteJoin": {
-    "title": "Odaya geç?",
-    "body": "{code} odasına katıl? Şu anki masandan ayrılacaksın.",
+  "joinByCode": {
+    "title": "Bir odaya katıl",
+    "body": "Aşağıya bir oda kodu veya davet bağlantısı yapıştır, sonra Katıl'a bas. Şu anki masandan ayrılacaksın.",
+    "label": "Oda kodu veya davet bağlantısı",
+    "placeholder": "örn. P86B3T",
     "confirm": "Odaya katıl"
   },
   "settings": {
@@ -237,12 +239,12 @@
       "name": "Kızıl Monolit",
       "type": "Mühür",
       "effect": "Aksiyon aşamasında 2 yerine 3 HP kullanırsınız. Her ek kopya +1 HP ekler; toplam HP 5'i aşamaz. Yerleştirildiği turda değil, bir sonraki turdan itibaren aktif olur.",
-      "flavor": "Pas ve azimden bir taht."
+      "flavor": "Her şey yıkıldığında hâlâ ayakta duran."
     },
     "necromancersEye": {
       "name": "Ölüçağıranın Gözü",
       "type": "Mühür",
-      "effect": "Kapanış aşamanızın başında, el limiti kontrolünden ÖNCE, Çöplüğün en üstündeki 1 kartı elinize ALMAK ZORUNDASINIZ. Her ek kopya 1 kart daha ekler. Çöplük boşsa efekt boşa düşer. Yerleştirildiği turun Kapanış'ında zaten devreye girer.",
+      "effect": "Kapanış aşamanızın başında, el limiti kontrolünden ÖNCE, Çöplüğün en üstündeki 1 kartı elinize ALMAK ZORUNDASINIZ. Her ek kopya 1 kart daha ekler. Çöplük boşsa efekt boşa düşer. Yerleştirildiği turun Kapanış'ında zaten devreye girer. Bu şekilde aldığınız kart artık sıradan bir el kartıdır: eli 7'nin üstüne çıkarırsa, aynı Kapanış'ın el-limiti adımında onu (ya da başka bir kartı) atabilirsiniz.",
       "flavor": "Ölüler hesaplarını sabırlı defterlerde tutar."
     },
     "etherStrike": {
@@ -273,7 +275,7 @@
       "name": "Kaderin Cilvesi",
       "type": "Büyü",
       "effect": "1 HP harcayın. Elinizdeki tüm kartları seçtiğiniz bir rakibin elindeki tüm kartlarla toptan takas edin. Masa kartları etkilenmez. El limiti fazlalıkları her oyuncunun bir sonraki Kapanış'ında giderilir. Hedef Hiçlik Örtüsü ile korunuyorsa oynanamaz.",
-      "flavor": "Tekerlek izin sormaz."
+      "flavor": "Kaderin çarkı kimseye sormadan döner."
     },
     "silence": {
       "name": "Sustur!",
@@ -290,7 +292,7 @@
     "bloodAtonement": {
       "name": "Kan Kefareti",
       "type": "Müdahale",
-      "effect": "HP harcamaz. YALNIZCA KENDİ Mührünüzün yok edilmek üzere olduğu anda oynanır. Elinizden rastgele 2 kart çöpe gider, Mühür kurtulur. Elinizde 2'den az kart varsa oynanamaz.",
+      "effect": "HP harcamaz. YALNIZCA KENDİ Mührünüzün yok edilmek üzere olduğu anda oynanır. Elinizden rastgele 2 kart çöpe gider, Mühür kurtulur — hangi 2 kartın gideceğini kimse seçmez; kartlar elinizden rastgele çıkar (dijital masa sizin için seçer), yani gerçek bir risktir. Elinizde 2'den az kart varsa oynanamaz.",
       "flavor": "Kalp atışıyla ödenen bir yemin."
     },
     "runicWarden": {
@@ -368,7 +370,7 @@
           "OLUŞTUR (1 HP): elden 1 Büyü oynayın, ya da masanıza 1 Mühür veya 1 Hizmetkâr yerleştirin.",
           "ARAŞTIR (1 HP): desteden 1 ekstra kart çekin.",
           "ARINDIR (1 HP): elinizden 1 kart atın, ardından 1 kart çekin. Arındır ile çekilen kart aynı turda başka bir Arındır ile atılamaz.",
-          "AŞAMA 3, KAPANIŞ: Önce aktif tüm Mühür efektleri devreye girer (Ölüçağıranın Gözü kartını şimdi alır). Sonra el limiti kontrol edilir; 7'ye iner. Kapanış tamamlandıktan sonra masanızda en az 3 Mühür varsa Yükseliş ilan edebilirsiniz (bkz. bölüm 10)."
+          "AŞAMA 3, KAPANIŞ: Önce aktif tüm Mühür efektleri devreye girer (Ölüçağıranın Gözü kartını şimdi alır). Sonra el limiti kontrol edilir; 7'ye iner — Ölüçağıranın Gözü'nün yeni aldığı kart da bu limite dahildir ve atılacak kart o olabilir. Kapanış tamamlandıktan sonra masanızda en az 3 Mühür varsa Yükseliş ilan edebilirsiniz (bkz. bölüm 10)."
         ]
       },
       {
@@ -446,7 +448,7 @@
           "Zaman Çatlağı: Odaklanma'da 2 yerine 3 kart çekersin. Her ek kopya +1 (en çok 4 kopya, 6 kart). Konulduğu turun ERTESİ tur etkinleşir.",
           "Hiçlik Örtüsü: Diğer Mühürlerin ve elin düşman büyüleri/efektleri tarafından hedeflenemez. Örtü'nün kendisi her zaman hedeflenebilir. Konulduğu anda etkin. Birden fazla kopya birikmez.",
           "Kızıl Monolit: Aksiyon'da 2 yerine 3 HP kullanırsın. Her ek kopya +1 HP (en fazla 5). Konulduğu turun ERTESİ tur etkinleşir.",
-          "Ölüçağıranın Gözü: Kapanış'ın başında, el limiti kontrolünden ÖNCE, Çöplüğün en üst kartını eline almak ZORUNDASIN. Her ek kopya bir kart daha alır. Çöplük boşsa boşa düşer. Konulduğu turda çalışır.",
+          "Ölüçağıranın Gözü: Kapanış'ın başında, el limiti kontrolünden ÖNCE, Çöplüğün en üst kartını eline almak ZORUNDASIN. Her ek kopya bir kart daha alır. Çöplük boşsa boşa düşer. Konulduğu turda çalışır. Alınan kart artık sıradan bir el kartıdır; eli 7'yi aşarsa aynı Kapanış'ta atılabilir.",
           "BÜYÜLER (24 toplam):",
           "Eterik Çarpma: 1 HP. Bir rakibin masasındaki 1 kartı yok et. Hizmetkâr Kalkanı uygulanır.",
           "Gölge Hırsızlığı: 1 HP. Rakibinin eli kapatılır; rastgele 1 kart eline çekilir. Hiçlik Örtüsü engeller.",
@@ -456,7 +458,7 @@
           "MÜDAHALELER (16 toplam):",
           "Sustur!: 0 HP. Taze atılmış bir Büyü veya Müdahaleyi iptal et. İptal edilen kart ve Sustur! Çöplüğe gider. Evrensel hedef.",
           "Karmik Yansıma: 0 HP. Bencil. Size ya da masanızdaki kartlarınıza yönelen saldırıyı iptal eder ve saldırgana geri döndürür; bu geri dönüşte saldırganın kendi Hizmetkâr Kalkanı geçerlidir.",
-          "Kan Kefareti: 0 HP. Bencil. Yalnızca size ait bir Mühür yok edilecekken oynanır; elinizden 2 rastgele kart atıp Mührü kurtarırsınız.",
+          "Kan Kefareti: 0 HP. Bencil. Yalnızca size ait bir Mühür yok edilecekken oynanır; elinizden 2 rastgele kart atıp Mührü kurtarırsınız. Kartları kimse seçmez; rastgele giderler (masa seçer).",
           "HİZMETKÂRLAR (16 toplam):",
           "Rünik Bekçi: Masandayken TÜM Mühürlerin hedeflenemez olur. Hizmetkâr Kalkanı geçerli; rakipler önce tüm Hizmetkârları temizlemelidir.",
           "Buzul Ucube: Yok edildiğinde, onu yok eden oyuncu sonraki tüm turunu atlar (Odaklanma, Aksiyon, Kapanış). Atlanan turda Müdahaleler oynanabilir.",
@@ -472,10 +474,12 @@
           "S. 2 Zaman Çatlağı masada, kaç kart çekerim? C. 4 (her kopya +1).",
           "S. Kızıl Monolit bu tur konuldu, bu tur 3 HP'yi mi kullanırım? C. Hayır. Bir sonraki turdan itibaren geçerlidir.",
           "S. Ölüçağıranın Gözü bu tur konuldu, bu turun Kapanış'ında kart alır mıyım? C. Evet. Tetik Kapanış'ta çalışır; Aksiyon'dan sonra gelir.",
+          "S. Ölüçağıranın Gözü'nün aldırdığı kartı tutmak zorunda mıyım? C. Hayır. Önce kartı ALIRSIN, sonra el-limiti kontrolü gelir — 7'nin üstündeysen onu (ya da başka bir kartı) aynı Kapanış'ta atabilirsin.",
           "S. Gölge Katili'ni masada hiç Hizmetkâr yokken oynarsam? C. Giriş efekti boşa düşer. Gölge Katili yine masaya yerleşir.",
           "S. Gölge Katili girişiyle Buzul Ucube'yi yok edersem kim tur atlar? C. SİZ. Cezayı yok eden öder.",
           "S. Karmik Yansıma saldırıyı geri döndürdüğünde saldırganın Hizmetkâr Kalkanı uygulanır mı? C. Evet. Geri dönen saldırı saldırganın Hizmetkâr Kalkanı'na tabidir; Mühürlerine ulaşmadan önce Hizmetkârlarını temizlemek zorundadır.",
           "S. Kan Kefareti için elimde kaç kart olmalı? C. En az 2. Daha azıyla oynanamaz.",
+          "S. Kan Kefareti'nin attığı 2 kartı kim seçer? C. Kimse — kartlar elinden rastgele çıkar (dijital masa seçer), bu yüzden bedeli ödemek her zaman bir kumardır.",
           "S. Zihin Paraziti'ni masamda 3 Hizmetkâr varken oynayabilir miyim? C. Hayır. Çalınan Hizmetkâr limitinizi doldurur; oynanamaz, HP harcanmaz.",
           "S. Gölge Hırsızlığı Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. El koruma altındadır.",
           "S. Kaderin Cilvesi Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. Hedef oyuncunun eli koruma altında.",

@@ -1,6 +1,6 @@
 import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EYE, ICON_EXIT, ICON_FEEDBACK, ICON_INFO } from "./icons.js";
 import { t } from "../i18n/index.js";
-import { inviteUrl, parseRoomInput } from "../net/room.js";
+import { inviteUrl } from "../net/room.js";
 import { flashConfirm } from "./feedback.js";
 import { toast } from "./Toast.js";
 
@@ -15,9 +15,10 @@ export interface HeaderHooks {
   onShortcuts(): void;
   /** Connect to a specific room by its 6-char code. */
   onJoinRoom(code: string): void;
-  /** A pasted code/link resolved to `code`: ask the player to confirm the switch
-   *  (owns the modal in Game), then join. */
-  onPasteJoin(code: string): void;
+  /** Open the "join a room by code/link" dialog (owns the modal in Game). The
+   *  dialog has its own text field, so this works in every browser — including
+   *  Firefox, which blocks clipboard reads outside its native paste affordance. */
+  onJoinByCode(): void;
   /** Run the Supabase connection self-test. */
   onDiagnose(): void;
 }
@@ -182,27 +183,15 @@ export class Header {
       }).catch(() => {});
     });
 
-    // Paste a code OR an invite link from the clipboard and join that room.
-    this.menu.querySelector<HTMLButtonElement>('[data-action="room-paste"]')?.addEventListener("click", async (e) => {
+    // Open the "join a room by code/link" dialog. The dialog carries its OWN text
+    // field, so the player pastes (Ctrl+V) or types the code there — this works in
+    // every browser. The old approach read the clipboard on click, which Firefox
+    // blocks behind its native paste affordance, so the app modal never showed.
+    this.menu.querySelector<HTMLButtonElement>('[data-action="room-paste"]')?.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const btn = e.currentTarget as HTMLElement;
-      let text = "";
-      try { text = (await navigator.clipboard?.readText()) || ""; } catch { text = ""; }
-      const code = parseRoomInput(text);
-      if (!code) {
-        btn.classList.add("is-error");
-        window.setTimeout(() => btn.classList.remove("is-error"), 600);
-        toast(t("ui.invalidCode"));
-        return;
-      }
-      // Already in this room: nothing to do (no modal, no spurious second control).
-      if (code === this.roomSlug) { toast(t("ui.joined")); return; }
-      // Ask for a clear confirmation ("Switch to room <CODE>?") before leaving the
-      // current table — Game owns the modal. The menu closes so no extra paste
-      // affordance lingers behind the dialog.
       this.closeMenu();
-      this.hooks.onPasteJoin(code);
+      this.hooks.onJoinByCode();
     });
 
     // Room code is blurred by default; clicking it reveals, clicking again hides.

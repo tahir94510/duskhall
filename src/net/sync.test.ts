@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { safeNumber, safeStamp, safeInt } from "../security/inputGuard.js";
 import { isNewerWrite } from "./lww.js";
-import { classifyKey, maskHost, sanitizeAnim } from "./realtime.js";
+import { classifyKey, maskHost, sanitizeAnim, clampCardTs } from "./realtime.js";
 
 // A minimal unsigned JWT with a given role claim, for classifyKey tests.
 function fakeJwt(role: string): string {
@@ -82,6 +82,21 @@ describe("last-write-wins accepts a newer remote edit", () => {
     const localTs = REAL_TS; // receiver's current copy
     expect(sanitizedTs).toBe(REAL_TS + 500);
     expect(isNewerWrite(sanitizedTs, "peerB", localTs, "self")).toBe(true);
+  });
+});
+
+describe("clampCardTs guards against a far-future (skewed-clock) sender", () => {
+  it("passes a real present/past timestamp through unchanged", () => {
+    expect(clampCardTs(REAL_TS, REAL_TS)).toBe(REAL_TS);
+    expect(clampCardTs(REAL_TS - 10_000, REAL_TS)).toBe(REAL_TS - 10_000);
+  });
+  it("tolerates ordinary forward skew (seconds to a few minutes)", () => {
+    expect(clampCardTs(REAL_TS + 30_000, REAL_TS)).toBe(REAL_TS + 30_000);
+  });
+  it("clamps a pathological far-future stamp back to now", () => {
+    const wild = REAL_TS + 1e9; // ~11 days ahead
+    expect(clampCardTs(wild, REAL_TS)).toBe(REAL_TS);
+    expect(clampCardTs(wild, REAL_TS)).toBeLessThan(wild);
   });
 });
 

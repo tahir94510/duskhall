@@ -80,6 +80,32 @@ export function isHost(selfId: string, active: Iterable<HostCandidate>, spectato
   return selfId !== "" && hostId(active) === selfId;
 }
 
+/** A tombstoned (kicked/left) client that re-appears in presence is genuinely BACK
+ *  — not a stale presence echo to keep suppressing — when its current connection
+ *  stamp is strictly newer than the one it was tombstoned with. Both stamps come
+ *  from that ONE device's clock across successive connects, so the comparison is
+ *  monotonic per device and immune to cross-machine clock skew. Returning true means
+ *  "drop the tombstone and show them now"; false means "still the old, lingering
+ *  presence — keep hiding it until untrack propagates / the hard expiry lapses". */
+export function shouldClearTombstone(tombstonedConnAt: number, presenceConnAt: number): boolean {
+  return presenceConnAt > tombstonedConnAt;
+}
+
+/** Decide a (re)entering client's seniority (joinedAt). When the stored identity was
+ *  active within `recoveryMs` (a refresh or a quick drop), KEEP the stored seniority
+ *  so the host keeps host and seats never reshuffle on a reload. Otherwise — a long
+ *  absence (the seat was released long ago) or no stored identity at all (a genuine
+ *  leave/kick wiped it) — return `now`, a FRESH seniority that ranks last and so can
+ *  never reclaim host over players who stayed. Pure + unit-tested. */
+export function seniorityOnReturn(
+  stored: { joinedAt: number; ts: number } | null,
+  now: number,
+  recoveryMs: number
+): number {
+  if (stored && stored.joinedAt > 0 && now - stored.ts <= recoveryMs) return stored.joinedAt;
+  return now;
+}
+
 // ---- Seat resolution --------------------------------------------------------
 // The single, pure, testable rule for "who sits where" each presence sync. It
 // fixes the duplicate-on-return and lingering-away bugs and honours the product
