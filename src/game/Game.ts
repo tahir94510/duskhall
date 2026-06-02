@@ -142,6 +142,11 @@ export class Game {
   // presence echo (same connAt), so a returning player is shown at once, not hidden
   // for the tombstone grace. Distinct from selfJoinedAt by design.
   private selfConnAt = Date.now();
+  // Whether we've completed a connection at least once this session. Used to refresh
+  // selfConnAt on a genuine RECONNECT (a network drop that auto-recovers without a
+  // page reload), so a peer who came back after the away grace still publishes a
+  // newer connAt and clears its tombstone — visible at once, not stuck till expiry.
+  private hasBeenOnline = false;
   // Persistent seat ownership keyed by seat index. A claim survives a network
   // drop (the seat shows as "dropped"/dimmed) and is only cleared by an explicit
   // `left` broadcast, so a disconnected player never loses their seat or cards.
@@ -1987,6 +1992,17 @@ export class Game {
       // Instead the bus sends `hello` on every (re)connect and the authoritative
       // peer answers it (see respondToHello), which also recovers state after a
       // dropped channel.
+      if (s === "online") {
+        // On a genuine RECONNECT (not the first connect), stamp a fresh connAt and
+        // re-publish, so peers who tombstoned us after the away grace see a newer
+        // connAt and clear it — we reappear at once instead of staying hidden until
+        // the tombstone's hard expiry. The first connect already has a fresh connAt.
+        if (this.hasBeenOnline) {
+          this.selfConnAt = Date.now();
+          this.bus.updateMe(this.presencePayload());
+        }
+        this.hasBeenOnline = true;
+      }
       if (s === "offline") {
         // Can't reach peers: never keep the loader waiting on the network. The
         // local board is final for solo/offline play.
