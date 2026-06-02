@@ -46,10 +46,12 @@ export interface DragHooks {
 
 const DRAG_THRESHOLD = 4;
 const LONG_PRESS_MS = 280;
-// Elevated z-band for cards in hand: above the table (--z-card: 10) and zones
-// (--z-zone: 2) but below peer cursors (--z-cursor: 600), so a held card always
-// renders over an opponent's area yet never covers their cursor or the header.
-// Mirrors ANIM_Z_BASE in Game.ts.
+// Base of the elevated z-band for cards in hand: above the table (--z-card: 10) and
+// zones (--z-zone: 2). Each held card is painted at HELD_Z_BASE + (its z − the pile's
+// lowest z), so a big pile may span past 519 internally, but it can never cover peer
+// cursors/header/seat labels: the cards sit inside .board__perspective, whose
+// rotation transform is a stacking context that contains the entire band beneath the
+// sibling label layer and the body-level cursors. Mirrors ANIM_Z_BASE in Game.ts.
 const HELD_Z_BASE = 500;
 
 interface DragSession {
@@ -169,14 +171,22 @@ export class DragController {
       .sort((a, b) => a.z - b.z);
     this.hooks.bringToTop(ordered.map((c) => c.id));
     const els = new Map<string, HTMLDivElement>();
-    let heldIdx = 0;
+    // Paint each held card at HELD_Z_BASE + its offset from the pile's lowest z, so
+    // the FULL internal stacking order is preserved no matter how many cards are in
+    // hand. The pile was just lifted by bringToTop, so its z values are dense and the
+    // span is at most the card count (≤72) — well within the band. (The old code
+    // capped the offset at 18, which collapsed every card past the 19th onto one z so
+    // bottom cards painted over top ones during a bulk drag, then "snapped back" on
+    // release when the resting z was restored.) The held band can never escape over
+    // seat labels / cursors / header: the cards live inside .board__perspective,
+    // whose board-rotation transform is a stacking context that contains the whole
+    // band beneath the sibling label layer (--z-seat) and the body-level cursors.
+    const minZ = ordered.length ? ordered[0]!.z : 0;
     for (const c of ordered) {
       const el = this.host.querySelector<HTMLDivElement>(`[data-id="${c.id}"]`);
       if (el) {
         els.set(c.id, el);
-        // Cap the offset so even a big held pile stays within [HELD_Z_BASE, seat
-        // band): the index only preserves relative order within the held pile.
-        el.style.zIndex = String(HELD_Z_BASE + Math.min(heldIdx++, 18));
+        el.style.zIndex = String(HELD_Z_BASE + (c.z - minZ));
         el.classList.add("is-held");
       }
     }

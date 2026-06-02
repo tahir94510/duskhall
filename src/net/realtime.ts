@@ -57,8 +57,22 @@ export interface SeatClaim {
 export interface PatchAnim {
   kind: "flip" | "shuffle";
   ids: string[];
-  /** Flip direction (the final face), so the receiver stages old → new correctly. */
+  /** For a flip, the SHARED target face every card in the pile turns to (the unify
+   *  turn: open pile → all closed, closed → all open). The receiver stages the
+   *  uniform old face (!toFaceUp) on every card, then turns them all to `toFaceUp`. */
   toFaceUp?: boolean;
+}
+
+/** A player the sender has authoritatively removed (kicked or explicitly left).
+ *  Carried on the host's periodic reconcile and on snapshots so a client that missed
+ *  the one-shot `left`/`kick` broadcast still converges: it frees the seat and
+ *  tombstones the id. `connAt` is the removed client's last-known per-connection
+ *  stamp, so a genuine return (newer connAt) is NOT re-removed. */
+export interface RemovedEntry {
+  id: string;
+  connAt: number;
+  /** The seat the removed player held, or -1 if unknown/none. */
+  seat?: number;
 }
 
 export interface CardPatch {
@@ -69,6 +83,10 @@ export interface CardPatch {
   claims?: SeatClaim[];
   /** Optional cosmetic animation hint (patches only, never snapshots). */
   anim?: PatchAnim;
+  /** Authoritatively-removed players (reconcile patches + snapshots). Lets a client
+   *  that missed a `left`/`kick` converge within the reconcile cadence instead of
+   *  showing the player "away" for the whole grace window. */
+  removed?: RemovedEntry[];
 }
 
 /** Broadcast when a player INTENTIONALLY leaves (reset/leave or hops rooms), as
@@ -159,6 +177,19 @@ export function sanitizeAnim(raw: unknown): PatchAnim | null {
   const out: PatchAnim = { kind: a.kind, ids };
   if (typeof a.toFaceUp === "boolean") out.toFaceUp = a.toFaceUp;
   return out;
+}
+
+/** Validate an authoritative removed-players list. Capped well above the 4 seats so it
+ *  can never bloat the payload; ids/seat clamped; connAt kept at full magnitude (it is
+ *  a wall-clock stamp like ts, so safeStamp not safeNumber — else the per-device return
+ *  check would always misfire). Empty ids dropped. */
+export function sanitizeRemoved(raw: unknown): RemovedEntry[] {
+  if (!Array.isArray(raw)) return [];
+  return (raw as Array<Partial<RemovedEntry>>).slice(0, 16).map((r) => ({
+    id: safeString(r.id, 40),
+    connAt: safeStamp(r.connAt, 0),
+    seat: typeof r.seat === "number" ? Math.max(-1, Math.min(3, Math.round(r.seat))) : -1
+  })).filter((r) => !!r.id);
 }
 
 export type KeyKind = "anon" | "publishable" | "service_role" | "secret" | "unknown";
@@ -665,6 +696,10 @@ export class RealtimeBus {
     return sanitizeAnim(raw);
   }
 
+  private sanitizeRemoved(raw: unknown): RemovedEntry[] {
+    return sanitizeRemoved(raw);
+  }
+
   private handleGame(payload: unknown): void {
     if (!payload || typeof payload !== "object") return;
     const msg = payload as { type?: string; payload?: unknown };
@@ -685,6 +720,12 @@ export class RealtimeBus {
       if (msg.type === "patch" && p.anim) {
         const a = this.sanitizeAnim(p.anim);
         if (a) sanitized.anim = a;
+      }
+      // Authoritatively-removed players ride on reconcile patches AND snapshots so a
+      // client that missed a one-shot left/kick converges (frees the seat, tombstones).
+      if (p.removed) {
+        const r = this.sanitizeRemoved(p.removed);
+        if (r.length) sanitized.removed = r;
       }
       for (const l of this.gameListeners) l({ type: msg.type, payload: sanitized });
     } else if (msg.type === "left") {

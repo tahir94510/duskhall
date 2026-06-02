@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { seatIsOwned, seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, shouldClearTombstone, seniorityOnReturn, type Occupancy, type HostCandidate, type RosterEntry } from "./occupancy.js";
+import { seatIsOwned, seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, shouldClearTombstone, shouldReTombstone, seniorityOnReturn, type Occupancy, type HostCandidate, type RosterEntry } from "./occupancy.js";
 
 // These rules decide whether a seat's on-screen area is a player's private zone or
 // open public table, and whether a card can be touched. The bugs they fix: empty
@@ -154,6 +154,19 @@ describe("seniorityOnReturn: refresh keeps host, long absence / leave does not",
     expect(seniorityOnReturn(null, NOW, RECOVERY)).toBe(NOW);
     // joinedAt 0 (corrupt / never set) is also treated as fresh.
     expect(seniorityOnReturn({ joinedAt: 0, ts: NOW }, NOW, RECOVERY)).toBe(NOW);
+  });
+});
+
+describe("shouldReTombstone: an authoritative removal ignores a returned player", () => {
+  it("re-tombstones when the id is not present (no live connAt)", () => {
+    expect(shouldReTombstone(1000, undefined)).toBe(true);
+  });
+  it("re-tombstones when the present connAt is NOT newer than the removal", () => {
+    expect(shouldReTombstone(2000, 2000)).toBe(true);  // same connection
+    expect(shouldReTombstone(2000, 1500)).toBe(true);  // stale echo
+  });
+  it("does NOT re-tombstone a genuine return (present connAt strictly newer)", () => {
+    expect(shouldReTombstone(1000, 2000)).toBe(false);
   });
 });
 

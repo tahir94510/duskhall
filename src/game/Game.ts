@@ -23,22 +23,22 @@ import { t, onLocaleChange } from "../i18n/index.js";
 import { getOrCreateRoom, newRoom, setRoomSlug } from "../net/room.js";
 import { showLoader, hideLoader } from "../ui/loader.js";
 import { seededDeck } from "./deck.js";
-import { seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, shouldClearTombstone, seniorityOnReturn, type Occupancy, type HostCandidate, type SeatClaimEntry } from "./occupancy.js";
+import { seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, shouldClearTombstone, shouldReTombstone, seniorityOnReturn, type Occupancy, type HostCandidate, type SeatClaimEntry } from "./occupancy.js";
 import {
   findStackOverlapping,
   findConnectedStack,
   gatherStack,
   shuffleStack,
-  flipStackOver,
+  setStackFace,
+  topVisibleId,
   alignRotation,
   rotationsDiffer,
-  flipVisibleCardId,
   isTidyStack
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
 import { pointInZoneCanonical } from "../table/SlotGrid.js";
-import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim } from "../net/realtime.js";
+import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry } from "../net/realtime.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
@@ -166,6 +166,15 @@ export class Game {
   // arrives to clear it. The connAt comparison is the real discriminator now, so the
   // old "must exceed AWAY_GRACE" coupling no longer gates visibility.
   private static readonly TOMBSTONE_MS = 35000;
+  // Recently-departed host ids (id -> expiry ms). When the host role transfers, the
+  // PREVIOUS host is recorded here for a short window so a kick they issued just before
+  // the transfer is still accepted by peers whose host view briefly disagrees. The
+  // authoritative `removed[]` reconcile is the real guarantee; this only trims latency.
+  private recentHosts = new Map<string, number>();
+  private static readonly RECENT_HOST_MS = 5000;
+  // The last host id we computed, so applyPresence can detect a transfer and stamp the
+  // outgoing host into recentHosts.
+  private lastHostId = "";
   // "Away" grace: a seat whose owner dropped (closed the tab / lost the network)
   // without sending an explicit `left` stays reserved & dimmed ONLY for this long.
   // If they have not returned by then we vacate the seat for good — release their
@@ -1133,15 +1142,18 @@ export class Game {
     const ordered = ids
       .map((id) => ({ id, z: this.state.cards.get(id)?.z ?? 0 }))
       .sort((a, b) => a.z - b.z);
-    let i = 0;
-    for (const { id } of ordered) {
+    const minZ = ordered.length ? ordered[0]!.z : 0;
+    for (const { id, z } of ordered) {
       const el = this.cardEls.get(id);
       if (!el) continue;
       el.classList.add("is-animating");
-      // Keep the band within [ANIM_Z_BASE, --z-seat) even for a 72-card pile: the
-      // offset only needs to preserve RELATIVE order within the pile, so cap it so
-      // a big animating pile never climbs over seat labels (520) or cursors (600).
-      el.style.zIndex = String(ANIM_Z_BASE + Math.min(i++, 18));
+      // Paint at ANIM_Z_BASE + offset from the pile's lowest z, preserving the FULL
+      // internal order for any pile size (a 72-card flip/shuffle no longer collapses
+      // its bottom cards onto one z). The band cannot climb over seat labels/cursors:
+      // the cards live inside .board__perspective, whose rotation transform is a
+      // stacking context that contains the whole band beneath the sibling label layer
+      // (--z-seat) and the body-level cursors, regardless of the internal z value.
+      el.style.zIndex = String(ANIM_Z_BASE + (z - minZ));
       const prev = this.animTimers.get(id);
       if (prev) window.clearTimeout(prev);
       const handle = window.setTimeout(() => {
@@ -1272,6 +1284,12 @@ export class Game {
     const anchor = this.state.cards.get(id);
     if (!anchor) return;
     this.syncTopZ(); // gatherStack lifts via topZ; keep it above all board cards
+    // The anchor (card under the cursor) turns exactly `dir`; every other card squares
+    // to the anchor's NEW angle by the SHORTEST path. gatherStack snaps each card via
+    // nearestCongruentRot(c.rot, anchor.rot + dir), whose result is always within ±2
+    // quarter-turns of the card's OWN angle — so a 90° card turns back to 0° and a 270°
+    // card turns forward to 360°, never the long way round, and the CSS rotate
+    // transition (interpolating rot*90deg) travels that same short arc.
     gatherStack(this.state, stack, anchor.x, anchor.y, anchor.rot + dir);
     for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
     this.scheduleFlush();
@@ -1416,6 +1434,10 @@ export class Game {
       const c = this.state.cards.get(cid);
       if (c && c.z > topZ) { topZ = c.z; topId = cid; }
     }
+    // Lock the whole pile to peers for the entire straighten→gather→flip flow so no
+    // one can grab/flip/rotate a card out from under the animation. Released by a
+    // guaranteed timer covering the worst-case (straighten + gather + flip) duration.
+    this.lockPileForAnim(stack, STACK_STRAIGHTEN_MS + STACK_TIDY_MS + FLIP_ANIM_MS);
     this.tidyStackThen(stack, topId, () => this.performStackFlip(stack), FLIP_ANIM_MS);
   }
 
@@ -1439,10 +1461,11 @@ export class Game {
       if (!c || !el) continue;
       el.classList.toggle("is-faceup", !c.faceUp);
     }
-    // Pin the visible card to the very top of the animation band so it is never
-    // covered, and hide the rest for the turn.
+    // Pin the visible card one slot above the WHOLE pile's animation band so it is
+    // never covered, even for a 72-card pile (the band now spans the full z range, no
+    // longer capped at +18). Hide the rest for the turn.
     if (visibleId) {
-      this.cardEls.get(visibleId)?.style.setProperty("z-index", String(ANIM_Z_BASE + 19));
+      this.cardEls.get(visibleId)?.style.setProperty("z-index", String(ANIM_Z_BASE + this.pileZSpan(ids) + 1));
       for (const id of ids) {
         if (id !== visibleId) this.cardEls.get(id)?.classList.add("is-flip-quiet");
       }
@@ -1467,6 +1490,50 @@ export class Game {
     }, durMs);
   }
 
+  // The z span of a pile (max − min current z), used to pin the visible flip card one
+  // slot above the WHOLE animation band so it is never covered even for a big pile.
+  private pileZSpan(ids: string[]): number {
+    let min = Infinity;
+    let max = -Infinity;
+    for (const id of ids) {
+      const c = this.state.cards.get(id);
+      if (!c) continue;
+      if (c.z < min) min = c.z;
+      if (c.z > max) max = c.z;
+    }
+    return max >= min ? max - min : 0;
+  }
+
+  // Turn an ENTIRE pile to ONE shared face with a single synchronised 3D turn (the
+  // "unify" flip). State already holds the target face (setStackFace ran first). We
+  // stage the UNIFORM old face (!targetFaceUp) on EVERY card — even ones already at
+  // the target — so the rotateY transition fires for all of them and the pile turns as
+  // one block. The visible card stays pinned on top; the rest go transparent for the
+  // turn. No depth reversal, so the same card is on top throughout and nothing flashes
+  // underneath. At settle the quiet class drops and the render loop writes the
+  // authoritative faces; we requestRender (never a synchronous paint) so is-animating
+  // has cleared before any concealment toggle, avoiding the rotateY snap that replayed
+  // the turn a second time.
+  private runSameFaceTurn(ids: string[], visibleId: string | null, targetFaceUp: boolean, durMs: number): void {
+    this.elevateDuringAnim(ids, durMs);
+    // Stage the uniform OLD face for every card so all of them animate.
+    for (const id of ids) this.cardEls.get(id)?.classList.toggle("is-faceup", !targetFaceUp);
+    if (visibleId) {
+      this.cardEls.get(visibleId)?.style.setProperty("z-index", String(ANIM_Z_BASE + this.pileZSpan(ids) + 1));
+      for (const id of ids) {
+        if (id !== visibleId) this.cardEls.get(id)?.classList.add("is-flip-quiet");
+      }
+    }
+    // Next frame: flip every card to the shared target face so the transition runs.
+    requestAnimationFrame(() => {
+      for (const id of ids) this.cardEls.get(id)?.classList.toggle("is-faceup", targetFaceUp);
+    });
+    window.setTimeout(() => {
+      for (const id of ids) this.cardEls.get(id)?.classList.remove("is-flip-quiet");
+      this.requestRender();
+    }, durMs);
+  }
+
   private performStackFlip(stack: string[]): void {
     if (!stack.length) return;
     // Re-check ownership/locks: a card could have changed hands during the tidy
@@ -1474,21 +1541,17 @@ export class Game {
     for (const cid of stack) {
       if (this.isRivalOwnedCard(cid) || this.isLockedByOther(cid)) return;
     }
-    // Direction is uniform across the pile; read it from the top card BEFORE the
-    // flip so flipVisibleCardId picks the right card to keep on screen.
-    let preTopId = stack[stack.length - 1]!;
-    let preTopZ = -Infinity;
-    for (const cid of stack) {
-      const c = this.state.cards.get(cid);
-      if (c && c.z > preTopZ) { preTopZ = c.z; preTopId = cid; }
-    }
-    const toFaceUp = !(this.state.cards.get(preTopId)?.faceUp ?? false);
-    // Turn the whole pile over like a real stack of cards: the depth order
-    // reverses (the bottom card ends up on top) and every face is toggled.
-    flipStackOver(this.state, stack);
+    // UNIFY the faces (not a per-card invert): a deck that reads open turns wholesale
+    // to closed and vice-versa, so a pile with mixed faces never stays mixed and no
+    // undercard flashes. The target is the toggle of the VISIBLE top card's face. Z is
+    // NOT reversed, so the same card stays on top before and after — it is the one we
+    // keep on screen through the 3D turn.
+    const visibleId = topVisibleId(this.state, stack);
+    const topCard = visibleId ? this.state.cards.get(visibleId) : null;
+    const toFaceUp = !(topCard?.faceUp ?? false);
+    setStackFace(this.state, stack, toFaceUp);
     for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
-    const visibleId = flipVisibleCardId(this.state, stack, toFaceUp);
-    this.runFlipVisual(stack, visibleId, FLIP_ANIM_MS);
+    this.runSameFaceTurn(stack, visibleId, toFaceUp, FLIP_ANIM_MS);
     // Send immediately with a flip hint so peers replay the same solid-block turn.
     this.flushWithAnim(stack, { kind: "flip", ids: stack, toFaceUp });
     void this.audio.play("flip");
@@ -1533,6 +1596,10 @@ export class Game {
     const seed = this.state.cards.get(id);
     if (!seed) return;
     const upright = this.viewerUprightRot(seed.rot);
+    // Lock the whole pile to peers for the entire face-down → straighten → gather →
+    // riffle flow so no card can be grabbed mid-shuffle. Worst-case duration covers
+    // every phase; the guaranteed release timer frees it even on an early return.
+    this.lockPileForAnim(stack, FLIP_ANIM_MS + STACK_STRAIGHTEN_MS + STACK_TIDY_MS + SHUFFLE_ANIM_MS);
     // Three clean beats: turn the whole pile face-DOWN (so no faces flash through the
     // gather), THEN straighten + gather into one pile, THEN riffle-shuffle the squared
     // deck. A face-down resting deck skips the turn and shuffles at once.
@@ -1768,6 +1835,17 @@ export class Game {
         this.players.set(p.id, p);
         if (seat < 0) spectatorCount++;
       }
+
+      // Track host transfer: when the role moves, remember the OUTGOING host briefly so
+      // a kick they issued just before the handoff is still honoured by peers (see
+      // handleKicked). Prune expired entries so the map stays tiny.
+      const nowHost = this.hostId();
+      if (nowHost !== this.lastHostId) {
+        if (this.lastHostId) this.recentHosts.set(this.lastHostId, Date.now() + Game.RECENT_HOST_MS);
+        this.lastHostId = nowHost;
+      }
+      const nowMs = Date.now();
+      for (const [hid, until] of this.recentHosts) if (until <= nowMs) this.recentHosts.delete(hid);
 
       // Keep every handle on the table unique. If another player shares our name,
       // exactly ONE of us yields — the LATER joiner (tie broken by id), so all
@@ -2071,6 +2149,18 @@ export class Game {
     return isHost(this.self.id, this.hostCandidates(), this.spectator);
   }
 
+  // True if `id` is the host now OR was the host within the last few seconds (a
+  // just-departed host whose handoff our roster may not have caught up to yet). Used
+  // to accept a kick issued right before a host transfer; the authoritative `removed[]`
+  // reconcile converges anyone we still reject.
+  private hostOrRecent(id: string): boolean {
+    if (id && id === this.hostId()) return true;
+    const until = this.recentHosts.get(id);
+    if (until === undefined) return false;
+    if (until <= Date.now()) { this.recentHosts.delete(id); return false; }
+    return true;
+  }
+
   // A kick was broadcast. Every client acts on it, not just the target:
   //  - the TARGET leaves to a fresh room as host;
   //  - everyone ELSE evicts that player immediately (seat freed, cards public,
@@ -2078,10 +2168,12 @@ export class Game {
   //    and never sends its own `left`. A kicked player is GONE for all, never
   //    shown as "away".
   private handleKicked(k: KickMsg): void {
-    // Only honour a kick issued by the current host. This blocks a forged kick from
-    // a non-host peer (the kick button is host-only in the UI, but the channel is
-    // untrusted). The host is the earliest active joiner; `by` is the kicker's id.
-    if (!k.by || k.by !== this.hostId()) return;
+    // Only honour a kick issued by the current host (or a host that stepped down in
+    // the last few seconds, so a handoff race doesn't drop a valid kick). This blocks a
+    // forged kick from a non-host peer (the kick button is host-only in the UI, but the
+    // channel is untrusted). Anyone we still wrongly reject converges via the host's
+    // authoritative `removed[]` reconcile.
+    if (!k.by || !this.hostOrRecent(k.by)) return;
     if (k.target === this.self.id) {
       // We were kicked: wipe ALL our data for this room so we return as a brand-new
       // presence (and can't reclaim the seat), then move to a fresh empty room.
@@ -2199,13 +2291,73 @@ export class Game {
     this.heldRefresh = window.setInterval(send, Math.floor(Game.HOLD_TTL_MS / 2));
   }
 
+  // Lock a whole pile to peers for the duration of a multi-phase animation
+  // (straighten → gather → flip/shuffle), then release it automatically. Peers see the
+  // cards as held (is-locked) and every interaction path rejects them, so no one can
+  // grab/flip/rotate a card out from under the running animation. The release is a
+  // GUARANTEED timer covering the worst-case total, so an early return inside the
+  // flow can never leave a stuck lock. We never clobber an in-progress drag hold
+  // (mutually exclusive in practice, but guarded so a stray gesture can't release a
+  // drag's cards early). Locking uses the same myHeldIds/heldByOther machinery as a
+  // drag, so applyPatch leaves the actor's pile untouched while it animates too.
+  private lockPileForAnim(stack: string[], totalMs: number): void {
+    if (this.spectator || stack.length < 2) return;
+    if (this.myHeldIds.length) return; // a drag hold is active — don't clobber it
+    this.broadcastHold(stack, false);
+    const ids = stack.slice();
+    const token = ids.join(",");
+    window.setTimeout(() => {
+      // Release only if WE still own this exact lock. If a drag started in the
+      // meantime it replaced myHeldIds with its own cards; releasing here would clear
+      // the drag's hold, so we leave it alone (the orphaned pile lock auto-expires at
+      // the hold TTL on peers — bounded and harmless).
+      if (this.myHeldIds.join(",") === token) this.broadcastHold(ids, true);
+    }, totalMs + 80);
+  }
+
   private sendSnapshot(): void {
     this.patchVersion++;
     const cards: PatchCard[] = Array.from(this.state.cards.values()).slice(0, 200).map((c) => this.wireCard(c));
     // Teach the receiver our known seat claims so a player who dropped before
     // they joined still shows as a reserved (dimmed) seat, not an empty one.
     const claims: SeatClaim[] = Array.from(this.seatClaims.entries()).map(([seat, c]) => ({ seat, id: c.id, name: c.name }));
-    this.bus.sendSnapshot({ v: this.patchVersion, by: this.self.id, cards, claims });
+    // Teach the receiver who we have authoritatively removed (kicked/left) so a joiner
+    // or a client that missed the one-shot message converges instead of resurrecting
+    // them from a lingering presence echo.
+    this.bus.sendSnapshot({ v: this.patchVersion, by: this.self.id, cards, claims, removed: this.buildRemovedList() });
+  }
+
+  // Snapshot of the players we have authoritatively removed (kicked/left), for the
+  // reconcile/snapshot `removed[]` field. Capped at 16 (far above the 4 seats) so it
+  // can never bloat the payload; expired tombstones are pruned first.
+  private buildRemovedList(): RemovedEntry[] {
+    this.pruneTombstones();
+    const out: RemovedEntry[] = [];
+    for (const [id, tomb] of this.removedTombstones) {
+      out.push({ id, connAt: tomb.connAt, seat: this.seatOfId(id) });
+      if (out.length >= 16) break;
+    }
+    return out;
+  }
+
+  // Converge an authoritative removal list (from a reconcile/snapshot): for each id we
+  // still consider present-or-claimed, free its seat and tombstone it — UNLESS it is
+  // genuinely back with a newer connAt (shouldReTombstone), in which case the removal
+  // is stale and ignored. Idempotent: a replay finds nothing left to do.
+  private applyRemoved(removed: RemovedEntry[]): void {
+    for (const r of removed) {
+      if (!r.id || r.id === this.self.id) continue;
+      const present = this.players.get(r.id);
+      if (!shouldReTombstone(r.connAt, present?.connAt)) continue; // they're back
+      const seat = this.seatOfId(r.id);
+      if (seat >= 0) {
+        this.applyLeft({ id: r.id, seat }); // frees seat, releases cards, tombstones
+      } else if (!this.removedTombstones.has(r.id)) {
+        this.tombstone(r.id, r.connAt);
+        if (this.players.delete(r.id)) this.requestRender();
+        this.lastRoster = this.lastRoster.filter((p) => p.id !== r.id);
+      }
+    }
   }
 
   // Apply an incoming patch or snapshot. A snapshot is authoritative full
@@ -2244,6 +2396,10 @@ export class Game {
       if (p.claims && p.claims.length) this.mergeClaims(p.claims);
       this.resolveFirstSync();
     }
+    // Converge on the sender's authoritative removals (reconcile + snapshot): a client
+    // that missed a one-shot left/kick frees the seat and tombstones the player here,
+    // so a kicked/departed player never lingers as "away" on some screens.
+    if (p.removed && p.removed.length) this.applyRemoved(p.removed);
     // Replay the actor's flip/shuffle flourish on our side (state is already set;
     // this is purely cosmetic). Snapshots carry no anim hint.
     if (!isSnapshot && p.anim) this.playRemoteAnim(p.anim);
@@ -2260,9 +2416,12 @@ export class Game {
     if (!ids.length || this.anyAnimating(ids)) return;
     for (const id of ids) if (this.isRivalOwnedCard(id)) return;
     if (anim.kind === "flip") {
+      // Unify turn: every card is at the shared target face (applyPatch set it); the
+      // highest-z card stays visible and the whole pile turns as one block. Because z
+      // is no longer reversed, the actor's and the peer's top card match.
       const toFaceUp = anim.toFaceUp === true;
-      const visibleId = flipVisibleCardId(this.state, ids, toFaceUp);
-      this.runFlipVisual(ids, visibleId, FLIP_ANIM_MS);
+      const visibleId = topVisibleId(this.state, ids);
+      this.runSameFaceTurn(ids, visibleId, toFaceUp, FLIP_ANIM_MS);
     } else {
       // Shuffle: turn any showing faces down smoothly first (mirrors the actor, no
       // snap), then riffle. State already faced the cards down via applyPatch.
@@ -2365,8 +2524,10 @@ export class Game {
       this.patchVersion++;
       const cards = Array.from(this.state.cards.values()).slice(0, 200).map((c) => this.wireCard(c));
       // Reconcile is a LWW patch (each card keeps its stored ts), sent on a path
-      // exempt from the send-rate cap so a busy table never drops the self-heal.
-      this.bus.sendReconcile({ v: this.patchVersion, by: this.self.id, cards });
+      // exempt from the send-rate cap so a busy table never drops the self-heal. It
+      // also carries the authoritative removed[] list so a peer that missed a
+      // left/kick converges within the 2s cadence instead of after the away grace.
+      this.bus.sendReconcile({ v: this.patchVersion, by: this.self.id, cards, removed: this.buildRemovedList() });
       if (this.debug) this.debug.sent++;
     }, 2000);
   }

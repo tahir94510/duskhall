@@ -91,6 +91,18 @@ export function shouldClearTombstone(tombstonedConnAt: number, presenceConnAt: n
   return presenceConnAt > tombstonedConnAt;
 }
 
+/** Should an authoritative "removed" entry (from a reconcile/snapshot) actually
+ *  tombstone the player? Only when they are NOT already back with a newer connection:
+ *  if we currently see that id present with a connAt strictly newer than the removal's
+ *  connAt, the removal is stale (they left and rejoined) and must be IGNORED, or we'd
+ *  wrongly evict a returned player. `presentConnAt` is undefined when the id is not in
+ *  our live roster (then the removal stands). Mirrors shouldClearTombstone's per-device
+ *  monotonic-connAt rule so the two never disagree. */
+export function shouldReTombstone(removedConnAt: number, presentConnAt: number | undefined): boolean {
+  if (presentConnAt === undefined) return true;
+  return !shouldClearTombstone(removedConnAt, presentConnAt);
+}
+
 /** Decide a (re)entering client's seniority (joinedAt). When the stored identity was
  *  active within `recoveryMs` (a refresh or a quick drop), KEEP the stored seniority
  *  so the host keeps host and seats never reshuffle on a reload. Otherwise — a long

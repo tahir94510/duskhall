@@ -173,12 +173,12 @@
    concealment toggle that lands during a turn can't yank the card back to 0deg and
    make it blink. A concealed card can only be flipped by its owner (who never sees
    it concealed), so the animating+concealed pairing is harmless and brief. */
-.card.is-concealed:not(.is-animating) .card__inner { transform: rotateY(0deg) !important; }
+.card.is-concealed:not(.is-animating):not(.is-flip-quiet) .card__inner { transform: rotateY(0deg) !important; }
 .card.is-concealed .card__face--back {
   visibility: visible;
   filter: blur(2.2px) saturate(0.82) brightness(0.9);
 }
-.card.is-concealed:not(.is-animating) .card__face--front { visibility: hidden; }
+.card.is-concealed:not(.is-animating):not(.is-flip-quiet) .card__face--front { visibility: hidden; }
 
 /* Snap-back animation when dropped into a rival zone */
 .card.is-snapback { animation: snapback 260ms var(--ease); }
