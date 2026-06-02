@@ -342,11 +342,15 @@
   overflow: hidden;
   isolation: isolate;
   opacity: 0;
-  transform: translateY(-4px);
-  transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  /* Position is written as an inline `transform: translate(x,y)` by Tooltip.position().
+     Transitioning transform would make the panel SLIDE across the screen from its old
+     (or default top-left) spot to the new card — and lag behind the cursor while
+     following it. So we transition ONLY opacity: the panel snaps to the right place
+     and fades in. */
+  transition: opacity var(--dur-fast) var(--ease);
   box-shadow: var(--shadow-panel);
 }
-.tooltip.is-visible { opacity: 1; transform: translateY(0); }
+.tooltip.is-visible { opacity: 1; }
 
 /* The darkening scrim over the art. Absolutely positioned at inset:0, it fills
    the panel's whole padding box — the area behind every text line — so the text
