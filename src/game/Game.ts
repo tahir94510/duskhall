@@ -919,6 +919,27 @@ export class Game {
     }
   }
 
+  // Turn every card that is currently SHOWING ITS FACE down to its back with a smooth
+  // turn, then run `done`. Used before a shuffle so the pile is faced down cleanly
+  // first instead of snapping (the riffle's is-shuffling kills the rotateY transition,
+  // which is why the face must settle BEFORE the wobble). A pile already face-down
+  // skips straight to `done`. The decision reads the PAINTED state (the is-faceup
+  // class), so it works both for the actor and for a peer replaying the shuffle.
+  private turnPileFaceDown(ids: string[], done: () => void): void {
+    const showing = ids.filter((id) => this.cardEls.get(id)?.classList.contains("is-faceup"));
+    if (!showing.length) { done(); return; }
+    // Purely VISUAL: we only turn the painted faces down here. The authoritative
+    // face-down state is stamped + broadcast by shuffleStack's flush (actor) or was
+    // already applied by applyPatch (peer replay), so we never write unstamped state.
+    this.elevateDuringAnim(ids, FLIP_ANIM_MS);
+    // Next frame: drop is-faceup so the .card__inner rotateY transition runs (the
+    // cards are is-animating but NOT yet is-shuffling, so the transition is live).
+    requestAnimationFrame(() => {
+      for (const id of showing) this.cardEls.get(id)?.classList.remove("is-faceup");
+    });
+    window.setTimeout(done, FLIP_ANIM_MS);
+  }
+
   private resizePending = 0;
   // Re-measure the board and re-align board-relative scaffolding after any
   // viewport / resolution / zoom / orientation change. Card positions are
@@ -1437,12 +1458,11 @@ export class Game {
     });
     window.setTimeout(() => {
       for (const id of ids) this.cardEls.get(id)?.classList.remove("is-flip-quiet");
-      // Write the settled transform/z/face NOW (elevateDuringAnim cleared
-      // is-animating just before this), so the pinned visible card drops to its real
-      // depth in the SAME frame the others reappear — no one-frame gap showing a
-      // stale top card. A properly gathered pile shares one spot, so this depth swap
-      // is invisible; the render loop's next tick is a harmless no-op.
-      this.renderAllCards();
+      // Let the render loop settle the faces/z on its next tick. We must NOT paint
+      // synchronously here: is-animating has just cleared, so a synchronous pass would
+      // toggle is-concealed and let `.is-concealed:not(.is-animating)` snap the card's
+      // rotateY, replaying the turn a second time. The connected-stack capture already
+      // gathers the pile onto one spot, so the depth settle is invisible regardless.
       this.requestRender();
     }, durMs);
   }
@@ -1513,22 +1533,21 @@ export class Game {
     const seed = this.state.cards.get(id);
     if (!seed) return;
     const upright = this.viewerUprightRot(seed.rot);
-    // Straighten (if angles differ) → gather into one pile → riffle-shuffle the now
-    // squared-up deck. Same ordered tidy as flip, so both feel consistent.
-    this.tidyStackThen(stack, id, () => {
-      if (this.stackBlocked(stack)) return; // re-confirm after the tidy delay
-      shuffleStack(this.state, stack, upright); // faces every card DOWN
-      for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
-      this.elevateDuringAnim(stack, SHUFFLE_ANIM_MS);
-      // Show the backs for the whole riffle: the cards are now is-shuffling (busy),
-      // so the render loop won't write is-faceup — set it down ourselves, matching
-      // the new state, so a previously face-up card doesn't flash its art mid-wobble.
-      for (const cid of stack) this.cardEls.get(cid)?.classList.remove("is-faceup");
-      this.applyShuffleJitter(stack); // already aligned, so just the riffle wobble
-      // Send immediately with a shuffle hint so peers riffle the same pile.
-      this.flushWithAnim(stack, { kind: "shuffle", ids: stack });
-      void this.audio.play("shuffle");
-    }, SHUFFLE_ANIM_MS);
+    // Three clean beats: turn the whole pile face-DOWN (so no faces flash through the
+    // gather), THEN straighten + gather into one pile, THEN riffle-shuffle the squared
+    // deck. A face-down resting deck skips the turn and shuffles at once.
+    this.turnPileFaceDown(stack, () => {
+      this.tidyStackThen(stack, id, () => {
+        if (this.stackBlocked(stack)) return; // re-confirm after the tidy delay
+        shuffleStack(this.state, stack, upright); // randomise z-order; faces already down
+        for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
+        this.elevateDuringAnim(stack, SHUFFLE_ANIM_MS);
+        this.applyShuffleJitter(stack); // faces already down, so just the clean riffle wobble
+        // Send immediately with a shuffle hint so peers riffle the same pile.
+        this.flushWithAnim(stack, { kind: "shuffle", ids: stack });
+        void this.audio.play("shuffle");
+      }, SHUFFLE_ANIM_MS);
+    });
   }
 
   // Collect every card back into a freshly shuffled face-down pile on the Deck
@@ -2245,10 +2264,12 @@ export class Game {
       const visibleId = flipVisibleCardId(this.state, ids, toFaceUp);
       this.runFlipVisual(ids, visibleId, FLIP_ANIM_MS);
     } else {
-      // Shuffle: state already faced the cards down; show backs and riffle.
-      this.elevateDuringAnim(ids, SHUFFLE_ANIM_MS);
-      for (const id of ids) this.cardEls.get(id)?.classList.remove("is-faceup");
-      this.applyShuffleJitter(ids);
+      // Shuffle: turn any showing faces down smoothly first (mirrors the actor, no
+      // snap), then riffle. State already faced the cards down via applyPatch.
+      this.turnPileFaceDown(ids, () => {
+        this.elevateDuringAnim(ids, SHUFFLE_ANIM_MS);
+        this.applyShuffleJitter(ids);
+      });
     }
   }
 

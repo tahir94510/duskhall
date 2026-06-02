@@ -1,35 +1,35 @@
 # Changelog
 
-## 0.8.0 — Rejoin & host fixes, whole-pile flip, cross-browser join, rules clarity
+## 0.8.0 — Rejoin and host fixes, whole-pile flip, cross-browser join, rules clarity
 
-- **A returning player is visible at once — no refresh needed.** A player who left,
-  was kicked, or dropped and comes back is now shown to everyone immediately. Each
-  client publishes a per-connection stamp, so peers can tell a genuine reconnect
-  (shown right away) from a stale presence echo (briefly ignored), instead of hiding
-  any returning player for the whole grace window.
-- **A refresh no longer costs you host.** Host (and seat order) is now decided by a
-  PERSISTED seniority that survives a reload/reconnect, so refreshing the page — or
-  the page that reveals a returning player — never hands host to someone else. A
-  player who genuinely leaves and comes back returns as the newest, so they can't
-  take host from those who stayed.
-- **Returning to your seat keeps your perspective.** With seniority and visibility
-  fixed, a returning player reclaims their own seat and the board stays oriented to
-  it; names no longer get swapped on a rejoin race.
-- **Flipping an open/spread deck turns it as ONE block.** "Select all and flip" now
-  captures the whole connected pile (not just the cards under one seed), gathers it,
-  and turns it over cleanly — the top card no longer drops to the bottom mid-turn
-  with a stray card popping up. The deck and discard piles can never merge.
-- **Paste-to-join works in Firefox.** Joining by code/link now opens a dialog with a
-  text field you paste or type into, instead of relying on a clipboard read that
-  Firefox blocks behind its own native paste button.
-- **Steadier sync under load.** The host's periodic self-heal is no longer dropped by
-  the send-rate cap during a busy table, and a peer with a wildly wrong clock can no
+- **A returning player is visible at once, with no refresh needed.** A player who
+  left, was kicked, or dropped and came back is now shown to everyone right away.
+  Each client publishes a per-connection stamp, so peers can tell a real reconnect
+  (shown immediately) from a stale presence echo (briefly ignored), instead of
+  hiding any returning player for the whole grace window.
+- **A refresh no longer costs you host.** Host and seat order now come from a
+  persisted seniority that survives a reload or reconnect, so refreshing the page
+  never hands host to someone else. A player who genuinely leaves and comes back
+  returns as the newest, so they cannot take host from the people who stayed.
+- **Returning to your seat keeps your perspective.** A returning player reclaims
+  their own seat, the board stays oriented to it, and names no longer get swapped
+  during a rejoin race.
+- **Flipping an open deck turns it as one block.** "Select all and flip" now
+  captures the whole connected pile instead of only the cards under one seed,
+  gathers it, and turns it over cleanly. The top card no longer drops to the bottom
+  mid-turn with a stray card popping up, and the deck and discard piles can never
+  merge.
+- **Paste-to-join works in Firefox.** Joining by code or link now opens a dialog
+  with a text field you paste or type into, instead of relying on a clipboard read
+  that Firefox blocks behind its own native paste button.
+- **Steadier sync under load.** The host's periodic self-heal is no longer dropped
+  by the send-rate cap on a busy table, and a peer with a badly wrong clock can no
   longer freeze cards by stamping them far in the future.
-- **Clearer rules.** Necromancer's Eye now spells out that the card you must take is
-  an ordinary hand card you can then discard down to 7 that same Closing; Blood
-  Atonement spells out that its two cards leave your hand at random (nobody chooses).
-  Both clarifications appear in the in-app rules and the rulebooks, in English and
-  Turkish, with new FAQ entries. A few flavour lines were polished.
+- **Clearer rules.** Necromancer's Eye now says plainly that the card you must take
+  counts toward your hand, so you can still discard down to 7 that same Closing.
+  Blood Atonement now says plainly that its two cards leave your hand at random and
+  nobody picks them. Both notes appear in the in-app rules and the rulebooks, in
+  English and Turkish, with new FAQ entries. A few flavour lines were polished too.
 
 ## 0.7.2 — Exit propagation, scattered-pile flip, dev note
 
