@@ -244,6 +244,9 @@ export class Game {
     onLocaleChange(() => this.onLocale());
 
     this.room = getOrCreateRoom();
+    // A broken room link returns "" and getOrCreateRoom has already redirected to the
+    // 404 page; stop here so we don't connect to an empty room while the page unloads.
+    if (!this.room) return;
     this.header.setRoom(this.room);
     this.installZoneActions();
     // Sweep abandoned/expired kabal:* room data so storage never piles up.
