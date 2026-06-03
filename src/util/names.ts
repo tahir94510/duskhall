@@ -34,20 +34,33 @@ export function pickName(): string {
   return POOL[idx] ?? "Player";
 }
 
+// A stable, case-insensitive key for comparing two handles. Plain toLowerCase is NOT
+// enough: the pool has Turkish names with the dotless ı ("Tılsım", "Sır"), and the
+// uppercase↔lowercase round-trip of the Turkish I is lossy ("Tılsım"→"TILSIM"→"tilsim"
+// ≠ "tılsım"), so a name typed/echoed in a different case would dodge de-duplication and
+// two players could share it. We lowercase with a fixed locale and fold every I-variant
+// (ı, i, İ with its combining dot) to a single "i" so the key is direction-independent.
+export function nameKey(s: string): string {
+  return s
+    .toLocaleLowerCase("en")
+    .replace(/̇/g, "") // strip the combining dot above (from İ → i̇)
+    .replace(/[ıi]/g, "i"); // fold dotless ı and dotted i to one key
+}
+
 // Pick a handle that is NOT already in `taken` (case-insensitive). When every
 // pool name is taken (more players than names, which never happens at 4 seats but
 // is handled for safety), fall back to a numbered handle so a name is never empty
 // and never collides.
 export function pickNameExcluding(taken: Iterable<string>): string {
   const used = new Set<string>();
-  for (const t of taken) used.add(t.toLocaleLowerCase());
-  const free = POOL.filter((n) => !used.has(n.toLocaleLowerCase()));
+  for (const t of taken) used.add(nameKey(t));
+  const free = POOL.filter((n) => !used.has(nameKey(n)));
   if (free.length) return free[Math.floor(Math.random() * free.length)]!;
   // Pool exhausted: append the smallest free numeric suffix to a base name.
   const base = pickName();
   for (let i = 2; i < 1000; i++) {
     const candidate = `${base} ${i}`;
-    if (!used.has(candidate.toLocaleLowerCase())) return candidate;
+    if (!used.has(nameKey(candidate))) return candidate;
   }
   return base;
 }

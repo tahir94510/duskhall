@@ -74,20 +74,37 @@ export function zoneRect(seat: Seat): { x0: number; y0: number; x1: number; y1: 
  * height as fractions of the board (Game derives them from the measured card size).
  */
 export function cardZoneOwner(nx: number, ny: number, rot: number, cardWFrac: number, cardHFrac: number): Seat | null {
+  const o = cardZoneOverlap(nx, ny, rot, cardWFrac, cardHFrac);
+  return o && o.frac > 0.5 ? o.seat : null;
+}
+
+/**
+ * The seat whose private zone overlaps the card the MOST, with that overlap as a
+ * fraction of the card's area (0..1), or null if no zone is touched. Lets callers pick
+ * their own threshold: the resting "ownership" rule uses >0.5 (see cardZoneOwner),
+ * while concealment-while-dragging uses a small threshold so a card a player is actively
+ * holding is hidden from peers the instant a bit of it enters their zone (privacy: no
+ * "did my card just flash?" window), and only revealed once it is clearly back out.
+ * Rotation-aware (an odd quarter-turn swaps the footprint). Zones never overlap, so the
+ * single best match is unambiguous.
+ */
+export function cardZoneOverlap(nx: number, ny: number, rot: number, cardWFrac: number, cardHFrac: number): { seat: Seat; frac: number } | null {
   const quarter = ((Math.round(rot) % 2) + 2) % 2; // 0 or 1 (odd turn swaps w/h)
   const w = quarter === 1 ? cardHFrac : cardWFrac;
   const h = quarter === 1 ? cardWFrac : cardHFrac;
   const area = w * h;
   if (area <= 0) return null;
   const cx0 = nx - w / 2, cy0 = ny - h / 2, cx1 = nx + w / 2, cy1 = ny + h / 2;
+  let best: { seat: Seat; frac: number } | null = null;
   for (const seat of [0, 1, 2, 3] as Seat[]) {
     const z = ZONES[seat];
     const ix = Math.min(cx1, z.x1) - Math.max(cx0, z.x0);
     const iy = Math.min(cy1, z.y1) - Math.max(cy0, z.y0);
     if (ix <= 0 || iy <= 0) continue;
-    if ((ix * iy) / area > 0.5) return seat;
+    const frac = (ix * iy) / area;
+    if (!best || frac > best.frac) best = { seat, frac };
   }
-  return null;
+  return best;
 }
 
 const ROW_GAP = 0.018; // gap between the two rows (Seal row vs Servant row), in canonical units
