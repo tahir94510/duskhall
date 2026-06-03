@@ -62,29 +62,23 @@ export function zoneRect(seat: Seat): { x0: number; y0: number; x1: number; y1: 
   return { x0: z.x0, y0: z.y0, x1: z.x1, y1: z.y1 };
 }
 
-/**
- * Which seat "owns" a card by POSITION: the seat whose private zone overlaps MORE THAN
- * HALF of the card's area, or null if no zone does. This is the single, player-friendly
- * rule for "is this card inside someone's private area?" — a card counts as in a zone
- * once >50% of it is inside, and becomes public the moment >50% is out. Symmetric for
- * entering and leaving, and rotation-aware (an odd quarter-turn swaps the footprint).
- * Zones never overlap each other, so at most one seat can exceed 50%.
- *
- * `nx, ny` is the card CENTRE fraction; `cardWFrac, cardHFrac` are the card's width and
- * height as fractions of the board (Game derives them from the measured card size).
- */
+// Privacy-first overlap threshold: a card counts as inside a seat's private zone (so
+// it is concealed from, and untouchable by, everyone else) as soon as this fraction of
+// its area is in — even a sliver poking in from ANY side. It only becomes public again
+// once it is almost fully out (less than this is left in). Low on purpose: a card a
+// player nudges anywhere near their own area must never flash to the table.
+export const ZONE_PRIVACY_FRAC = 0.1;
+
 export function cardZoneOwner(nx: number, ny: number, rot: number, cardWFrac: number, cardHFrac: number): Seat | null {
   const o = cardZoneOverlap(nx, ny, rot, cardWFrac, cardHFrac);
-  return o && o.frac > 0.5 ? o.seat : null;
+  return o && o.frac > ZONE_PRIVACY_FRAC ? o.seat : null;
 }
 
 /**
  * The seat whose private zone overlaps the card the MOST, with that overlap as a
- * fraction of the card's area (0..1), or null if no zone is touched. Lets callers pick
- * their own threshold: the resting "ownership" rule uses >0.5 (see cardZoneOwner),
- * while concealment-while-dragging uses a small threshold so a card a player is actively
- * holding is hidden from peers the instant a bit of it enters their zone (privacy: no
- * "did my card just flash?" window), and only revealed once it is clearly back out.
+ * fraction of the card's area (0..1), or null if no zone is touched. cardZoneOwner gates
+ * this at ZONE_PRIVACY_FRAC (eager hide, late reveal). `nx, ny` is the card CENTRE
+ * fraction; `cardWFrac, cardHFrac` are the card's size as fractions of the board.
  * Rotation-aware (an odd quarter-turn swaps the footprint). Zones never overlap, so the
  * single best match is unambiguous.
  */

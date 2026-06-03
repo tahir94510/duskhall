@@ -1,12 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { cardZoneOwner, cardZoneOverlap, zoneRect, pointInZoneCanonical } from "./SlotGrid.js";
+import { cardZoneOwner, cardZoneOverlap, ZONE_PRIVACY_FRAC, zoneRect, pointInZoneCanonical } from "./SlotGrid.js";
 
 // Zone 0 (bottom): x[0.16,0.84], y[0.78,0.96]. A typical card footprint as a fraction
-// of the board is roughly 0.08 wide x 0.12 tall.
+// of the board is roughly 0.08 wide x 0.12 tall. With H=0.12 the in-fraction as the card
+// enters from the top is (ny - 0.72) / 0.12, so the privacy threshold (0.1) is crossed
+// around ny ≈ 0.732.
 const W = 0.08;
 const H = 0.12;
 
-describe("cardZoneOwner: a card belongs to a zone only when >50% of its area is inside", () => {
+describe("cardZoneOwner: privacy-first — a sliver in conceals, almost-fully-out reveals", () => {
   it("a card fully inside seat 0's zone is owned by seat 0", () => {
     expect(cardZoneOwner(0.5, 0.9, 0, W, H)).toBe(0);
   });
@@ -15,19 +17,23 @@ describe("cardZoneOwner: a card belongs to a zone only when >50% of its area is 
     expect(cardZoneOwner(0.5, 0.5, 0, W, H)).toBe(null);
   });
 
-  it("just under half inside the zone is NOT owned (public)", () => {
-    // center y = 0.775: card spans [0.715,0.835], overlap [0.78,0.835] ≈ 46% → public.
-    expect(cardZoneOwner(0.5, 0.775, 0, W, H)).toBe(null);
+  it("only a tiny sliver in (below the privacy threshold) stays public", () => {
+    // center y = 0.725: ~4% in (< ZONE_PRIVACY_FRAC) → almost fully out → public.
+    expect(cardZoneOwner(0.5, 0.725, 0, W, H)).toBe(null);
   });
 
-  it("more than half inside the zone IS owned", () => {
-    // center y = 0.79: ~58% of the height overlaps the zone.
-    expect(cardZoneOwner(0.5, 0.79, 0, W, H)).toBe(0);
+  it("even a small part in (above the threshold) is already concealed/owned", () => {
+    // center y = 0.745: ~21% in — mostly OUT, but more than a sliver → private.
+    expect(cardZoneOwner(0.5, 0.745, 0, W, H)).toBe(0);
   });
 
-  it("more than half OUT (pulled toward centre) becomes public again", () => {
-    // center y = 0.76: only ~33% overlaps → public.
-    expect(cardZoneOwner(0.5, 0.76, 0, W, H)).toBe(null);
+  it("fully out (toward centre) is public", () => {
+    // center y = 0.71: card [0.65,0.77], below the zone top (0.78) → no overlap.
+    expect(cardZoneOwner(0.5, 0.71, 0, W, H)).toBe(null);
+  });
+
+  it("the threshold is the small privacy fraction, not a half", () => {
+    expect(ZONE_PRIVACY_FRAC).toBeLessThan(0.25);
   });
 
   it("is rotation-aware: an odd quarter-turn swaps the footprint", () => {
@@ -50,24 +56,23 @@ describe("cardZoneOwner: a card belongs to a zone only when >50% of its area is 
   });
 });
 
-describe("cardZoneOverlap: fraction drives the eager 'hide while held' conceal", () => {
-  it("reports a small but non-zero overlap as a card just enters a zone", () => {
-    // center y = 0.83: card [0.77,0.89] vs zone y[0.78,0.96] → most of it is in.
+describe("cardZoneOverlap: reports the best seat and the in-fraction", () => {
+  it("reports a high fraction deep inside and a small one near the edge", () => {
     const deepIn = cardZoneOverlap(0.5, 0.83, 0, W, H);
     expect(deepIn?.seat).toBe(0);
     expect(deepIn!.frac).toBeGreaterThan(0.5);
-    // center y = 0.735: card [0.675,0.795] → only ~12% overlaps the zone top.
     const sliver = cardZoneOverlap(0.5, 0.735, 0, W, H);
     expect(sliver?.seat).toBe(0);
     expect(sliver!.frac).toBeGreaterThan(0);
-    expect(sliver!.frac).toBeLessThan(0.5); // not "owned" at rest, but enough to hide while held
+    expect(sliver!.frac).toBeLessThan(0.5);
   });
   it("returns null in the central area (no zone touched)", () => {
     expect(cardZoneOverlap(0.5, 0.5, 0, W, H)).toBe(null);
   });
-  it("cardZoneOwner stays the >50% gate over the same overlap", () => {
-    expect(cardZoneOwner(0.5, 0.735, 0, W, H)).toBe(null); // <50% → not owned
-    expect(cardZoneOwner(0.5, 0.83, 0, W, H)).toBe(0);      // >50% → owned
+  it("cardZoneOwner gates the same overlap at the privacy threshold", () => {
+    const o = cardZoneOverlap(0.5, 0.745, 0, W, H)!;
+    expect(o.frac).toBeGreaterThan(ZONE_PRIVACY_FRAC);
+    expect(cardZoneOwner(0.5, 0.745, 0, W, H)).toBe(0); // above threshold → owned
   });
 });
 
