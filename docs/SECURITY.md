@@ -37,8 +37,8 @@ Every broadcast message is treated as untrusted.
 - **Field-appropriate validation** (`safeNumber` / `safeStamp` / `safeInt`): each
   field is bounded by what it is, never one blanket clamp. Coordinates (`x`,`y`) are
   clamped to a near-board range; the last-write-wins timestamp (`ts`) and z-order
-  (`z`) and patch version keep their true magnitude (validated as finite, not clamped)
-  — clamping `ts` to the coordinate range was the bug that silently dropped every
+  (`z`) and patch version keep their true magnitude (validated as finite, not clamped).
+  Clamping `ts` to the coordinate range was the bug that silently dropped every
   card update between players.
 - Schema check: every field must be the right primitive; unknown fields are dropped.
 - Seat index clamped to `[-1, 3]` (`-1` = spectator).
@@ -46,7 +46,7 @@ Every broadcast message is treated as untrusted.
 ### The Supabase anon / publishable key is public by design
 
 The browser key (`SUPABASE_ANON_KEY` or an `sb_publishable_…` key) is **meant** to
-ship to the client — `@supabase/supabase-js` puts it in the websocket connection, so
+ship to the client. `@supabase/supabase-js` puts it in the websocket connection, so
 it is always visible in devtools regardless of how it's delivered. It grants only what
 Realtime Broadcast + Presence allow (no tables, no RLS‑protected data in this app), so
 exposure is not a vulnerability. The in‑app connection self‑test never prints the key,

@@ -158,7 +158,7 @@
     "buymeacoffee": "Bana bir kahve ısmarla",
     "noUrl": "Destek sayfası henüz hazır değil. Lütfen daha sonra tekrar bak.",
     "supportersTitle": "Destekçiler",
-    "supportersHint": "Destek mesajına #vaerum eklersen adın birkaç gün içinde (genelde 48–72 saat) bu listeye eklenir.",
+    "supportersHint": "Destek mesajına #vaerum eklersen adın birkaç gün içinde (genelde 48-72 saat) bu listeye eklenir.",
     "thanks": "Masayı yaşatmaya devam ettiğin için teşekkürler."
   },
   "updates": {
@@ -166,6 +166,18 @@
     "badge": "Yeni",
     "empty": "Henüz güncelleme yok.",
     "entries": [
+      {
+        "v": "2026-06b",
+        "date": "Haziran 2026",
+        "title": "Daha keskin gizlilik, daha okunaklı masa, daha akıcı ses",
+        "items": [
+          "Gizli alanın bir kartı, herhangi bir kenardan azıcık girdiği an gizliyor; ancak neredeyse tamamen çıkınca tekrar gösteriyor. Bu, her ekran boyutunda ve herkes için aynı görünüyor.",
+          "Koyu masa artık daha okunaklı: kartlar zeminden ayrışıyor, deste ve çöplük etiketleri daha net; sakin, karanlık atmosfer korunuyor.",
+          "Müzik ve ses ilk dokunuşunda temiz başlıyor; sekme değiştirip geri döndüğünde konsol uyarısı çıkmıyor.",
+          "Oda sahibinin bağlantısı bir an koparsa, uzaktayken hostluğu başkasına geçmeden koruyor.",
+          "Destekçiler listesi artık en yeni destekçileri en üstte gösteriyor."
+        ]
+      },
       {
         "v": "2026-06",
         "date": "Haziran 2026",

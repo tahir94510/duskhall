@@ -1,4 +1,4 @@
-# Vaerum — Asset Guide
+# Vaerum Asset Guide
 
 The single reference for creating or updating Vaerum's visual and audio assets:
 card art, the table background, audio, and the logo / social preview. It records
@@ -18,7 +18,7 @@ produces zero broken images or 404s.
 
 | Token | Hex | Use |
 | --- | --- | --- |
-| Ink | `#050505`–`#000000` | Backgrounds, card grounds |
+| Ink | `#050505`-`#000000` | Backgrounds, card grounds |
 | Ivory | `#f3efe5` | Logo, line work, primary text |
 | Ivory dim | `#b8b4aa` | Secondary text |
 | Ivory mute | `#837f76` | Tertiary text, hints |
@@ -49,7 +49,7 @@ for a small focal highlight.
 - **Bleed:** design to the edges; the runtime clips to an 8 px corner radius.
 - **No transparency needed:** a solid, type-tinted ground is ideal.
 
-**Manifest** — `public/cards/manifest.json`. The runtime only fetches what the
+**Manifest**: `public/cards/manifest.json`. The runtime only fetches what the
 manifest lists, so add a card's file there to enable it:
 
 ```json
@@ -107,13 +107,13 @@ adding a file.
 
 - **Resolution:** 1600 × 1600 px or larger (the field is square and uses `cover`).
 - **Format:** WebP (quality ~82) preferred; PNG / JPG / AVIF also load.
-- **Orientation:** fixed — the background does **not** rotate per seat, so paint
+- **Orientation:** fixed, the background does **not** rotate per seat, so paint
   it upright.
 - **Tone:** mid-to-dark, calm, low contrast. Cards must stay legible on top, and a
   scrim already darkens the edges. Avoid bright centres, busy detail or hard focal
   points under the play area.
 
-**Manifest** — `public/background/manifest.json`; only the first entry is used:
+**Manifest**: `public/background/manifest.json`; only the first entry is used:
 
 ```json
 { "available": [{ "id": "tableSurface", "ext": "webp" }] }
@@ -133,11 +133,11 @@ layer. With no image, an elegant built-in gradient shows and nothing is fetched.
 
 ## Audio (`public/audio/`)
 
-**SFX** — `public/audio/sfx/`. File names must match these ids:
+**SFX**: `public/audio/sfx/`. File names must match these ids:
 `flip`, `pickup`, `place`, `shuffle`, `gather`, `snap`, `ui-open`, `ui-close`,
 `ui-click`. Keep each under ~250 ms for a snappy feel.
 
-**Music** — `public/audio/music/`. Any file names; played in natural-sort order
+**Music**: `public/audio/music/`. Any file names; played in natural-sort order
 (`music2` before `music10`), then looped.
 
 - **Formats:** MP3 / OGG / WAV / M4A / AAC all load.
@@ -147,7 +147,7 @@ layer. With no image, an elegant built-in gradient shows and nothing is fetched.
   game is never silent and never 404s.
 
 **Direction:** effects are soft, woody, tactile (real cards on felt), never harsh
-or synthetic. Music is ambient, sparse and unobtrusive — long, dark, slow, with
+or synthetic. Music is ambient, sparse and unobtrusive: long, dark, slow, with
 no strong melody or percussion that would tire a long session.
 
 ---

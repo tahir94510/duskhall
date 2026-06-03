@@ -157,6 +157,7 @@ In-game **Settings** (Master / Music / Effects) sliders persist to `localStorage
 - `docs/ASSETS.md`: exact art/audio specs and world-consistent prompts for creating or updating assets
 - `docs/SECURITY.md`: security model, rate-limits, threat notes, Cloudflare guidance
 - `docs/COPYRIGHT.md`: copyright notice and recommended legal steps
+- `docs/MAINTAINING.md`: developer directives (changelog/updates convention, supporters, i18n parity, content style, architecture map)
 
 ## License
 

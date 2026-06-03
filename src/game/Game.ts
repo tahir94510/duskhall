@@ -39,7 +39,7 @@ import {
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
-import { cardZoneOwner } from "../table/SlotGrid.js";
+import { cardZoneOwner, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry } from "../net/realtime.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
@@ -703,10 +703,10 @@ export class Game {
   // small part is inside a zone (from ANY side) and public only once it is almost fully
   // out — eager to hide, slow to reveal, so a card never flashes to the table.
   private cardZoneOwnerOf(c: CardState): number | null {
-    const { w, h } = this.cardMetrics();
-    const wf = this.boardSize.width > 0 ? w / this.boardSize.width : 0;
-    const hf = this.boardSize.height > 0 ? h / this.boardSize.height : 0;
-    return cardZoneOwner(c.x, c.y, c.rot, wf, hf);
+    // Use the SHARED canonical card size, not this device's measured pixels, so the
+    // conceal/reveal decision is byte-identical on every screen and for every player
+    // (a card dragged out reveals everywhere at once; nudged in, hides everywhere).
+    return cardZoneOwner(c.x, c.y, c.rot, CARD_CANON_W, CARD_CANON_H);
   }
 
   // Is this card in a rival's private area whose seat is still held? Decided by the

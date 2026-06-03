@@ -1,6 +1,38 @@
 # Changelog
 
-## 0.8.0 — Rejoin and host fixes, whole-pile flip, cross-browser join, rules clarity
+## 0.9.0: Physical flips, device-consistent privacy, polish and docs
+
+- **Flipping a deck feels physical.** Turning a pile over reverses its depth (the
+  bottom card ends up on top) and squares every card to one consistent face, so a
+  mixed open and closed pile tidies itself as it turns. No card flashes the wrong
+  face, and the whole pile turns as one clean block. Shuffle, gather and the
+  shortest-path 90 degree rotation share the same tidy flow with no overlapping
+  sound or animation.
+- **Your private area is consistent for everyone, on every screen.** A card is
+  hidden from other players the instant any part of it enters your zone, from any
+  side, and shown again only once it is almost fully out. The decision now uses a
+  shared canonical card size, so two players on different screen sizes always agree:
+  a card dragged out reveals everywhere at once, never lingering as hidden on one
+  view.
+- **Host survives a blip.** If the host's connection drops for a moment, they keep
+  host while away instead of it jumping to another player; it transfers only on a
+  real exit or kick, or once the away grace ends. Returning players still cannot
+  steal host from those who stayed.
+- **Readable dark table.** Softened the full-screen dark wash, lifted the felt off
+  near-black, and raised card contrast so cards stand out and the deck and discard
+  labels are clear, while keeping the calm, dark mood.
+- **Sound starts cleanly.** Audio resumes on a real tap and re-arms after you switch
+  tabs and come back, with no AudioContext console warning.
+- **Smaller fixes.** Card info and the touch action bar appear where you are instead
+  of sliding in from a corner. A large dragged pile keeps its stacking order. Modals
+  open without a stray focus ring. The tab title and the 404 and startup pages now
+  read in your language. Joining a room you are already in says so. A new supporters
+  wall (newest first) and a "What's new" panel with a badge were added. Player names
+  de-duplicate correctly, including Turkish dotted and dotless I.
+- **Docs.** Added `docs/MAINTAINING.md` with directives for the changelog and updates
+  convention, supporters, locale parity, content style, and the architecture map.
+
+## 0.8.0: Rejoin and host fixes, whole-pile flip, cross-browser join, rules clarity
 
 - **A returning player is visible at once, with no refresh needed.** A player who
   left, was kicked, or dropped and came back is now shown to everyone right away.
@@ -31,7 +63,7 @@
   nobody picks them. Both notes appear in the in-app rules and the rulebooks, in
   English and Turkish, with new FAQ entries. A few flavour lines were polished too.
 
-## 0.7.2 — Exit propagation, scattered-pile flip, dev note
+## 0.7.2: Exit propagation, scattered-pile flip, dev note
 
 - **Leaving no longer lingers as "away".** On exit or room-hop the `left` broadcast
   is now awaited (with a 700 ms safety timeout) before the channel is torn down, so
@@ -43,10 +75,10 @@
 - **A small "in development, support us" note** sits under the Support menu row.
 - Replaced the last user-facing em-dash placeholders (debug HUD) with plain hyphens.
 
-## 0.7.1 — Lifecycle hardening, faithful card physics, unique names
+## 0.7.1: Lifecycle hardening, faithful card physics, unique names
 
 - **Leaving a room is a clean break.** Switching rooms (exit or kick) now wipes
-  the whole roster — active seats, players, claims, tombstones, holds — so a
+  the whole roster (active seats, players, claims, tombstones, holds), so a
   player who leaves or is kicked lands in a fresh room with no phantom "away"
   players carried over from the old one.
 - **A kick no longer makes everyone look "away".** Freeing a seat no longer
@@ -54,15 +86,15 @@
   "away"); the next real presence sync re-seats correctly.
 - **Everyone sees the same "away".** Seat claims from the authoritative snapshot
   are now the source of truth, so a player who dropped is shown as away on every
-  client — including ones that joined after the drop — and a stale claim is
+  client, including ones that joined after the drop, and a stale claim is
   corrected to match the host.
 - **The host can kick an away player.** The kick control now appears on a dropped
   (away) seat too, resolved from its claim, so a stuck seat can always be cleared.
 - **Unique handles.** The name pool is much larger and de-duplicated, and the
   table guarantees no two players share a name (the later joiner yields,
-  deterministically) — your id never changes.
+  deterministically), and your id never changes.
 - **Interacting claims a card.** Flipping, rotating, gathering or shuffling a card
-  that sits in your own zone now makes it yours, the same as dragging it in — on
+  that sits in your own zone now makes it yours, the same as dragging it in, on
   keyboard, scroll, right-click and the touch bar.
 - **No more stray 360° spin on shuffle.** Squaring a pile now turns every card by
   the shortest path, so a sideways card never does a full extra turn (gather and
@@ -71,12 +103,12 @@
   the fronts of the inner cards mid-turn; only the outer card is visible through
   the turn (no blink, no leak).
 - **Card info reads on the art.** The info panel now uses the card's artwork as its
-  background with a dark scrim, text directly on top — no inner picture box —
+  background with a dark scrim, text directly on top, with no inner picture box,
   sized so long text never overflows or scrolls.
 - **Balanced header mark.** The logo sits a touch larger, in proportion with the
   menu button.
 
-## 0.7.0 — Seat labels, clean flips, touch polish, and a real link preview
+## 0.7.0: Seat labels, clean flips, touch polish, and a real link preview
 
 - **Player areas read clearly.** Each seat's name, status light and host kick
   control now live in a separate upright layer above the cards, so a card dropped
@@ -108,7 +140,7 @@
 - **Asset guide.** `docs/ASSETS.md` documents the exact art/audio specs and gives
   world-consistent prompts for generating card art, backgrounds and the logo.
 
-## 0.6.0 — Square field, lifecycle, and legal
+## 0.6.0: Square field, lifecycle, and legal
 
 - **Square play field.** The play area is now a centered square (capped at 880px),
   so all four seats share one identical coordinate space. Previously the rectangular
@@ -117,16 +149,16 @@
 - **Kick is final for everyone.** A kicked player is removed on every screen at once
   (never shown as "away"), their cards go public, and they land in a fresh room as
   host. Only the host can kick; forged kicks are ignored. Connection drops still show
-  "away" and remain resumable — the one path that does.
+  "away" and remain resumable, the one path that does.
 - **Smooth bulk moves.** Dragging a large stack no longer queries the DOM per card
   per frame; element references are cached at grab.
 - **Drop lands on top.** Ctrl-dragging a card or stack onto another pile now rests on
   top, not under it.
 - **Softer shadows** so a deep deck no longer compounds into a dark mass.
-- **About & Legal** menu entry: About, Privacy, Terms, Copyright — professional,
+- **About & Legal** menu entry: About, Privacy, Terms, Copyright: professional,
   accurate content in English and Turkish.
 
-## 0.5.0 — Production-ready multiplayer
+## 0.5.0: Production-ready multiplayer
 
 Builds on the 0.4.0 sync fix to make the live, multi-device experience solid.
 
@@ -134,7 +166,7 @@ Builds on the 0.4.0 sync fix to make the live, multi-device experience solid.
 - **Empty seats are open table.** Zone hit-testing and card concealment now key off
   whether a player actually holds the seat, not the physical zone div. A seat nobody
   occupies (never sat, or the player left/was kicked) accepts card drops and shows its
-  cards as public — exactly like the center table. Centralized in `occupancy.ts`
+  cards as public, exactly like the center table. Centralized in `occupancy.ts`
   (`seatIsOwned` / `seatIsRival` / `cardIsRivalOwned`), unit-tested.
 - **Drop (away) vs exit (leave/kick) are clean and distinct.** A dropped player (closed
   tab / lost network) keeps their seat and private cards and resumes on return with the
@@ -149,11 +181,11 @@ Builds on the 0.4.0 sync fix to make the live, multi-device experience solid.
 - **Security**: the connection self-test masks the project URL (`unizx….supabase.co`);
   SECURITY.md documents that the anon/publishable key is public by design and warns
   against using a secret key. Both `anon` and `sb_publishable_` keys are accepted.
-- **Mobile/touch**: no sticky hover after a tap (`@media (hover)`), ≥40–44px touch
+- **Mobile/touch**: no sticky hover after a tap (`@media (hover)`), ≥40-44px touch
   targets, and the long-press action bar wraps instead of overflowing on small phones.
 - **Perf**: removed a per-card-per-frame Set allocation from the render hot path.
 
-## 0.4.0 — Vaerum
+## 0.4.0: Vaerum
 
 This release renames the project and, more importantly, fixes the root cause behind
 the long-standing "nothing syncs / everyone sees a different table" reports.
@@ -169,8 +201,8 @@ privacy, host/kick, away-state). The connection, not those features, was the pro
 - **Same-device fallback transport** (`BroadcastChannel`): two tabs/windows on one
   machine now always sync, even with Supabase offline. A misconfiguration is now
   visible (the Connection row reads Offline) instead of silently dead.
-- **Connection self-test** (menu → Connection row): a four-step check — settings
-  loaded, URL shape, project reachable + key accepted, Realtime subscribes — that
+- **Connection self-test** (menu → Connection row): a four-step check: settings
+  loaded, URL shape, project reachable + key accepted, Realtime subscribes, that
   echoes the received URL and decodes the anon key's role, so a wrong/missing/
   service-role key is caught immediately. No SQL, tables, RLS or auth are required;
   only a correct URL + anon key + Realtime enabled.
