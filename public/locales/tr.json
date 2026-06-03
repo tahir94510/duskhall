@@ -61,6 +61,13 @@
     "hint_rest-failed": "Projeye erişilemedi ya da anon anahtarı reddedildi. URL'i ve anon (public) anahtarını doğrulayın; Supabase projesinin duraklatılmadığından emin olun.",
     "hint_realtime-failed": "Projeye erişiliyor ama Realtime soketi bağlanamadı. Supabase panelinizde Realtime'ın açık olduğundan ve bir güvenlik duvarı ya da vekil sunucunun websocket'i engellemediğinden emin olun."
   },
+  "actions": {
+    "flip": "Çevir",
+    "rotate": "90° döndür",
+    "gather": "Topla",
+    "shuffle": "Karıştır",
+    "info": "Kart bilgisi"
+  },
   "table": {
     "deck": "Deste",
     "open": "Açık",

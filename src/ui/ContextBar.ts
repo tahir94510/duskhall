@@ -1,3 +1,6 @@
+import { t } from "../i18n/index.js";
+import { escape as esc } from "./Modal.js";
+
 // Mobile / long-press context bar. Buttons disable themselves when the
 // action does not apply to the current stack (e.g. you cannot shuffle a
 // single card), so the touch UI never offers something that does nothing.
@@ -35,11 +38,11 @@ export class ContextBar {
     this.el = document.createElement("div");
     this.el.className = "context-bar";
     this.el.innerHTML = `
-      <button type="button" class="context-bar__btn" data-act="flip" aria-label="Flip">${ICON_FLIP}</button>
-      <button type="button" class="context-bar__btn" data-act="rotate" aria-label="Rotate 90°">${ICON_ROTATE}</button>
-      <button type="button" class="context-bar__btn" data-act="gather" aria-label="Gather">${ICON_GATHER}</button>
-      <button type="button" class="context-bar__btn" data-act="mix" aria-label="Shuffle">${ICON_MIX}</button>
-      <button type="button" class="context-bar__btn" data-act="info" aria-label="Card info">${ICON_INFO}</button>
+      <button type="button" class="context-bar__btn" data-act="flip" aria-label="${esc(t("actions.flip"))}">${ICON_FLIP}</button>
+      <button type="button" class="context-bar__btn" data-act="rotate" aria-label="${esc(t("actions.rotate"))}">${ICON_ROTATE}</button>
+      <button type="button" class="context-bar__btn" data-act="gather" aria-label="${esc(t("actions.gather"))}">${ICON_GATHER}</button>
+      <button type="button" class="context-bar__btn" data-act="mix" aria-label="${esc(t("actions.shuffle"))}">${ICON_MIX}</button>
+      <button type="button" class="context-bar__btn" data-act="info" aria-label="${esc(t("actions.info"))}">${ICON_INFO}</button>
     `;
     document.body.appendChild(this.el);
     this.bind();
