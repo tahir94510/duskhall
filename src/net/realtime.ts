@@ -268,7 +268,7 @@ export class RealtimeBus {
 
   // Per-sender receive-rate limiters: a flooding/buggy peer can't pin the CPU
   // because excess messages from a single id are dropped before dispatch.
-  private recvBuckets = new Map<string, { patch: TokenBucket; cursor: TokenBucket }>();
+  private recvBuckets = new Map<string, { patch: TokenBucket; cursor: TokenBucket; hello: TokenBucket }>();
 
   // Same-device fallback transport (BroadcastChannel). It runs ALONGSIDE Supabase
   // so two tabs/windows on one machine always sync, even when the websocket is
@@ -649,13 +649,15 @@ export class RealtimeBus {
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "kick", payload: { target, by } } as GameMsg });
   }
 
-  private bucketFor(id: string): { patch: TokenBucket; cursor: TokenBucket } {
+  private bucketFor(id: string): { patch: TokenBucket; cursor: TokenBucket; hello: TokenBucket } {
     let b = this.recvBuckets.get(id);
     if (!b) {
       // Generous ceilings (well above legitimate send rates) that still cap a
       // hostile peer. The patch ceiling must clear a live drag (~30/s previews
-      // plus commits) or peers would see stuttering, half-applied movement.
-      b = { patch: new TokenBucket(90, 60), cursor: new TokenBucket(80, 60) };
+      // plus commits) or peers would see stuttering, half-applied movement. `hello`
+      // is rare (join / reconnect / a few nudges), so a tight bucket stops a peer
+      // from spamming sync requests to make the host re-broadcast snapshots in a loop.
+      b = { patch: new TokenBucket(90, 60), cursor: new TokenBucket(80, 60), hello: new TokenBucket(8, 1) };
       this.recvBuckets.set(id, b);
     }
     return b;
@@ -761,7 +763,11 @@ export class RealtimeBus {
     } else if (msg.type === "hello") {
       const p = msg.payload as { id?: string } | undefined;
       if (p && typeof p.id === "string") {
-        for (const l of this.gameListeners) l({ type: "hello", payload: { id: safeString(p.id, 40) } });
+        const id = safeString(p.id, 40);
+        // Rate-limit sync requests per sender so a peer can't loop the host into
+        // re-broadcasting snapshots. Legitimate joins/reconnects stay well under it.
+        if (id && !this.bucketFor(id).hello.consume()) return;
+        for (const l of this.gameListeners) l({ type: "hello", payload: { id } });
       }
     }
   }

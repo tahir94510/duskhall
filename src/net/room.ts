@@ -14,7 +14,8 @@ export function makeSlug(): string {
 
 function readSlugFromUrl(): string | null {
   const url = new URL(window.location.href);
-  const fromPath = url.pathname.replace(/^\//, "").toUpperCase();
+  // Tolerate leading/trailing slashes so "/P86B3T/" still resolves.
+  const fromPath = url.pathname.replace(/^\/+/, "").replace(/\/+$/, "").toUpperCase();
   if (SLUG_RE.test(fromPath)) return fromPath;
   // Legacy ?r=KBL-XXXXXX support
   const legacy = url.searchParams.get("r");
@@ -23,6 +24,19 @@ function readSlugFromUrl(): string | null {
     if (SLUG_RE.test(cleaned)) return cleaned;
   }
   return null;
+}
+
+// A non-empty URL PATH that does not resolve to a valid room code is a broken link
+// (e.g. "/abc!!" or a half-copied invite). The root "/" is fine (it opens a new room),
+// and a legacy "?r=" query is handled leniently. Used to send broken links to the 404
+// page instead of silently opening an unrelated fresh room.
+function hasMalformedPath(): boolean {
+  const url = new URL(window.location.href);
+  const path = url.pathname.replace(/^\/+/, "").replace(/\/+$/, "");
+  if (!path) return false;                 // root → new room, not an error
+  if (SLUG_RE.test(path.toUpperCase())) return false; // valid slug
+  if (url.searchParams.get("r")) return false;        // legacy query link, be lenient
+  return true;
 }
 
 function writeSlugToUrl(slug: string): void {
@@ -37,6 +51,12 @@ export function getOrCreateRoom(): string {
   if (existing) {
     writeSlugToUrl(existing); // normalize legacy URL
     return existing;
+  }
+  // A broken room link (non-empty path that isn't a valid code) goes to the 404 page
+  // rather than quietly dropping the player into an unrelated new room.
+  if (hasMalformedPath()) {
+    window.location.replace("/404.html");
+    return "";
   }
   const slug = makeSlug();
   writeSlugToUrl(slug);

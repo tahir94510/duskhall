@@ -17,6 +17,7 @@
     "deckReset": "The deck has been gathered and shuffled.",
     "settings": "Settings",
     "shortcuts": "Shortcuts",
+    "updates": "What's new",
     "language": "Language",
     "close": "Close",
     "cancel": "Cancel",
@@ -35,6 +36,7 @@
     "waiting": "Waiting for players...",
     "pasteJoin": "Paste code or link to join",
     "joined": "Joined the room",
+    "alreadyInRoom": "You're already in this room.",
     "invalidCode": "No valid room code on the clipboard",
     "spectators": "Spectators",
     "connection": "Connection",
@@ -137,18 +139,39 @@
   },
   "support": {
     "title": "Support Vaerum",
-    "intro": "Vaerum is built by an independent designer. Your support unlocks the next steps:",
+    "intro": "Vaerum is built by one independent designer. Your support funds the next steps:",
     "lines": [
-      "<strong>Develop the game</strong>: new card cycles, balance work, animations, and atmosphere polish.",
-      "<strong>Physical card edition</strong>: custom card stock, embossed sigils, and box production.",
-      "<strong>3D Steam edition</strong>: an animated 3D release with full effects and sound.",
-      "<strong>Translation</strong>: bringing Vaerum to more languages."
+      "<strong>The game and its ideas</strong>: new card cycles, sharper balance, and more depth and atmosphere.",
+      "<strong>This online table</strong>: new features, faster and smoother play, and more languages.",
+      "<strong>A 3D / Steam edition</strong>: a fully animated 3D table with rich effects and sound.",
+      "<strong>A physical card set</strong>: premium card stock, embossed sigils, and a proper boxed edition."
     ],
     "cta": "Open support page",
     "patreon": "Support on Patreon",
     "buymeacoffee": "Buy me a coffee",
-    "noUrl": "A support page is not configured yet. Please check back later.",
+    "noUrl": "A support page is not set up yet. Please check back later.",
+    "supportersTitle": "Supporters",
+    "supportersHint": "Add #vaerum to your support message and your name joins this wall within a few days (usually 48–72 hours).",
     "thanks": "Thank you for keeping the table alive."
+  },
+  "updates": {
+    "title": "What's new",
+    "badge": "New",
+    "empty": "No updates yet.",
+    "entries": [
+      {
+        "v": "2026-06",
+        "date": "June 2026",
+        "title": "Smoother table, steadier play",
+        "items": [
+          "Flipping, gathering and shuffling a pile now move like real cards, with no flicker or cards overlapping out of order.",
+          "Turning a deck over reads as one clean motion, and mixed face-up/face-down piles tidy themselves as they turn.",
+          "Cards and panels no longer slide in from a corner; the card info and the touch action bar appear right where you are.",
+          "Joining, leaving, being removed and reconnecting now stay consistent for everyone at the table.",
+          "Added a supporters wall and this What's new panel."
+        ]
+      }
+    ]
   },
   "feedback": {
     "title": "Send feedback",

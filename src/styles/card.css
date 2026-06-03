@@ -59,6 +59,13 @@
 /* During a riffle the keyframe owns the transform, so no competing transition. */
 .card.is-shuffling { transition: none; }
 
+/* Staging frame of a stack turn: the OLD face is written WITHOUT a transition so it
+   snaps into place instead of animating backwards first. runSameFaceTurn adds this,
+   forces a reflow, removes it, then flips to the target face on the next frame — so the
+   3D turn always runs cleanly forward, even when a card's current face differs from the
+   staged one (e.g. a closed card dropped on an open pile). */
+.card.is-flip-staging .card__inner { transition: none; }
+
 /* A peer is holding this card: a subtle ivory dashed ring + not-allowed cursor
    so you can see at a glance it's momentarily off-limits. Pure B&W, no hue. */
 .card.is-locked {

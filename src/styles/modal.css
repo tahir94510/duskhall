@@ -28,6 +28,9 @@
   transform: translateY(8px) scale(0.98);
   transition: transform var(--dur) var(--ease);
 }
+/* The panel is the initial focus target (tabindex=-1) for clean modal semantics; it is
+   a container, not a control, so it must never show a focus ring. */
+.modal:focus, .modal:focus-visible { outline: none; }
 .modal-backdrop.is-visible .modal { transform: translateY(0) scale(1); }
 /* Symmetric exit: the panel eases back down/out as the backdrop fades, instead
    of snapping to its entry transform the instant `is-visible` is removed. */
@@ -372,6 +375,55 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
 .support__cta { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
 .support__cta .btn { width: 100%; height: 40px; gap: 8px; }
 .support__cta .btn svg { width: 16px; height: 16px; }
+
+/* Supporters / thank-you wall: a calm, wrapped row of name chips with a quiet hint
+   about how to be listed. Hidden entirely until at least one name is present. */
+.support__thanks { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.support__thanks-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ivory-dim);
+  margin: 0 0 10px;
+}
+.support__names { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.support__name {
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: rgba(243, 239, 229, 0.04);
+  color: var(--ivory);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.support__hint { color: var(--ivory-mute); font-size: 12px; line-height: 1.55; margin: 0; }
+
+/* --- Updates / What's new --- */
+.updates { display: grid; gap: 18px; }
+.updates__entry { display: grid; gap: 8px; }
+.updates__entry + .updates__entry { padding-top: 16px; border-top: 1px solid var(--line); }
+.updates__meta { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.updates__entry-title { font-size: 14px; font-weight: 600; color: var(--ivory); }
+.updates__date { font-size: 12px; color: var(--ivory-mute); white-space: nowrap; }
+.updates__items { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.updates__items li {
+  position: relative;
+  padding-left: 18px;
+  color: var(--ivory-dim);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.updates__items li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ivory-mute);
+}
 
 /* --- Shortcuts --- */
 .shortcuts-grid {

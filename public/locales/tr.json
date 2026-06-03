@@ -17,6 +17,7 @@
     "deckReset": "Deste toplanıp yeniden karıştırıldı.",
     "settings": "Ayarlar",
     "shortcuts": "Kısayollar",
+    "updates": "Yenilikler",
     "language": "Dil",
     "close": "Kapat",
     "cancel": "Vazgeç",
@@ -35,6 +36,7 @@
     "waiting": "Oyuncular bekleniyor...",
     "pasteJoin": "Katılmak için kodu veya bağlantıyı yapıştır",
     "joined": "Odaya katıldın",
+    "alreadyInRoom": "Zaten bu odadasın.",
     "invalidCode": "Panoda geçerli bir oda kodu yok",
     "spectators": "İzleyiciler",
     "connection": "Bağlantı",
@@ -137,18 +139,39 @@
   },
   "support": {
     "title": "Vaerum'a Destek Ol",
-    "intro": "Vaerum bağımsız bir tasarımcı tarafından geliştiriliyor. Desteğin şu adımları açar:",
+    "intro": "Vaerum'u bağımsız bir tasarımcı tek başına geliştiriyor. Desteğin şu adımları finanse eder:",
     "lines": [
-      "<strong>Oyunu geliştir</strong>: yeni kart döngüleri, balans çalışması, animasyon ve atmosfer cilası.",
-      "<strong>Fiziksel kart sürümü</strong>: özel karton, kabartmalı sigil ve kutu üretimi.",
-      "<strong>3D Steam sürümü</strong>: tam efekt ve sesle animasyonlu 3D yayın.",
-      "<strong>Çeviri</strong>: Vaerum'u daha çok dile taşımak."
+      "<strong>Oyun ve fikirleri</strong>: yeni kart döngüleri, daha iyi denge, daha fazla derinlik ve atmosfer.",
+      "<strong>Bu çevrimiçi masa</strong>: yeni özellikler, daha hızlı ve akıcı oyun, daha çok dil.",
+      "<strong>3D / Steam sürümü</strong>: zengin efekt ve sesle tamamen animasyonlu bir 3D masa.",
+      "<strong>Fiziksel kart seti</strong>: kaliteli karton, kabartmalı sigiller ve özel kutulu sürüm."
     ],
     "cta": "Destek sayfasını aç",
     "patreon": "Patreon'da destek ol",
     "buymeacoffee": "Bana bir kahve ısmarla",
-    "noUrl": "Destek sayfası henüz yapılandırılmamış. Daha sonra tekrar deneyin.",
+    "noUrl": "Destek sayfası henüz hazır değil. Lütfen daha sonra tekrar bak.",
+    "supportersTitle": "Destekçiler",
+    "supportersHint": "Destek mesajına #vaerum eklersen adın birkaç gün içinde (genelde 48–72 saat) bu listeye eklenir.",
     "thanks": "Masayı yaşatmaya devam ettiğin için teşekkürler."
+  },
+  "updates": {
+    "title": "Yenilikler",
+    "badge": "Yeni",
+    "empty": "Henüz güncelleme yok.",
+    "entries": [
+      {
+        "v": "2026-06",
+        "date": "Haziran 2026",
+        "title": "Daha akıcı masa, daha kararlı oyun",
+        "items": [
+          "Desteyi çevirmek, toplamak ve karıştırmak artık gerçek kartlar gibi; titreme ya da sıra bozularak üst üste binme yok.",
+          "Desteyi ters çevirmek tek temiz bir hareket gibi görünüyor; karışık (açık/kapalı) desteler dönerken kendiliğinden düzeliyor.",
+          "Kartlar ve paneller artık köşeden kayarak gelmiyor; kart bilgisi ve dokunmatik buton çubuğu tam bulunduğun yerde beliriyor.",
+          "Odaya katılma, çıkma, atılma ve yeniden bağlanma artık masadaki herkes için tutarlı.",
+          "Destekçiler listesi ve bu Yenilikler paneli eklendi."
+        ]
+      }
+    ]
   },
   "feedback": {
     "title": "Geri bildirim gönder",

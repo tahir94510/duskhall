@@ -76,7 +76,7 @@ export function openJoinByCode(
   const submit = (): void => {
     const code = parseRoomInput(input.value);
     if (!code) { showError(t("ui.invalidCode")); return; }
-    if (code === opts.currentRoom) { modal.close(); toast(t("ui.joined")); return; }
+    if (code === opts.currentRoom) { modal.close(); toast(t("ui.alreadyInRoom")); return; }
     modal.close(() => onJoin(code));
   };
 
