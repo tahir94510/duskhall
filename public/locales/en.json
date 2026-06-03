@@ -158,7 +158,7 @@
     "buymeacoffee": "Buy me a coffee",
     "noUrl": "A support page is not set up yet. Please check back later.",
     "supportersTitle": "Supporters",
-    "supportersHint": "Add #vaerum to your support message and your name joins this wall within a few days (usually 48–72 hours).",
+    "supportersHint": "Add #vaerum to your support message and your name joins this wall within a few days (usually 48-72 hours).",
     "thanks": "Thank you for keeping the table alive."
   },
   "updates": {
@@ -166,6 +166,18 @@
     "badge": "New",
     "empty": "No updates yet.",
     "entries": [
+      {
+        "v": "2026-06b",
+        "date": "June 2026",
+        "title": "Sharper privacy, clearer table, smoother sound",
+        "items": [
+          "Your private area now hides a card the moment any part of it enters, from any side, and shows it again only once it is almost fully out. It looks the same for everyone, on every screen size.",
+          "The dark table is easier to read: cards stand out from the felt and the deck and discard labels are clearer, while the calm, dark mood stays.",
+          "Music and sound start cleanly on your first tap, with no console warnings after you switch tabs and come back.",
+          "If the host's connection drops for a moment, they keep host while away instead of it jumping to someone else.",
+          "The supporters wall now lists the most recent supporters first."
+        ]
+      },
       {
         "v": "2026-06",
         "date": "June 2026",

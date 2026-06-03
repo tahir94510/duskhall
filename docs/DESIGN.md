@@ -31,7 +31,7 @@ The canonical balance numbers live in `src/game/balance.ts`. The rulebook copy i
 
 Card positions are stored in a single canonical normalised frame `[0, 1]²` of the board. Every client rotates its own view so its seat sits at the bottom; the rotation helpers live in `src/table/rotation.ts`:
 
-- `seatRotationDeg(mySeat)` → 0 / 180 / -90 / 90 for seats 0–3.
+- `seatRotationDeg(mySeat)` → 0 / 180 / -90 / 90 for seats 0-3.
 - `localToCanonical(nx, ny, mySeat)` / `canonicalToLocal(...)` rotate around the board centre.
 
 Card positions store the card CENTRE as a canonical fraction; the render loop turns that centre into the on-screen top-left by subtracting half the measured card size, so a pile sits on its marker identically on every device and never drifts on resize. Dock anchors are fixed CENTRE constants in `src/table/constants.ts`:
@@ -208,8 +208,8 @@ and these are the levers that keep it fair and replayable:
   opens a full round in which every rival gets a real window to break it (destroy a
   Seal to drop the declarer below three). Karmic Reflection and Blood Atonement give
   the declarer earned defenses, so survival rewards prior play rather than luck.
-  The known risk here is *king-making* — a single out-of-contention player tipping
-  the result — so disruption is spread across categories and copies (a lone card is
+  The known risk here is *king-making*, a single out-of-contention player tipping
+  the result, so disruption is spread across categories and copies (a lone card is
   rarely enough), not concentrated in one silver bullet.
 - **The leader faces a headwind, not the loser a handout.** Catch-up comes from the
   leader being the obvious, declared target during the Trial, the Cosmic-Encounter /
@@ -222,5 +222,5 @@ and these are the levers that keep it fair and replayable:
 
 Numbers worth keeping in proportion if the set is ever re-tuned: opening hand 5 with
 a max of 7 (the genre standard), 2 base actions, an Ascension threshold of 3 reached
-in roughly the back third of a 30–60 minute game, and Silence! kept as the single
+in roughly the back third of a 30-60 minute game, and Silence! kept as the single
 most numerous card so the reaction layer never dries up.
