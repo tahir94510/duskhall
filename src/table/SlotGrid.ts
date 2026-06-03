@@ -69,6 +69,16 @@ export function zoneRect(seat: Seat): { x0: number; y0: number; x1: number; y1: 
 // player nudges anywhere near their own area must never flash to the table.
 export const ZONE_PRIVACY_FRAC = 0.1;
 
+// Canonical card footprint as a FIXED fraction of the board, shared by every client.
+// The rendered card size (--card-w: clamp(58px,7.6vmin,126px)) is a different fraction of
+// the board on each device/viewport, so deriving the overlap from measured pixels made
+// two players on different screen sizes disagree on whether a card is "in" a zone (a card
+// dragged out could stay concealed on one view). Using these fixed canonical dimensions
+// makes the conceal/reveal boundary identical for everyone, on every device, from every
+// side. Tuned to roughly match the typical rendered card fraction. Keep in one place.
+export const CARD_CANON_W = 0.085;
+export const CARD_CANON_H = 0.125;
+
 export function cardZoneOwner(nx: number, ny: number, rot: number, cardWFrac: number, cardHFrac: number): Seat | null {
   const o = cardZoneOverlap(nx, ny, rot, cardWFrac, cardHFrac);
   return o && o.frac > ZONE_PRIVACY_FRAC ? o.seat : null;
