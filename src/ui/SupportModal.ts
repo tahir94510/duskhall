@@ -24,10 +24,51 @@ function button(url: string, label: string, icon: string, primary: boolean): str
   return `<a class="${cls}" href="${escape(url)}" target="_blank" rel="noopener">${icon}<span>${escape(label)}</span></a>`;
 }
 
+// The supporters wall is sourced from public/supporters.json (an array of names,
+// editable on GitHub with no redeploy) merged with an optional build-time
+// VITE_SUPPORTERS env (comma-separated). The result is trimmed, de-duplicated
+// (case-insensitive), length-capped per name and total-capped, so a malformed or
+// oversized file can never break or bloat the panel. Cached after the first load.
+let supportersCache: Promise<string[]> | null = null;
+function envSupporters(): string[] {
+  const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env || {};
+  return (env.VITE_SUPPORTERS || "").split(",");
+}
+function cleanSupporters(raw: unknown, fromEnv: string[]): string[] {
+  const list = (Array.isArray(raw) ? raw : []).concat(fromEnv);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const v of list) {
+    if (typeof v !== "string") continue;
+    const name = v.trim().slice(0, 40);
+    if (!name) continue;
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(name);
+    if (out.length >= 500) break;
+  }
+  return out;
+}
+function loadSupporters(): Promise<string[]> {
+  if (supportersCache) return supportersCache;
+  supportersCache = (async () => {
+    let json: unknown = [];
+    try {
+      const res = await fetch("/supporters.json", { cache: "no-store" });
+      const ct = res.headers.get("content-type") || "";
+      if (res.ok && ct.includes("json")) json = await res.json();
+    } catch { /* no file / offline — fall back to env only */ }
+    return cleanSupporters(json, envSupporters());
+  })();
+  return supportersCache;
+}
+
 // Offers whichever support channels are configured — Patreon, Buy Me a Coffee
 // and/or a generic page — each behind its own env var, exactly like the Feedback
 // modal lists whichever feedback channels are set. The first available one is the
-// primary (filled) button; the rest are secondary.
+// primary (filled) button; the rest are secondary. Below the call-to-action it shows
+// a supporters / thank-you wall and a quiet hint on how to be listed.
 export function openSupportModal(modal: Modal, links: SupportLinks): void {
   const lines = tArr<string>("support.lines");
   const buttons: string[] = [];
@@ -44,7 +85,21 @@ export function openSupportModal(modal: Modal, links: SupportLinks): void {
       ${lines.map((l) => `<li>${renderLine(l)}</li>`).join("")}
     </ul>
     ${cta}
+    <div class="support__thanks">
+      <h3 class="support__thanks-title">${escape(t("support.supportersTitle"))}</h3>
+      <div class="support__names" data-role="supporters"></div>
+      <p class="support__hint">${escape(t("support.supportersHint"))}</p>
+    </div>
     <p class="modal__sub" style="margin-top:14px;">${escape(t("support.thanks"))}</p>
   `;
   modal.open({ title: t("support.title"), bodyHtml });
+
+  // Fill the names asynchronously; the dialog may already be closed by the time the
+  // fetch resolves, so we re-find the (still-open) container and skip if it's gone.
+  const namesEl = modal.bodyEl()?.querySelector<HTMLElement>('[data-role="supporters"]') ?? null;
+  if (!namesEl) return;
+  void loadSupporters().then((names) => {
+    if (!namesEl.isConnected || !names.length) return;
+    namesEl.innerHTML = names.map((n) => `<span class="support__name">${escape(n)}</span>`).join("");
+  });
 }
