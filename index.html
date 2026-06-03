@@ -6,15 +6,19 @@
     <meta name="theme-color" content="#000000" />
     <meta name="color-scheme" content="dark" />
     <title>Vaerum: Heirs of the Ether</title>
-    <!-- Localise the tab title BEFORE the bundle loads, using the same priority as
-         i18n.detectLocale (?lang= → localStorage "kabal:lang" → navigator language).
-         Without this, a Turkish visitor briefly sees the static English title flash to
-         the localised one once JS runs. Keep these strings in sync with meta.title in
-         public/locales/*.json (just the brand line; it changes rarely). -->
+    <!-- Localise the tab title AND the static boot-failure card BEFORE the bundle loads,
+         using the same priority as i18n.detectLocale (?lang= → localStorage "kabal:lang"
+         → navigator language). Without this, a Turkish visitor briefly sees English (the
+         title flash, or — if the bundle fails — an English error card). Keep these
+         strings in sync with public/locales/*.json. -->
     <script>
       (function () {
         try {
           var titles = { en: "Vaerum: Heirs of the Ether", tr: "Vaerum: Eterin Vârisleri" };
+          var fail = {
+            en: { h: "Something went wrong.", p: "Vaerum could not start. Try reloading the page.", b: "Reload" },
+            tr: { h: "Bir şeyler ters gitti.", p: "Vaerum başlatılamadı. Sayfayı yeniden yüklemeyi dene.", b: "Yeniden yükle" }
+          };
           var q = new URLSearchParams(location.search).get("lang");
           var stored = null;
           try { stored = localStorage.getItem("kabal:lang"); } catch (e) {}
@@ -24,6 +28,15 @@
                   : nav.indexOf("tr") === 0 ? "tr" : "en";
           document.title = titles[loc];
           document.documentElement.setAttribute("lang", loc);
+          var f = fail[loc];
+          document.addEventListener("DOMContentLoaded", function () {
+            var h = document.getElementById("boot-fail-title");
+            var p = document.getElementById("boot-fail-text");
+            var b = document.querySelector("#boot-fail [data-reload]");
+            if (h) h.textContent = f.h;
+            if (p) p.textContent = f.p;
+            if (b) b.textContent = f.b;
+          });
         } catch (e) {}
       })();
     </script>
@@ -118,14 +131,14 @@
             </g>
           </svg>
         </span>
-        <h1>Something went wrong.</h1>
-        <p>Vaerum could not start. Try reloading the page.</p>
+        <h1 id="boot-fail-title">Something went wrong.</h1>
+        <p id="boot-fail-text">Vaerum could not start. Try reloading the page.</p>
         <button type="button" data-reload>Reload</button>
       </div>
     </div>
     <noscript>
       <div class="boot-fail__noscript">
-        Vaerum requires JavaScript. Please enable it to play.
+        Vaerum requires JavaScript. Please enable it to play. · Vaerum oynamak için JavaScript gerektirir; lütfen etkinleştir.
       </div>
     </noscript>
   </body>

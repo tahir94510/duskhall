@@ -61,6 +61,13 @@
     "hint_rest-failed": "The project could not be reached, or the anon key was rejected. Confirm the URL and the anon (public) key, and make sure the Supabase project is not paused.",
     "hint_realtime-failed": "The project is reachable but the Realtime socket did not connect. In your Supabase dashboard, make sure Realtime is enabled, and check that no firewall or proxy is blocking the websocket."
   },
+  "actions": {
+    "flip": "Flip",
+    "rotate": "Rotate 90°",
+    "gather": "Gather",
+    "shuffle": "Shuffle",
+    "info": "Card info"
+  },
   "table": {
     "deck": "Deck",
     "open": "Open",

@@ -6,15 +6,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
     <script>
-      // Defensive SPA fallback. If Vercel ever serves this 404 page for a
-      // valid room slug, redirect to root keeping the path so the SPA can
-      // pick it up. window.history.replaceState avoids leaving a 404 hit
-      // in the browser history.
+      // Defensive SPA fallback. If the host ever serves this 404 page for a path that
+      // LOOKS like a real room code, bounce to it so the app can pick it up. Anything
+      // else is a genuinely broken link, so we stay here and show the card (no redirect
+      // loop on a malformed path).
       (function () {
-        var p = window.location.pathname || "/";
-        if (p !== "/" && p !== "/404.html") {
-          window.location.replace("/" + p.replace(/^\/+/, ""));
+        var p = (window.location.pathname || "/").replace(/^\/+/, "").replace(/\/+$/, "");
+        if (/^[A-Z0-9]{6}$/i.test(p)) {
+          window.location.replace("/" + p.toUpperCase());
         }
+      })();
+    </script>
+    <script>
+      // Localise the page to TR/EN with the SAME priority as i18n.detectLocale
+      // (?lang= -> localStorage "kabal:lang" -> navigator language), before paint.
+      (function () {
+        try {
+          var L = {
+            en: { t: "Vaerum", h: "Page not found.", p: "That link does not point to a known Vaerum room.", a: "Open a new room" },
+            tr: { t: "Vaerum", h: "Sayfa bulunamadı.", p: "Bu bağlantı bilinen bir Vaerum odasına gitmiyor.", a: "Yeni bir oda aç" }
+          };
+          var q = new URLSearchParams(location.search).get("lang");
+          var stored = null;
+          try { stored = localStorage.getItem("kabal:lang"); } catch (e) {}
+          var nav = (navigator.language || "en").toLowerCase();
+          var loc = (q && L[q]) ? q : (stored && L[stored]) ? stored : nav.indexOf("tr") === 0 ? "tr" : "en";
+          var s = L[loc];
+          document.documentElement.setAttribute("lang", loc);
+          document.title = s.t;
+          document.addEventListener("DOMContentLoaded", function () {
+            var h = document.getElementById("nf-title");
+            var tx = document.getElementById("nf-text");
+            var a = document.getElementById("nf-link");
+            if (h) h.textContent = s.h;
+            if (tx) tx.textContent = s.p;
+            if (a) a.textContent = s.a;
+          });
+        } catch (e) {}
       })();
     </script>
     <style>
@@ -56,9 +84,9 @@
             <circle cx="24" cy="32" r="3.5" fill="#f3efe5" stroke="none" />
           </g>
         </svg>
-        <h1>Page not found.</h1>
-        <p>That link does not point to a known Vaerum room.</p>
-        <a href="/">Open a new room</a>
+        <h1 id="nf-title">Page not found.</h1>
+        <p id="nf-text">That link does not point to a known Vaerum room.</p>
+        <a id="nf-link" href="/">Open a new room</a>
       </div>
     </div>
   </body>
