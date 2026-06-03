@@ -25,8 +25,8 @@
      variables so the non-rotating seat-label layer (.board__labels) can reuse the
      EXACT same tracks/gap and stay pixel-aligned with the zones at every
      breakpoint (mobile overrides only re-set these variables). */
-  --grid-cols: minmax(64px, 19%) 1fr minmax(64px, 19%);
-  --grid-rows: minmax(64px, 19%) 1fr minmax(64px, 19%);
+  --grid-cols: minmax(68px, 20.5%) 1fr minmax(68px, 20.5%);
+  --grid-rows: minmax(68px, 20.5%) 1fr minmax(68px, 20.5%);
   --grid-gap: clamp(6px, 1.4vmin, 16px);
   grid-template-columns: var(--grid-cols);
   grid-template-rows: var(--grid-rows);
