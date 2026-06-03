@@ -39,7 +39,7 @@ import {
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
-import { cardZoneOwner, cardZoneOverlap } from "../table/SlotGrid.js";
+import { cardZoneOwner } from "../table/SlotGrid.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry } from "../net/realtime.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
@@ -557,10 +557,10 @@ export class Game {
       setOwnerSeat: (id) => {
         const c = this.state.cards.get(id);
         if (!c) return;
-        // Ownership is decided by the >50%-overlap rule on the card's FINAL position
+        // Ownership is decided by the privacy-overlap rule on the card's FINAL position
         // (not the pointer at drop), so the persisted flag matches what every viewer
-        // sees: a card more than half inside a seat's zone belongs to it, otherwise
-        // it is public. Concealment itself is recomputed live from position too.
+        // sees: a card with even a small part inside a seat's zone belongs to it, and it
+        // is public only once it is almost fully out. Concealment is recomputed live too.
         const owner = this.cardZoneOwnerOf(c);
         if (c.ownerSeat !== owner) {
           c.ownerSeat = owner;
@@ -697,10 +697,11 @@ export class Game {
     return seatIsRival(this.occupancy(), seat, this.self.seat, this.spectator);
   }
 
-  // The seat whose private zone currently overlaps MORE THAN HALF of this card's area,
-  // or null. This is the live, position-based owner used for both concealment and the
-  // "can't touch a rival's card" rule: a card counts as inside a zone once >50% of it
-  // is in, and becomes public the moment >50% is out — symmetric and player-friendly.
+  // The seat whose private zone currently holds this card by the privacy-overlap rule
+  // (ZONE_PRIVACY_FRAC), or null. This is the live, position-based owner used for both
+  // concealment and the "can't touch a rival's card" rule: a card is private as soon as a
+  // small part is inside a zone (from ANY side) and public only once it is almost fully
+  // out — eager to hide, slow to reveal, so a card never flashes to the table.
   private cardZoneOwnerOf(c: CardState): number | null {
     const { w, h } = this.cardMetrics();
     const wf = this.boardSize.width > 0 ? w / this.boardSize.width : 0;
@@ -709,7 +710,7 @@ export class Game {
   }
 
   // Is this card in a rival's private area whose seat is still held? Decided by the
-  // card's LIVE position (>50% inside that seat's zone), not a stale flag, so dragging a
+  // card's LIVE position (a small part inside that seat's zone), not a stale flag, so dragging a
   // card out of a zone reveals it (and dragging it in conceals it) as it crosses half.
   // A zone whose owner left/kicked (or was never occupied) is NOT rival-owned — the
   // card is public. Spectators treat every owned-zone card as rival-owned.
@@ -731,7 +732,7 @@ export class Game {
     if (!c || c.ownerSeat === this.self.seat) return false;
     // Never steal a rival's still-private card (guarded elsewhere too).
     if (this.isRivalOwnedCard(id)) return false;
-    // Claim only when the card is actually (>50%) inside OUR zone — same overlap rule
+    // Claim only when the card is actually inside OUR zone (privacy-overlap) — same rule
     // as drop ownership, so interacting (flip/rotate/gather) matches dragging in.
     if (this.cardZoneOwnerOf(c) !== this.self.seat) return false;
     c.ownerSeat = this.self.seat;
@@ -2356,40 +2357,6 @@ export class Game {
     return true;
   }
 
-  // The seat of a PEER currently holding this card (drag / multi-phase animation), or
-  // null. Used for the eager privacy conceal below.
-  private heldSeatByOther(id: string): number | null {
-    const h = this.heldByOther.get(id);
-    if (!h) return null;
-    if (h.until <= Date.now()) { this.heldByOther.delete(id); return null; }
-    return h.seat;
-  }
-
-  // Tiny overlap (fraction of card area) that already counts as "entering" a zone while
-  // the owner is actively holding the card — so peers hide it the instant a sliver goes
-  // in, not only past the halfway point. Privacy-first: eager to hide, slow to reveal.
-  private static readonly HELD_CONCEAL_FRAC = 0.12;
-
-  // Should THIS viewer see the card as a concealed back? Two layers:
-  //  • At rest: the resting >50%-overlap ownership rule (isRivalOwnedCard).
-  //  • While a PEER is holding it (drag / flip-shuffle animation): hide it as soon as a
-  //    small part enters that peer's own zone, and keep it hidden until it is clearly
-  //    back out — so a card a player is fiddling with near their area never flashes its
-  //    face to the table ("did it show?" anxiety), even mid-drag. The owner never sees
-  //    their own card concealed; spectators fall through to the resting rule (which
-  //    conceals every held-seat card for them).
-  private isConcealedForRender(c: CardState): boolean {
-    if (this.isRivalOwnedCard(c.id)) return true;
-    if (this.spectator) return false; // resting rule already covered spectators
-    const holder = this.heldSeatByOther(c.id);
-    if (holder === null || holder === this.self.seat) return false; // public, or our own grab
-    if (!this.seatIsRival(holder)) return false; // holder's seat isn't a private rival zone
-    const { w, h } = this.cardMetrics();
-    const wf = this.boardSize.width > 0 ? w / this.boardSize.width : 0;
-    const hf = this.boardSize.height > 0 ? h / this.boardSize.height : 0;
-    const ov = cardZoneOverlap(c.x, c.y, c.rot, wf, hf);
-    return !!ov && ov.seat === holder && ov.frac > Game.HELD_CONCEAL_FRAC;
-  }
 
   private scheduleHoldSweep(): void {
     let soonest = Infinity;
@@ -2711,7 +2678,7 @@ export class Game {
       // animating: the concealment rule forces rotateY(0), which would fight a
       // flip mid-rotation; the very next frame after the turn settles writes the
       // correct class.
-      if (!busy) el.classList.toggle("is-concealed", this.isConcealedForRender(c));
+      if (!busy) el.classList.toggle("is-concealed", this.isRivalOwnedCard(c.id));
       // Busy indicator while a peer is holding this card.
       el.classList.toggle("is-locked", this.isLockedByOther(c.id));
     }

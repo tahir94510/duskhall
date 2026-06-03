@@ -136,14 +136,21 @@ export class AudioEngine {
     param.setTargetAtTime(target, now, tau);
   }
 
+  // Resume a context the browser suspended (created suspended, or auto-suspended after
+  // the tab was backgrounded). Safe to call from any gesture-backed path; a no-op when
+  // already running. Catches the rejection so a blocked resume never throws.
+  private resumeIfSuspended(): void {
+    if (this.ctx && this.ctx.state === "suspended") {
+      void this.ctx.resume().catch(() => {});
+    }
+  }
+
   // Resume audio on first user gesture (browsers block autoplay)
   async boot(): Promise<void> {
     if (this.booted) return;
     this.booted = true;
     this.ensureContext();
-    if (this.ctx && this.ctx.state === "suspended") {
-      try { await this.ctx.resume(); } catch {}
-    }
+    this.resumeIfSuspended();
     if (!this.muted) await this.startMusic();
   }
 
@@ -162,6 +169,10 @@ export class AudioEngine {
     this.lastPlayedAt.set(name, nowMs);
 
     this.ensureContext();
+    // A gesture reached us, so re-arm a context the browser auto-suspended while the
+    // tab was hidden — otherwise the next sound silently no-ops AND Chrome logs the
+    // "AudioContext was not allowed to start" warning.
+    this.resumeIfSuspended();
     if (!this.ctx || !this.sfxGain) return;
     // Only weighty effects nudge the music; light UI ticks/flips leave it alone
     // so rapid clicking never makes the bed pump.
@@ -444,6 +455,7 @@ export class AudioEngine {
 
   async startMusic(): Promise<void> {
     this.ensureContext();
+    this.resumeIfSuspended();
     if (this.musicElement || this.musicProcedural) return;
     const { music } = await this.loadManifest();
     if (music.length > 0) {
