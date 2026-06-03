@@ -23,7 +23,7 @@ export class Modal {
     bd.setAttribute("role", "dialog");
     bd.setAttribute("aria-modal", "true");
     bd.innerHTML = `
-      <div class="modal">
+      <div class="modal" tabindex="-1">
         <div class="modal__head">
           <div>
             <div class="modal__title">${escape(opts.title)}</div>
@@ -85,8 +85,12 @@ export class Modal {
     closeOn(() => document.removeEventListener("keydown", onEsc));
     closeOn(() => bd.removeEventListener("keydown", onKeydown));
 
-    // Move focus into the dialog (first focusable, else the close button).
-    (this.focusable(bd)[0] ?? closeBtn)?.focus();
+    // Move focus to the dialog PANEL itself (tabindex=-1), not the close button or the
+    // first link/input — so opening a modal (e.g. the first-visit About panel) never
+    // paints a stray :focus-visible ring on a control the user didn't choose. The Tab
+    // trap and Escape handler still work, so keyboard users keep full access.
+    const panel = bd.querySelector<HTMLElement>(".modal");
+    (panel ?? closeBtn)?.focus();
   }
 
   private focusable(root: HTMLElement): HTMLElement[] {

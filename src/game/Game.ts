@@ -1538,14 +1538,29 @@ export class Game {
   // the turn a second time.
   private runSameFaceTurn(ids: string[], visibleId: string | null, targetFaceUp: boolean, durMs: number): void {
     this.elevateDuringAnim(ids, durMs);
-    // Stage the uniform OLD face for every card so all of them animate.
-    for (const id of ids) this.cardEls.get(id)?.classList.toggle("is-faceup", !targetFaceUp);
+    // Stage the uniform OLD face for every card so all of them animate. This is done
+    // WITHOUT a transition (is-flip-staging sets .card__inner transition:none), so a card
+    // whose current face differs from the staged one snaps to it instead of animating
+    // backwards first — the jitter/pop when a closed card sat on an open pile. We force a
+    // reflow, drop the staging class, then flip to the target on the next frame so the
+    // 3D turn runs cleanly forward from the staged face.
+    let probe: HTMLElement | null = null;
+    for (const id of ids) {
+      const el = this.cardEls.get(id);
+      if (!el) continue;
+      el.classList.add("is-flip-staging");
+      el.classList.toggle("is-faceup", !targetFaceUp);
+      probe = el;
+    }
     if (visibleId) {
       this.cardEls.get(visibleId)?.style.setProperty("z-index", String(ANIM_Z_BASE + this.pileZSpan(ids) + 1));
       for (const id of ids) {
         if (id !== visibleId) this.cardEls.get(id)?.classList.add("is-flip-quiet");
       }
     }
+    // Commit the staged face with no transition (one reflow), then re-enable transitions.
+    if (probe) void probe.offsetWidth;
+    for (const id of ids) this.cardEls.get(id)?.classList.remove("is-flip-staging");
     // Next frame: flip every card to the shared target face so the transition runs.
     requestAnimationFrame(() => {
       for (const id of ids) this.cardEls.get(id)?.classList.toggle("is-faceup", targetFaceUp);

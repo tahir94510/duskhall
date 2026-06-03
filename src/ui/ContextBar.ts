@@ -104,7 +104,13 @@ export class ContextBar {
     // long-press near a screen edge never opens a partly-clipped bar.
     if (y + h + margin > window.innerHeight) y = window.innerHeight - h - margin;
     if (y < margin) y = margin;
-    this.el.style.transform = `translate(${x}px, ${y}px)`;
+    // Position with left/top (instant), NOT transform: the CSS keeps `transform` for the
+    // scale pop-in (scale .94 -> 1) and transitions it, so writing the position into
+    // transform would (a) override the scale and (b) make the bar SLIDE across the screen
+    // from its previous spot. left/top are not transitioned, so it appears exactly where
+    // the finger is and only the scale/opacity animate in.
+    this.el.style.left = `${x}px`;
+    this.el.style.top = `${y}px`;
   }
 
   hide = (): void => {
