@@ -2009,7 +2009,15 @@ export class Game {
     if (connAt === undefined) {
       for (const c of this.seatClaims.values()) if (c.id === id) { connAt = c.connAt; break; }
     }
-    this.removedTombstones.set(id, { connAt: connAt ?? 0, until: Date.now() + Game.TOMBSTONE_MS });
+    // Monotonic connAt: never LOWER an existing tombstone's stamp. A later call with a
+    // stale/0 connAt (e.g. a kick handled before presence seated the returning player)
+    // must not downgrade a tombstone set with the real connAt, or the player's own
+    // current presence would clear it and the kick would be undone (the "first kick does
+    // nothing, second works" bug). Only a genuinely newer reconnect (a higher connAt in
+    // applyPresence) clears it.
+    const prev = this.removedTombstones.get(id);
+    const next = Math.max(connAt ?? 0, prev?.connAt ?? 0);
+    this.removedTombstones.set(id, { connAt: next, until: Date.now() + Game.TOMBSTONE_MS });
   }
   private pruneTombstones(): void {
     const now = Date.now();
@@ -2284,10 +2292,21 @@ export class Game {
       void this.joinRoom(newRoom()).then(() => toast(t("kick.kicked")));
       return;
     }
-    // A peer (not the target): find the kicked player's seat and evict them now.
+    // A peer (not the target): evict the kicked player. Tombstone FIRST, with a connAt
+    // that their current presence cannot clear (the host's stamp, maxed with anything we
+    // know locally), so the eviction sticks even if our presence has not seated the
+    // returning player yet. Then free the seat and release its cards if we have it.
+    const known = this.players.get(k.target)?.connAt ?? this.lastRoster.find((p) => p.id === k.target)?.connAt ?? 0;
+    this.tombstone(k.target, Math.max(k.connAt ?? 0, known));
     const seat = this.seatOfId(k.target);
-    if (seat >= 0) this.applyLeft({ id: k.target, seat });
-    else { this.tombstone(k.target); this.players.delete(k.target); this.lastRoster = this.lastRoster.filter((p) => p.id !== k.target); this.requestRender(); }
+    if (seat >= 0) {
+      this.applyLeft({ id: k.target, seat });
+    } else {
+      this.players.delete(k.target);
+      this.lastRoster = this.lastRoster.filter((p) => p.id !== k.target);
+      this.refreshZones();
+      this.requestRender();
+    }
   }
 
   // Resolve the seat a client id currently holds (active or claimed), else -1.
@@ -2306,8 +2325,8 @@ export class Game {
     const occupant = Array.from(this.players.values()).find((p) => p.seat === seat);
     const claim = this.seatClaims.get(seat);
     const target = occupant
-      ? { id: occupant.id, name: occupant.name }
-      : (claim ? { id: claim.id, name: claim.name } : null);
+      ? { id: occupant.id, name: occupant.name, connAt: occupant.connAt }
+      : (claim ? { id: claim.id, name: claim.name, connAt: claim.connAt } : null);
     if (!target) return;
     void this.audio.play("ui-open");
     openConfirm(
@@ -2319,7 +2338,10 @@ export class Game {
         danger: true
       },
       () => {
-        this.bus.sendKick(target.id, this.self.id);
+        // Carry the target's last-known connAt so every peer tombstones them with a
+        // stamp their own current presence cannot clear (a returning, re-kicked player
+        // is removed on the FIRST kick, not the second).
+        this.bus.sendKick(target.id, this.self.id, target.connAt);
         // Apply the eviction locally right away rather than waiting for the kicked
         // client to echo a `left` (which races, or never arrives if they are
         // offline): free the seat, release that seat's cards to the table, and drop

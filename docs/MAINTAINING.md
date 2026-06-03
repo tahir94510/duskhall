@@ -55,18 +55,23 @@ Two separate things, same rule: newest first, keep the old entries.
 Defined in `public/locales/*.json` under `updates.entries`, an array of:
 
 ```json
-{ "v": "2026-06", "date": "June 2026", "title": "Short headline", "items": ["...", "..."] }
+{ "v": "2026-06-03", "date": "June 3, 2026", "title": "Short headline", "items": ["...", "..."] }
 ```
 
-- `v` is an internal version tag. It is never shown to players. The "New" badge compares
-  it to `localStorage["kabal:seen-updates"]` (see `latestUpdateVersion()` in
-  `src/ui/UpdatesModal.ts` and the badge wiring in `src/game/Game.ts`).
-- To announce a release: add a NEW entry at the FRONT of `entries` with a fresh, unique
-  `v` (any increasing string, a date or a build tag is fine), a human `date` label, a
-  short `title`, and a few plain `items`. Keep the existing entries below it. The "New"
-  badge then lights up for every player and clears once they open the panel.
-- Write `items` for players, not for engineers. Describe what they will notice.
-- Update both `en.json` and `tr.json` (parity test will remind you).
+- `v` is the internal version id. It is never shown to players, but it must be UNIQUE,
+  increasing, and IDENTICAL across every locale for the same entry. Use the release date
+  in ISO form, `yyyy-mm-dd`. If you ship twice in one day, add a suffix: `2026-06-03.2`.
+  The "New" badge compares `entries[0].v` to `localStorage["kabal:seen-updates"]` (see
+  `latestUpdateVersion()` in `src/ui/UpdatesModal.ts` and the wiring in `src/game/Game.ts`),
+  so a fresh `v` lights the badge for everyone and it clears once they open the panel.
+- `date` is the human label players see. Use a SPECIFIC full date (day, month, year), not
+  just a month, so two entries in the same month never look identical. Localize it per
+  language (for example "June 3, 2026" and "3 Haziran 2026").
+- To announce a release: add a NEW entry at the FRONT of `entries` in BOTH `en.json` and
+  `tr.json` (same `v`, localized `date`/`title`/`items`). Keep the existing entries below.
+- Write `items` for players, not for engineers. Describe what they will notice. Keep the
+  `v` values in sync across locales or the badge will misfire (the parity test checks the
+  shape, not the values, so this one is on you).
 
 ### CHANGELOG.md (developers see this)
 

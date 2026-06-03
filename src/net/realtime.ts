@@ -117,6 +117,11 @@ export interface HoldMsg {
 export interface KickMsg {
   target: string;
   by: string;
+  /** The target's last-known per-connection stamp, so every peer tombstones them with a
+   *  connAt their CURRENT presence cannot clear. Without it, a kick handled before the
+   *  returning player was seated locally tombstoned them with 0, and their own presence
+   *  undid the kick (so the first kick appeared to do nothing). Optional for old clients. */
+  connAt?: number;
 }
 
 export type GameMsg =
@@ -647,10 +652,11 @@ export class RealtimeBus {
   }
 
   /** Host-only: ask a player to leave. Only the target acts on it. */
-  sendKick(target: string, by: string): void {
-    this.local.sendGame({ type: "kick", payload: { target, by } });
+  sendKick(target: string, by: string, connAt?: number): void {
+    const payload: KickMsg = { target, by, connAt };
+    this.local.sendGame({ type: "kick", payload });
     if (!this.channel || this.status !== "online") return;
-    this.channel.send({ type: "broadcast", event: "game", payload: { type: "kick", payload: { target, by } } as GameMsg });
+    this.channel.send({ type: "broadcast", event: "game", payload: { type: "kick", payload } as GameMsg });
   }
 
   private bucketFor(id: string): { patch: TokenBucket; cursor: TokenBucket; hello: TokenBucket } {
@@ -748,7 +754,7 @@ export class RealtimeBus {
     } else if (msg.type === "kick") {
       const k = msg.payload as Partial<KickMsg> | undefined;
       if (!k || typeof k.target !== "string") return;
-      const safe: KickMsg = { target: safeString(k.target, 40), by: safeString(k.by, 40) };
+      const safe: KickMsg = { target: safeString(k.target, 40), by: safeString(k.by, 40), connAt: safeStamp(k.connAt, 0) };
       if (!safe.target) return;
       for (const l of this.gameListeners) l({ type: "kick", payload: safe });
     } else if (msg.type === "hold") {

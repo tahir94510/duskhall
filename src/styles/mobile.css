@@ -64,8 +64,8 @@
        Rows and cols use IDENTICAL % and px floor so the board stays square-symmetric
        (the 90° seat-rotation perspective depends on it) and the centre 1fr never
        collapses on a tall phone where the viewport is far from square. */
-    --grid-cols: minmax(54px, 21%) 1fr minmax(54px, 21%);
-    --grid-rows: minmax(54px, 21%) 1fr minmax(54px, 21%);
+    --grid-cols: minmax(58px, 22%) 1fr minmax(58px, 22%);
+    --grid-rows: minmax(58px, 22%) 1fr minmax(58px, 22%);
     /* Cards scale with the square field, so the dock fits the centre row at any
        aspect ratio and never spills into the strips. --field is .table-scoped, so
        redefine --card-h here too (the :root calc can't see --field). */
@@ -105,8 +105,8 @@
   .table {
     /* A touch more strip room for the name + status light + kick cluster, still
        field-proportional and still rows==cols (square-symmetric). */
-    --grid-cols: minmax(50px, 22%) 1fr minmax(50px, 22%);
-    --grid-rows: minmax(50px, 22%) 1fr minmax(50px, 22%);
+    --grid-cols: minmax(54px, 23%) 1fr minmax(54px, 23%);
+    --grid-rows: minmax(54px, 23%) 1fr minmax(54px, 23%);
     --grid-gap: 6px;
     --card-w: clamp(38px, calc(var(--field) * 0.155), 80px);
     --card-h: calc(var(--card-w) * 1.45);
