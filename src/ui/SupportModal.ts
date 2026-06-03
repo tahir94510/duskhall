@@ -35,7 +35,12 @@ function envSupporters(): string[] {
   return (env.VITE_SUPPORTERS || "").split(",");
 }
 function cleanSupporters(raw: unknown, fromEnv: string[]): string[] {
-  const list = (Array.isArray(raw) ? raw : []).concat(fromEnv);
+  // Convention: supporters.json (and VITE_SUPPORTERS) are kept oldest→newest — you
+  // APPEND each new supporter to the end. We present the wall NEWEST-FIRST (most recent
+  // names at the top) so a fresh supporter sees themselves right away; de-dup keeps the
+  // FIRST (newest) spelling when a name appears twice. Reverse before de-dup so the
+  // newest occurrence wins and leads.
+  const list = (Array.isArray(raw) ? raw : []).concat(fromEnv).reverse();
   const seen = new Set<string>();
   const out: string[] = [];
   for (const v of list) {

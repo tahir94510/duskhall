@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cardZoneOwner, zoneRect, pointInZoneCanonical } from "./SlotGrid.js";
+import { cardZoneOwner, cardZoneOverlap, zoneRect, pointInZoneCanonical } from "./SlotGrid.js";
 
 // Zone 0 (bottom): x[0.16,0.84], y[0.78,0.96]. A typical card footprint as a fraction
 // of the board is roughly 0.08 wide x 0.12 tall.
@@ -47,6 +47,27 @@ describe("cardZoneOwner: a card belongs to a zone only when >50% of its area is 
       const owner = cardZoneOwner(nx!, ny!, 0, W, H);
       expect(owner === null || (owner >= 0 && owner <= 3)).toBe(true);
     }
+  });
+});
+
+describe("cardZoneOverlap: fraction drives the eager 'hide while held' conceal", () => {
+  it("reports a small but non-zero overlap as a card just enters a zone", () => {
+    // center y = 0.83: card [0.77,0.89] vs zone y[0.78,0.96] → most of it is in.
+    const deepIn = cardZoneOverlap(0.5, 0.83, 0, W, H);
+    expect(deepIn?.seat).toBe(0);
+    expect(deepIn!.frac).toBeGreaterThan(0.5);
+    // center y = 0.735: card [0.675,0.795] → only ~12% overlaps the zone top.
+    const sliver = cardZoneOverlap(0.5, 0.735, 0, W, H);
+    expect(sliver?.seat).toBe(0);
+    expect(sliver!.frac).toBeGreaterThan(0);
+    expect(sliver!.frac).toBeLessThan(0.5); // not "owned" at rest, but enough to hide while held
+  });
+  it("returns null in the central area (no zone touched)", () => {
+    expect(cardZoneOverlap(0.5, 0.5, 0, W, H)).toBe(null);
+  });
+  it("cardZoneOwner stays the >50% gate over the same overlap", () => {
+    expect(cardZoneOwner(0.5, 0.735, 0, W, H)).toBe(null); // <50% → not owned
+    expect(cardZoneOwner(0.5, 0.83, 0, W, H)).toBe(0);      // >50% → owned
   });
 });
 
