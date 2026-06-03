@@ -103,9 +103,9 @@
    opacity, consistent with the logo, calm and elegant (no nested clutter). */
 .card__face--back {
   background:
-    radial-gradient(120% 90% at 50% 50%, rgba(243, 239, 229, 0.05) 0%, rgba(243, 239, 229, 0) 58%),
-    #050505;
-  border: 1px solid rgba(243, 239, 229, 0.16);
+    radial-gradient(120% 90% at 50% 50%, rgba(243, 239, 229, 0.06) 0%, rgba(243, 239, 229, 0) 58%),
+    #131318;
+  border: 1px solid rgba(243, 239, 229, 0.22);
 }
 
 .card__face--back::before {
@@ -133,8 +133,8 @@
 .card__face--front {
   /* rotated away from camera until is-faceup flips */
   transform: rotateY(180deg);
-  background: #050505;
-  border: 1px solid rgba(243, 239, 229, 0.12);
+  background: #131318;
+  border: 1px solid rgba(243, 239, 229, 0.16);
 }
 
 /* Empty front (no art yet): one quiet inner frame. */
@@ -183,7 +183,7 @@
 .card.is-concealed:not(.is-animating):not(.is-flip-quiet) .card__inner { transform: rotateY(0deg) !important; }
 .card.is-concealed .card__face--back {
   visibility: visible;
-  filter: blur(2.2px) saturate(0.82) brightness(0.9);
+  filter: blur(2.2px) saturate(0.85) brightness(0.96);
 }
 .card.is-concealed:not(.is-animating):not(.is-flip-quiet) .card__face--front { visibility: hidden; }
 

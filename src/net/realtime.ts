@@ -47,6 +47,10 @@ export interface SeatClaim {
   seat: number;
   id: string;
   name: string;
+  /** The claimant's persisted seniority (epoch ms). Carried so a newcomer ranks an
+   *  AWAY host correctly and every client converges on the same host. Optional for
+   *  backward-compat with older clients (treated as unknown / 0). */
+  joinedAt?: number;
 }
 
 /** Cosmetic-only hint attached to a patch so REMOTE peers replay the same flourish
@@ -690,7 +694,9 @@ export class RealtimeBus {
     return (raw as Array<Partial<SeatClaim>>).slice(0, 4).map((c) => ({
       seat: typeof c.seat === "number" ? Math.max(0, Math.min(3, Math.round(c.seat))) : 0,
       id: safeString(c.id, 40),
-      name: safeString(c.name, 24) || "Player"
+      name: safeString(c.name, 24) || "Player",
+      // Seniority stamp (~1.7e12) — keep full magnitude like a card ts; 0 = unknown.
+      joinedAt: safeStamp(c.joinedAt, 0)
     })).filter((c) => !!c.id);
   }
 

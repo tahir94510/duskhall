@@ -24,7 +24,7 @@ import { t, onLocaleChange } from "../i18n/index.js";
 import { getOrCreateRoom, newRoom, setRoomSlug } from "../net/room.js";
 import { showLoader, hideLoader } from "../ui/loader.js";
 import { seededDeck } from "./deck.js";
-import { seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, shouldClearTombstone, shouldReTombstone, seniorityOnReturn, type Occupancy, type HostCandidate, type SeatClaimEntry } from "./occupancy.js";
+import { seatIsRival, cardIsRivalOwned, hostId, isHost, hostCandidatesWithAway, resolveSeating, shouldClearTombstone, shouldReTombstone, seniorityOnReturn, type Occupancy, type HostCandidate, type AwayHostClaim, type SeatClaimEntry } from "./occupancy.js";
 import {
   findStackOverlapping,
   findConnectedStack,
@@ -39,7 +39,7 @@ import {
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
-import { pointInZoneCanonical } from "../table/SlotGrid.js";
+import { cardZoneOwner } from "../table/SlotGrid.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry } from "../net/realtime.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
@@ -551,11 +551,16 @@ export class Game {
       },
       onCardFlipped: (id) => this.flipCard(id),
       onStackToggleFlip: (id) => this.toggleStackFlip(id),
-      setOwnerSeat: (id, seat) => {
+      setOwnerSeat: (id) => {
         const c = this.state.cards.get(id);
         if (!c) return;
-        if (c.ownerSeat !== seat) {
-          c.ownerSeat = seat;
+        // Ownership is decided by the >50%-overlap rule on the card's FINAL position
+        // (not the pointer at drop), so the persisted flag matches what every viewer
+        // sees: a card more than half inside a seat's zone belongs to it, otherwise
+        // it is public. Concealment itself is recomputed live from position too.
+        const owner = this.cardZoneOwnerOf(c);
+        if (c.ownerSeat !== owner) {
+          c.ownerSeat = owner;
           this.dirtyIds.add(id);
           this.scheduleFlush();
         }
@@ -689,15 +694,26 @@ export class Game {
     return seatIsRival(this.occupancy(), seat, this.self.seat, this.spectator);
   }
 
-  // Is this card in a rival's private area whose seat is still held? A card owned
-  // by a now-empty seat (owner left/kicked, or never occupied) is NOT rival-owned —
-  // it has no private zone, so it becomes a free, grabbable public card. Spectators
-  // treat every owned card as rival-owned. Single source of truth for "can I not
-  // touch this card because it's someone else's".
+  // The seat whose private zone currently overlaps MORE THAN HALF of this card's area,
+  // or null. This is the live, position-based owner used for both concealment and the
+  // "can't touch a rival's card" rule: a card counts as inside a zone once >50% of it
+  // is in, and becomes public the moment >50% is out — symmetric and player-friendly.
+  private cardZoneOwnerOf(c: CardState): number | null {
+    const { w, h } = this.cardMetrics();
+    const wf = this.boardSize.width > 0 ? w / this.boardSize.width : 0;
+    const hf = this.boardSize.height > 0 ? h / this.boardSize.height : 0;
+    return cardZoneOwner(c.x, c.y, c.rot, wf, hf);
+  }
+
+  // Is this card in a rival's private area whose seat is still held? Decided by the
+  // card's LIVE position (>50% inside that seat's zone), not a stale flag, so dragging a
+  // card out of a zone reveals it (and dragging it in conceals it) as it crosses half.
+  // A zone whose owner left/kicked (or was never occupied) is NOT rival-owned — the
+  // card is public. Spectators treat every owned-zone card as rival-owned.
   private isRivalOwnedCard(id: string): boolean {
     const c = this.state.cards.get(id);
     if (!c) return false;
-    return cardIsRivalOwned(this.occupancy(), c.ownerSeat, this.self.seat, this.spectator);
+    return cardIsRivalOwned(this.occupancy(), this.cardZoneOwnerOf(c), this.self.seat, this.spectator);
   }
 
   // Claim a card for our seat when we interact with it AND it is sitting in our
@@ -712,7 +728,9 @@ export class Game {
     if (!c || c.ownerSeat === this.self.seat) return false;
     // Never steal a rival's still-private card (guarded elsewhere too).
     if (this.isRivalOwnedCard(id)) return false;
-    if (!pointInZoneCanonical(this.self.seat as Seat, c.x, c.y)) return false;
+    // Claim only when the card is actually (>50%) inside OUR zone — same overlap rule
+    // as drop ownership, so interacting (flip/rotate/gather) matches dragging in.
+    if (this.cardZoneOwnerOf(c) !== this.self.seat) return false;
     c.ownerSeat = this.self.seat;
     this.dirtyIds.add(id);
     return true;
@@ -2108,9 +2126,14 @@ export class Game {
       // Don't resurrect a player we just removed (kick/leave) — tombstones win.
       if (this.removedTombstones.has(c.id)) continue;
       const cur = this.seatClaims.get(c.seat);
-      if (!cur || cur.id !== c.id || cur.name !== c.name) {
+      // Prefer the wire's seniority when it carries one (so a newcomer learns an away
+      // host's real joinedAt and ranks host the same as everyone else); else keep ours.
+      const wireJoinedAt = typeof c.joinedAt === "number" && c.joinedAt > 0 ? c.joinedAt : 0;
+      const nextJoinedAt = wireJoinedAt || cur?.joinedAt || 0;
+      const needsUpdate = !cur || cur.id !== c.id || cur.name !== c.name || cur.joinedAt !== nextJoinedAt;
+      if (needsUpdate) {
         // Snapshot claims carry no connAt; keep any we already had, else 0.
-        this.seatClaims.set(c.seat, { id: c.id, name: c.name, joinedAt: cur?.joinedAt ?? 0, connAt: cur?.connAt ?? 0 });
+        this.seatClaims.set(c.seat, { id: c.id, name: c.name, joinedAt: nextJoinedAt, connAt: cur?.connAt ?? 0 });
         changed = true;
       }
     }
@@ -2195,18 +2218,28 @@ export class Game {
   // moment the host leaves, and a returning ex-host can never steal it back (their
   // reconnect gives them a newer joinedAt). Only the host can kick / reset the deck.
   private hostCandidates(): HostCandidate[] {
-    const out: HostCandidate[] = [];
+    const active: HostCandidate[] = [];
     for (const p of this.players.values()) {
       if (p.seat >= 0 && this.activeSeats.has(p.seat)) {
-        out.push({ id: p.id, joinedAt: p.joinedAt, seat: p.seat });
+        active.push({ id: p.id, joinedAt: p.joinedAt, seat: p.seat });
       }
     }
     // Our own presence may not be in `players` yet on the very first paint; include
     // self when seated so isHost() is correct immediately.
-    if (!this.spectator && this.claimSeat >= 0 && !out.some((c) => c.id === this.self.id)) {
-      out.push({ id: this.self.id, joinedAt: this.selfJoinedAt, seat: this.claimSeat });
+    if (!this.spectator && this.claimSeat >= 0 && !active.some((c) => c.id === this.self.id)) {
+      active.push({ id: this.self.id, joinedAt: this.selfJoinedAt, seat: this.claimSeat });
     }
-    return out;
+    // Include AWAY claims (seat reserved, owner not currently present) so a host that
+    // merely DROPPED keeps the role for the whole away-grace window instead of it
+    // bouncing to another player the instant their presence vanishes. The dropped host
+    // is the earliest joiner, so hostId() keeps them; once the claim is released (real
+    // leave/kick or grace expiry) the role transfers to the next-oldest active player.
+    const awayClaims: AwayHostClaim[] = [];
+    for (const [seat, claim] of this.seatClaims) {
+      if (this.activeSeats.has(seat)) continue;
+      awayClaims.push({ id: claim.id, joinedAt: claim.joinedAt, seat });
+    }
+    return hostCandidatesWithAway(active, awayClaims);
   }
   private hostId(): string {
     return hostId(this.hostCandidates());
@@ -2386,7 +2419,7 @@ export class Game {
     const cards: PatchCard[] = Array.from(this.state.cards.values()).slice(0, 200).map((c) => this.wireCard(c));
     // Teach the receiver our known seat claims so a player who dropped before
     // they joined still shows as a reserved (dimmed) seat, not an empty one.
-    const claims: SeatClaim[] = Array.from(this.seatClaims.entries()).map(([seat, c]) => ({ seat, id: c.id, name: c.name }));
+    const claims: SeatClaim[] = Array.from(this.seatClaims.entries()).map(([seat, c]) => ({ seat, id: c.id, name: c.name, joinedAt: c.joinedAt }));
     // Teach the receiver who we have authoritatively removed (kicked/left) so a joiner
     // or a client that missed the one-shot message converges instead of resurrecting
     // them from a lingering presence echo.

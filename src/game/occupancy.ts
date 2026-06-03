@@ -80,6 +80,36 @@ export function isHost(selfId: string, active: Iterable<HostCandidate>, spectato
   return selfId !== "" && hostId(active) === selfId;
 }
 
+/** An away seat claim (owner not currently present but the seat is still reserved). */
+export interface AwayHostClaim {
+  id: string;
+  joinedAt: number;
+  seat: number;
+}
+
+/** Build the host-candidate list from the present, seated players PLUS the away seat
+ *  claims, so a host who merely DROPPED (network blip / tab hidden) keeps the host role
+ *  for the whole away-grace window instead of it bouncing to another player the instant
+ *  their presence vanishes. An away claim only counts when its `joinedAt` is known
+ *  (> 0): a claim learned with no seniority (e.g. an old snapshot) must never outrank a
+ *  real, present player and wrongly seize host. Active players always take precedence
+ *  over an away claim for the same id (no duplicates). The result is fed to `hostId`,
+ *  which still picks the earliest joiner — so the dropped host (earliest) stays host;
+ *  when their claim is finally released (real leave/kick or grace expiry) the role
+ *  transfers to the next-oldest ACTIVE player. */
+export function hostCandidatesWithAway(active: HostCandidate[], awayClaims: AwayHostClaim[]): HostCandidate[] {
+  const out: HostCandidate[] = active.slice();
+  const seen = new Set(active.map((c) => c.id));
+  for (const a of awayClaims) {
+    if (a.seat < 0) continue;
+    if (a.joinedAt <= 0) continue; // unknown seniority — never let it win host
+    if (seen.has(a.id)) continue;  // an active copy already counts
+    out.push({ id: a.id, joinedAt: a.joinedAt, seat: a.seat });
+    seen.add(a.id);
+  }
+  return out;
+}
+
 /** A tombstoned (kicked/left) client that re-appears in presence is genuinely BACK
  *  — not a stale presence echo to keep suppressing — when its current connection
  *  stamp is strictly newer than the one it was tombstoned with. Both stamps come

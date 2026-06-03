@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { seatIsOwned, seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, shouldClearTombstone, shouldReTombstone, seniorityOnReturn, type Occupancy, type HostCandidate, type RosterEntry } from "./occupancy.js";
+import { seatIsOwned, seatIsRival, cardIsRivalOwned, hostId, isHost, hostCandidatesWithAway, resolveSeating, shouldClearTombstone, shouldReTombstone, seniorityOnReturn, type Occupancy, type HostCandidate, type RosterEntry } from "./occupancy.js";
 
 // These rules decide whether a seat's on-screen area is a player's private zone or
 // open public table, and whether a card can be touched. The bugs they fix: empty
@@ -264,3 +264,37 @@ describe("resolveSeating: dedupe, own-seat reclaim, tombstone, no spectator auto
     expect(resolved.get("spec")).toBe(-1);
   });
 });
+
+describe("hostCandidatesWithAway: a dropped host keeps host during the away grace", () => {
+  it("keeps the away (earliest) host ranked above present players", () => {
+    // Host A (joined first) dropped → away claim; B and C are present and newer.
+    const active: HostCandidate[] = [
+      { id: "B", joinedAt: 200, seat: 1 },
+      { id: "C", joinedAt: 300, seat: 2 }
+    ];
+    const away = [{ id: "A", joinedAt: 100, seat: 0 }];
+    const cand = hostCandidatesWithAway(active, away);
+    expect(hostId(cand)).toBe("A"); // host does NOT transfer while A is merely away
+  });
+
+  it("transfers to the oldest active player once the away claim is gone", () => {
+    const active: HostCandidate[] = [
+      { id: "B", joinedAt: 200, seat: 1 },
+      { id: "C", joinedAt: 300, seat: 2 }
+    ];
+    expect(hostId(hostCandidatesWithAway(active, []))).toBe("B");
+  });
+
+  it("ignores an away claim with unknown seniority (joinedAt<=0) so it can't seize host", () => {
+    const active: HostCandidate[] = [{ id: "B", joinedAt: 200, seat: 1 }];
+    const away = [{ id: "ghost", joinedAt: 0, seat: 0 }];
+    expect(hostId(hostCandidatesWithAway(active, away))).toBe("B");
+  });
+
+  it("does not duplicate an id that is both active and (stale) away-claimed", () => {
+    const active: HostCandidate[] = [{ id: "A", joinedAt: 100, seat: 0 }];
+    const away = [{ id: "A", joinedAt: 100, seat: 0 }];
+    const cand = hostCandidatesWithAway(active, away);
+    expect(cand.filter((c) => c.id === "A").length).toBe(1);
+  });
+})
