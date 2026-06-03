@@ -17,6 +17,7 @@
     "deckReset": "The deck has been gathered and shuffled.",
     "settings": "Settings",
     "shortcuts": "Shortcuts",
+    "updates": "What's new",
     "language": "Language",
     "close": "Close",
     "cancel": "Cancel",
@@ -152,6 +153,25 @@
     "supportersTitle": "Supporters",
     "supportersHint": "Add #vaerum to your support message and your name joins this wall within a few days (usually 48–72 hours).",
     "thanks": "Thank you for keeping the table alive."
+  },
+  "updates": {
+    "title": "What's new",
+    "badge": "New",
+    "empty": "No updates yet.",
+    "entries": [
+      {
+        "v": "2026-06",
+        "date": "June 2026",
+        "title": "Smoother table, steadier play",
+        "items": [
+          "Flipping, gathering and shuffling a pile now move like real cards, with no flicker or cards overlapping out of order.",
+          "Turning a deck over reads as one clean motion, and mixed face-up/face-down piles tidy themselves as they turn.",
+          "Cards and panels no longer slide in from a corner; the card info and the touch action bar appear right where you are.",
+          "Joining, leaving, being removed and reconnecting now stay consistent for everyone at the table.",
+          "Added a supporters wall and this What's new panel."
+        ]
+      }
+    ]
   },
   "feedback": {
     "title": "Send feedback",

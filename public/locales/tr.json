@@ -17,6 +17,7 @@
     "deckReset": "Deste toplanıp yeniden karıştırıldı.",
     "settings": "Ayarlar",
     "shortcuts": "Kısayollar",
+    "updates": "Yenilikler",
     "language": "Dil",
     "close": "Kapat",
     "cancel": "Vazgeç",
@@ -152,6 +153,25 @@
     "supportersTitle": "Destekçiler",
     "supportersHint": "Destek mesajına #vaerum eklersen adın birkaç gün içinde (genelde 48–72 saat) bu listeye eklenir.",
     "thanks": "Masayı yaşatmaya devam ettiğin için teşekkürler."
+  },
+  "updates": {
+    "title": "Yenilikler",
+    "badge": "Yeni",
+    "empty": "Henüz güncelleme yok.",
+    "entries": [
+      {
+        "v": "2026-06",
+        "date": "Haziran 2026",
+        "title": "Daha akıcı masa, daha kararlı oyun",
+        "items": [
+          "Desteyi çevirmek, toplamak ve karıştırmak artık gerçek kartlar gibi; titreme ya da sıra bozularak üst üste binme yok.",
+          "Desteyi ters çevirmek tek temiz bir hareket gibi görünüyor; karışık (açık/kapalı) desteler dönerken kendiliğinden düzeliyor.",
+          "Kartlar ve paneller artık köşeden kayarak gelmiyor; kart bilgisi ve dokunmatik buton çubuğu tam bulunduğun yerde beliriyor.",
+          "Odaya katılma, çıkma, atılma ve yeniden bağlanma artık masadaki herkes için tutarlı.",
+          "Destekçiler listesi ve bu Yenilikler paneli eklendi."
+        ]
+      }
+    ]
   },
   "feedback": {
     "title": "Geri bildirim gönder",

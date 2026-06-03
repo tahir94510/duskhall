@@ -1,4 +1,4 @@
-import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EYE, ICON_EXIT, ICON_FEEDBACK, ICON_INFO } from "./icons.js";
+import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EYE, ICON_EXIT, ICON_FEEDBACK, ICON_INFO, ICON_SPARK } from "./icons.js";
 import { t } from "../i18n/index.js";
 import { inviteUrl } from "../net/room.js";
 import { flashConfirm } from "./feedback.js";
@@ -13,6 +13,8 @@ export interface HeaderHooks {
   onResetDeck(): void;
   onSettings(): void;
   onShortcuts(): void;
+  /** Open the "What's new" / updates panel (and clear the New badge). */
+  onUpdates(): void;
   /** Connect to a specific room by its 6-char code. */
   onJoinRoom(code: string): void;
   /** Open the "join a room by code/link" dialog (owns the modal in Game). The
@@ -93,6 +95,11 @@ export class Header {
           <span class="header__menu-icon">${ICON_SHORTCUTS}</span>
           <span class="header__menu-label" data-i18n="ui.shortcuts">${esc(t("ui.shortcuts"))}</span>
         </button>
+        <button type="button" class="header__menu-row header__menu-row--badge" data-action="updates" role="menuitem">
+          <span class="header__menu-icon">${ICON_SPARK}</span>
+          <span class="header__menu-label" data-i18n="ui.updates">${esc(t("ui.updates"))}</span>
+          <span class="header__row-badge header__row-badge--new" data-role="updates-badge" aria-hidden="true" hidden>${esc(t("updates.badge"))}</span>
+        </button>
         <button type="button" class="header__menu-row" data-action="legal" role="menuitem">
           <span class="header__menu-icon">${ICON_INFO}</span>
           <span class="header__menu-label" data-i18n="ui.legal">${esc(t("ui.legal"))}</span>
@@ -160,6 +167,7 @@ export class Header {
     this.menu.querySelector<HTMLButtonElement>('[data-action="support"]')?.addEventListener("click", wrap(this.hooks.onSupport));
     this.menu.querySelector<HTMLButtonElement>('[data-action="feedback"]')?.addEventListener("click", wrap(this.hooks.onFeedback));
     this.menu.querySelector<HTMLButtonElement>('[data-action="shortcuts"]')?.addEventListener("click", wrap(this.hooks.onShortcuts));
+    this.menu.querySelector<HTMLButtonElement>('[data-action="updates"]')?.addEventListener("click", wrap(this.hooks.onUpdates));
     this.menu.querySelector<HTMLButtonElement>('[data-action="legal"]')?.addEventListener("click", wrap(this.hooks.onLegal));
     this.menu.querySelector<HTMLButtonElement>('[data-action="reset-deck"]')?.addEventListener("click", wrap(this.hooks.onResetDeck));
     this.menu.querySelector<HTMLButtonElement>('[data-action="reset"]')?.addEventListener("click", wrap(this.hooks.onReset));
@@ -266,6 +274,13 @@ export class Header {
   setFeedbackAvailable(on: boolean): void {
     const row = this.menu.querySelector<HTMLElement>('[data-role="feedback"]');
     if (row) row.hidden = !on;
+  }
+
+  /** Show/hide the "New" badge on the Updates row (driven by Game from the
+   *  seen-vs-latest comparison; cleared the moment the panel is opened). */
+  setUpdatesBadge(on: boolean): void {
+    const badge = this.menu.querySelector<HTMLElement>('[data-role="updates-badge"]');
+    if (badge) badge.hidden = !on;
   }
 
   /** Update the live spectator count shown in the menu (row hidden at zero for

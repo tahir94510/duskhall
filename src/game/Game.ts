@@ -10,6 +10,7 @@ import { openRulesModal } from "../ui/RulesModal.js";
 import { openSupportModal } from "../ui/SupportModal.js";
 import { openFeedbackModal, hasFeedbackChannel } from "../ui/FeedbackModal.js";
 import { openLegalModal } from "../ui/LegalModal.js";
+import { openUpdatesModal, latestUpdateVersion } from "../ui/UpdatesModal.js";
 import { openLeaveConfirm } from "../ui/LeaveConfirm.js";
 import { openConfirm } from "../ui/ConfirmModal.js";
 import { openJoinByCode } from "../ui/JoinByCodeModal.js";
@@ -84,6 +85,10 @@ const SNAPSHOT_TTL_MS = 12 * 60 * 60 * 1000; // a saved board restores only with
 // Not room-scoped and never swept by pruneStaleStorage / clearRoomStorage (it matches
 // none of their prefixes), so it persists across rooms, refreshes, leaves and kicks.
 const LS_SEEN_ABOUT = "kabal:seen-about";
+// Per-device record of the newest "What's new" version this browser has opened. The
+// Updates row shows a "New" badge while this differs from the latest entry; opening the
+// panel writes the latest here and clears the badge until the next update ships.
+const LS_SEEN_UPDATES = "kabal:seen-updates";
 
 // `joinedAt` is the player's PERSISTED seniority in this room (their original join
 // time). It survives a refresh/reconnect so the host keeps host and seating order
@@ -225,12 +230,16 @@ export class Game {
       onResetDeck: () => { if (this.spectator || !this.isHost()) return; this.confirmResetDeck(); },
       onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio, () => this.onLocale()); },
       onShortcuts: () => { void this.audio.play("ui-open"); openShortcutsModal(this.modal); },
+      onUpdates: () => { void this.audio.play("ui-open"); this.markUpdatesSeen(); openUpdatesModal(this.modal); },
       onJoinRoom: (code) => { void this.joinRoom(code); },
       onJoinByCode: () => { void this.audio.play("ui-open"); openJoinByCode(this.modal, { currentRoom: this.room }, (code) => { void this.joinRoom(code); }); },
       onDiagnose: () => { void this.audio.play("ui-open"); openDiagnosticsModal(this.modal, this.bus); }
     });
     document.body.appendChild(this.header.el);
     this.header.setFeedbackAvailable(hasFeedbackChannel(this.config.issuesUrl, this.config.feedbackUrl));
+    // Show the "New" badge on the Updates row when this device hasn't opened the latest
+    // entry yet (locale is already loaded at this point, so the version is available).
+    this.header.setUpdatesBadge(this.updatesUnseen());
 
     onLocaleChange(() => this.onLocale());
 
@@ -315,6 +324,20 @@ export class Game {
     // A short beat after the board reveal so the modal doesn't fight the reveal
     // animation. No sound: audio is still gated until the first user gesture.
     window.setTimeout(() => { if (!this.modal.isOpen()) openLegalModal(this.modal); }, 500);
+  }
+
+  // True when there's a newer "What's new" entry than the one this device last opened.
+  // A read failure (storage off) returns false so we never nag with a stuck badge.
+  private updatesUnseen(): boolean {
+    const latest = latestUpdateVersion();
+    if (!latest) return false;
+    try { return localStorage.getItem(LS_SEEN_UPDATES) !== latest; } catch { return false; }
+  }
+  // Record the latest version as seen and drop the badge (called when the panel opens).
+  private markUpdatesSeen(): void {
+    const latest = latestUpdateVersion();
+    if (latest) { try { localStorage.setItem(LS_SEEN_UPDATES, latest); } catch {} }
+    this.header.setUpdatesBadge(false);
   }
 
   // First-sync gate: resolves once we know our seat AND have the authoritative

@@ -399,6 +399,32 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
 }
 .support__hint { color: var(--ivory-mute); font-size: 12px; line-height: 1.55; margin: 0; }
 
+/* --- Updates / What's new --- */
+.updates { display: grid; gap: 18px; }
+.updates__entry { display: grid; gap: 8px; }
+.updates__entry + .updates__entry { padding-top: 16px; border-top: 1px solid var(--line); }
+.updates__meta { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.updates__entry-title { font-size: 14px; font-weight: 600; color: var(--ivory); }
+.updates__date { font-size: 12px; color: var(--ivory-mute); white-space: nowrap; }
+.updates__items { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.updates__items li {
+  position: relative;
+  padding-left: 18px;
+  color: var(--ivory-dim);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.updates__items li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ivory-mute);
+}
+
 /* --- Shortcuts --- */
 .shortcuts-grid {
   display: grid;
