@@ -65,4 +65,21 @@ describe("i18n locale parity (EN ↔ TR ↔ every locale)", () => {
         .toEqual({ locale: f, empty: [] });
     }
   });
+
+  it("updates entry version ids are unique and identical across locales", () => {
+    // The "New" badge keys off entries[0].v, so the v values must line up across
+    // languages (else switching locale re-fires the badge) and never repeat within a
+    // locale. The visible `date` is free to differ per language.
+    const versions = (file: string): string[] => {
+      const u = (loadLocale(file) as { updates?: { entries?: Array<{ v?: string }> } }).updates;
+      return (u?.entries ?? []).map((e) => String(e.v ?? ""));
+    };
+    const en = versions("en.json");
+    expect(new Set(en).size).toBe(en.length); // unique within en
+    expect(en.every((v) => v.length > 0)).toBe(true);
+    for (const f of files) {
+      if (f === "en.json") continue;
+      expect({ locale: f, versions: versions(f) }).toEqual({ locale: f, versions: en });
+    }
+  });
 });
