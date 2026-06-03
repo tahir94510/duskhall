@@ -188,11 +188,13 @@ body:not(.is-ready) .board__perspective { transition: none; }
   background-repeat: no-repeat;
   background-position: center center;
   background-size: cover;
-  background-color: #050507;
+  /* Lifted off near-pure black so cards (and their borders) read against the felt on
+     dim/OLED screens, while keeping the deep, calm atmosphere. */
+  background-color: #0c0c11;
   background-image:
-    radial-gradient(120% 90% at 50% 36%, rgba(74, 66, 98, 0.20) 0%, rgba(20, 18, 28, 0) 56%),
-    radial-gradient(150% 120% at 50% 122%, rgba(42, 37, 58, 0.26) 0%, rgba(8, 8, 12, 0) 62%),
-    linear-gradient(180deg, #08070b 0%, #050506 52%, #030304 100%);
+    radial-gradient(120% 90% at 50% 36%, rgba(80, 72, 104, 0.22) 0%, rgba(20, 18, 28, 0) 56%),
+    radial-gradient(150% 120% at 50% 122%, rgba(46, 41, 62, 0.26) 0%, rgba(8, 8, 12, 0) 62%),
+    linear-gradient(180deg, #0e0d13 0%, #0b0a0f 52%, #08080c 100%);
 }
 
 /* Gentle scrim above the background and below the play surface: softens bright
@@ -203,8 +205,8 @@ body:not(.is-ready) .board__perspective { transition: none; }
   z-index: var(--z-scrim);
   pointer-events: none;
   background:
-    radial-gradient(118% 100% at 50% 50%, rgba(0, 0, 0, 0) 44%, rgba(0, 0, 0, 0.34) 100%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.20) 0%, rgba(0, 0, 0, 0.04) 24%, rgba(0, 0, 0, 0.04) 76%, rgba(0, 0, 0, 0.24) 100%);
+    radial-gradient(118% 100% at 50% 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.16) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.02) 24%, rgba(0, 0, 0, 0.02) 76%, rgba(0, 0, 0, 0.10) 100%);
 }
 
 .board__layer {

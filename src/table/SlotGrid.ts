@@ -56,6 +56,40 @@ export function pointInZoneCanonical(seat: Seat, nx: number, ny: number): boolea
   return nx >= z.x0 && nx <= z.x1 && ny >= z.y0 && ny <= z.y1;
 }
 
+/** A seat's private-zone rectangle in canonical [0,1] coords (shared across viewers). */
+export function zoneRect(seat: Seat): { x0: number; y0: number; x1: number; y1: number } {
+  const z = ZONES[seat];
+  return { x0: z.x0, y0: z.y0, x1: z.x1, y1: z.y1 };
+}
+
+/**
+ * Which seat "owns" a card by POSITION: the seat whose private zone overlaps MORE THAN
+ * HALF of the card's area, or null if no zone does. This is the single, player-friendly
+ * rule for "is this card inside someone's private area?" — a card counts as in a zone
+ * once >50% of it is inside, and becomes public the moment >50% is out. Symmetric for
+ * entering and leaving, and rotation-aware (an odd quarter-turn swaps the footprint).
+ * Zones never overlap each other, so at most one seat can exceed 50%.
+ *
+ * `nx, ny` is the card CENTRE fraction; `cardWFrac, cardHFrac` are the card's width and
+ * height as fractions of the board (Game derives them from the measured card size).
+ */
+export function cardZoneOwner(nx: number, ny: number, rot: number, cardWFrac: number, cardHFrac: number): Seat | null {
+  const quarter = ((Math.round(rot) % 2) + 2) % 2; // 0 or 1 (odd turn swaps w/h)
+  const w = quarter === 1 ? cardHFrac : cardWFrac;
+  const h = quarter === 1 ? cardWFrac : cardHFrac;
+  const area = w * h;
+  if (area <= 0) return null;
+  const cx0 = nx - w / 2, cy0 = ny - h / 2, cx1 = nx + w / 2, cy1 = ny + h / 2;
+  for (const seat of [0, 1, 2, 3] as Seat[]) {
+    const z = ZONES[seat];
+    const ix = Math.min(cx1, z.x1) - Math.max(cx0, z.x0);
+    const iy = Math.min(cy1, z.y1) - Math.max(cy0, z.y0);
+    if (ix <= 0 || iy <= 0) continue;
+    if ((ix * iy) / area > 0.5) return seat;
+  }
+  return null;
+}
+
 const ROW_GAP = 0.018; // gap between the two rows (Seal row vs Servant row), in canonical units
 
 // v3.2: per-seat slot grid is intentionally empty. The visual was cluttering
