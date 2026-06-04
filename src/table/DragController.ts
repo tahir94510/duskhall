@@ -92,9 +92,12 @@ export class DragController {
     window.addEventListener("pointermove", this.onPointerMove, { passive: false });
     window.addEventListener("pointerup", this.onPointerUp, { passive: false });
     window.addEventListener("pointercancel", this.onPointerUp, { passive: false });
-    this.host.addEventListener("contextmenu", (e) => e.preventDefault());
-    this.host.addEventListener("dragstart", (e) => e.preventDefault());
+    this.host.addEventListener("contextmenu", this.onContextMenu);
+    this.host.addEventListener("dragstart", this.onDragStart);
   }
+
+  private onContextMenu = (e: Event): void => { e.preventDefault(); };
+  private onDragStart = (e: Event): void => { e.preventDefault(); };
 
   private cardFromTarget(target: EventTarget | null): HTMLDivElement | null {
     if (!(target instanceof Element)) return null;
@@ -370,5 +373,7 @@ export class DragController {
     window.removeEventListener("pointermove", this.onPointerMove);
     window.removeEventListener("pointerup", this.onPointerUp);
     window.removeEventListener("pointercancel", this.onPointerUp);
+    this.host.removeEventListener("contextmenu", this.onContextMenu);
+    this.host.removeEventListener("dragstart", this.onDragStart);
   }
 }

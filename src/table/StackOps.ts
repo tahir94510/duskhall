@@ -249,12 +249,19 @@ export function shuffleStack(state: BoardState, ids: string[], unifyRot?: number
     if (c && c.z > topZ) { topZ = c.z; topRot = c.rot; }
   }
   if (unifyRot !== undefined) topRot = unifyRot;
-  // Reassign z-indices in the new order, preserving positions
-  const minZ = Math.min(...ids.map((id) => state.cards.get(id)?.z ?? 0));
+  // Reassign z-indices in the new order, preserving positions. Use a dedicated
+  // counter (not the loop index) so a card that vanished mid-gesture doesn't leave
+  // a gap in the z range — the survivors stay densely, contiguously stacked. The
+  // floor is the lowest z among the cards that ACTUALLY exist; a missing id must not
+  // drag it to 0 (a stray `?? 0`) and yank the whole pile to the bottom of the board.
+  const presentZs = ids.map((id) => state.cards.get(id)?.z).filter((z): z is number => z !== undefined);
+  const minZ = presentZs.length ? Math.min(...presentZs) : 0;
+  let zi = 0;
   for (let i = 0; i < order.length; i++) {
     const c = state.cards.get(order[i]!);
     if (!c) continue;
-    c.z = minZ + i;
+    c.z = minZ + zi;
+    zi++;
     c.faceUp = false;
     // Square up by the SHORTEST path (nearest congruent angle to this card's own
     // cumulative rot) so a sideways card never does a stray full 360° spin when

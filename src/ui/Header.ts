@@ -153,7 +153,11 @@ export class Header {
       // outside the menu (e.g. a game shortcut) just closes it without grabbing
       // focus (which would otherwise flash a focus-visible outline).
       if (e.key === "Escape") this.closeMenu(true);
-      else if (e.target instanceof Element && !this.menu.contains(e.target)) this.closeMenu();
+      // Exclude the more button itself: a Space/Enter keydown on the focused
+      // trigger would close the menu here, then the browser's synthetic click
+      // would re-toggle it open — so the menu could never be closed from its own
+      // trigger via keyboard. Mirrors the pointerdown guard above.
+      else if (e.target instanceof Element && !this.moreBtn.contains(e.target) && !this.menu.contains(e.target)) this.closeMenu();
     });
     const wrap = (cb: () => void) => (e: MouseEvent) => {
       e.preventDefault();

@@ -82,6 +82,15 @@ export class Modal {
       const first = focusables[0]!;
       const last = focusables[focusables.length - 1]!;
       const active = document.activeElement;
+      // On open, focus sits on the .modal panel (tabindex=-1), which the focusable()
+      // list excludes; a Shift+Tab from there would otherwise escape the dialog into
+      // the (inert) background. If focus is on the panel itself or has wandered outside
+      // the dialog, pull it back to the first/last control so the trap stays closed.
+      if (!(active instanceof HTMLElement) || !bd.contains(active) || active === bd.querySelector(".modal")) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+        return;
+      }
       if (e.shiftKey && active === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && active === last) { e.preventDefault(); first.focus(); }
     };
