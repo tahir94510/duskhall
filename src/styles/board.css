@@ -18,14 +18,23 @@
   );
   /* Card size, expressed as a fraction of the SQUARE field so it scales the same
      proportion on every device (phone → 4K TV). Defined here (not :root) because
-     --field is .table-scoped. Height is 1.45× width. 0.115 keeps the card height
-     (0.167·field) safely inside the ~20.5% private-zone strips AND the card width
-     well under the 0.20 deck↔discard separation, so nothing overflows or collides.
-     Mobile breakpoints (mobile.css) override this with their own field fractions.
-     Growing this is purely visual: stack detection re-measures pixels and privacy
-     uses fixed canonical fractions (see tokens.css / SlotGrid.ts). */
-  --card-w: clamp(72px, calc(var(--field) * 0.115), 176px);
+     --field is .table-scoped. Height is 1.45× width. 0.125 keeps the card height
+     (0.181·field) safely inside the 22% private-zone strips below (a consistent
+     ~82% fill, matching the touch breakpoints) AND the card width well under the
+     0.20 deck↔discard separation, so nothing overflows or collides. Mobile
+     breakpoints (mobile.css) override this with their own field fractions. Growing
+     this is purely visual: stack detection re-measures pixels and privacy uses
+     fixed canonical fractions (see tokens.css / SlotGrid.ts). The 54px floor is
+     deliberately small: it only binds on a SHORT-landscape board (e.g. 768×480),
+     where a larger floor would make the card taller than the small zone strip and
+     overflow it — the fraction governs everywhere else. */
+  --card-w: clamp(54px, calc(var(--field) * 0.125), 178px);
   --card-h: calc(var(--card-w) * 1.45);
+  /* Corner radius tracks the card so roundness stays the SAME proportion at every
+     size (a fixed px looks chunky on a 40px phone card and sharp on a 178px TV
+     card). All --r-card consumers (.card, deck/discard markers, slot marks) live
+     inside .table, so this card-relative value reaches them all. */
+  --r-card: clamp(7px, calc(var(--card-w) * 0.075), 13px);
   width: var(--field);
   height: var(--field);
   transform: translate(-50%, -50%);
@@ -35,8 +44,13 @@
      variables so the non-rotating seat-label layer (.board__labels) can reuse the
      EXACT same tracks/gap and stay pixel-aligned with the zones at every
      breakpoint (mobile overrides only re-set these variables). */
-  --grid-cols: minmax(68px, 20.5%) 1fr minmax(68px, 20.5%);
-  --grid-rows: minmax(68px, 20.5%) 1fr minmax(68px, 20.5%);
+  /* Side strips = the four private zones. 22% matches the canonical privacy
+     boundary (SlotGrid ZONES, e.g. bottom y0 0.78 = 22% from the edge) so the
+     frosted panel and the actual private area line up, and it matches the touch
+     breakpoints — one consistent private-area proportion across every device.
+     Rows == cols so the board stays square-symmetric for the 90° seat rotation. */
+  --grid-cols: minmax(68px, 22%) 1fr minmax(68px, 22%);
+  --grid-rows: minmax(68px, 22%) 1fr minmax(68px, 22%);
   --grid-gap: clamp(6px, 1.4vmin, 16px);
   grid-template-columns: var(--grid-cols);
   grid-template-rows: var(--grid-rows);
@@ -119,7 +133,8 @@ body:not(.is-ready) .board__perspective { transition: none; }
   position: absolute;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  /* em so the gap tracks the responsive label font (scales with the board). */
+  gap: 0.6em;
   max-width: calc(100% - 12px);
   padding: 1px 2px;
   font-family: var(--font-display);
@@ -135,8 +150,9 @@ body:not(.is-ready) .board__perspective { transition: none; }
 .seat-label__text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .seat-label__dot {
   flex: 0 0 auto;
-  width: 6px;
-  height: 6px;
+  /* em so the presence light scales with the label font for a balanced cluster. */
+  width: 0.5em;
+  height: 0.5em;
   border-radius: 50%;
   background: currentColor;
   opacity: 0.7;

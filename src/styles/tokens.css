@@ -46,7 +46,7 @@
      size (Game.cardMetrics) and privacy uses a fixed canonical fraction, so growing
      this is purely visual and never shifts who can see or group a card. Keep this
      fallback in step with the .table base in board.css. */
-  --card-w: clamp(72px, 11vmin, 176px);
+  --card-w: clamp(54px, 12.5vmin, 178px);
   --card-h: calc(var(--card-w) * 1.45);
 
   /* Gap between the deck and discard markers (matches DOCK_GUTTER_PX in TS). */
