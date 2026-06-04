@@ -80,14 +80,50 @@ dashes.
 
 ## Supporters wall
 
-The Support panel shows a thank you wall, newest first.
+The Support panel shows a thank you wall, newest first. Players who add `#vaerum` to
+their support message are added here within a few days.
 
-- Source of truth: `public/supporters.json`, a JSON array of names. Append each new
-  supporter to the END of the array (oldest to newest). The panel reverses it so the
-  most recent name shows first, and de dupes case insensitively.
-- An optional `VITE_SUPPORTERS` env (comma separated) is merged in for build time lists.
-- Names are length and count capped and escaped before render, so the file is safe to
-  edit by hand. See `src/ui/SupportModal.ts`.
+### Where the data lives
+
+`public/supporters.json`, a plain JSON array of display names. It ships empty:
+
+```json
+[]
+```
+
+To list supporters, fill it like this (oldest to newest, one name per entry):
+
+```json
+["Ada Lovelace", "Bora", "Cem K.", "Deniz"]
+```
+
+### How to add a supporter
+
+1. Open `public/supporters.json`.
+2. Append the person's display name as a new string at the END of the array (keep the
+   existing names, keep it valid JSON: double quotes, comma between entries).
+3. Commit and deploy. The file is fetched at runtime, so a redeploy (or CDN refresh) is
+   all that is needed, no code change.
+
+The panel reverses the list, so the newest name you appended shows at the TOP. Names are
+de-duplicated case-insensitively (including the Turkish dotted and dotless I), trimmed,
+capped at 40 characters each and 500 total, and HTML-escaped before render, so the file
+is safe to edit by hand and a stray duplicate or odd character cannot break the panel.
+
+### Build-time alternative (env)
+
+Instead of (or in addition to) the file, set `VITE_SUPPORTERS` to a comma-separated list
+at build time, for example in `.env.local`:
+
+```
+VITE_SUPPORTERS=Ada Lovelace, Bora, Cem K.
+```
+
+The JSON file and the env list are merged and then shown newest first (each kept
+oldest-to-newest, so the last name you append leads). Use one or the other; editing the
+JSON file is preferred because it needs no rebuild. The whole section is hidden
+automatically when there are no names. See `src/ui/SupportModal.ts` (`loadSupporters` /
+`cleanSupporters`).
 
 ## Runtime configuration
 

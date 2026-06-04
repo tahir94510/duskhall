@@ -1,6 +1,7 @@
 import { Modal, escape } from "./Modal.js";
 import { t, tArr } from "../i18n/index.js";
 import { ICON_PATREON, ICON_COFFEE, ICON_SUPPORT } from "./icons.js";
+import { nameKey } from "../util/names.js";
 
 // Support lines contain inline <strong> markup intentionally; render raw but
 // keep dynamic text safe via a small allowlist.
@@ -47,7 +48,7 @@ function cleanSupporters(raw: unknown, fromEnv: string[]): string[] {
     if (typeof v !== "string") continue;
     const name = v.trim().slice(0, 40);
     if (!name) continue;
-    const key = name.toLowerCase();
+    const key = nameKey(name); // case- AND Turkish-I-safe, so "Tılsım"/"TILSIM" de-dupe
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(name);
