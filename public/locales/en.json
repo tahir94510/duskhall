@@ -167,6 +167,15 @@
     "empty": "No updates yet.",
     "entries": [
       {
+        "v": "2026-06-04",
+        "date": "June 4, 2026",
+        "title": "Quieter, more tactile table",
+        "items": [
+          "Gathering a pile that is already neatly collected now does nothing, instead of re-collecting it and replaying the sound every time. A scattered or fanned pile still gathers as before, and shuffling or turning a pile over stay repeatable.",
+          "Dropping a whole pile now lands with a deeper, weightier thud that sounds different from the crisp tap of a single card, so the table sounds the way it looks."
+        ]
+      },
+      {
         "v": "2026-06-03",
         "date": "June 3, 2026",
         "title": "Sharper privacy, clearer table, smoother sound",

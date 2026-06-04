@@ -1705,11 +1705,18 @@ export class Game {
     // the same cards twice (diverging z/rotation/position from peers).
     if (this.anyAnimating(stack)) return;
     const seed = this.state.cards.get(id);
+    if (!seed) return;
     // Square the pile up to the angle that reads upright for THIS viewer, so a
     // jumble of 90°/180° cards becomes a clean stack from where they're sitting.
-    const upright = this.viewerUprightRot(seed ? seed.rot : 0);
+    const upright = this.viewerUprightRot(seed.rot);
+    // Already a tidy single stack squared to upright? Gathering it again would
+    // move nothing, yet still play a sound and broadcast a redundant patch — the
+    // "spam" a repeated G on a resting deck produces. A collected pile stays
+    // collected silently. (Shuffle and flip are intentionally repeatable and are
+    // NOT guarded this way.)
+    if (isTidyStack(this.state, stack, seed.x, seed.y, upright)) return;
     this.syncTopZ(); // lift the gathered pile above every board card
-    if (seed) gatherStack(this.state, stack, seed.x, seed.y, upright);
+    gatherStack(this.state, stack, seed.x, seed.y, upright);
     for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
     this.scheduleFlush();
     void this.audio.play("gather");

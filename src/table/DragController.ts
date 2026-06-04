@@ -344,8 +344,11 @@ export class DragController {
     }
 
     this.hooks.onCardMoved(s.ids);
+    // A whole pile lands with a weightier "place-stack" thud; a single card keeps
+    // the crisp "place" tap. Sound variety so dropping a deck feels different from
+    // dropping one card.
     if (didSnapBack) this.hooks.playSfx("snap");
-    else if (didPlace) this.hooks.playSfx("place");
+    else if (didPlace) this.hooks.playSfx(s.ids.length > 1 ? "place-stack" : "place");
     // Re-arm the hover tooltip at the drop point so a face-up card shows its info
     // immediately, without the pointer having to leave and re-enter.
     this.hooks.onReleased(e.clientX, e.clientY, e.pointerType);

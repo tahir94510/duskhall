@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.1: Quieter, more tactile table
+
+- **A collected pile stays collected.** Gathering a pile that is already a tidy,
+  squared stack now does nothing — no repeated swoosh, no needless re-broadcast —
+  instead of re-gathering and re-playing the sound every time you press it. A
+  scattered or fanned pile still gathers normally. Shuffling and turning a pile
+  over stay intentionally repeatable.
+- **A deck lands heavier than a card.** Dropping a whole pile now plays a deeper,
+  settling thud that reads distinctly from the crisp tap of a single card, so the
+  table sounds the way it looks.
+
 ## 0.9.0: Physical flips, device-consistent privacy, polish and docs
 
 - **Flipping a deck feels physical.** Turning a pile over reverses its depth (the

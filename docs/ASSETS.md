@@ -134,8 +134,11 @@ layer. With no image, an elegant built-in gradient shows and nothing is fetched.
 ## Audio (`public/audio/`)
 
 **SFX**: `public/audio/sfx/`. File names must match these ids:
-`flip`, `pickup`, `place`, `shuffle`, `gather`, `snap`, `ui-open`, `ui-close`,
-`ui-click`. Keep each under ~250 ms for a snappy feel.
+`flip`, `pickup`, `place`, `place-stack`, `shuffle`, `gather`, `snap`, `ui-open`,
+`ui-close`, `ui-click`. Keep each under ~250 ms for a snappy feel. `place-stack`
+is the weightier "a whole pile lands" thud (heavier than `place`, the single-card
+tap); if you omit it the procedural fallback already plays a deeper, settling
+version, so a deck always sounds distinct from one card.
 
 **Music**: `public/audio/music/`. Any file names; played in natural-sort order
 (`music2` before `music10`), then looped.
