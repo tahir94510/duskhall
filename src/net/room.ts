@@ -99,7 +99,10 @@ export function parseRoomInput(text: string): string | null {
   // Try to parse it as a URL and read the path / ?r= just like the address bar.
   try {
     const url = new URL(raw);
-    const fromPath = url.pathname.replace(/^\//, "").toUpperCase();
+    // Tolerate leading/trailing slashes so ".../P86B3T/" resolves from the path
+    // (matching readSlugFromUrl) instead of falling through to the loose scan,
+    // which could otherwise pick a 6-letter token out of the hostname.
+    const fromPath = url.pathname.replace(/^\/+/, "").replace(/\/+$/, "").toUpperCase();
     if (SLUG_RE.test(fromPath)) return fromPath;
     const legacy = url.searchParams.get("r");
     if (legacy) {
@@ -110,9 +113,12 @@ export function parseRoomInput(text: string): string | null {
     /* not a URL — fall through to a loose scan */
   }
 
-  // Last resort: scan for the first standalone 6-char code in the string,
-  // tolerating a "KBL-" prefix from old links.
-  const m = raw.toUpperCase().match(/(?:KBL-)?([A-Z0-9]{6})/);
+  // Last resort: scan for a STANDALONE 6-char code in the string, tolerating a
+  // "KBL-" prefix from old links. The token must be bounded by a non-alphanumeric
+  // (or the string ends), so a longer run like "MYLONGUSERNAME" is rejected rather
+  // than silently truncated to its first six characters ("MYLONG") — which would
+  // light the Join button and drop the player into an unrelated/garbage room.
+  const m = raw.toUpperCase().match(/(?:^|[^A-Z0-9])(?:KBL-)?([A-Z0-9]{6})(?![A-Z0-9])/);
   if (m && SLUG_RE.test(m[1]!)) return m[1]!;
   return null;
 }

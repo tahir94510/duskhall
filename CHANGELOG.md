@@ -1,5 +1,84 @@
 # Changelog
 
+## 0.9.5: Join-by-code and cursor fixes
+
+- **Join by code rejects garbage.** `parseRoomInput`'s last-resort scan was greedy:
+  any pasted string with six or more consecutive letters/numbers resolved to its first
+  six characters, so pasting a username or a sentence lit the Join button and dropped
+  you into an unrelated, empty room. The scan now only accepts a STANDALONE six-char
+  code, and the invite-link path tolerates a trailing slash (so `.../P86B3T/` reads the
+  code from the path instead of grabbing a six-letter token out of the hostname). Added
+  `src/net/room.test.ts` to lock the behaviour.
+- **Your cursor hides while you are in a menu.** Opening a modal stopped broadcasting
+  the cursor but never sent a hide, so peers saw your ghost frozen on the table the
+  whole time. It now sends the off-board sentinel once on the first move with a menu
+  open, mirroring the private-zone hide.
+- **Sturdier cursor-hide sentinel.** The off-board sentinel moved from -10 to -2 (a
+  named `CURSOR_OFFBOARD`), so it survives the input-guard coordinate clamp on its own
+  instead of relying on the old -10→-3 clamp coincidence.
+- **Reduced-motion consistency.** The shared `snapback` keyframe used by a (currently
+  unwired) error-flash state is now disabled under reduced motion too.
+
+## 0.9.4: Card encyclopedia in the docs
+
+- **The card encyclopedia is now in the docs.** Added `docs/CARDS.en.md` and
+  `docs/CARDS.tr.md`: every card's category, copy count, full effect text and flavor,
+  mirroring the in-app encyclopedia and the locale source so the rules are browsable
+  outside the app. Linked from the README, with a `MAINTAINING.md` directive to keep
+  `cards.ts`, the locales, and these files in sync.
+- **Style pass.** Removed the em dashes that had slipped into the recent changelog and
+  "What's new" entries, per the project's no-dash copy rule.
+
+## 0.9.3: A bigger, richer table
+
+- **Bigger, more legible cards.** The card-size clamp grew (max 126px → 150px on
+  large screens, with a higher floor and a slightly larger mid-range) so the table
+  feels like real cards in hand instead of a small island in the centre, and the
+  deck/discard markers (which scale with the card) grow with it. This is purely
+  visual: stack-detection reads the measured pixel size and privacy uses a fixed
+  canonical fraction, so who can see or group a card is unchanged. Mobile caps were
+  raised for big tablets/phones while the field-proportional floors that guarantee
+  fit on the smallest screens stayed put.
+- **Premium card depth.** The deck back gained a directional gradient, a top
+  catch-light and a dark inner edge for real card-stock thickness; face-up cards now
+  carry a crisp framed edge over the art; a lifted/held card casts a deeper shadow.
+  All still strictly monochrome.
+- **Richer table atmosphere.** Added a soft, soft-light film grain and a depth
+  vignette painted ON TOP of the table image (so they survive the runtime image
+  swap), masking softness in the source and settling the eye on the centre. The
+  deck/discard slots read as carved, premium drop targets with a clearer label and a
+  stronger hot-state glow. The calm, dark, monochrome mood is preserved.
+
+## 0.9.2: Reduced-motion and resting-pile fixes
+
+- **Reduced motion is honoured end to end.** With the OS "reduce motion" setting
+  on, flips and shuffles were already instant visually, but the JS still held the
+  pile elevated, kept the undercards hidden, and locked the pile for peers for up
+  to ~1.2s with nothing moving, and the riffle/snap-back keyframes still played.
+  Now the elevation/quiet/peer-lock windows collapse to zero in lockstep with the
+  zeroed CSS, and the `shuffle-spin` and `snapback` keyframes are disabled under
+  reduced motion, so a flip/shuffle is genuinely instant with no leftover state.
+- **A fully-turned deck stays on its marker.** `recenterDeckPile` recognised a deck
+  card as "on the deck" only when its cumulative rotation was exactly 0, so a
+  face-down, visually-upright card whose `rot` had wrapped a full circle (4, 8, …)
+  drifted off the marker on resize/zoom. It now tests the orientation mod 4, the
+  same idiom the rest of the code uses.
+- **No needless repaint on a hold refresh.** The holder re-broadcasts a hold every
+  few seconds to refresh its TTL; `applyHold` repainted on every one even when the
+  locked set was unchanged. It now extends the TTL silently and repaints only when
+  the lock set or its seat actually changes.
+
+## 0.9.1: Quieter, more tactile table
+
+- **A collected pile stays collected.** Gathering a pile that is already a tidy,
+  squared stack now does nothing (no repeated swoosh, no needless re-broadcast)
+  instead of re-gathering and re-playing the sound every time you press it. A
+  scattered or fanned pile still gathers normally. Shuffling and turning a pile
+  over stay intentionally repeatable.
+- **A deck lands heavier than a card.** Dropping a whole pile now plays a deeper,
+  settling thud that reads distinctly from the crisp tap of a single card, so the
+  table sounds the way it looks.
+
 ## 0.9.0: Physical flips, device-consistent privacy, polish and docs
 
 - **Flipping a deck feels physical.** Turning a pile over reverses its depth (the

@@ -46,6 +46,24 @@ CHANGELOG, and every file under `docs/`.
   - `index.html` (tab title and the boot failure card)
   - `public/404.html` (the not found card)
 
+## Card content and the encyclopedia
+
+A card's text and counts live in three places that must agree:
+
+- `src/game/cards.ts`: structural data only (category and copy `count`). This is what
+  builds the 72-card deck.
+- `public/locales/en.json` and `tr.json` under `cards.*`: the canonical `name`, `type`,
+  `effect`, and `flavor` text players read in the app. This is the source of truth for
+  wording.
+- `docs/CARDS.en.md` and `docs/CARDS.tr.md`: the readable card encyclopedia (every card's
+  category, copy count, full effect, and flavor). These MIRROR the locale text and the
+  cards.ts counts so the rules are browsable outside the app.
+
+When you add, remove, retune, or rename a card, or change a copy count, update all of the
+above together (both languages), keep the encyclopedia effect text identical to the locale
+`effect`, and re-check `totalCardCount()` still reads 72 (or the new intended total). The
+in-app rules `encyclopedia` section in the locales is the same content; keep it in step too.
+
 ## The in app "What's new" panel and CHANGELOG
 
 Two separate things, same rule: newest first, keep the old entries.
