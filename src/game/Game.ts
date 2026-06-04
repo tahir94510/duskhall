@@ -697,11 +697,12 @@ export class Game {
     return seatIsRival(this.occupancy(), seat, this.self.seat, this.spectator);
   }
 
-  // The seat whose private zone currently holds this card by the privacy-overlap rule
-  // (ZONE_PRIVACY_FRAC), or null. This is the live, position-based owner used for both
-  // concealment and the "can't touch a rival's card" rule: a card is private as soon as a
-  // small part is inside a zone (from ANY side) and public only once it is almost fully
-  // out — eager to hide, slow to reveal, so a card never flashes to the table.
+  // The seat whose private zone currently holds this card, or null. A single low overlap
+  // threshold (ZONE_PRIVACY_FRAC, 10% of the card's area) decides it: a card is private
+  // once a small part is inside a zone from ANY side, and public again only once it is
+  // almost fully out. Because the threshold is low, it hides eagerly and reveals only
+  // near the edge, so a card never flashes to the table. Used for both concealment and
+  // the "can't touch a rival's card" rule.
   private cardZoneOwnerOf(c: CardState): number | null {
     // Use the SHARED canonical card size, not this device's measured pixels, so the
     // conceal/reveal decision is byte-identical on every screen and for every player
@@ -710,10 +711,10 @@ export class Game {
   }
 
   // Is this card in a rival's private area whose seat is still held? Decided by the
-  // card's LIVE position (a small part inside that seat's zone), not a stale flag, so dragging a
-  // card out of a zone reveals it (and dragging it in conceals it) as it crosses half.
-  // A zone whose owner left/kicked (or was never occupied) is NOT rival-owned — the
-  // card is public. Spectators treat every owned-zone card as rival-owned.
+  // card's LIVE position (the same 10% overlap rule), not a stale flag, so dragging a
+  // card out of a zone reveals it, and dragging it in conceals it, as it crosses the
+  // threshold. A zone whose owner left/kicked (or was never occupied) is NOT rival-owned,
+  // so the card is public. Spectators treat every owned-zone card as rival-owned.
   private isRivalOwnedCard(id: string): boolean {
     const c = this.state.cards.get(id);
     if (!c) return false;
@@ -2148,10 +2149,13 @@ export class Game {
       // host's real joinedAt and ranks host the same as everyone else); else keep ours.
       const wireJoinedAt = typeof c.joinedAt === "number" && c.joinedAt > 0 ? c.joinedAt : 0;
       const nextJoinedAt = wireJoinedAt || cur?.joinedAt || 0;
-      const needsUpdate = !cur || cur.id !== c.id || cur.name !== c.name || cur.joinedAt !== nextJoinedAt;
+      // Prefer the wire's connAt too (monotonic: never lower a known stamp), so a claim
+      // learned from a snapshot has a real connAt and a kick of that away player sticks.
+      const wireConnAt = typeof c.connAt === "number" && c.connAt > 0 ? c.connAt : 0;
+      const nextConnAt = Math.max(wireConnAt, cur?.connAt ?? 0);
+      const needsUpdate = !cur || cur.id !== c.id || cur.name !== c.name || cur.joinedAt !== nextJoinedAt || cur.connAt !== nextConnAt;
       if (needsUpdate) {
-        // Snapshot claims carry no connAt; keep any we already had, else 0.
-        this.seatClaims.set(c.seat, { id: c.id, name: c.name, joinedAt: nextJoinedAt, connAt: cur?.connAt ?? 0 });
+        this.seatClaims.set(c.seat, { id: c.id, name: c.name, joinedAt: nextJoinedAt, connAt: nextConnAt });
         changed = true;
       }
     }
@@ -2452,7 +2456,7 @@ export class Game {
     const cards: PatchCard[] = Array.from(this.state.cards.values()).slice(0, 200).map((c) => this.wireCard(c));
     // Teach the receiver our known seat claims so a player who dropped before
     // they joined still shows as a reserved (dimmed) seat, not an empty one.
-    const claims: SeatClaim[] = Array.from(this.seatClaims.entries()).map(([seat, c]) => ({ seat, id: c.id, name: c.name, joinedAt: c.joinedAt }));
+    const claims: SeatClaim[] = Array.from(this.seatClaims.entries()).map(([seat, c]) => ({ seat, id: c.id, name: c.name, joinedAt: c.joinedAt, connAt: c.connAt }));
     // Teach the receiver who we have authoritatively removed (kicked/left) so a joiner
     // or a client that missed the one-shot message converges instead of resurrecting
     // them from a lingering presence echo.

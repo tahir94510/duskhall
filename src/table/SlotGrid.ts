@@ -39,11 +39,15 @@ interface ZoneRect {
   // For left seat, seals are on the inner edge (x near 0.22), etc.
 }
 
+// Each seat's private zone runs all the way to its board EDGE (0 or 1 on the outer
+// side), matching the drawn strip, so a card resting at the very edge of a player's area
+// still counts as inside it (it was wrongly treated as public when the rect stopped a few
+// percent short of the edge). The inner side is the privacy boundary toward the centre.
 const ZONES: Record<Seat, ZoneRect> = {
-  0: { x0: 0.16, y0: 0.78, x1: 0.84, y1: 0.96, horizontal: true },
-  1: { x0: 0.16, y0: 0.04, x1: 0.84, y1: 0.22, horizontal: true },
-  2: { x0: 0.04, y0: 0.22, x1: 0.22, y1: 0.78, horizontal: false },
-  3: { x0: 0.78, y0: 0.22, x1: 0.96, y1: 0.78, horizontal: false }
+  0: { x0: 0.16, y0: 0.78, x1: 0.84, y1: 1.0, horizontal: true },
+  1: { x0: 0.16, y0: 0.0, x1: 0.84, y1: 0.22, horizontal: true },
+  2: { x0: 0.0, y0: 0.22, x1: 0.22, y1: 0.78, horizontal: false },
+  3: { x0: 0.78, y0: 0.22, x1: 1.0, y1: 0.78, horizontal: false }
 };
 
 // Is a canonical [0,1] point inside a seat's zone rectangle? Canonical (board-
@@ -64,7 +68,7 @@ export function zoneRect(seat: Seat): { x0: number; y0: number; x1: number; y1: 
 
 // Privacy-first overlap threshold: a card counts as inside a seat's private zone (so
 // it is concealed from, and untouchable by, everyone else) as soon as this fraction of
-// its area is in — even a sliver poking in from ANY side. It only becomes public again
+// its area is in, even a sliver poking in from ANY side. It only becomes public again
 // once it is almost fully out (less than this is left in). Low on purpose: a card a
 // player nudges anywhere near their own area must never flash to the table.
 export const ZONE_PRIVACY_FRAC = 0.1;
