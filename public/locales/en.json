@@ -174,7 +174,7 @@
           "Your private area now hides a card the moment any part of it enters, from any side, and shows it again only once it is almost fully out. It looks the same for everyone, on every screen size.",
           "The dark table is easier to read: cards stand out from the felt and the deck and discard labels are clearer, while the calm, dark mood stays.",
           "Music and sound start cleanly on your first tap, with no console warnings after you switch tabs and come back.",
-          "If the host's connection drops for a moment, they keep host while away instead of it jumping to someone else.",
+          "If the host's connection drops for a moment, they stay the host while away, instead of it passing to another player.",
           "The supporters wall now lists the most recent supporters first."
         ]
       },
@@ -208,9 +208,9 @@
         "id": "howto",
         "title": "How this table works",
         "body": [
-          "Vaerum is a shared table, not a referee. You and your friends move, flip, group, shuffle and rotate cards in real time, and you follow the rulebook yourselves, just like a physical table.",
-          "Each seat has its own private area along its edge. A card you place in your own area is hidden from everyone else: they see a blurred back, not its face. Slide a card out of your area and it becomes visible to the table; slide it back in and it hides again. The change happens as the card crosses the edge, the same way for every player and on every screen size.",
-          "To play: drag a card to move it, hold Ctrl and drag to move a whole stack, scroll over a card to flip it, and right-click or Ctrl-scroll to flip a whole pile. Press G to gather a pile into one neat stack, M to shuffle it, and Shift-scroll to rotate. On a phone, long-press a card to open its action bar. The full list is under Shortcuts in the menu."
+          "Vaerum gives you and your friends a shared table. You deal, move, flip, gather, shuffle and rotate the cards together in real time. It never enforces the rules, so you play by the rulebook yourselves, just as you would in person.",
+          "Each player has a private area along their own edge of the table. Any card you place in your area is hidden from the others, who see only a blurred card back. Drag a card out of your area to reveal it to everyone, and back in to hide it again. A card switches between hidden and visible as it crosses the edge of your area, and it looks the same to every player on any screen.",
+          "The basics: drag a card to move it, or hold Ctrl while dragging to move a whole stack. Scroll over a card to flip it, or right-click (Ctrl-scroll) to flip a whole pile. Press G to gather a loose pile into a tidy stack, M to shuffle it, and Shift-scroll to turn it sideways. On a phone, press and hold a card to open its quick actions. You can find the full list under Shortcuts in the menu."
         ]
       },
       {

@@ -171,10 +171,10 @@
         "date": "3 Haziran 2026",
         "title": "Daha keskin gizlilik, daha okunaklı masa, daha akıcı ses",
         "items": [
-          "Gizli alanın bir kartı, herhangi bir kenardan azıcık girdiği an gizliyor; ancak neredeyse tamamen çıkınca tekrar gösteriyor. Bu, her ekran boyutunda ve herkes için aynı görünüyor.",
-          "Koyu masa artık daha okunaklı: kartlar zeminden ayrışıyor, deste ve çöplük etiketleri daha net; sakin, karanlık atmosfer korunuyor.",
-          "Müzik ve ses ilk dokunuşunda temiz başlıyor; sekme değiştirip geri döndüğünde konsol uyarısı çıkmıyor.",
-          "Oda sahibinin bağlantısı bir an koparsa, uzaktayken hostluğu başkasına geçmeden koruyor.",
+          "Bir kart, gizli alanına herhangi bir kenardan azıcık girer girmez diğer oyunculardan gizleniyor; ancak neredeyse tamamen dışarı çıkınca yeniden görünür oluyor. Bu davranış her ekran boyutunda ve her oyuncuda aynı.",
+          "Koyu masa artık daha okunaklı: kartlar zeminden ayrışıyor, deste ve çöplük yazıları daha net. Sakin, karanlık atmosfer ise korunuyor.",
+          "Müzik ve ses ilk dokunuşunda temiz başlıyor; sekme değiştirip geri döndüğünde konsolda uyarı çıkmıyor.",
+          "Oda sahibinin bağlantısı bir an koparsa, kısa süre uzaktayken oda sahipliği başkasına geçmiyor.",
           "Destekçiler listesi artık en yeni destekçileri en üstte gösteriyor."
         ]
       },
@@ -208,9 +208,9 @@
         "id": "howto",
         "title": "Bu masa nasıl çalışır",
         "body": [
-          "Vaerum ortak bir masadır, hakem değil. Sen ve arkadaşların kartları gerçek zamanlı olarak taşır, çevirir, toplar, karıştırır ve döndürürsünüz; kuralları tıpkı gerçek bir masadaki gibi kendiniz uygularsınız.",
-          "Her koltuğun kendi kenarında bir gizli alanı vardır. Kendi alanına koyduğun bir kart diğerlerinden gizlidir: onlar yüzünü değil, bulanık bir arkasını görür. Kartı alanından dışarı çıkardığında masaya görünür olur; geri soktuğunda yeniden gizlenir. Bu değişim kart kenarı geçerken olur ve her oyuncuda, her ekran boyutunda aynı çalışır.",
-          "Oynamak için: kartı sürükleyerek taşı, Ctrl basılı tutup sürükleyerek tüm yığını taşı, kartın üzerinde tekerleği kaydırarak çevir, sağ tıkla veya Ctrl+tekerlek ile tüm desteyi çevir. Bir desteyi tek düzgün yığında toplamak için G, karıştırmak için M, döndürmek için Shift+tekerlek. Telefonda kartın üzerine uzun basarak eylem çubuğunu aç. Tam liste menüdeki Kısayollar bölümünde."
+          "Vaerum sana ve arkadaşlarına ortak bir masa sunar. Kartları gerçek zamanlı olarak birlikte dağıtır, taşır, çevirir, toplar, karıştırır ve döndürürsünüz. Kuralları kendiliğinden uygulamaz; tıpkı yüz yüze oynar gibi kuralları kendiniz işletirsiniz.",
+          "Her oyuncunun, masanın kendi kenarında özel bir alanı vardır. Bu alana koyduğun kartlar diğerlerinden gizlenir; onlar kartın yüzünü değil, yalnızca bulanık bir arkasını görür. Bir kartı alanından dışarı sürükleyince herkese görünür olur, geri sürükleyince yeniden gizlenir. Kart, alanının kenarını geçtiği anda gizliyle görünür arasında geçiş yapar ve bu, her oyuncuda ve her ekranda aynı görünür.",
+          "Temel hareketler: kartı sürükleyerek taşı, tüm yığını taşımak için Ctrl'ye basılı tutarak sürükle. Bir kartı çevirmek için üzerinde tekerleği kaydır, tüm desteyi çevirmek için sağ tıkla (ya da Ctrl+tekerlek). Dağınık bir desteyi derli toplu yapmak için G, karıştırmak için M, yana döndürmek için Shift+tekerlek. Telefonda kartı basılı tutarak hızlı eylemleri aç. Tüm listeyi menüdeki Kısayollar bölümünde bulabilirsin."
         ]
       },
       {
