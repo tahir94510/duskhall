@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.9.8: The shared deck rests at one angle for everyone
+
+Side-seat players (left/right) squaring the central deck used to rotate the SHARED
+`rot` to their own viewport, so the deck flipped sideways for the other seats and
+changed each time a different player tidied it — an inconsistency between viewers.
+
+- **Central deck/discard square to the canonical upright for all seats.** New
+  `Game.uprightTargetFor` returns `rot ≡ 0` (shortest path) for a pile sitting on the
+  `DECK`/`DISCARD` marker (`isCentralDockPile`), and the per-viewer upright for every
+  other pile. Gather, shuffle and stack-turn all route their squaring angle through
+  it, so the shared deck now rests at one stable table angle that the side seats see
+  edge-on (like a real deck) instead of teleport-rotating per actor. `rotateStack`
+  (explicit rotate) is unchanged. Sync-safe: every client writes the same `rot ≡ 0`.
+  A previously-sideways deck self-heals to canonical on the next gather/shuffle.
+- Documented the rule in `docs/DESIGN.md` (Stack interactions).
+
 ## 0.9.7: A dropped "release" could lock a pile for peers
 
 This is the real cause behind "a non-host's Shuffle does nothing." Shuffle is, by
