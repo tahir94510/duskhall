@@ -1632,6 +1632,12 @@ export class Game {
     // depth reversal keeps the move physically honest.
     const refTopId = topVisibleId(this.state, stack);
     const target = !(refTopId ? this.state.cards.get(refTopId)?.faceUp ?? false : false);
+    // Lift the whole pile ABOVE every other table card first (preserving its internal
+    // order), so a flipped card/pile is never left underneath another card. turnStackOver
+    // then reverses the depth WITHIN these top slots, so the pile stays on top and reads
+    // as physically turned over. (A resting tidy pile skips the gather lift upstream, so
+    // without this a deck with a stray card on top would flip but stay buried.)
+    this.bringCardsToTop(stack);
     turnStackOver(this.state, stack, target);
     for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
     // After the reversal, pick the card that should stay visible through the 3D turn
