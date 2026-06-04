@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { safeNumber, safeStamp, safeInt } from "../security/inputGuard.js";
+import { safeNumber, safeStamp, safeInt, withinByteCap } from "../security/inputGuard.js";
 import { isNewerWrite } from "./lww.js";
 import { classifyKey, maskHost, sanitizeAnim, sanitizeRemoved, clampCardTs } from "./realtime.js";
 
@@ -53,6 +53,30 @@ describe("field validators keep field-appropriate magnitudes", () => {
     expect(safeNumber(REAL_TS)).toBeLessThan(REAL_TS);
     // The correct validator keeps it intact.
     expect(safeStamp(REAL_TS)).toBe(REAL_TS);
+  });
+});
+
+describe("withinByteCap measures real UTF-8 bytes, not UTF-16 code units", () => {
+  it("accepts a small payload", () => {
+    expect(withinByteCap({ a: "hello" })).toBe(true);
+  });
+
+  it("rejects a payload whose true byte size exceeds the 32 KB cap even though its UTF-16 length does not", () => {
+    // Each emoji is 2 UTF-16 code units but 4 UTF-8 bytes. ~9000 of them is ~18000
+    // code units (well under 32768, so the old s.length check passed) but ~36000
+    // bytes (over the cap). The real byte count must reject it.
+    const payload = { s: "😀".repeat(9000) };
+    const units = JSON.stringify(payload).length;
+    const bytes = new TextEncoder().encode(JSON.stringify(payload)).length;
+    expect(units).toBeLessThanOrEqual(32 * 1024); // old check would have passed
+    expect(bytes).toBeGreaterThan(32 * 1024);     // true size is over
+    expect(withinByteCap(payload)).toBe(false);   // so it is rejected
+  });
+
+  it("rejects a value that cannot be serialised (circular)", () => {
+    const a: Record<string, unknown> = {};
+    a.self = a;
+    expect(withinByteCap(a)).toBe(false);
   });
 });
 

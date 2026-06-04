@@ -12,7 +12,13 @@ export function detectLocale(): Locale {
   const url = new URL(window.location.href);
   const fromQuery = url.searchParams.get("lang");
   if (fromQuery && SUPPORTED.includes(fromQuery as Locale)) return fromQuery as Locale;
-  const stored = localStorage.getItem(STORAGE_KEY);
+  // Guard the read: in storage-blocked environments (some private modes, embedded
+  // or policy-restricted contexts) even getItem throws. detectLocale is the very
+  // first call in boot, so an unguarded throw here would replace the whole app with
+  // the boot-fail card instead of just falling back to the browser language. The
+  // write side is already guarded the same way.
+  let stored: string | null = null;
+  try { stored = localStorage.getItem(STORAGE_KEY); } catch {}
   if (stored && SUPPORTED.includes(stored as Locale)) return stored as Locale;
   const nav = (navigator.language || "en").toLowerCase();
   if (nav.startsWith("tr")) return "tr";
