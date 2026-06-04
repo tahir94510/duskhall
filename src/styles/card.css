@@ -207,3 +207,12 @@
   68%  { transform: translate3d(var(--tx, 0), var(--ty, 0), 0) rotate(calc(var(--base-rot, 0deg) + var(--a2, -4deg))); }
   100% { transform: translate3d(var(--tx, 0), var(--ty, 0), 0) rotate(var(--base-rot, 0deg)); }
 }
+
+/* Reduced motion: the base .card / .card__inner transitions are already zeroed via
+   --dur* (tokens.css), but these two are @keyframes animations, which those tokens
+   do not touch. Disable them explicitly so a flip/shuffle/snap-back is fully instant
+   for a reduced-motion user (the JS holds collapse to 0 in lockstep — see Game.ts). */
+@media (prefers-reduced-motion: reduce) {
+  .card.is-shuffling { animation: none; }
+  .card.is-snapback { animation: none; }
+}

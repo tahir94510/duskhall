@@ -52,22 +52,35 @@ const SEAT_COLORS = ["#f3efe5", "#cdc8bc", "#a09c92", "#79766f"];
 // static card layer (--z-card) but below cursors (--z-cursor: 600), so an
 // animating pile floats over the table yet never covers peer cursors/header.
 const ANIM_Z_BASE = 500;
+// Honour "prefers-reduced-motion". When the user asks for reduced motion the CSS
+// transitions are zeroed (tokens.css) and the keyframes are disabled (card.css),
+// so a flip/shuffle is INSTANT visually. The JS elevation / is-flip-quiet / peer
+// hold-lock windows below shadow those animations, so they must collapse too —
+// otherwise a reduced-motion user gets an instant flip but the pile stays elevated,
+// undercards stay hidden, and peers see the pile locked for up to ~1.2s with
+// nothing moving. Read once at load (the preference changes rarely; the CSS half
+// stays fully reactive). Guarded so it is inert under SSR / test (no matchMedia).
+const PREFERS_REDUCED_MOTION =
+  typeof window !== "undefined" && typeof window.matchMedia === "function" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const MOTION = PREFERS_REDUCED_MOTION ? 0 : 1;
 // Animation durations (kept slightly above the CSS transition/keyframe lengths
-// so the z-elevation never clears before the visual settles).
+// so the z-elevation never clears before the visual settles). All collapse to 0
+// under reduced motion so the holds match the instant CSS.
 // Flip = the .card__inner rotateY transition (--dur-flip: 320ms in card.css) plus a
 // tiny guard so the elevation never clears before the visual settles.
-const FLIP_ANIM_MS = 320;
+const FLIP_ANIM_MS = 320 * MOTION;
 // Shuffle = the shuffle-spin keyframe length (380ms in card.css); keep them equal so
 // the elevation and the jitter cleanup land exactly when the animation ends.
-const SHUFFLE_ANIM_MS = 380;
+const SHUFFLE_ANIM_MS = 380 * MOTION;
 // Tidy phases for stack flip/shuffle. When the pile is fanned at mixed angles we
 // first STRAIGHTEN every card to one orientation, then GATHER them into one spot,
 // then act (flip/riffle) — three smooth, ordered beats rather than all at once.
 // Each is just over the .card transform transition so one settles before the next.
 // Each phase is just over the .card transform transition (--dur: 180ms) so the
 // straighten finishes before the gather starts, and the gather before the act.
-const STACK_STRAIGHTEN_MS = 200; // rotate-to-one-direction phase (skipped if already aligned)
-const STACK_TIDY_MS = 200;       // gather-into-one-pile phase
+const STACK_STRAIGHTEN_MS = 200 * MOTION; // rotate-to-one-direction phase (skipped if already aligned)
+const STACK_TIDY_MS = 200 * MOTION;       // gather-into-one-pile phase
 const SS_SNAPSHOT_PREFIX = "kabal:snap:";
 const SS_SEAT_PREFIX = "kabal:seat:";
 const SS_CLIENT_ID = "kabal:cid";
@@ -840,7 +853,12 @@ export class Game {
       if (c.ownerSeat !== null) continue;
       // Pristine deck pile: face-down, upright, on the deck marker. On the
       // initial deal (onlyNearDeck=false) every such card belongs to the pile.
-      const onDeck = !c.faceUp && c.rot === 0 &&
+      // `rot` is CUMULATIVE (never wraps), so a card turned a full circle reads
+      // upright at rot 4, 8, …, not just 0. Test the visual orientation (mod 4) the
+      // way StackOps/SlotGrid do, else a face-down, visually-upright deck card with a
+      // non-zero cumulative rot drifts off the marker on resize instead of re-snapping.
+      const uprightMod4 = (((c.rot % 4) + 4) % 4) === 0;
+      const onDeck = !c.faceUp && uprightMod4 &&
         (!onlyNearDeck || (Math.abs(c.x - deckNx) <= tolX && Math.abs(c.y - baseNy) <= tolY));
       if (onDeck) { c.x = deckNx; c.y = baseNy; continue; }
       // Discard pile: any public card resting on the discard marker. Both markers
@@ -2427,7 +2445,15 @@ export class Game {
     if (h.release) {
       for (const id of h.ids) if (this.heldByOther.delete(id)) changed = true;
     } else {
-      for (const id of h.ids) { this.heldByOther.set(id, { seat: h.seat, until: h.until }); changed = true; }
+      // The holder re-broadcasts the same hold every HOLD_TTL_MS/2 to refresh the TTL.
+      // Only a genuinely NEW lock (or a seat change) alters the visual, so render only
+      // then — a plain TTL refresh on an unchanged set extends `until` silently instead
+      // of forcing a repaint every few seconds for every held pile.
+      for (const id of h.ids) {
+        const prev = this.heldByOther.get(id);
+        if (!prev || prev.seat !== h.seat) changed = true;
+        this.heldByOther.set(id, { seat: h.seat, until: h.until });
+      }
       this.scheduleHoldSweep();
     }
     if (changed) this.requestRender();

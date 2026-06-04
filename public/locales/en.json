@@ -172,7 +172,9 @@
         "title": "Quieter, more tactile table",
         "items": [
           "Gathering a pile that is already neatly collected now does nothing, instead of re-collecting it and replaying the sound every time. A scattered or fanned pile still gathers as before, and shuffling or turning a pile over stay repeatable.",
-          "Dropping a whole pile now lands with a deeper, weightier thud that sounds different from the crisp tap of a single card, so the table sounds the way it looks."
+          "Dropping a whole pile now lands with a deeper, weightier thud that sounds different from the crisp tap of a single card, so the table sounds the way it looks.",
+          "If you turn on your device's “reduce motion” setting, flipping and shuffling are now fully instant: no card stays briefly hidden or frozen afterwards, and the pile is never momentarily locked for the other players.",
+          "A face-down deck that had been turned a full circle now stays put on the deck spot when you resize the window, instead of slowly drifting off it."
         ]
       },
       {

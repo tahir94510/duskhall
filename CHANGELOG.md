@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.9.2: Reduced-motion and resting-pile fixes
+
+- **Reduced motion is honoured end to end.** With the OS "reduce motion" setting
+  on, flips and shuffles were already instant visually, but the JS still held the
+  pile elevated, kept the undercards hidden, and locked the pile for peers for up
+  to ~1.2s with nothing moving — and the riffle/snap-back keyframes still played.
+  Now the elevation/quiet/peer-lock windows collapse to zero in lockstep with the
+  zeroed CSS, and the `shuffle-spin` and `snapback` keyframes are disabled under
+  reduced motion, so a flip/shuffle is genuinely instant with no leftover state.
+- **A fully-turned deck stays on its marker.** `recenterDeckPile` recognised a deck
+  card as "on the deck" only when its cumulative rotation was exactly 0, so a
+  face-down, visually-upright card whose `rot` had wrapped a full circle (4, 8, …)
+  drifted off the marker on resize/zoom. It now tests the orientation mod 4, the
+  same idiom the rest of the code uses.
+- **No needless repaint on a hold refresh.** The holder re-broadcasts a hold every
+  few seconds to refresh its TTL; `applyHold` repainted on every one even when the
+  locked set was unchanged. It now extends the TTL silently and repaints only when
+  the lock set or its seat actually changes.
+
 ## 0.9.1: Quieter, more tactile table
 
 - **A collected pile stays collected.** Gathering a pile that is already a tidy,
