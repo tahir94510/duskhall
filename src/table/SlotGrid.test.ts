@@ -36,6 +36,15 @@ describe("cardZoneOwner: privacy-first — a sliver in conceals, almost-fully-ou
     expect(ZONE_PRIVACY_FRAC).toBeLessThan(0.25);
   });
 
+  it("a card resting at the very board edge still counts as inside the zone", () => {
+    // The zone runs to the board edge (y1 = 1.0 for seat 0), so a card pushed right to
+    // the bottom is in the owner's private area, not wrongly treated as public.
+    expect(cardZoneOwner(0.5, 0.98, 0, W, H)).toBe(0); // bottom edge -> seat 0
+    expect(cardZoneOwner(0.02, 0.5, 0, W, H)).toBe(2); // left edge -> seat 2
+    expect(cardZoneOwner(0.98, 0.5, 0, W, H)).toBe(3); // right edge -> seat 3
+    expect(cardZoneOwner(0.5, 0.02, 0, W, H)).toBe(1); // top edge -> seat 1
+  });
+
   it("is rotation-aware: an odd quarter-turn swaps the footprint", () => {
     // Seat 2 (left): x[0.04,0.22], y[0.22,0.78]. A card rotated 90° presents H x W.
     // Centre near the left edge; with the swapped (wider-than-tall) footprint it sits

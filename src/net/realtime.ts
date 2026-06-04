@@ -51,6 +51,11 @@ export interface SeatClaim {
    *  AWAY host correctly and every client converges on the same host. Optional for
    *  backward-compat with older clients (treated as unknown / 0). */
   joinedAt?: number;
+  /** The claimant's last-known per-connection stamp. Carried so a claim learned only
+   *  from a snapshot still has a real connAt (not 0); without it, kicking an away player
+   *  the host knows only via a snapshot would tombstone them with 0, which their own
+   *  presence then clears (the re-kick would be undone). Optional for old clients. */
+  connAt?: number;
 }
 
 /** Cosmetic-only hint attached to a patch so REMOTE peers replay the same flourish
@@ -701,8 +706,10 @@ export class RealtimeBus {
       seat: typeof c.seat === "number" ? Math.max(0, Math.min(3, Math.round(c.seat))) : 0,
       id: safeString(c.id, 40),
       name: safeString(c.name, 24) || "Player",
-      // Seniority stamp (~1.7e12) — keep full magnitude like a card ts; 0 = unknown.
-      joinedAt: safeStamp(c.joinedAt, 0)
+      // Seniority + per-connection stamps (~1.7e12) — keep full magnitude like a card ts;
+      // 0 = unknown.
+      joinedAt: safeStamp(c.joinedAt, 0),
+      connAt: safeStamp(c.connAt, 0)
     })).filter((c) => !!c.id);
   }
 
