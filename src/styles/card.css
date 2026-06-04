@@ -142,7 +142,9 @@
   /* rotated away from camera until is-faceup flips */
   transform: rotateY(180deg);
   background: #131318;
-  border: 1px solid rgba(243, 239, 229, 0.18);
+  /* A touch crisper than before so a face-up card keeps a clean printed edge at
+     the larger sizes, without going harsh. */
+  border: 1px solid rgba(243, 239, 229, 0.22);
 }
 
 /* Premium framed edge OVER the art: a crisp dark inner ring plus a faint top
@@ -205,7 +207,10 @@
 .card.is-concealed:not(.is-animating):not(.is-flip-quiet) .card__inner { transform: rotateY(0deg) !important; }
 .card.is-concealed .card__face--back {
   visibility: visible;
-  filter: blur(2.2px) saturate(0.85) brightness(0.96);
+  /* Blur scales with the card so a rival's hidden card reads as equally concealed
+     at every size — a fixed 2.2px barely softens a big TV card yet over-blurs a
+     tiny phone card. Tied to --card-w (≈2.2px at a ~100px card) and clamped. */
+  filter: blur(clamp(1.8px, calc(var(--card-w) * 0.024), 4.6px)) saturate(0.85) brightness(0.96);
 }
 .card.is-concealed:not(.is-animating):not(.is-flip-quiet) .card__face--front { visibility: hidden; }
 
