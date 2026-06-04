@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.9.8: The shared deck rests at one angle for everyone
+
+Side-seat players (left/right) squaring the central deck used to rotate the SHARED
+`rot` to their own viewport, so the deck flipped sideways for the other seats and
+changed each time a different player tidied it — an inconsistency between viewers.
+
+- **Central deck/discard square to the canonical upright for all seats.** New
+  `Game.uprightTargetFor` returns `rot ≡ 0` (shortest path) for a pile sitting on the
+  `DECK`/`DISCARD` marker (`isCentralDockPile`), and the per-viewer upright for every
+  other pile. Gather, shuffle and stack-turn all route their squaring angle through
+  it, so the shared deck now rests at one stable table angle that the side seats see
+  edge-on (like a real deck) instead of teleport-rotating per actor. `rotateStack`
+  (explicit rotate) is unchanged. Sync-safe: every client writes the same `rot ≡ 0`.
+  A previously-sideways deck self-heals to canonical on the next gather/shuffle.
+- Documented the rule in `docs/DESIGN.md` (Stack interactions).
+
+## 0.9.7: A dropped "release" could lock a pile for peers
+
+This is the real cause behind "a non-host's Shuffle does nothing." Shuffle is, by
+design, allowed for every player (only deck-reset and kick are host-only); a third
+end-to-end audit confirmed no host gate and no silent no-op in `shuffleAt`. The
+culprit was the lock protocol, not shuffle itself.
+
+- **Hold RELEASE frames are no longer rate-limited.** `RealtimeBus.sendHold` routed
+  every hold frame — locks, refreshes AND releases — through the same `holdBucket`
+  token bucket. A burst of grabs/locks could drain the bucket and drop the one frame
+  that frees a pile, so peers kept the cards shown as locked until the 6s hold-TTL
+  expired. During that window the other player genuinely could not grab, flip or
+  shuffle those cards — a pile that "does nothing." Releases (`h.release === true`)
+  now always send; only lock/refresh frames are throttled. (`src/net/realtime.ts`)
+- **No stale "locked" outline over your own grab.** `renderAllCards` toggled
+  `is-locked` every frame even on a card you are actively dragging or animating, so a
+  stale peer lock could paint the dashed lock outline on top of your own pickup. The
+  toggle is now skipped while the card is busy (held/animating). (`src/game/Game.ts`)
+
+Note: side-seat players squaring the shared central deck to their own upright (so it
+reads sideways for others) is a per-viewer-rotation design choice, left unchanged
+pending a deliberate decision.
+
 ## 0.9.6: One shadow per lifted pile
 
 - **Lifted-deck shadow no longer buries the table.** v0.9.3 gave the held card a big

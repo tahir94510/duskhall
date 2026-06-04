@@ -642,7 +642,12 @@ export class RealtimeBus {
     if (!withinByteCap(h)) return;
     this.local.sendGame({ type: "hold", payload: h });
     if (!this.channel || this.status !== "online") return;
-    if (!this.holdBucket.consume()) return;
+    // A RELEASE must never be throttled: it is the "stop" that frees a pile for
+    // peers. If a burst of locks drains the bucket and the release frame is the one
+    // dropped, peers keep the cards locked until the 6s hold-TTL — during which they
+    // genuinely cannot grab/flip/shuffle them (a real, mysterious "shuffle does
+    // nothing" for the other player). Only lock/refresh frames are rate-limited.
+    if (!h.release && !this.holdBucket.consume()) return;
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "hold", payload: h } as GameMsg });
   }
 

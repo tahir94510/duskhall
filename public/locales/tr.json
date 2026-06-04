@@ -167,6 +167,23 @@
     "empty": "Henüz güncelleme yok.",
     "entries": [
       {
+        "v": "2026-06-04.4",
+        "date": "4 Haziran 2026",
+        "title": "Tek deste, herkese tek açı",
+        "items": [
+          "Paylaşılan deste ve çöplük artık tüm masa için tek, sabit bir açıda duruyor. Önceden, soldaki ya da sağdaki bir oyuncu desteyi düzelttiğinde deste diğer herkes için yan yatmış görünebiliyor ve her düzeltende açısı değişiyordu. Artık gerçek bir masadaki deste gibi duruyor; yan koltuklar onu açılı görür ve kim karıştırırsa karıştırsın deste tüm oyunculara aynı görünür."
+        ]
+      },
+      {
+        "v": "2026-06-04.3",
+        "date": "4 Haziran 2026",
+        "title": "Karıştırma her zaman çalışır",
+        "items": [
+          "Başka bir oyuncu bir desteyle işi biter bitmez onu karıştırmak, çevirmek ya da tutmak artık anında çalışıyor. Nadir bir aksaklık, kartları birkaç saniyeliğine diğer oyuncuda kilitli gösterebiliyordu; bu yüzden onların karıştırması hiçbir şey yapmıyormuş gibi görünüyordu. Artık bu tutma güvenilir biçimde bırakılıyor.",
+          "\"Birisi bunu tutuyor\" anlamına gelen kesik çizgili çerçeve, kartı tam siz alırken ya da çevirirken artık üstüne binip titremiyor."
+        ]
+      },
+      {
         "v": "2026-06-04.2",
         "date": "4 Haziran 2026",
         "title": "Daha temiz kaldırma",

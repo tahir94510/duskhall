@@ -35,7 +35,8 @@ import {
   flipVisibleCardId,
   alignRotation,
   rotationsDiffer,
-  isTidyStack
+  isTidyStack,
+  nearestCongruentRot
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
@@ -515,6 +516,30 @@ export class Game {
     let delta = (((residue - currentRot) % 4) + 4) % 4; // 0..3 forward
     if (delta > 2) delta -= 4; // take the shortest direction (−1 instead of +3)
     return currentRot + delta;
+  }
+
+  // True when a pile's anchor sits on the central, SHARED deck or discard marker.
+  // Those two piles belong to every seat at once, so squaring them to one player's
+  // own upright would leave them lying sideways for everyone else — and flip
+  // around each time a different seat tidied them. A pile anywhere else (a personal
+  // heap) is not central. Uses the same canonical tolerance as the resize re-snap.
+  private isCentralDockPile(c: CardState): boolean {
+    const { w: cardW, h: cardH } = this.cardMetrics();
+    const tolX = (cardW * 0.6) / this.boardSize.width;
+    const tolY = (cardH * 0.6) / this.boardSize.height;
+    if (Math.abs(c.y - DECK_NY) > tolY) return false;
+    return Math.abs(c.x - this.deckBaseNx()) <= tolX || Math.abs(c.x - this.discardBaseNx()) <= tolX;
+  }
+
+  // The rotation a pile should square to when gathered / shuffled / turned. The
+  // central shared deck and discard square to the table's CANONICAL upright (rot 0,
+  // shortest path) so every seat sees them at one stable angle that never depends on
+  // who acted — exactly like a real deck resting on a table, which the side seats
+  // simply see edge-on. Every other pile keeps THIS viewer's upright so a heap a
+  // player tidies in their own area reads straight to them.
+  private uprightTargetFor(c: CardState): number {
+    if (this.isCentralDockPile(c)) return nearestCongruentRot(c.rot, 0);
+    return this.viewerUprightRot(c.rot);
   }
 
   // Centre of the cards layer in viewport pixels. Rotation is applied about
@@ -1492,7 +1517,7 @@ export class Game {
   private tidyStackThen(stack: string[], anchorId: string, act: () => void, actMs: number): void {
     const anchor = this.state.cards.get(anchorId);
     if (!anchor) return;
-    const target = this.viewerUprightRot(anchor.rot);
+    const target = this.uprightTargetFor(anchor);
     // Already a tidy single stack (resting deck/discard)? Skip the dead-time and
     // turn/shuffle it instantly — only a scattered or fanned pile needs the tidy.
     if (isTidyStack(this.state, stack, anchor.x, anchor.y, target)) {
@@ -1510,7 +1535,7 @@ export class Game {
     const doGather = () => {
       // Re-resolve the anchor's spot (it may have a fresh position) and collect.
       const a = this.state.cards.get(anchorId) ?? anchor;
-      gatherStack(this.state, stack, a.x, a.y, this.viewerUprightRot(a.rot));
+      gatherStack(this.state, stack, a.x, a.y, this.uprightTargetFor(a));
       for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
       this.elevateDuringAnim(stack, gatherMs + actMs);
       // Write the gathered transforms so the cards SLIDE together via the CSS
@@ -1738,7 +1763,7 @@ export class Game {
     if (!seed) return;
     // Square the pile up to the angle that reads upright for THIS viewer, so a
     // jumble of 90°/180° cards becomes a clean stack from where they're sitting.
-    const upright = this.viewerUprightRot(seed.rot);
+    const upright = this.uprightTargetFor(seed);
     // Already a tidy single stack squared to upright? Gathering it again would
     // move nothing, yet still play a sound and broadcast a redundant patch — the
     // "spam" a repeated G on a resting deck produces. A collected pile stays
@@ -1760,7 +1785,7 @@ export class Game {
     if (this.anyAnimating(stack)) return;
     const seed = this.state.cards.get(id);
     if (!seed) return;
-    const upright = this.viewerUprightRot(seed.rot);
+    const upright = this.uprightTargetFor(seed);
     // Lock the whole pile to peers for the entire face-down → straighten → gather →
     // riffle flow so no card can be grabbed mid-shuffle. Worst-case duration covers
     // every phase; the guaranteed release timer frees it even on an early return.
@@ -2805,8 +2830,11 @@ export class Game {
       // flip mid-rotation; the very next frame after the turn settles writes the
       // correct class.
       if (!busy) el.classList.toggle("is-concealed", this.isRivalOwnedCard(c.id));
-      // Busy indicator while a peer is holding this card.
-      el.classList.toggle("is-locked", this.isLockedByOther(c.id));
+      // Busy indicator while a peer is holding this card. Skip while WE are dragging
+      // or animating it (busy): a stale peer lock would otherwise paint the dashed
+      // "locked" outline on top of our own grab/flip. The settle frame restores it.
+      if (!busy) el.classList.toggle("is-locked", this.isLockedByOther(c.id));
+      else el.classList.remove("is-locked");
     }
   }
 
