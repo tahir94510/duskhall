@@ -2805,8 +2805,11 @@ export class Game {
       // flip mid-rotation; the very next frame after the turn settles writes the
       // correct class.
       if (!busy) el.classList.toggle("is-concealed", this.isRivalOwnedCard(c.id));
-      // Busy indicator while a peer is holding this card.
-      el.classList.toggle("is-locked", this.isLockedByOther(c.id));
+      // Busy indicator while a peer is holding this card. Skip while WE are dragging
+      // or animating it (busy): a stale peer lock would otherwise paint the dashed
+      // "locked" outline on top of our own grab/flip. The settle frame restores it.
+      if (!busy) el.classList.toggle("is-locked", this.isLockedByOther(c.id));
+      else el.classList.remove("is-locked");
     }
   }
 

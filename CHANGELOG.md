@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.9.7: A dropped "release" could lock a pile for peers
+
+This is the real cause behind "a non-host's Shuffle does nothing." Shuffle is, by
+design, allowed for every player (only deck-reset and kick are host-only); a third
+end-to-end audit confirmed no host gate and no silent no-op in `shuffleAt`. The
+culprit was the lock protocol, not shuffle itself.
+
+- **Hold RELEASE frames are no longer rate-limited.** `RealtimeBus.sendHold` routed
+  every hold frame — locks, refreshes AND releases — through the same `holdBucket`
+  token bucket. A burst of grabs/locks could drain the bucket and drop the one frame
+  that frees a pile, so peers kept the cards shown as locked until the 6s hold-TTL
+  expired. During that window the other player genuinely could not grab, flip or
+  shuffle those cards — a pile that "does nothing." Releases (`h.release === true`)
+  now always send; only lock/refresh frames are throttled. (`src/net/realtime.ts`)
+- **No stale "locked" outline over your own grab.** `renderAllCards` toggled
+  `is-locked` every frame even on a card you are actively dragging or animating, so a
+  stale peer lock could paint the dashed lock outline on top of your own pickup. The
+  toggle is now skipped while the card is busy (held/animating). (`src/game/Game.ts`)
+
+Note: side-seat players squaring the shared central deck to their own upright (so it
+reads sideways for others) is a per-viewer-rotation design choice, left unchanged
+pending a deliberate decision.
+
 ## 0.9.6: One shadow per lifted pile
 
 - **Lifted-deck shadow no longer buries the table.** v0.9.3 gave the held card a big

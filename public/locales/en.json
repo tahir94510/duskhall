@@ -167,6 +167,15 @@
     "empty": "No updates yet.",
     "entries": [
       {
+        "v": "2026-06-04.3",
+        "date": "June 4, 2026",
+        "title": "Shuffling always works",
+        "items": [
+          "Shuffling, flipping or grabbing a pile right after another player handled it now works straight away. A rare hiccup could leave the cards looking locked to the other player for a few seconds, so their shuffle seemed to do nothing; that hold is now released reliably.",
+          "The dashed \"someone is holding this\" outline no longer flickers on top of a card while you are the one picking it up or turning it."
+        ]
+      },
+      {
         "v": "2026-06-04.2",
         "date": "June 4, 2026",
         "title": "Cleaner lifting",
