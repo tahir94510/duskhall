@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.9.9: Reset deck works for everyone; per-viewer angle restored
+
+Two user-reported issues.
+
+- **Reset deck now opens its confirm dialog for any seated player.** It was
+  host-only, so for every other player the menu item did nothing — the confirmation
+  modal never opened, which read as "reset is broken." Resetting is collaborative
+  (like shuffle), so any seated player may now trigger it; the confirm dialog is the
+  safeguard, and spectators (no deck) still cannot. `resetDeck` now also stamps every
+  card with a fresh winning clock + writer id, so the reset reliably wins on every
+  peer (the authoritative snapshot bypasses LWW, but the follow-up reconcile must win
+  too). Reset returns all 72 cards to a freshly shuffled, face-down, canonical
+  (`rot 0`) pile on the deck spot — the start-of-game setup. Removed the now-unused
+  `Header.setHostMode`/`host` plumbing (kept the per-zone kick gate).
+- **Reverted 0.9.8: pile squaring is per-viewer again.** Gathering, shuffling or
+  turning a pile (including the central deck) once more squares it to the ACTING
+  player's own upright (`viewerUprightRot`), consistent with the rest of the table,
+  per the user's preference. (0.9.8 had made the central deck a fixed canonical angle
+  for all seats; that is removed, along with its `docs/DESIGN.md` note, which now
+  documents the per-viewer rule.) Note: because `rot` is shared, a pile reads upright
+  for whoever last tidied it and at each other seat's own angle — a single shared
+  rotation cannot read upright for all four seats at once.
+
 ## 0.9.8: The shared deck rests at one angle for everyone
 
 Side-seat players (left/right) squaring the central deck used to rotate the SHARED

@@ -41,7 +41,6 @@ export class Header {
   private timerHandle = 0;
   private menuOpen = false;
   private spectator = false;
-  private host = true;
 
   constructor(private hooks: HeaderHooks) {
     this.el = document.createElement("header");
@@ -301,18 +300,15 @@ export class Header {
 
   /** Reflect host status: only the host may reset the shared deck, so that row is
    *  hidden for non-hosts (everyone can still leave the room). */
-  setHostMode(isHost: boolean): void {
-    this.host = isHost;
-    this.applyPlayControls();
-  }
-
-  // Reset deck is host-only and never shown to spectators; Exit room is shown to
-  // every seated player (spectators can leave too, but they have no deck to reset).
+  // Reset deck is shown to every SEATED player (it is collaborative, like shuffle;
+  // the confirm dialog is the safety) and hidden only from spectators, who have no
+  // deck to reset. Exit room is likewise shown to every seated player. (Reset deck
+  // used to be host-only, so non-host players saw a dead button — fixed.)
   private applyPlayControls(): void {
     const resetDeck = this.menu.querySelector<HTMLElement>('[data-role="reset-deck"]');
     const resetRoom = this.menu.querySelector<HTMLElement>('[data-role="reset-room"]');
     const divider = this.menu.querySelector<HTMLElement>('[data-role="play-divider"]');
-    if (resetDeck) resetDeck.hidden = this.spectator || !this.host;
+    if (resetDeck) resetDeck.hidden = this.spectator;
     if (resetRoom) resetRoom.hidden = this.spectator;
     if (divider) divider.hidden = this.spectator;
   }

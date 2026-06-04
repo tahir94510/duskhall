@@ -62,20 +62,14 @@ Helpers live in `src/table/StackOps.ts`; `Game.ts` wires them to gestures.
 - **Gather** (`gatherStack`) pulls the overlapping cards onto one point and
   reassigns z in their existing order, so the pile sits on top as a tight stack.
 
-**Squaring angle (per-viewer vs shared).** When a pile is gathered, shuffled or
-turned it squares to one orientation. `Game.uprightTargetFor` decides which:
-- The **central shared deck and discard** (a pile whose anchor sits on the
-  `DECK`/`DISCARD` marker, per `isCentralDockPile`) square to the table's
-  CANONICAL upright (`rot ≡ 0`). Because `rot` is shared, this gives every seat one
-  stable angle that never depends on who acted — like a real deck resting on a
-  table, which the left/right seats simply see edge-on. (No single `rot` can read
-  vertical for all four seats at once, since seats are 90° apart; a fixed canonical
-  angle is the consistent choice and avoids the deck flipping sideways whenever a
-  different seat tidied it.)
-- **Every other pile** (a personal heap in someone's area) squares to that
-  viewer's own upright (`viewerUprightRot`), so a player's own pile reads straight
-  to them. `rotateStack` (explicit Shift+scroll / rotate) is unaffected — it always
-  turns the pile the way the actor asked.
+**Squaring angle is per-viewer.** When a pile is gathered, shuffled or turned it
+squares to the ACTING player's own upright (`viewerUprightRot`): the angle that
+reads straight from their seat. Because `rot` is shared, peers then see the pile at
+whatever angle their own seat implies (a side seat sees a just-tidied central deck
+edge-on). This keeps every interaction consistent with the rest of the table — a
+player always squares a pile straight to their own view — and matches how the four
+zones are bound per viewer. `rotateStack` (explicit Shift+scroll / rotate) is
+unaffected and turns the pile exactly as the actor asked.
 
 ## Palette (v3.7)
 

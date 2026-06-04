@@ -167,6 +167,15 @@
     "empty": "Henüz güncelleme yok.",
     "entries": [
       {
+        "v": "2026-06-04.5",
+        "date": "4 Haziran 2026",
+        "title": "Deste sıfırlama herkeste çalışıyor",
+        "items": [
+          "Deste sıfırlama artık yalnızca oda sahibinde değil, masadaki her oyuncuda çalışıyor. Tıklayınca bir onay penceresi açılıyor; onayladığınızda tüm kartlar toplanıp ortada kapalı, yeniden karılmış bir desteye — yani oyunun başındaki kuruluma — herkes için dönüyor. Önceden bunu sadece oda sahibi yapabiliyordu ve diğer herkeste buton hiçbir şey yapmıyordu.",
+          "Bir desteyi (deste dahil) topladığınızda, karıştırdığınızda ya da çevirdiğinizde artık yeniden SİZİN kendi bakışınıza göre düzleşiyor; masanın geri kalanıyla aynı. Düzelttiğiniz deste size düz görünür; diğer koltuklar onu kendi açılarında görür."
+        ]
+      },
+      {
         "v": "2026-06-04.4",
         "date": "4 Haziran 2026",
         "title": "Tek deste, herkese tek açı",
