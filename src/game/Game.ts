@@ -35,8 +35,7 @@ import {
   flipVisibleCardId,
   alignRotation,
   rotationsDiffer,
-  isTidyStack,
-  nearestCongruentRot
+  isTidyStack
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
@@ -256,7 +255,7 @@ export class Game {
       onFeedback: () => { void this.audio.play("ui-open"); openFeedbackModal(this.modal, this.config.issuesUrl, this.config.feedbackUrl); },
       onLegal: () => { void this.audio.play("ui-open"); openLegalModal(this.modal); },
       onReset: () => { if (this.spectator) return; void this.audio.play("ui-open"); this.handleReset(); },
-      onResetDeck: () => { if (this.spectator || !this.isHost()) return; this.confirmResetDeck(); },
+      onResetDeck: () => { if (this.spectator) return; this.confirmResetDeck(); },
       onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio, () => this.onLocale()); },
       onShortcuts: () => { void this.audio.play("ui-open"); openShortcutsModal(this.modal); },
       onUpdates: () => { void this.audio.play("ui-open"); this.markUpdatesSeen(); openUpdatesModal(this.modal); },
@@ -516,30 +515,6 @@ export class Game {
     let delta = (((residue - currentRot) % 4) + 4) % 4; // 0..3 forward
     if (delta > 2) delta -= 4; // take the shortest direction (−1 instead of +3)
     return currentRot + delta;
-  }
-
-  // True when a pile's anchor sits on the central, SHARED deck or discard marker.
-  // Those two piles belong to every seat at once, so squaring them to one player's
-  // own upright would leave them lying sideways for everyone else — and flip
-  // around each time a different seat tidied them. A pile anywhere else (a personal
-  // heap) is not central. Uses the same canonical tolerance as the resize re-snap.
-  private isCentralDockPile(c: CardState): boolean {
-    const { w: cardW, h: cardH } = this.cardMetrics();
-    const tolX = (cardW * 0.6) / this.boardSize.width;
-    const tolY = (cardH * 0.6) / this.boardSize.height;
-    if (Math.abs(c.y - DECK_NY) > tolY) return false;
-    return Math.abs(c.x - this.deckBaseNx()) <= tolX || Math.abs(c.x - this.discardBaseNx()) <= tolX;
-  }
-
-  // The rotation a pile should square to when gathered / shuffled / turned. The
-  // central shared deck and discard square to the table's CANONICAL upright (rot 0,
-  // shortest path) so every seat sees them at one stable angle that never depends on
-  // who acted — exactly like a real deck resting on a table, which the side seats
-  // simply see edge-on. Every other pile keeps THIS viewer's upright so a heap a
-  // player tidies in their own area reads straight to them.
-  private uprightTargetFor(c: CardState): number {
-    if (this.isCentralDockPile(c)) return nearestCongruentRot(c.rot, 0);
-    return this.viewerUprightRot(c.rot);
   }
 
   // Centre of the cards layer in viewport pixels. Rotation is applied about
@@ -1262,9 +1237,12 @@ export class Game {
   // Ask before reshuffling the whole table back into the deck — a destructive,
   // shared action, so it routes through the same plain confirm dialog as leave.
   private confirmResetDeck(): void {
-    // Host-only: resetting the shared deck affects everyone, so a non-host (or a
-    // spectator) can never trigger it even if the control is reached some other way.
-    if (this.spectator || !this.isHost()) return;
+    // Any SEATED player may reset the shared deck (it is a collaborative table —
+    // like shuffle, which is also open to everyone) — the confirmation dialog is the
+    // safety against an accidental reset. Only spectators (no seat, no deck to reset)
+    // are barred. (Previously host-only, which left every other player tapping a
+    // dead button: the confirm modal never opened for them.)
+    if (this.spectator) return;
     void this.audio.play("ui-open");
     openConfirm(this.modal, {
       title: t("resetDeckConfirm.title"),
@@ -1517,7 +1495,7 @@ export class Game {
   private tidyStackThen(stack: string[], anchorId: string, act: () => void, actMs: number): void {
     const anchor = this.state.cards.get(anchorId);
     if (!anchor) return;
-    const target = this.uprightTargetFor(anchor);
+    const target = this.viewerUprightRot(anchor.rot);
     // Already a tidy single stack (resting deck/discard)? Skip the dead-time and
     // turn/shuffle it instantly — only a scattered or fanned pile needs the tidy.
     if (isTidyStack(this.state, stack, anchor.x, anchor.y, target)) {
@@ -1535,7 +1513,7 @@ export class Game {
     const doGather = () => {
       // Re-resolve the anchor's spot (it may have a fresh position) and collect.
       const a = this.state.cards.get(anchorId) ?? anchor;
-      gatherStack(this.state, stack, a.x, a.y, this.uprightTargetFor(a));
+      gatherStack(this.state, stack, a.x, a.y, this.viewerUprightRot(a.rot));
       for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
       this.elevateDuringAnim(stack, gatherMs + actMs);
       // Write the gathered transforms so the cards SLIDE together via the CSS
@@ -1763,7 +1741,7 @@ export class Game {
     if (!seed) return;
     // Square the pile up to the angle that reads upright for THIS viewer, so a
     // jumble of 90°/180° cards becomes a clean stack from where they're sitting.
-    const upright = this.uprightTargetFor(seed);
+    const upright = this.viewerUprightRot(seed.rot);
     // Already a tidy single stack squared to upright? Gathering it again would
     // move nothing, yet still play a sound and broadcast a redundant patch — the
     // "spam" a repeated G on a resting deck produces. A collected pile stays
@@ -1785,7 +1763,7 @@ export class Game {
     if (this.anyAnimating(stack)) return;
     const seed = this.state.cards.get(id);
     if (!seed) return;
-    const upright = this.uprightTargetFor(seed);
+    const upright = this.viewerUprightRot(seed.rot);
     // Lock the whole pile to peers for the entire face-down → straighten → gather →
     // riffle flow so no card can be grabbed mid-shuffle. Worst-case duration covers
     // every phase; the guaranteed release timer frees it even on an early return.
@@ -1813,6 +1791,11 @@ export class Game {
     const order = seededDeck(`${this.room}:${Date.now()}`);
     const baseNx = this.deckBaseNx();
     const baseNy = DECK_NY;
+    // Stamp every card with one fresh winning clock + our id so the reset
+    // authoritatively beats any in-flight edit on every peer. The snapshot itself
+    // bypasses LWW, but the follow-up reconcile/commit must also win — a stale ts
+    // there could let a peer's older position resurrect a card off the deck.
+    const now = this.stamp();
     let z = 1;
     for (const item of order) {
       const c = this.state.cards.get(item.instanceId);
@@ -1820,9 +1803,11 @@ export class Game {
       c.x = baseNx;
       c.y = baseNy;
       c.z = z++;
-      c.rot = 0;
+      c.rot = 0;          // back to the canonical start-of-game orientation
       c.faceUp = false;
       c.ownerSeat = null;
+      c.ts = now;
+      c.by = this.self.id;
       this.dirtyIds.add(c.id);
     }
     this.state.topZ = z;
@@ -2858,9 +2843,7 @@ export class Game {
   private refreshZones(): void {
     const youSuffix = t("table.youSuffix");
     const droppedSuffix = t("table.droppedSuffix");
-    const host = this.isHost();
-    // Keep the menu's host-only controls (reset deck) in sync with who the host is.
-    this.header.setHostMode(host);
+    const host = this.isHost(); // used below to gate the per-zone "kick" buttons
     for (let seat = 0; seat < SEAT_COUNT; seat++) {
       const z = this.physicalZoneForSeat(seat);
       if (!z) continue;

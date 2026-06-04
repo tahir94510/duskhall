@@ -167,6 +167,15 @@
     "empty": "No updates yet.",
     "entries": [
       {
+        "v": "2026-06-04.5",
+        "date": "June 4, 2026",
+        "title": "Reset deck works for everyone",
+        "items": [
+          "Reset deck now works for any player at the table, not just the host. Tapping it opens a confirmation, and confirming gathers every card and returns them to a freshly shuffled, face-down deck in the centre — the start-of-game setup — for all players. Before, only the host could do this and for everyone else the button did nothing.",
+          "When you gather, shuffle or turn a pile (including the deck), it again squares upright to YOUR own view, the same as the rest of the table. A pile you tidy reads straight to you; the other seats see it at their own angle."
+        ]
+      },
+      {
         "v": "2026-06-04.4",
         "date": "June 4, 2026",
         "title": "One deck, one angle for everyone",
