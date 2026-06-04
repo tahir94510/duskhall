@@ -707,7 +707,10 @@ export class RealtimeBus {
       z: safeInt(c.z, 0),
       rot: typeof c.rot === "number" ? Math.max(-999, Math.min(999, Math.round(c.rot))) : 0,
       faceUp: c.faceUp === true,
-      ownerSeat: typeof c.ownerSeat === "number" ? Math.max(-1, Math.min(3, c.ownerSeat)) : null,
+      // Round, never just clamp: a fractional seat (e.g. 2.5) would slip past the
+      // clamp and then miss every integer-keyed seat check (activeSeats/seatClaims),
+      // so a card in a private zone would read as public. Match the other seat sanitizers.
+      ownerSeat: typeof c.ownerSeat === "number" ? Math.max(-1, Math.min(3, Math.round(c.ownerSeat))) : null,
       // ts is a wall-clock last-write-wins stamp (~1.7e12). It MUST keep its real
       // magnitude or the LWW gate in applyPatch rejects every remote edit — the bug
       // that made all card operations fail to sync. Never run it through safeNumber.
@@ -788,7 +791,7 @@ export class RealtimeBus {
       const safe: HoldMsg = {
         ids,
         by: safeString(h.by, 40),
-        seat: typeof h.seat === "number" ? Math.max(-1, Math.min(3, h.seat)) : -1,
+        seat: typeof h.seat === "number" ? Math.max(-1, Math.min(3, Math.round(h.seat))) : -1,
         // until is a wall-clock expiry (Date.now() + ms), not a coordinate — keep
         // its real magnitude or the hold-lock would look permanently expired.
         until: safeStamp(h.until, 0),
@@ -818,7 +821,7 @@ export class RealtimeBus {
       x: safeNumber(c.x),
       y: safeNumber(c.y),
       // Allow -1 (spectator) through; render trusts the presence seat anyway.
-      seat: typeof c.seat === "number" ? Math.max(-1, Math.min(3, c.seat)) : -1
+      seat: typeof c.seat === "number" ? Math.max(-1, Math.min(3, Math.round(c.seat))) : -1
     };
     for (const l of this.cursorListeners) l(safe);
   }
@@ -837,7 +840,7 @@ export class RealtimeBus {
       players.push({
         id,
         name: safeString(entry.name, 24) || "Player",
-        seat: typeof entry.seat === "number" ? Math.max(-1, Math.min(3, entry.seat)) : 0,
+        seat: typeof entry.seat === "number" ? Math.max(-1, Math.min(3, Math.round(entry.seat))) : 0,
         color: safeString(entry.color, 16) || "#c8a45a",
         joinedAt,
         // Old clients send no connAt; fall back to joinedAt so the tombstone

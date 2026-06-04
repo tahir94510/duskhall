@@ -129,6 +129,10 @@ export class Tooltip {
   };
 
   private onMove = (e: PointerEvent): void => {
+    // A sticky (touch-opened) panel stays anchored at its card until dismissed; only
+    // a hovering mouse repositions the panel to track the cursor. Without this, a
+    // touch drag elsewhere on the board would yank the pinned info panel to the finger.
+    if (this.sticky || e.pointerType === "touch") return;
     this.mouseX = e.clientX;
     this.mouseY = e.clientY;
     if (this.active) this.position();

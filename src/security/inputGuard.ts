@@ -57,10 +57,19 @@ export function safeBool(b: unknown): boolean {
   return b === true;
 }
 
+// Reused so we don't allocate a new encoder on every send.
+const byteCounter = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
+
 export function withinByteCap(payload: unknown): boolean {
   try {
     const s = JSON.stringify(payload);
-    return s.length <= MAX_BYTES;
+    // s.length counts UTF-16 code units; the real wire size is the UTF-8 BYTE length,
+    // which is >= the unit count (a single non-ASCII char is one unit but up to 3-4
+    // bytes). Fast path: if even the unit count is over, it is certainly over. Else
+    // measure true bytes so a payload of multibyte names/emoji can't slip past the cap.
+    if (s.length > MAX_BYTES) return false;
+    const bytes = byteCounter ? byteCounter.encode(s).length : s.length;
+    return bytes <= MAX_BYTES;
   } catch {
     return false;
   }

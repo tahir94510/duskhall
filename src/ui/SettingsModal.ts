@@ -99,12 +99,12 @@ export function openSettingsModal(
       e.preventDefault();
       if (getLocale() === code) return;
       void loadLocale(code).then(() => {
-        body.querySelectorAll<HTMLButtonElement>(".lang-pill").forEach((p) => {
-          const active = p.dataset.lang === code;
-          p.classList.toggle("is-active", active);
-          p.setAttribute("aria-pressed", active ? "true" : "false");
-        });
+        // Apply the new language to the board, then REBUILD this panel so its own
+        // title and labels are translated too. Updating only the pills left the rest
+        // of the dialog (title, legends, slider labels) stuck in the old language
+        // until it was closed and reopened.
         onLangChange(code);
+        openSettingsModal(modal, audio, onLangChange);
       });
     });
   });

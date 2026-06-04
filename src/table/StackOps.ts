@@ -182,14 +182,19 @@ export function gatherStack(state: BoardState, ids: string[], focusNx?: number, 
   } else {
     let sx = 0;
     let sy = 0;
+    let n = 0;
     for (const id of ids) {
       const c = state.cards.get(id);
       if (!c) continue;
       sx += c.x;
       sy += c.y;
+      n++;
     }
-    cx = sx / ids.length;
-    cy = sy / ids.length;
+    // Divide by the number of cards actually found, not ids.length: an id whose card
+    // vanished mid-gesture would otherwise drag the centroid toward (0,0) and place
+    // the gathered pile off-target.
+    cx = n ? sx / n : 0;
+    cy = n ? sy / n : 0;
   }
   const ordered = ids
     .map((id) => state.cards.get(id))

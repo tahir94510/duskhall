@@ -20,6 +20,8 @@ export class Modal {
   // against this modal's own Escape listener). Without this, that path would skip
   // onClose and leak the "this panel is open" state.
   private onCloseCb: (() => void) | null = null;
+  // Per-instance counter for unique title ids (aria-labelledby wiring).
+  private static titleSeq = 0;
 
   open(opts: ModalOpts): void {
     this.close();
@@ -27,13 +29,15 @@ export class Modal {
     this.prevFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const bd = document.createElement("div");
     bd.className = "modal-backdrop";
-    bd.setAttribute("role", "dialog");
-    bd.setAttribute("aria-modal", "true");
+    // The dialog semantics belong on the PANEL that receives focus, not the backdrop,
+    // and the panel needs an accessible name. Point aria-labelledby at the title so a
+    // screen reader announces "&lt;title&gt; dialog" when focus lands on the panel.
+    const titleId = `modal-title-${++Modal.titleSeq}`;
     bd.innerHTML = `
-      <div class="modal" tabindex="-1">
+      <div class="modal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="${titleId}">
         <div class="modal__head">
           <div>
-            <div class="modal__title">${escape(opts.title)}</div>
+            <div class="modal__title" id="${titleId}">${escape(opts.title)}</div>
             ${opts.subtitle ? `<div class="modal__sub">${escape(opts.subtitle)}</div>` : ""}
           </div>
           <button class="modal__close" type="button" aria-label="${escape(t("ui.close"))}">${ICON_CLOSE}</button>
