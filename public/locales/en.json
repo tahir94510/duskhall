@@ -205,6 +205,15 @@
     "intro": "Vaerum is a free, browser-based digital card table for playing with friends. This page explains what it is, what data it does and does not handle, and the terms of use.",
     "sections": [
       {
+        "id": "howto",
+        "title": "How this table works",
+        "body": [
+          "Vaerum is a shared table, not a referee. You and your friends move, flip, group, shuffle and rotate cards in real time, and you follow the rulebook yourselves, just like a physical table.",
+          "Each seat has its own private area along its edge. A card you place in your own area is hidden from everyone else: they see a blurred back, not its face. Slide a card out of your area and it becomes visible to the table; slide it back in and it hides again. The change happens as the card crosses the edge, the same way for every player and on every screen size.",
+          "To play: drag a card to move it, hold Ctrl and drag to move a whole stack, scroll over a card to flip it, and right-click or Ctrl-scroll to flip a whole pile. Press G to gather a pile into one neat stack, M to shuffle it, and Shift-scroll to rotate. On a phone, long-press a card to open its action bar. The full list is under Shortcuts in the menu."
+        ]
+      },
+      {
         "id": "about",
         "title": "About",
         "body": [

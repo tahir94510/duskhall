@@ -205,6 +205,15 @@
     "intro": "Vaerum, arkadaşlarınızla oynamak için tasarlanmış ücretsiz, tarayıcı tabanlı bir dijital kart masasıdır. Bu sayfa oyunun ne olduğunu, hangi verileri ele alıp almadığını ve kullanım koşullarını açıklar.",
     "sections": [
       {
+        "id": "howto",
+        "title": "Bu masa nasıl çalışır",
+        "body": [
+          "Vaerum ortak bir masadır, hakem değil. Sen ve arkadaşların kartları gerçek zamanlı olarak taşır, çevirir, toplar, karıştırır ve döndürürsünüz; kuralları tıpkı gerçek bir masadaki gibi kendiniz uygularsınız.",
+          "Her koltuğun kendi kenarında bir gizli alanı vardır. Kendi alanına koyduğun bir kart diğerlerinden gizlidir: onlar yüzünü değil, bulanık bir arkasını görür. Kartı alanından dışarı çıkardığında masaya görünür olur; geri soktuğunda yeniden gizlenir. Bu değişim kart kenarı geçerken olur ve her oyuncuda, her ekran boyutunda aynı çalışır.",
+          "Oynamak için: kartı sürükleyerek taşı, Ctrl basılı tutup sürükleyerek tüm yığını taşı, kartın üzerinde tekerleği kaydırarak çevir, sağ tıkla veya Ctrl+tekerlek ile tüm desteyi çevir. Bir desteyi tek düzgün yığında toplamak için G, karıştırmak için M, döndürmek için Shift+tekerlek. Telefonda kartın üzerine uzun basarak eylem çubuğunu aç. Tam liste menüdeki Kısayollar bölümünde."
+        ]
+      },
+      {
         "id": "about",
         "title": "Hakkında",
         "body": [
