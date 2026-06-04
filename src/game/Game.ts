@@ -81,6 +81,11 @@ const SHUFFLE_ANIM_MS = 380 * MOTION;
 // straighten finishes before the gather starts, and the gather before the act.
 const STACK_STRAIGHTEN_MS = 200 * MOTION; // rotate-to-one-direction phase (skipped if already aligned)
 const STACK_TIDY_MS = 200 * MOTION;       // gather-into-one-pile phase
+// Off-board canonical coordinate for the "hide my cursor" sentinel. It must read
+// as off-board to renderCursor (which hides at < -1) AND survive inputGuard's
+// coordinate clamp (COORD_MIN = -3) unchanged, so a peer reliably hides the ghost.
+// -2 satisfies both without depending on the old -10→-3 clamp coincidence.
+const CURSOR_OFFBOARD = -2;
 const SS_SNAPSHOT_PREFIX = "kabal:snap:";
 const SS_SEAT_PREFIX = "kabal:seat:";
 const SS_CLIENT_ID = "kabal:cid";
@@ -603,17 +608,24 @@ export class Game {
         // the source of the seat-0 "impostor" ghost).
         if (this.spectator) return;
         // The cursor listener is on window (so empty board space, no longer
-        // captured by the cards layer, still shares the pointer). Skip broadcast
-        // while a modal is open: the player is in a menu, not at the table, and
-        // peers should not see their ghost dart across the board.
-        if (this.modal.isOpen()) return;
+        // captured by the cards layer, still shares the pointer). While a modal is
+        // open the player is in a menu, not at the table: send the off-board
+        // sentinel ONCE (like the zone path) so peers hide our ghost instead of
+        // leaving it frozen on the board the whole time the menu is open.
+        if (this.modal.isOpen()) {
+          if (!this.cursorHiddenSent) {
+            this.cursorHiddenSent = true;
+            this.bus.sendCursor({ id: this.self.id, x: CURSOR_OFFBOARD, y: CURSOR_OFFBOARD, seat: this.self.seat });
+          }
+          return;
+        }
         // Inside our own zone we keep our pointer private: send an off-board
         // sentinel ONCE so peers hide our ghost (instead of freezing it at the
         // zone edge), then stay quiet until we leave the zone again.
         if (this.pointInZone(this.self.seat, x, y)) {
           if (!this.cursorHiddenSent) {
             this.cursorHiddenSent = true;
-            this.bus.sendCursor({ id: this.self.id, x: -10, y: -10, seat: this.self.seat });
+            this.bus.sendCursor({ id: this.self.id, x: CURSOR_OFFBOARD, y: CURSOR_OFFBOARD, seat: this.self.seat });
           }
           return;
         }
@@ -956,7 +968,7 @@ export class Game {
       if (document.hidden) {
         // Hidden: push the cursor off-board so peers stop showing a frozen ghost;
         // it reappears on the next pointer move when we return.
-        if (!this.spectator) this.bus.sendCursor({ id: this.self.id, x: -10, y: -10, seat: this.claimSeat });
+        if (!this.spectator) this.bus.sendCursor({ id: this.self.id, x: CURSOR_OFFBOARD, y: CURSOR_OFFBOARD, seat: this.claimSeat });
         return;
       }
       // Visible again: the requestAnimationFrame render loop was paused while

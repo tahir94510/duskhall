@@ -54,6 +54,12 @@
 /* Project-wide confirmation tick: a brief positive flash after copy/paste/etc. */
 .icon-btn.is-confirmed { color: var(--ivory); border-color: var(--line-3); background: rgba(255, 255, 255, 0.06); }
 .icon-btn.is-error { color: #ff9a9a; border-color: rgba(220, 90, 90, 0.7); animation: snapback 360ms var(--ease); }
+/* Honour reduced motion for the shared snapback keyframe here too (card.css disables
+   it for .card.is-snapback), so the error flash never animates for a reduced-motion
+   user if this state is ever wired up. */
+@media (prefers-reduced-motion: reduce) {
+  .icon-btn.is-error { animation: none; }
+}
 
 .icon-btn__badge {
   position: absolute;

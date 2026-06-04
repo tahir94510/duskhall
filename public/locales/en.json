@@ -177,7 +177,9 @@
           "Gathering a pile that is already neatly collected now does nothing, instead of re-collecting it and replaying the sound every time. A scattered or fanned pile still gathers as before, and shuffling or turning a pile over stay repeatable.",
           "Dropping a whole pile now lands with a deeper, weightier thud that sounds different from the crisp tap of a single card, so the table sounds the way it looks.",
           "If you turn on your device's 'reduce motion' setting, flipping and shuffling are now fully instant: no card stays briefly hidden or frozen afterwards, and the pile is never momentarily locked for the other players.",
-          "A face-down deck that had been turned a full circle now stays put on the deck spot when you resize the window, instead of slowly drifting off it."
+          "A face-down deck that had been turned a full circle now stays put on the deck spot when you resize the window, instead of slowly drifting off it.",
+          "Join by code is stricter: it only accepts a real six-character code or an invite link, instead of pulling a wrong code out of a longer pasted word, so you no longer land in an empty, unrelated room.",
+          "While you are reading the rules or in any menu, the other players no longer see your pointer frozen on the table; it hides until you come back."
         ]
       },
       {

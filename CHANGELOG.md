@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.9.5: Join-by-code and cursor fixes
+
+- **Join by code rejects garbage.** `parseRoomInput`'s last-resort scan was greedy:
+  any pasted string with six or more consecutive letters/numbers resolved to its first
+  six characters, so pasting a username or a sentence lit the Join button and dropped
+  you into an unrelated, empty room. The scan now only accepts a STANDALONE six-char
+  code, and the invite-link path tolerates a trailing slash (so `.../P86B3T/` reads the
+  code from the path instead of grabbing a six-letter token out of the hostname). Added
+  `src/net/room.test.ts` to lock the behaviour.
+- **Your cursor hides while you are in a menu.** Opening a modal stopped broadcasting
+  the cursor but never sent a hide, so peers saw your ghost frozen on the table the
+  whole time. It now sends the off-board sentinel once on the first move with a menu
+  open, mirroring the private-zone hide.
+- **Sturdier cursor-hide sentinel.** The off-board sentinel moved from -10 to -2 (a
+  named `CURSOR_OFFBOARD`), so it survives the input-guard coordinate clamp on its own
+  instead of relying on the old -10→-3 clamp coincidence.
+- **Reduced-motion consistency.** The shared `snapback` keyframe used by a (currently
+  unwired) error-flash state is now disabled under reduced motion too.
+
 ## 0.9.4: Card encyclopedia in the docs
 
 - **The card encyclopedia is now in the docs.** Added `docs/CARDS.en.md` and
