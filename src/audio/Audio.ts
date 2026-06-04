@@ -535,17 +535,22 @@ export class AudioEngine {
     this.musicProcedural = { osc, osc2, lfo, gain };
   }
 
-  // Build a fresh shuffled bag of all track indices (Fisher-Yates, crypto seed).
-  // If `avoid` is given (the track that just played), make sure it is not first
-  // so the rotation never repeats a track back-to-back across a bag boundary.
-  private buildShuffledBag(avoid = -1): number[] {
+  // Build a shuffled bag of track indices (Fisher-Yates, crypto seed).
+  // `avoid` is the track that just played. With `exclude` false (a fresh full
+  // rotation) it is only kept off the FIRST slot so the rotation never repeats a
+  // track back-to-back across a bag boundary. With `exclude` true (the REST of the
+  // current rotation, e.g. on restore where `avoid` is the track now playing) it is
+  // dropped from the bag entirely, so that track does not play a second time before
+  // every other track has played once.
+  private buildShuffledBag(avoid = -1, exclude = false): number[] {
     const n = this.musicPlaylist.length;
-    const bag = Array.from({ length: n }, (_, i) => i);
-    for (let i = n - 1; i > 0; i--) {
+    let bag = Array.from({ length: n }, (_, i) => i);
+    if (exclude && avoid >= 0) bag = bag.filter((i) => i !== avoid);
+    for (let i = bag.length - 1; i > 0; i--) {
       const j = Math.floor(randUnit() * (i + 1));
       [bag[i], bag[j]] = [bag[j]!, bag[i]!];
     }
-    if (n > 1 && bag[0] === avoid) [bag[0], bag[1]] = [bag[1]!, bag[0]!];
+    if (!exclude && bag.length > 1 && bag[0] === avoid) [bag[0], bag[1]] = [bag[1]!, bag[0]!];
     return bag;
   }
 
@@ -570,7 +575,9 @@ export class AudioEngine {
     if (savedIdx >= 0 && savedIdx < n) {
       this.musicIndex = savedIdx;
       this.resumePos = Number.isFinite(savedPos) && savedPos > 0 ? savedPos : 0;
-      this.musicBag = bag.length ? bag : this.buildShuffledBag(savedIdx);
+      // savedIdx is the track we are resuming, so it counts as already played this
+      // rotation: rebuild the REST of the rotation without it (not just off-first).
+      this.musicBag = bag.length ? bag : this.buildShuffledBag(savedIdx, true);
     } else {
       this.musicBag = bag.length ? bag : this.buildShuffledBag();
       this.musicIndex = this.nextTrackIndex();

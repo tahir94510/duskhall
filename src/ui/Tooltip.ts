@@ -137,7 +137,12 @@ export class Tooltip {
   private show(data: { defId: string; cardEl: HTMLElement }): void {
     const def = CARD_DEFS.find((d) => d.id === data.defId);
     if (!def) return;
+    // Only ever reveal a card the viewer is allowed to see: it must be face-up and
+    // not concealed/held in someone's private zone. resolve() already checks all
+    // three live, but show() runs on a delayed timer, so re-check here to avoid a
+    // leak if the card became concealed or was picked up during the hover delay.
     if (!data.cardEl.classList.contains("is-faceup")) return;
+    if (data.cardEl.classList.contains("is-concealed") || data.cardEl.classList.contains("is-held")) return;
     this.active = data;
     // Always start hidden so the first frame after innerHTML cannot leak in
     // at the previous (or default) position.

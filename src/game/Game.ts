@@ -1784,7 +1784,9 @@ export class Game {
       c.by = this.self.id;
       return this.wireCard(c);
     });
-    this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards });
+    // A finished gesture is a commit, not a preview: it must not be dropped by the
+    // send-rate bucket during a busy drag, or peers keep the stale position.
+    this.bus.sendCommit({ v: this.patchVersion, by: this.self.id, cards });
     if (this.debug) this.debug.sent++;
     this.dirtyIds.clear();
   }
@@ -1809,7 +1811,9 @@ export class Game {
     }).filter((c): c is PatchCard => !!c);
     if (!cards.length) return;
     this.patchVersion++;
-    this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards, anim });
+    // Flip/shuffle is a commit with a one-shot cosmetic hint: never throttle it,
+    // or a peer mid-drag misses the flourish and the face/order diverges.
+    this.bus.sendCommit({ v: this.patchVersion, by: this.self.id, cards, anim });
     if (this.debug) this.debug.sent++;
     if (this.dirtyIds.size) this.scheduleFlush();
   }
@@ -2064,6 +2068,13 @@ export class Game {
     if (!claim || claim.id !== claimId) return; // reclaimed or already gone
     if (this.activeSeats.has(seat)) return; // owner came back just in time
     this.applyLeft({ id: claimId, seat });
+    // Each client runs its own away countdown, so they can lapse a few moments
+    // apart (or a late joiner never saw the away state at all). Broadcast the
+    // departure so every peer frees the seat and releases its cards at once
+    // instead of waiting for its own timer or the next host reconcile. applyLeft
+    // is idempotent and tombstoned, so a redundant `left` from another client is a
+    // harmless no-op.
+    this.bus.sendLeft({ id: claimId, seat });
   }
 
   private clearAwayTimers(): void {
@@ -2912,6 +2923,10 @@ export class Game {
   }
 
   private resetTable(): void {
+    // Hide any open card tooltip first: its anchor card element is about to be
+    // wiped, which would otherwise leave a tooltip pinned to a card that no longer
+    // exists in the new room.
+    this.tooltip.hide();
     this.refs.cardsLayer.innerHTML = "";
     this.state.cards.clear();
     this.cardEls.clear();

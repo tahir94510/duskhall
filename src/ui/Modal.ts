@@ -14,9 +14,16 @@ export class Modal {
   private listeners: Array<() => void> = [];
   private prevFocus: HTMLElement | null = null;
   private inerted: HTMLElement[] = [];
+  // The current modal's onClose, remembered so it still fires when the dialog is
+  // closed by an OUTSIDE caller that passes no callback (e.g. the global Escape
+  // handler in Game calls modal.close() with no argument and can win the race
+  // against this modal's own Escape listener). Without this, that path would skip
+  // onClose and leak the "this panel is open" state.
+  private onCloseCb: (() => void) | null = null;
 
   open(opts: ModalOpts): void {
     this.close();
+    this.onCloseCb = opts.onClose ?? null;
     this.prevFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const bd = document.createElement("div");
     bd.className = "modal-backdrop";
@@ -102,6 +109,11 @@ export class Modal {
     if (!this.backdrop) return;
     const bd = this.backdrop;
     this.backdrop = null;
+    // Fire the remembered onClose even if the caller passed nothing, but never
+    // twice: the explicit handlers pass opts.onClose, which is the same callback,
+    // so prefer the argument and always clear the stored one.
+    const onClose = after ?? this.onCloseCb ?? undefined;
+    this.onCloseCb = null;
     for (const off of this.listeners) off();
     this.listeners = [];
     // Restore background interactivity and return focus to the trigger.
@@ -112,7 +124,7 @@ export class Modal {
     bd.classList.remove("is-visible");
     window.setTimeout(() => {
       bd.remove();
-      after?.();
+      onClose?.();
     }, 220);
     if (restore && document.contains(restore)) restore.focus();
   }

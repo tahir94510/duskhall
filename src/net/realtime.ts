@@ -608,6 +608,22 @@ export class RealtimeBus {
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "patch", payload: patch } as GameMsg });
   }
 
+  /** A COMMITTED state transition (a finished move/drop, a flip, a shuffle, a
+   *  gather, an ownership change). Unlike a drag-preview frame, losing one of these
+   *  diverges the table until the next host reconcile, so it must NOT be throttled
+   *  by the send-rate `opsBucket`: during a busy multi-player drag the bucket can be
+   *  momentarily empty and the commit would be silently dropped. Commits are
+   *  low-frequency (one per gesture), still byte-capped, and the receive side still
+   *  rate-limits per sender, so they cannot be used to flood. Drag previews stay on
+   *  the throttled sendPatch path. */
+  sendCommit(patch: CardPatch): void {
+    if (patch.cards.length > 200 || !withinByteCap(patch)) return;
+    this.patchVersion = Math.max(this.patchVersion, patch.v);
+    this.local.sendGame({ type: "patch", payload: patch });
+    if (!this.channel || this.status !== "online") return;
+    this.channel.send({ type: "broadcast", event: "game", payload: { type: "patch", payload: patch } as GameMsg });
+  }
+
   sendSnapshot(snap: CardPatch): void {
     if (snap.cards.length > 200 || !withinByteCap(snap)) return;
     this.local.sendGame({ type: "snapshot", payload: snap });
