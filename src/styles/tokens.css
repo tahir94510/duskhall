@@ -22,9 +22,9 @@
   --seat-3: #79766f;
 
   /* Geometry */
-  --r-card: 8px;
+  --r-card: 10px;
   --r-panel: 10px;
-  --r-zone: 12px;
+  --r-zone: 14px;
   --r-pill: 999px;
 
   /* Shadow: soft, top-lit and restrained. Vertical (no angle), as if one soft
@@ -34,17 +34,19 @@
      black blob under a pile. A held/lifted card gets a clearly larger, soft cast
      so it still reads as raised above the table. */
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.18);
-  --shadow-card-held: 0 16px 34px rgba(0, 0, 0, 0.46), 0 4px 10px rgba(0, 0, 0, 0.3);
+  --shadow-card-held: 0 22px 44px rgba(0, 0, 0, 0.5), 0 6px 14px rgba(0, 0, 0, 0.34);
   --shadow-panel: 0 16px 40px rgba(0, 0, 0, 0.5);
 
-  /* Card sizing. The max grows on large monitors / fullscreen so the bigger
-     board (see --field) is filled with proportionally bigger, legible cards
-     rather than a small island in the centre — the table should feel like real
-     cards in hand, not a tiny island. Mobile breakpoints override this. The
-     stack-detection math reads the MEASURED pixel size (Game.cardMetrics) and
-     privacy uses a fixed canonical fraction, so growing this is purely visual
-     and never shifts who can see or group a card. */
-  --card-w: clamp(62px, 8.4vmin, 150px);
+  /* Card sizing. This :root value is only a FALLBACK; the real, field-relative
+     size is set on `.table` in board.css (it needs the .table-scoped --field) and
+     mobile.css overrides per breakpoint. Cards are deliberately a generous, board-
+     relative size so the table reads like real cards in hand — substantial and
+     legible — not a small island, and it scales the SAME proportion from the
+     smallest phone to a 4K TV. The stack-detection math reads the MEASURED pixel
+     size (Game.cardMetrics) and privacy uses a fixed canonical fraction, so growing
+     this is purely visual and never shifts who can see or group a card. Keep this
+     fallback in step with the .table base in board.css. */
+  --card-w: clamp(72px, 11vmin, 176px);
   --card-h: calc(var(--card-w) * 1.45);
 
   /* Gap between the deck and discard markers (matches DOCK_GUTTER_PX in TS). */
