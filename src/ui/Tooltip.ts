@@ -129,6 +129,10 @@ export class Tooltip {
   };
 
   private onMove = (e: PointerEvent): void => {
+    // A sticky (touch-opened) panel stays anchored at its card until dismissed; only
+    // a hovering mouse repositions the panel to track the cursor. Without this, a
+    // touch drag elsewhere on the board would yank the pinned info panel to the finger.
+    if (this.sticky || e.pointerType === "touch") return;
     this.mouseX = e.clientX;
     this.mouseY = e.clientY;
     if (this.active) this.position();
@@ -137,7 +141,12 @@ export class Tooltip {
   private show(data: { defId: string; cardEl: HTMLElement }): void {
     const def = CARD_DEFS.find((d) => d.id === data.defId);
     if (!def) return;
+    // Only ever reveal a card the viewer is allowed to see: it must be face-up and
+    // not concealed/held in someone's private zone. resolve() already checks all
+    // three live, but show() runs on a delayed timer, so re-check here to avoid a
+    // leak if the card became concealed or was picked up during the hover delay.
     if (!data.cardEl.classList.contains("is-faceup")) return;
+    if (data.cardEl.classList.contains("is-concealed") || data.cardEl.classList.contains("is-held")) return;
     this.active = data;
     // Always start hidden so the first frame after innerHTML cannot leak in
     // at the previous (or default) position.

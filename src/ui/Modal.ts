@@ -14,19 +14,30 @@ export class Modal {
   private listeners: Array<() => void> = [];
   private prevFocus: HTMLElement | null = null;
   private inerted: HTMLElement[] = [];
+  // The current modal's onClose, remembered so it still fires when the dialog is
+  // closed by an OUTSIDE caller that passes no callback (e.g. the global Escape
+  // handler in Game calls modal.close() with no argument and can win the race
+  // against this modal's own Escape listener). Without this, that path would skip
+  // onClose and leak the "this panel is open" state.
+  private onCloseCb: (() => void) | null = null;
+  // Per-instance counter for unique title ids (aria-labelledby wiring).
+  private static titleSeq = 0;
 
   open(opts: ModalOpts): void {
     this.close();
+    this.onCloseCb = opts.onClose ?? null;
     this.prevFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const bd = document.createElement("div");
     bd.className = "modal-backdrop";
-    bd.setAttribute("role", "dialog");
-    bd.setAttribute("aria-modal", "true");
+    // The dialog semantics belong on the PANEL that receives focus, not the backdrop,
+    // and the panel needs an accessible name. Point aria-labelledby at the title so a
+    // screen reader announces "&lt;title&gt; dialog" when focus lands on the panel.
+    const titleId = `modal-title-${++Modal.titleSeq}`;
     bd.innerHTML = `
-      <div class="modal" tabindex="-1">
+      <div class="modal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="${titleId}">
         <div class="modal__head">
           <div>
-            <div class="modal__title">${escape(opts.title)}</div>
+            <div class="modal__title" id="${titleId}">${escape(opts.title)}</div>
             ${opts.subtitle ? `<div class="modal__sub">${escape(opts.subtitle)}</div>` : ""}
           </div>
           <button class="modal__close" type="button" aria-label="${escape(t("ui.close"))}">${ICON_CLOSE}</button>
@@ -102,6 +113,11 @@ export class Modal {
     if (!this.backdrop) return;
     const bd = this.backdrop;
     this.backdrop = null;
+    // Fire the remembered onClose even if the caller passed nothing, but never
+    // twice: the explicit handlers pass opts.onClose, which is the same callback,
+    // so prefer the argument and always clear the stored one.
+    const onClose = after ?? this.onCloseCb ?? undefined;
+    this.onCloseCb = null;
     for (const off of this.listeners) off();
     this.listeners = [];
     // Restore background interactivity and return focus to the trigger.
@@ -112,7 +128,7 @@ export class Modal {
     bd.classList.remove("is-visible");
     window.setTimeout(() => {
       bd.remove();
-      after?.();
+      onClose?.();
     }, 220);
     if (restore && document.contains(restore)) restore.focus();
   }

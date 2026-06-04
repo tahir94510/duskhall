@@ -107,6 +107,11 @@ export class DragController {
 
   private onPointerDown = (e: PointerEvent): void => {
     if (!this.hooks.canInteract()) return;
+    // Ignore a second pointer while a press/drag is already live. A multi-touch tap on
+    // another card used to overwrite the active session wholesale, so the first card was
+    // left stuck is-held (floating in the held z-band) and its ephemeral hold-lock was
+    // never released for peers. One drag at a time; the active one finishes on its own up.
+    if (this.session) { e.preventDefault(); return; }
     const cardEl = this.cardFromTarget(e.target);
     if (!cardEl) return;
     if (e.button !== 0 && e.button !== 2) return;
@@ -283,16 +288,24 @@ export class DragController {
     // STATE FIRST: update every card's canonical position synchronously, so
     // the RAF render loop never sees a half-applied drop.
     const selfSeat = this.hooks.getSelfSeat();
-    const opponentSeat = this.hooks.pointInOpponentZone(e.clientX, e.clientY);
     const inSelf = this.hooks.pointInSelfZone(e.clientX, e.clientY);
-    const snappedSeats = new Set<string>();
+    // Snap-back decision by the card FOOTPRINT, the same geometry that decides ownership
+    // and concealment: if the drop would land any card inside an occupied rival's private
+    // zone, bounce the WHOLE drag back to its origin. The old pointer-in-zone test missed
+    // footprint-only overlaps, so a card whose body landed in a rival's area (pointer just
+    // outside) was placed and instantly became rival-owned: concealed and ungrabbable to
+    // its own player, i.e. silently handed to the rival with no way back.
+    let landsInRival = false;
+    for (const id of s.ids) {
+      if (this.hooks.isRivalOwned(id)) { landsInRival = true; break; }
+    }
     let didSnapBack = false;
     let didPlace = false;
 
     for (const id of s.ids) {
       const c = this.state.cards.get(id);
       if (!c) continue;
-      if (opponentSeat !== null && opponentSeat !== selfSeat) {
+      if (landsInRival) {
         const rel = s.relOffsets.get(id);
         if (rel) {
           c.x = s.startNx + s.anchorDx + rel.dx;
@@ -300,9 +313,7 @@ export class DragController {
         }
         didSnapBack = true;
       } else {
-        const seat = inSelf ? selfSeat : null;
-        this.hooks.setOwnerSeat(id, seat);
-        if (seat !== null) snappedSeats.add(id);
+        this.hooks.setOwnerSeat(id, inSelf ? selfSeat : null);
         didPlace = true;
       }
     }
@@ -326,7 +337,7 @@ export class DragController {
       // Restore the resting z immediately so there is no one-frame gap where the
       // dropped card still sits in the held band.
       el.style.zIndex = String(c.z);
-      if (didSnapBack && (opponentSeat !== null && opponentSeat !== selfSeat)) {
+      if (didSnapBack) {
         el.classList.add("is-snapback");
         window.setTimeout(() => el.classList.remove("is-snapback"), 260);
       }

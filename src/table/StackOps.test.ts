@@ -134,6 +134,19 @@ describe("gatherStack squares the pile up", () => {
     expect(st.cards.get("a")!.y).toBeCloseTo(0.4, 9);
     expect(st.cards.get("a")!.rot).toBe(2);
   });
+
+  it("with no explicit focus, gathers at the centroid of the cards that still exist", () => {
+    // "ghost" is in the id list but NOT in state (a card deleted mid-gesture). The
+    // centroid must average only the real cards (a, b), not divide by ids.length and
+    // get pulled toward (0,0).
+    const st = board([card("a", 0.4, 0.5, 1, 0), card("b", 0.6, 0.5, 2, 0)]);
+    gatherStack(st, ["a", "ghost", "b"], undefined, undefined, 0);
+    // Centroid of the two real cards is (0.5, 0.5), not (0.333, 0.333).
+    for (const id of ["a", "b"]) {
+      expect(st.cards.get(id)!.x).toBeCloseTo(0.5, 9);
+      expect(st.cards.get(id)!.y).toBeCloseTo(0.5, 9);
+    }
+  });
 });
 
 describe("flipping a scattered, mixed-rotation pile (toggleStackFlip's sequence)", () => {

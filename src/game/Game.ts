@@ -175,8 +175,13 @@ export class Game {
   private removedTombstones = new Map<string, { connAt: number; until: number }>();
   // Hard fallback expiry so a tombstone can never leak if no fresh presence ever
   // arrives to clear it. The connAt comparison is the real discriminator now, so the
-  // old "must exceed AWAY_GRACE" coupling no longer gates visibility.
-  private static readonly TOMBSTONE_MS = 35000;
+  // old "must exceed AWAY_GRACE" coupling no longer gates visibility. INVARIANT: this
+  // must be >= SENIORITY_RECOVERY_MS (40s). Otherwise a player kicked while OFFLINE
+  // (whose local identity was never wiped) could reconnect after the tombstone lapsed
+  // but inside the seniority window and recover their original seat/host rank as if
+  // never kicked. Keeping it >= the recovery window means a returning kicked client is
+  // always still suppressed at least as long as it could recover senior seniority.
+  private static readonly TOMBSTONE_MS = 45000;
   // Recently-departed host ids (id -> expiry ms). When the host role transfers, the
   // PREVIOUS host is recorded here for a short window so a kick they issued just before
   // the transfer is still accepted by peers whose host view briefly disagrees. The
@@ -1349,6 +1354,9 @@ export class Game {
   private rotateStack(id: string, dir: number): void {
     const stack = findConnectedStack(this.state, this.boardSize, id, this.cardMetrics());
     if (this.stackBlocked(stack)) return;
+    // Ignore a repeat while this pile is still animating, so a rotate landing in
+    // another stack action's animation window can't double-apply and re-flush.
+    if (this.anyAnimating(stack)) return;
     const anchor = this.state.cards.get(id);
     if (!anchor) return;
     this.syncTopZ(); // gatherStack lifts via topZ; keep it above all board cards
@@ -1671,6 +1679,10 @@ export class Game {
     // does nothing — keeping the "one sound = one real action" contract.
     if (stack.length < 2) return;
     if (this.stackBlocked(stack)) return;
+    // Ignore a repeat while this pile is still tidying/animating, so a gather fired
+    // during another stack action's straighten window can't re-mutate and re-flush
+    // the same cards twice (diverging z/rotation/position from peers).
+    if (this.anyAnimating(stack)) return;
     const seed = this.state.cards.get(id);
     // Square the pile up to the angle that reads upright for THIS viewer, so a
     // jumble of 90°/180° cards becomes a clean stack from where they're sitting.
@@ -1784,7 +1796,9 @@ export class Game {
       c.by = this.self.id;
       return this.wireCard(c);
     });
-    this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards });
+    // A finished gesture is a commit, not a preview: it must not be dropped by the
+    // send-rate bucket during a busy drag, or peers keep the stale position.
+    this.bus.sendCommit({ v: this.patchVersion, by: this.self.id, cards });
     if (this.debug) this.debug.sent++;
     this.dirtyIds.clear();
   }
@@ -1809,7 +1823,9 @@ export class Game {
     }).filter((c): c is PatchCard => !!c);
     if (!cards.length) return;
     this.patchVersion++;
-    this.bus.sendPatch({ v: this.patchVersion, by: this.self.id, cards, anim });
+    // Flip/shuffle is a commit with a one-shot cosmetic hint: never throttle it,
+    // or a peer mid-drag misses the flourish and the face/order diverges.
+    this.bus.sendCommit({ v: this.patchVersion, by: this.self.id, cards, anim });
     if (this.debug) this.debug.sent++;
     if (this.dirtyIds.size) this.scheduleFlush();
   }
@@ -2064,6 +2080,13 @@ export class Game {
     if (!claim || claim.id !== claimId) return; // reclaimed or already gone
     if (this.activeSeats.has(seat)) return; // owner came back just in time
     this.applyLeft({ id: claimId, seat });
+    // Each client runs its own away countdown, so they can lapse a few moments
+    // apart (or a late joiner never saw the away state at all). Broadcast the
+    // departure so every peer frees the seat and releases its cards at once
+    // instead of waiting for its own timer or the next host reconcile. applyLeft
+    // is idempotent and tombstoned, so a redundant `left` from another client is a
+    // harmless no-op.
+    this.bus.sendLeft({ id: claimId, seat });
   }
 
   private clearAwayTimers(): void {
@@ -2343,7 +2366,7 @@ export class Game {
       this.modal,
       {
         title: t("kick.title"),
-        body: t("kick.body").replace("{name}", target.name),
+        body: t("kick.body", { name: target.name }),
         confirmLabel: t("kick.confirm"),
         danger: true
       },
@@ -2359,7 +2382,7 @@ export class Game {
         // converge the same way via the kicked client's `left` and presence sync.
         this.players.delete(target.id);
         this.applyLeft({ id: target.id, seat });
-        toast(t("kick.done").replace("{name}", target.name));
+        toast(t("kick.done", { name: target.name }));
       }
     );
   }
@@ -2786,7 +2809,7 @@ export class Game {
           const canKick = host && seat !== this.self.seat && (!!occupant || (isDropped && !!claim));
           kickBtn.hidden = !canKick;
           kickBtn.dataset.seat = String(seat);
-          if (canKick && kickName) kickBtn.setAttribute("aria-label", t("kick.aria").replace("{name}", kickName));
+          if (canKick && kickName) kickBtn.setAttribute("aria-label", t("kick.aria", { name: kickName }));
         }
       }
     }
@@ -2912,6 +2935,10 @@ export class Game {
   }
 
   private resetTable(): void {
+    // Hide any open card tooltip first: its anchor card element is about to be
+    // wiped, which would otherwise leave a tooltip pinned to a card that no longer
+    // exists in the new room.
+    this.tooltip.hide();
     this.refs.cardsLayer.innerHTML = "";
     this.state.cards.clear();
     this.cardEls.clear();
