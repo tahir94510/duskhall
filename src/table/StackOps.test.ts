@@ -259,6 +259,16 @@ describe("shuffleStack", () => {
     expect(st.cards.get("b")!.rot).toBe(8);
     expect(Math.abs(st.cards.get("b")!.rot - 9)).toBeLessThanOrEqual(2);
   });
+
+  it("keeps z contiguous for the survivors when an id vanished mid-gesture", () => {
+    // "ghost" is in the id list but not in the board (deleted by a remote patch
+    // between grab and shuffle). The surviving cards must still get a dense,
+    // contiguous z range with no gap where the missing card would have sat.
+    const st = board([card("a", 0.5, 0.5, 10), card("b", 0.5, 0.5, 11), card("c", 0.5, 0.5, 12)]);
+    shuffleStack(st, ["a", "ghost", "b", "c"], 0);
+    const zs = ["a", "b", "c"].map((id) => st.cards.get(id)!.z).sort((x, y) => x - y);
+    expect(zs).toEqual([10, 11, 12]); // contiguous from minZ, no gap
+  });
 });
 
 describe("shuffleAt's gather-then-shuffle: tidy first, then a clean stacking order", () => {

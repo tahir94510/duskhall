@@ -783,7 +783,7 @@ function readNum(key: string, fallback: number): number {
 }
 function writeNum(key: string, v: number): void { try { localStorage.setItem(key, String(v)); } catch {} }
 function readBool(key: string, fallback: boolean): boolean {
-  try { return localStorage.getItem(key) === "1" ? true : localStorage.getItem(key) === "0" ? false : fallback; }
+  try { const v = localStorage.getItem(key); return v === "1" ? true : v === "0" ? false : fallback; }
   catch { return fallback; }
 }
 function writeBool(key: string, v: boolean): void { try { localStorage.setItem(key, v ? "1" : "0"); } catch {} }
