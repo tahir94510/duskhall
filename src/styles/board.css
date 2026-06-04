@@ -192,9 +192,34 @@ body:not(.is-ready) .board__perspective { transition: none; }
      dim/OLED screens, while keeping the deep, calm atmosphere. */
   background-color: #0c0c11;
   background-image:
-    radial-gradient(120% 90% at 50% 36%, rgba(80, 72, 104, 0.22) 0%, rgba(20, 18, 28, 0) 56%),
-    radial-gradient(150% 120% at 50% 122%, rgba(46, 41, 62, 0.26) 0%, rgba(8, 8, 12, 0) 62%),
-    linear-gradient(180deg, #0e0d13 0%, #0b0a0f 52%, #08080c 100%);
+    radial-gradient(120% 90% at 50% 34%, rgba(74, 70, 86, 0.24) 0%, rgba(20, 18, 24, 0) 56%),
+    radial-gradient(150% 120% at 50% 122%, rgba(44, 41, 52, 0.28) 0%, rgba(8, 8, 12, 0) 62%),
+    linear-gradient(180deg, #100f15 0%, #0b0a0f 52%, #08080c 100%);
+}
+
+/* Atmosphere painted ON TOP of the table image (Background.ts replaces the .app-bg
+   background-IMAGE with the photo, so depth/texture must live on these pseudo layers
+   to survive). ::before is a fine, soft-light film grain — a tactile felt surface
+   that also masks any softness in the source image; ::after is a depth vignette that
+   darkens the edges and corners so the eye settles on the centre and the seats read
+   as a lit table rather than a flat wash. Both are inert to pointer events. */
+.app-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+  opacity: 0.05;
+  mix-blend-mode: soft-light;
+}
+.app-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(135% 125% at 50% 40%, rgba(0, 0, 0, 0) 42%, rgba(0, 0, 0, 0.26) 80%, rgba(0, 0, 0, 0.46) 100%);
 }
 
 /* Gentle scrim above the background and below the play surface: softens bright
@@ -260,24 +285,29 @@ body:not(.is-ready) .board__perspective { transition: none; }
   height: var(--card-h);
   border-radius: var(--r-card);
   /* Clearly visible but quiet: a solid hairline frame, a faint fill and a centred
-     label, so the deck/discard zones read as real drop targets. */
-  border: 1px solid rgba(243, 239, 229, 0.28);
-  background: radial-gradient(120% 90% at 50% 50%, rgba(243, 239, 229, 0.06) 0%, rgba(243, 239, 229, 0) 70%);
+     label, so the deck/discard zones read as real, premium drop targets seated on
+     the felt — an inset edge gives the empty slot a little carved depth. */
+  border: 1px solid rgba(243, 239, 229, 0.3);
+  background: radial-gradient(120% 90% at 50% 42%, rgba(243, 239, 229, 0.07) 0%, rgba(243, 239, 229, 0) 72%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(243, 239, 229, 0.05);
   display: grid;
   place-items: center;
-  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
 
 .dock__label {
   font-family: var(--font-display);
   /* Scale with the CARD (not the viewport) so a long word (e.g. Turkish "ÇÖPLÜK")
      never spills past the marker on small phones, where --card-w clamps down. */
-  font-size: clamp(7px, calc(var(--card-w) * 0.13), 10px);
+  font-size: clamp(8px, calc(var(--card-w) * 0.135), 12px);
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ivory-dim);
-  opacity: 0.92;
+  opacity: 0.96;
+  /* A soft cast so the label stays legible whether the felt behind it is light or
+     dark, without a hard edge that would look stamped-on. */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
   pointer-events: none;
   user-select: none;
   /* Stay inside the card box: clip to the marker width and never wrap or bleed. */
@@ -304,6 +334,7 @@ body:not(.is-ready) .dock__label { transition: none; }
 .dock__slot--discard { left: 60%; transform: translate(-50%, -50%); }
 
 .dock__slot.is-hot {
-  border-color: rgba(243, 239, 229, 0.5);
-  background: rgba(243, 239, 229, 0.06);
+  border-color: rgba(243, 239, 229, 0.62);
+  background: rgba(243, 239, 229, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(243, 239, 229, 0.16), inset 0 0 18px rgba(243, 239, 229, 0.08);
 }

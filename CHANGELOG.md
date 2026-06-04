@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.9.3: A bigger, richer table
+
+- **Bigger, more legible cards.** The card-size clamp grew (max 126px → 150px on
+  large screens, with a higher floor and a slightly larger mid-range) so the table
+  feels like real cards in hand instead of a small island in the centre, and the
+  deck/discard markers — which scale with the card — grow with it. This is purely
+  visual: stack-detection reads the measured pixel size and privacy uses a fixed
+  canonical fraction, so who can see or group a card is unchanged. Mobile caps were
+  raised for big tablets/phones while the field-proportional floors that guarantee
+  fit on the smallest screens stayed put.
+- **Premium card depth.** The deck back gained a directional gradient, a top
+  catch-light and a dark inner edge for real card-stock thickness; face-up cards now
+  carry a crisp framed edge over the art; a lifted/held card casts a deeper shadow.
+  All still strictly monochrome.
+- **Richer table atmosphere.** Added a soft, soft-light film grain and a depth
+  vignette painted ON TOP of the table image (so they survive the runtime image
+  swap), masking softness in the source and settling the eye on the centre. The
+  deck/discard slots read as carved, premium drop targets with a clearer label and a
+  stronger hot-state glow. The calm, dark, monochrome mood is preserved.
+
 ## 0.9.2: Reduced-motion and resting-pile fixes
 
 - **Reduced motion is honoured end to end.** With the OS "reduce motion" setting

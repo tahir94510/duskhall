@@ -34,13 +34,17 @@
      black blob under a pile. A held/lifted card gets a clearly larger, soft cast
      so it still reads as raised above the table. */
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.18);
-  --shadow-card-held: 0 10px 22px rgba(0, 0, 0, 0.34);
+  --shadow-card-held: 0 16px 34px rgba(0, 0, 0, 0.46), 0 4px 10px rgba(0, 0, 0, 0.3);
   --shadow-panel: 0 16px 40px rgba(0, 0, 0, 0.5);
 
   /* Card sizing. The max grows on large monitors / fullscreen so the bigger
      board (see --field) is filled with proportionally bigger, legible cards
-     rather than a small island in the centre. Mobile breakpoints override this. */
-  --card-w: clamp(58px, 7.6vmin, 126px);
+     rather than a small island in the centre — the table should feel like real
+     cards in hand, not a tiny island. Mobile breakpoints override this. The
+     stack-detection math reads the MEASURED pixel size (Game.cardMetrics) and
+     privacy uses a fixed canonical fraction, so growing this is purely visual
+     and never shifts who can see or group a card. */
+  --card-w: clamp(62px, 8.4vmin, 150px);
   --card-h: calc(var(--card-w) * 1.45);
 
   /* Gap between the deck and discard markers (matches DOCK_GUTTER_PX in TS). */

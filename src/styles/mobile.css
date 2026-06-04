@@ -69,7 +69,7 @@
     /* Cards scale with the square field, so the dock fits the centre row at any
        aspect ratio and never spills into the strips. --field is .table-scoped, so
        redefine --card-h here too (the :root calc can't see --field). */
-    --card-w: clamp(38px, calc(var(--field) * 0.15), 96px);
+    --card-w: clamp(40px, calc(var(--field) * 0.15), 110px);
     --card-h: calc(var(--card-w) * 1.45);
   }
   .header__menu { min-width: 200px; max-width: calc(100vw - 28px); }
@@ -108,7 +108,7 @@
     --grid-cols: minmax(54px, 23%) 1fr minmax(54px, 23%);
     --grid-rows: minmax(54px, 23%) 1fr minmax(54px, 23%);
     --grid-gap: 6px;
-    --card-w: clamp(38px, calc(var(--field) * 0.155), 80px);
+    --card-w: clamp(40px, calc(var(--field) * 0.155), 88px);
     --card-h: calc(var(--card-w) * 1.45);
     padding: max(env(safe-area-inset-top), 8px) 8px max(env(safe-area-inset-bottom), 8px) 8px;
   }
@@ -153,7 +153,7 @@
   /* Keep the dock slots from crowding on the tiniest phones — still field-tied
      and .table-scoped so it matches the larger-mobile rule (and --card-h follows). */
   .table {
-    --card-w: clamp(36px, calc(var(--field) * 0.15), 64px);
+    --card-w: clamp(38px, calc(var(--field) * 0.15), 70px);
     --card-h: calc(var(--card-w) * 1.45);
   }
 }
