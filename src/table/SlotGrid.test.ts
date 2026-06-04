@@ -1,12 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { cardZoneOwner, cardZoneOverlap, ZONE_PRIVACY_FRAC, zoneRect, pointInZoneCanonical } from "./SlotGrid.js";
+import { cardZoneOwner, cardZoneOverlap, ZONE_PRIVACY_FRAC, zoneRect, pointInZoneCanonical, CARD_CANON_W, CARD_CANON_H } from "./SlotGrid.js";
 
-// Zone 0 (bottom): x[0.16,0.84], y[0.78,0.96]. A typical card footprint as a fraction
-// of the board is roughly 0.08 wide x 0.12 tall. With H=0.12 the in-fraction as the card
-// enters from the top is (ny - 0.72) / 0.12, so the privacy threshold (0.1) is crossed
-// around ny ≈ 0.732.
-const W = 0.08;
-const H = 0.12;
+// Use the REAL production footprint so the test tracks live behaviour: the privacy
+// boundary must follow the actual canonical card size (kept in step with board.css
+// --card-w). Boundaries are derived from H, not hard-coded, so re-tuning the card size
+// never silently invalidates these assertions.
+const W = CARD_CANON_W;
+const H = CARD_CANON_H;
+// Bottom zone (seat 0) starts at y = 0.78. For a card centred at (0.5, ny) with its full
+// width inside, the in-fraction is (ny + H/2 - 0.78) / H. Invert it to place a card at a
+// chosen overlap, so each case targets an exact fraction regardless of H.
+const Z0_TOP = 0.78;
+const nyForFrac = (f: number): number => Z0_TOP - H / 2 + f * H;
 
 describe("cardZoneOwner: privacy-first — a sliver in conceals, almost-fully-out reveals", () => {
   it("a card fully inside seat 0's zone is owned by seat 0", () => {
@@ -18,18 +23,18 @@ describe("cardZoneOwner: privacy-first — a sliver in conceals, almost-fully-ou
   });
 
   it("only a tiny sliver in (below the privacy threshold) stays public", () => {
-    // center y = 0.725: ~4% in (< ZONE_PRIVACY_FRAC) → almost fully out → public.
-    expect(cardZoneOwner(0.5, 0.725, 0, W, H)).toBe(null);
+    // ~4% in (< ZONE_PRIVACY_FRAC) → almost fully out → public.
+    expect(cardZoneOwner(0.5, nyForFrac(0.04), 0, W, H)).toBe(null);
   });
 
   it("even a small part in (above the threshold) is already concealed/owned", () => {
-    // center y = 0.745: ~21% in — mostly OUT, but more than a sliver → private.
-    expect(cardZoneOwner(0.5, 0.745, 0, W, H)).toBe(0);
+    // ~20% in — mostly OUT, but more than a sliver → private.
+    expect(cardZoneOwner(0.5, nyForFrac(0.2), 0, W, H)).toBe(0);
   });
 
   it("fully out (toward centre) is public", () => {
-    // center y = 0.71: card [0.65,0.77], below the zone top (0.78) → no overlap.
-    expect(cardZoneOwner(0.5, 0.71, 0, W, H)).toBe(null);
+    // Footprint top edge sits just below the zone top (0.78) → no overlap at all.
+    expect(cardZoneOwner(0.5, Z0_TOP - H / 2 - 0.02, 0, W, H)).toBe(null);
   });
 
   it("the threshold is the small privacy fraction, not a half", () => {
@@ -67,10 +72,10 @@ describe("cardZoneOwner: privacy-first — a sliver in conceals, almost-fully-ou
 
 describe("cardZoneOverlap: reports the best seat and the in-fraction", () => {
   it("reports a high fraction deep inside and a small one near the edge", () => {
-    const deepIn = cardZoneOverlap(0.5, 0.83, 0, W, H);
+    const deepIn = cardZoneOverlap(0.5, nyForFrac(0.7), 0, W, H);
     expect(deepIn?.seat).toBe(0);
     expect(deepIn!.frac).toBeGreaterThan(0.5);
-    const sliver = cardZoneOverlap(0.5, 0.735, 0, W, H);
+    const sliver = cardZoneOverlap(0.5, nyForFrac(0.25), 0, W, H);
     expect(sliver?.seat).toBe(0);
     expect(sliver!.frac).toBeGreaterThan(0);
     expect(sliver!.frac).toBeLessThan(0.5);
@@ -79,9 +84,10 @@ describe("cardZoneOverlap: reports the best seat and the in-fraction", () => {
     expect(cardZoneOverlap(0.5, 0.5, 0, W, H)).toBe(null);
   });
   it("cardZoneOwner gates the same overlap at the privacy threshold", () => {
-    const o = cardZoneOverlap(0.5, 0.745, 0, W, H)!;
+    const ny = nyForFrac(0.2);
+    const o = cardZoneOverlap(0.5, ny, 0, W, H)!;
     expect(o.frac).toBeGreaterThan(ZONE_PRIVACY_FRAC);
-    expect(cardZoneOwner(0.5, 0.745, 0, W, H)).toBe(0); // above threshold → owned
+    expect(cardZoneOwner(0.5, ny, 0, W, H)).toBe(0); // above threshold → owned
   });
 });
 
