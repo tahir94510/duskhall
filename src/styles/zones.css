@@ -1,22 +1,29 @@
 .zone {
   position: relative;
   border-radius: var(--r-zone);
-  background: rgba(18, 18, 18, 0.28);
+  /* A premium frosted tray: a faint top-lit vertical gradient over the felt gives
+     the panel real depth, and an inset top catch-light + dark base edge make it
+     read as a carved surface rather than a flat wash. */
+  background:
+    linear-gradient(180deg, rgba(243, 239, 229, 0.05) 0%, rgba(18, 18, 18, 0) 38%),
+    rgba(16, 16, 16, 0.3);
   border: 1px solid var(--line);
-  backdrop-filter: blur(10px) saturate(110%);
-  -webkit-backdrop-filter: blur(10px) saturate(110%);
-  transition: border-color var(--dur) var(--ease), opacity var(--dur) var(--ease);
+  box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.05), inset 0 0 0 1px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(12px) saturate(112%);
+  -webkit-backdrop-filter: blur(12px) saturate(112%);
+  transition: border-color var(--dur) var(--ease), opacity var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
   isolation: isolate;
   z-index: var(--z-zone);
   pointer-events: none;
 }
 
-/* Self zone stays glass-clear so the owner reads their hand at a glance. */
+/* Self zone stays glass-clear so the owner reads their hand at a glance, but keeps
+   a soft inner frame + top catch-light so it still reads as a real, premium tray. */
 .zone--self {
-  background: rgba(18, 18, 18, 0.12);
+  background: linear-gradient(180deg, rgba(243, 239, 229, 0.045) 0%, rgba(18, 18, 18, 0) 42%), rgba(18, 18, 18, 0.1);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  box-shadow: inset 0 0 0 1px rgba(243, 239, 229, 0.06);
+  box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.07), inset 0 0 0 1px rgba(243, 239, 229, 0.06);
 }
 
 /* The player name, status light and host kick control no longer live inside the
@@ -26,7 +33,14 @@
    panel + its occupancy state (colour / dimming). */
 
 .zone--empty { opacity: 0.3; color: var(--ivory-mute); }
-.zone--active { color: var(--seat-color); border-color: color-mix(in oklab, var(--seat-color) 38%, transparent); opacity: 1; }
+.zone--active {
+  color: var(--seat-color);
+  border-color: color-mix(in oklab, var(--seat-color) 42%, transparent);
+  opacity: 1;
+  /* A whisper of the seat accent inside the frame so an occupied tray glows just
+     enough to read as "live", over the shared top catch-light. */
+  box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.06), inset 0 0 0 1px color-mix(in oklab, var(--seat-color) 16%, transparent);
+}
 /* Dropped seat: the player lost connection / closed the tab but did NOT leave.
    Their area stays reserved and clearly "asleep" (dimmed, dashed) — their cards
    remain private — until they rejoin or explicitly leave. */

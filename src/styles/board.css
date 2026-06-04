@@ -14,8 +14,18 @@
   --field: min(
     calc(100vw - max(env(safe-area-inset-left), 12px) - max(env(safe-area-inset-right), 12px)),
     calc(100dvh - max(env(safe-area-inset-top), 12px) - max(env(safe-area-inset-bottom), 12px)),
-    1180px
+    1400px
   );
+  /* Card size, expressed as a fraction of the SQUARE field so it scales the same
+     proportion on every device (phone → 4K TV). Defined here (not :root) because
+     --field is .table-scoped. Height is 1.45× width. 0.115 keeps the card height
+     (0.167·field) safely inside the ~20.5% private-zone strips AND the card width
+     well under the 0.20 deck↔discard separation, so nothing overflows or collides.
+     Mobile breakpoints (mobile.css) override this with their own field fractions.
+     Growing this is purely visual: stack detection re-measures pixels and privacy
+     uses fixed canonical fractions (see tokens.css / SlotGrid.ts). */
+  --card-w: clamp(72px, calc(var(--field) * 0.115), 176px);
+  --card-h: calc(var(--card-w) * 1.45);
   width: var(--field);
   height: var(--field);
   transform: translate(-50%, -50%);
@@ -113,7 +123,9 @@ body:not(.is-ready) .board__perspective { transition: none; }
   max-width: calc(100% - 12px);
   padding: 1px 2px;
   font-family: var(--font-display);
-  font-size: 11px;
+  /* Scale with the board so names stay legible on a big TV yet never dominate a
+     phone. Ellipsis below keeps a long/translated name from ever spilling. */
+  font-size: clamp(11px, calc(var(--field) * 0.0135), 16px);
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
