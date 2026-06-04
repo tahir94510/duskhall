@@ -74,12 +74,17 @@ async function fetchJson(url: string): Promise<Partial<RuntimeConfig> | null> {
   }
 }
 
-// Resolve config from three layers and return the first that carries Supabase
-// creds. Layers are merged low-to-high so branding (APP_NAME etc.) from any layer
-// still applies even when the creds come from another:
+// Resolve config from three layers, lowest priority first:
 //   1. Vite build-time env (VITE_*)  — local dev / static hosts (.env.local)
 //   2. /api/config edge function    — Vercel runtime env (no rebuild needed)
 //   3. /config.local.json           — gitignored local fallback
+// We stop at the FIRST layer that carries Supabase creds and return it merged with
+// everything gathered so far. This short-circuits the network fetches once we have a
+// working config (faster boot on the common static-host path where VITE_* carries
+// both creds and branding). Consequence: branding (APP_NAME etc.) set ONLY in a
+// LATER layer than the one that first supplies creds is not consulted, so keep a
+// layer's creds and its branding together. When no layer has creds we fall through
+// and return whatever branding all three layers gathered.
 export async function loadConfig(): Promise<RuntimeConfig> {
   let merged: Partial<RuntimeConfig> = stripEmpty(fromViteEnv());
   if (hasCreds(normalise(merged))) return normalise(merged);
@@ -91,8 +96,8 @@ export async function loadConfig(): Promise<RuntimeConfig> {
   const local = await fetchJson("/config.local.json");
   if (local) merged = { ...merged, ...stripEmpty(local) };
 
-  // Return the merged result regardless: with creds if any layer had them, else
-  // whatever branding we gathered (so APP_NAME can still theme the page).
+  // No layer carried creds: return whatever branding we gathered (so APP_NAME can
+  // still theme the page even when Supabase is unconfigured).
   return normalise(merged);
 }
 

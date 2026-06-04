@@ -203,9 +203,14 @@ export class Game {
   // How recently the stored identity must have been active for us to RECOVER our
   // seniority (joinedAt) on (re)connect. A quick refresh/drop is well within this
   // window, so we keep host; an absence longer than this (our seat was released long
-  // ago) yields a fresh seniority, so we can't reclaim host after being gone. Kept a
-  // touch above the away grace so a reconnect that just made the grace still keeps host.
-  private static readonly SENIORITY_RECOVERY_MS = Game.AWAY_GRACE_MS + 10000;
+  // ago) yields a fresh seniority, so we can't reclaim host after being gone.
+  // INVARIANT: this must NOT exceed AWAY_GRACE_MS. Peers vacate an away seat and
+  // transfer host exactly at the away grace; if the recovery window ran longer, an
+  // ex-host returning in the gap [away grace, recovery] would recover its senior
+  // joinedAt AND clear its tombstone (fresh connAt), re-winning host and briefly
+  // splitting the room into two hosts. Matching the windows means once peers have
+  // expired the seat, the returner always ranks last and can never steal host back.
+  private static readonly SENIORITY_RECOVERY_MS = Game.AWAY_GRACE_MS;
 
   constructor(deps: GameDeps) {
     this.host = deps.host;
@@ -944,6 +949,15 @@ export class Game {
       // and respondToHello de-dupes to a single responder, so it cannot storm.
       this.renderAllCards();
       this.bus.requestSync();
+      // A long background can get our heartbeat throttled enough that peers prune us,
+      // run the away grace, and tombstone us. On the Supabase path a reconnect bumps
+      // connAt to clear that; on the LOCAL-only path "online" never fires, so a
+      // re-announce carries the same connAt and the tombstone sticks until its hard
+      // expiry. Stamp a fresh connAt and re-publish here so peers see us as genuinely
+      // back (newer connAt clears the tombstone) the moment we return to the tab. It
+      // is monotonic and harmless when no tombstone exists.
+      this.selfConnAt = Date.now();
+      this.bus.updateMe(this.presencePayload());
     });
   }
 
@@ -1029,6 +1043,13 @@ export class Game {
   // deck/discard PILE (a card-width-relative offset) needs the re-snap, and
   // only for cards still sitting on it.
   private onViewportChanged(): void {
+    // Refresh the cached board size IMMEDIATELY, before the debounce. boardBox() reads
+    // a live center but the cached size, so during the ~50-80ms settle window a drop or
+    // broadcast cursor would be scaled by the pre-resize size and land at the wrong
+    // canonical spot (then persist + sync). An immediate clientWidth read may catch an
+    // intermediate value mid-animation, but that is far closer than the stale one, and
+    // the debounced pass below still re-measures once layout settles to re-seat piles.
+    this.measureBoard();
     if (this.resizePending) return;
     this.resizePending = window.setTimeout(() => {
       this.resizePending = 0;
@@ -2679,7 +2700,12 @@ export class Game {
     window.clearInterval(this.reconcileTimer);
     this.reconcileTimer = window.setInterval(() => {
       if (document.hidden || this.spectator) return;
-      if (this.activeSeats.size <= 1 || !this.isHost()) return;
+      // Gate on the TOTAL roster, not just seated/active players: a host with one
+      // active seat but a spectator (or an away peer) still needs to broadcast the
+      // authoritative removed[] so a peer that missed a one-shot kick/left converges.
+      // Using activeSeats here let a kicked player linger forever on a spectator that
+      // dropped the kick packet, since the reconcile that would heal it went silent.
+      if (this.players.size <= 1 || !this.isHost()) return;
       this.patchVersion++;
       const cards = Array.from(this.state.cards.values()).slice(0, 200).map((c) => this.wireCard(c));
       // Reconcile is a LWW patch (each card keeps its stored ts), sent on a path
