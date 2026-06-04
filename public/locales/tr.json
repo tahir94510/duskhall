@@ -167,6 +167,14 @@
     "empty": "Henüz güncelleme yok.",
     "entries": [
       {
+        "v": "2026-06-04.2",
+        "date": "4 Haziran 2026",
+        "title": "Daha temiz kaldırma",
+        "items": [
+          "Bir desteyi kaldırdığınızda artık her kart aynı anda ağır bir gölge düşürmüyor; eskiden bu, destenin altında kalan her şeyi karanlığa gömüyordu. Deste artık tek, temiz bir gölgeyle havalanıyor ve altındaki masa okunaklı kalıyor."
+        ]
+      },
+      {
         "v": "2026-06-04",
         "date": "4 Haziran 2026",
         "title": "Daha büyük, daha zengin, daha sessiz masa",

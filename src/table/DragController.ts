@@ -195,6 +195,12 @@ export class DragController {
         el.classList.add("is-held");
       }
     }
+    // Only the TOP card of a lifted pile carries the big drop shadow; the cards
+    // beneath keep the light resting shadow. Otherwise a 50+ card deck stacks 50+
+    // heavy shadow haloes into a black smear that buries everything under it. The
+    // pile then reads as ONE lifted object with a single clean shadow.
+    const lead = ordered.length ? els.get(ordered[ordered.length - 1]!.id) : undefined;
+    if (lead) lead.classList.add("is-held-lead");
 
     this.session = {
       pointerId: e.pointerId,
@@ -275,7 +281,7 @@ export class DragController {
       for (const id of s.ids) {
         const el = s.els.get(id);
         if (!el) continue;
-        el.classList.remove("is-held");
+        el.classList.remove("is-held", "is-held-lead");
         const c = this.state.cards.get(id);
         if (c) el.style.zIndex = String(c.z);
       }
@@ -333,7 +339,7 @@ export class DragController {
       const el = s.els.get(id);
       if (!el) continue;
       el.style.transform = `translate3d(${c.x * m.width - m.cardW / 2}px, ${c.y * m.height - m.cardH / 2}px, 0) rotate(${c.rot * 90}deg)`;
-      el.classList.remove("is-held");
+      el.classList.remove("is-held", "is-held-lead");
       // Restore the resting z immediately so there is no one-frame gap where the
       // dropped card still sits in the held band.
       el.style.zIndex = String(c.z);

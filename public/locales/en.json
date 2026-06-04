@@ -167,6 +167,14 @@
     "empty": "No updates yet.",
     "entries": [
       {
+        "v": "2026-06-04.2",
+        "date": "June 4, 2026",
+        "title": "Cleaner lifting",
+        "items": [
+          "Lifting a deck no longer casts a heavy shadow from every card at once, which used to bury whatever sat beneath the pile in darkness. The pile now floats with one clean shadow and the table stays readable underneath it."
+        ]
+      },
+      {
         "v": "2026-06-04",
         "date": "June 4, 2026",
         "title": "A bigger, richer, quieter table",

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.6: One shadow per lifted pile
+
+- **Lifted-deck shadow no longer buries the table.** v0.9.3 gave the held card a big
+  drop shadow, but it was applied to EVERY card in a lifted pile (`.card.is-held::before`),
+  so picking up a 50+ card deck stacked dozens of heavy shadow haloes into a black smear
+  that swallowed everything beneath it. The held cards now keep the light resting shadow
+  and only the TOP card of the pile (`.is-held-lead`, set by `DragController` on grab and
+  cleared on release/drop) carries the big lift shadow, so the pile reads as one floating
+  object and the table stays legible. Matches the tokens.css note that card shadows must
+  stay light because they compound through a deep stack.
+
 ## 0.9.5: Join-by-code and cursor fixes
 
 - **Join by code rejects garbage.** `parseRoomInput`'s last-resort scan was greedy:

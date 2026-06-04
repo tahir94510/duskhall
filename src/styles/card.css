@@ -42,7 +42,12 @@
   filter: brightness(1.03);
   transition: filter var(--dur) var(--ease);
 }
-.card.is-held::before { box-shadow: var(--shadow-card-held); }
+/* Held cards keep the LIGHT resting shadow so a lifted deck doesn't stack dozens
+   of heavy haloes into a black smear that buries everything beneath it. Only the
+   top card of the lifted pile (.is-held-lead, set by DragController) carries the
+   big drop shadow, so the whole pile reads as one object floating above the table. */
+.card.is-held::before { box-shadow: var(--shadow-card); }
+.card.is-held.is-held-lead::before { box-shadow: var(--shadow-card-held); }
 
 /* Cards mid flip/shuffle are lifted into the same band (inline z) so undercards
    never flash above a still-animating card. */
