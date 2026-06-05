@@ -68,13 +68,14 @@
 }
 
 /* Trapezoid placement on the 3-track board grid (board.css). Each zone spans its WHOLE board
-   edge (the edge band, 28% deep) and is clipped to a trapezoid: wide at the board edge,
-   tapering to the inner 44% so adjacent zones meet along the board diagonals with no overlap
-   and the centre 0.44 x 0.44 stays free for the deck/discard. The clip matches the canonical
-   nearest-edge split in SlotGrid.ts, so what looks private IS private. Each hand area is now
-   nearly the full edge wide, so a player reads their whole hand at a glance. The inner taper
-   is 0.28 of the board: 28% of the strip's long side, 100% of its depth (a true 45deg corner). */
-.zone--top { grid-column: 1 / 4; grid-row: 1; clip-path: polygon(0% 0%, 100% 0%, 72% 100%, 28% 100%); }
-.zone--left { grid-column: 1; grid-row: 1 / 4; clip-path: polygon(0% 0%, 100% 28%, 100% 72%, 0% 100%); }
-.zone--right { grid-column: 3; grid-row: 1 / 4; clip-path: polygon(100% 0%, 100% 100%, 0% 72%, 0% 28%); }
-.zone--self, .zone--bottom { grid-column: 1 / 4; grid-row: 3; clip-path: polygon(28% 0%, 72% 0%, 100% 100%, 0% 100%); }
+   edge (the edge band, 24% deep) and is clipped to a trapezoid: wide at the board edge,
+   tapering to the inner 52% so adjacent zones meet along the board diagonals with no overlap
+   and the centre 0.52 x 0.52 stays free for the deck/discard and the tableau shelves. The clip
+   matches the canonical nearest-edge split in SlotGrid.ts, so what looks private IS private.
+   Each hand area is still nearly the full edge wide. The inner taper is 0.24 of the board: 24%
+   of the strip's long side, 100% of its depth (a true 45deg corner). Keep these percentages in
+   lockstep with SlotGrid ZONE_DEPTH and the board.css grid tracks. */
+.zone--top { grid-column: 1 / 4; grid-row: 1; clip-path: polygon(0% 0%, 100% 0%, 76% 100%, 24% 100%); }
+.zone--left { grid-column: 1; grid-row: 1 / 4; clip-path: polygon(0% 0%, 100% 24%, 100% 76%, 0% 100%); }
+.zone--right { grid-column: 3; grid-row: 1 / 4; clip-path: polygon(100% 0%, 100% 100%, 0% 76%, 0% 24%); }
+.zone--self, .zone--bottom { grid-column: 1 / 4; grid-row: 3; clip-path: polygon(24% 0%, 76% 0%, 100% 100%, 0% 100%); }

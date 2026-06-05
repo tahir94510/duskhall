@@ -2936,6 +2936,11 @@ export class Game {
         }
       }
     }
+    // Mark the local player's own tableau shelf so only it shows the "Seals · Servants" label
+    // (always rotated to the bottom, horizontal), keeping rivals' shelves as clean frames.
+    for (const shelf of this.refs.slotLayer.querySelectorAll<HTMLElement>(".tableau-shelf")) {
+      shelf.classList.toggle("is-self", !this.spectator && Number(shelf.dataset.seat) === this.self.seat);
+    }
   }
 
 

@@ -95,6 +95,7 @@ export function buildTable(host: HTMLElement): BoardRefs {
   };
 
   paintSlotGrid(refs);
+  paintTableauShelves(refs);
   return refs;
 }
 
@@ -116,8 +117,39 @@ function paintSlotGrid(refs: BoardRefs): void {
   }
 }
 
+// One tableau shelf per seat: a single framed band in the public ring just in front of each
+// player's hand zone, where they lay out their face-up Seals and Servants OVERLAPPING (each
+// half shown), exactly like a fanned row in hand. It is a guide, not a snap target, so it can
+// never crowd or break the layout; cards may extend past it. The four shelves are congruent
+// (each 0.30 in from its own board edge) so every seat gets the same area, and they sit clear
+// of the central deck/discard. They live in the rotating board layer, so each player sees their
+// own shelf horizontal at the bottom (label upright) and the rivals' shelves around the table.
+const SHELVES: Array<{ seat: Seat; left: number; top: number; w: number; h: number }> = [
+  { seat: 0, left: 50, top: 70, w: 48, h: 12 },
+  { seat: 1, left: 50, top: 30, w: 48, h: 12 },
+  { seat: 2, left: 30, top: 50, w: 12, h: 48 },
+  { seat: 3, left: 70, top: 50, w: 12, h: 48 }
+];
+
+function paintTableauShelves(refs: BoardRefs): void {
+  for (const s of SHELVES) {
+    const shelf = document.createElement("div");
+    shelf.className = "tableau-shelf";
+    shelf.dataset.seat = String(s.seat);
+    shelf.style.left = `${s.left}%`;
+    shelf.style.top = `${s.top}%`;
+    shelf.style.width = `${s.w}%`;
+    shelf.style.height = `${s.h}%`;
+    // The label counter-rotates the board rotation so it reads upright for the local viewer
+    // (matching the deck/discard labels), and is updated on language change by refreshDockLabels.
+    shelf.innerHTML = `<span class="tableau-shelf__label">${escapeHtml(t("table.tableau"))}</span>`;
+    refs.slotLayer.appendChild(shelf);
+  }
+}
+
 export function repaintSlots(refs: BoardRefs): void {
   paintSlotGrid(refs);
+  paintTableauShelves(refs);
 }
 
 // Re-label the deck/discard markers when the language changes.
@@ -126,6 +158,10 @@ export function refreshDockLabels(refs: BoardRefs): void {
   const discard = refs.discardSlot.querySelector<HTMLElement>(".dock__label");
   if (deck) deck.textContent = t("table.deck");
   if (discard) discard.textContent = t("table.discard");
+  // Per-seat tableau shelf labels share the language refresh.
+  for (const label of refs.slotLayer.querySelectorAll<HTMLElement>(".tableau-shelf__label")) {
+    label.textContent = t("table.tableau");
+  }
 }
 
 function escapeHtml(s: string): string {

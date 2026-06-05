@@ -44,17 +44,18 @@
      variables so the non-rotating seat-label layer (.board__labels) can reuse the
      EXACT same tracks/gap and stay pixel-aligned with the zones at every
      breakpoint (mobile overrides only re-set these variables). */
-  /* Three tracks per axis: the edge bands are 28% deep and the centre is the 44% middle. Each
+  /* Three tracks per axis: the edge bands are 24% deep and the centre is the 52% middle. Each
      private zone spans its WHOLE edge (full row/column) and is clipped to a trapezoid in
      zones.css, so every seat's hand area is nearly the full edge wide while the four trapezoids
-     meet along the diagonals (no overlap) and the centre 0.44 x 0.44 cell stays free for the
-     deck/discard. 28% deep matches the canonical ZONE_DEPTH (SlotGrid.ts) so the drawn panel
-     and the private area line up exactly. One depth on every breakpoint keeps the proportion
-     identical across devices. Rows == cols so the board stays square-symmetric for the 90° seat
-     rotation, and the four trapezoids stay congruent so every seat's area is the same size.
-     Keep these tracks in lockstep with the SlotGrid ZONE_DEPTH and the zones.css clip-paths. */
-  --grid-cols: minmax(68px, 28%) 1fr minmax(68px, 28%);
-  --grid-rows: minmax(68px, 28%) 1fr minmax(68px, 28%);
+     meet along the diagonals (no overlap) and the centre 0.52 x 0.52 cell stays free for the
+     deck/discard AND the per-seat tableau shelves. 24% deep matches the canonical ZONE_DEPTH
+     (SlotGrid.ts) so the drawn panel and the private area line up exactly. One depth on every
+     breakpoint keeps the proportion identical across devices. Rows == cols so the board stays
+     square-symmetric for the 90° seat rotation, and the four trapezoids stay congruent so every
+     seat's area is the same size. Keep these tracks in lockstep with the SlotGrid ZONE_DEPTH
+     and the zones.css clip-paths. */
+  --grid-cols: minmax(60px, 24%) 1fr minmax(60px, 24%);
+  --grid-rows: minmax(60px, 24%) 1fr minmax(60px, 24%);
   --grid-gap: clamp(6px, 1.4vmin, 16px);
   grid-template-columns: var(--grid-cols);
   grid-template-rows: var(--grid-rows);
@@ -368,6 +369,47 @@ body:not(.is-ready) .board__perspective { transition: none; }
   background: rgba(243, 239, 229, 0.04);
 }
 
+/* Per-seat tableau shelf: a single framed band in the public ring in front of each player,
+   where they lay out face-up Seals and Servants overlapping. Sized/placed by
+   Board.paintTableauShelves (inline left/top/width/height as board fractions), so it scales
+   identically on every device. A quiet carved frame so it reads as a real surface without
+   adding noise; cards rest ON TOP of it (higher z). */
+.tableau-shelf {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: var(--r-card);
+  border: 1px dashed rgba(243, 239, 229, 0.11);
+  background: linear-gradient(180deg, rgba(243, 239, 229, 0.025) 0%, rgba(243, 239, 229, 0) 72%);
+  box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.05), inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+/* The shelf label (e.g. "Seals · Servants") shows only on YOUR OWN shelf, which the board
+   rotation always brings to the bottom (horizontal), so the label never overflows a narrow
+   side shelf. Rivals' shelves stay clean frames. The label counter-rotates the board so it
+   reads upright for the local viewer, exactly like the deck/discard labels. */
+.tableau-shelf__label { display: none; }
+.tableau-shelf.is-self .tableau-shelf__label { display: block; }
+.tableau-shelf__label {
+  font-family: var(--font-display);
+  font-size: clamp(7px, calc(var(--card-w) * 0.115), 11px);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ivory-mute);
+  opacity: 0.62;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  user-select: none;
+  transform: rotate(calc(-1 * var(--board-rot, 0deg)));
+  transform-origin: center;
+  transition: transform var(--dur-slow) var(--ease);
+}
+body:not(.is-ready) .tableau-shelf__label { transition: none; }
+
 .dock {
   position: absolute;
   inset: 0;
@@ -431,12 +473,14 @@ body:not(.is-ready) .board__perspective { transition: none; }
 }
 body:not(.is-ready) .dock__label { transition: none; }
 
-/* The marker CENTRES sit at DECK_NX / DISCARD_NX (constants.ts: 0.40 / 0.60) of
+/* The marker CENTRES sit at DECK_NX / DISCARD_NX (constants.ts: 0.43 / 0.57) of
    the board, so a dealt pile (stored at those same centre fractions) lands dead
-   centre on its marker on every device. Keep these percentages in sync with
-   constants.ts. translate(-50%, -50%) centres the box on the point. */
-.dock__slot--deck { left: 40%; transform: translate(-50%, -50%); }
-.dock__slot--discard { left: 60%; transform: translate(-50%, -50%); }
+   centre on its marker on every device. The two piles sit a little closer together
+   than before so the public centre opens a tableau-shelf band in front of every seat
+   (incl. the side seats) without the deck/discard intruding. Keep these percentages in
+   sync with constants.ts. translate(-50%, -50%) centres the box on the point. */
+.dock__slot--deck { left: 43%; transform: translate(-50%, -50%); }
+.dock__slot--discard { left: 57%; transform: translate(-50%, -50%); }
 
 .dock__slot.is-hot {
   border-color: rgba(243, 239, 229, 0.62);

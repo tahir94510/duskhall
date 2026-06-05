@@ -48,9 +48,12 @@ interface ZoneRect {
   // For left seat, seals are on the inner edge (x near 0.28), etc.
 }
 
-// How deep each edge band reaches in from its board edge. The centre square of side
-// (1 - 2*depth) = 0.44 stays public for the shared deck/discard.
-export const ZONE_DEPTH = 0.28;
+// How deep each edge band (private hand zone) reaches in from its board edge. The centre
+// square of side (1 - 2*depth) = 0.52 stays public, holding the shared deck/discard AND a
+// thin tableau shelf in front of each player (where face-up Seals/Servants are laid out,
+// overlapping). 0.24 keeps the hand a generous full-edge trapezoid while opening that shelf
+// band; ZONES, the CSS grid tracks and the trapezoid clip-paths all key off this value.
+export const ZONE_DEPTH = 0.24;
 
 // The full-width edge band for each seat (the trapezoid's bounding rectangle). These OVERLAP
 // at the corners by design; the diagonal split between adjacent seats is resolved by
