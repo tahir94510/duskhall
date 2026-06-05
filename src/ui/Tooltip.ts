@@ -176,22 +176,45 @@ export class Tooltip {
     this.el.classList.add("is-visible");
   }
 
-  // Show the panel for a card def on demand, anchored to an arbitrary element (the clickable
-  // card name in the rulebook). No card-element/face-up checks — the rulebook always shows the
-  // full reference. Sticky (tap outside to dismiss) and elevated above the modal it sits over.
-  showForDef(defId: string, anchor: HTMLElement): void {
+  // Show the panel for a card def on demand, anchored to an arbitrary element (a card name in
+  // the rulebook). No card-element/face-up checks — the rulebook always shows the full
+  // reference. `sticky` (the default, for a click/tap) keeps it until a tap outside; a hover
+  // passes sticky=false so it hides on mouse-leave. Elevated above the modal it sits over.
+  showForDef(defId: string, anchor: HTMLElement, sticky = true): void {
     window.clearTimeout(this.showTimer);
     if (!this.renderDef(defId)) return;
+    this.anchorTo(anchor, sticky);
+  }
+
+  // A glossary TERM panel (no art): just a title and a definition, reusing the same panel so
+  // a rules term (e.g. Ether Resonance) reads like a card's info. Same sticky/hover rule.
+  showTerm(title: string, def: string, anchor: HTMLElement, sticky = true): void {
+    window.clearTimeout(this.showTimer);
+    this.el.classList.remove("is-visible", "has-art");
+    this.el.style.backgroundImage = "";
+    this.el.innerHTML = `
+      <div class="tooltip__scrim" aria-hidden="true"></div>
+      <div class="tooltip__title">${escapeHtml(title)}</div>
+      <div class="tooltip__body">${escapeHtml(def)}</div>
+    `;
+    this.anchorTo(anchor, sticky);
+  }
+
+  // Position the (already rendered) panel at an anchor element and reveal it.
+  private anchorTo(anchor: HTMLElement, sticky: boolean): void {
     const r = anchor.getBoundingClientRect();
     this.mouseX = r.left + r.width / 2;
     this.mouseY = r.top;
-    this.sticky = true;
-    this.active = { defId, cardEl: anchor };
+    this.sticky = sticky;
+    this.active = { defId: "", cardEl: anchor };
     this.el.classList.add("is-elevated");
     this.position();
     void this.el.offsetWidth;
     this.el.classList.add("is-visible");
   }
+
+  /** True while a tap-opened (sticky) panel is up, so a hover-leave handler can leave it be. */
+  isSticky(): boolean { return this.sticky; }
 
   private position(): void {
     const margin = 12;

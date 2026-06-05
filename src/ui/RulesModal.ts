@@ -12,6 +12,18 @@ function buildNameToId(): Map<string, string> {
   return m;
 }
 
+// Glossary terms (non-card rules concepts) that get the same hover/tap info panel. Localised
+// term text -> glossary key. Keep this list in step with the `glossary` block in the locales.
+const GLOSSARY_KEYS = ["etherResonance", "ascension", "servantShield"];
+function buildTermToKey(): Map<string, string> {
+  const m = new Map<string, string>();
+  for (const key of GLOSSARY_KEYS) {
+    const term = t(`glossary.${key}.term`);
+    if (term && term !== `glossary.${key}.term`) m.set(term, key);
+  }
+  return m;
+}
+
 interface RuleSection {
   id: string;
   title: string;
@@ -26,12 +38,39 @@ function applyInline(escaped: string): string {
     .replace(/(^|\s)_([^_]+)_(?=\s|$|[.,;:!?])/g, '$1<em>$2</em>');
 }
 
-// Line-level rendering for paragraphs and list items: bold a leading label
-// that ends in a colon ("HAND:", "CREATE (1 HP):", "Time Rift:") so the
-// rulebook reads as structured definitions instead of a flat wall of text.
-function richLine(raw: string, nameToId?: Map<string, string>): string {
-  // Detect the leading "Label: rest" on the RAW line so a card-name label can be matched
-  // against nameToId (whose keys are unescaped), then escape each part for output.
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Inline-link every card name and glossary term wherever it appears in a line, so hovering
+// (or tapping) it opens the same info panel the table uses. Matches are taken on the RAW text
+// at word boundaries (Unicode-aware, so Turkish letters and a trailing apostrophe-suffix are
+// handled), longest phrase first so "Shadow Slayer" wins over "Shadow". Gaps are escaped and
+// run through the markdown-lite, so the output HTML is only our own generated tags.
+function linkify(raw: string, nameToId?: Map<string, string>, termToKey?: Map<string, string>): string {
+  const phrases = [...(nameToId?.keys() ?? []), ...(termToKey?.keys() ?? [])].filter(Boolean).sort((a, b) => b.length - a.length);
+  if (!phrases.length) return applyInline(escape(raw));
+  const re = new RegExp("(?<![\\p{L}\\d])(" + phrases.map(escapeRegExp).join("|") + ")(?![\\p{L}\\d])", "gu");
+  let out = "";
+  let last = 0;
+  for (let m = re.exec(raw); m; m = re.exec(raw)) {
+    out += applyInline(escape(raw.slice(last, m.index)));
+    const phrase = m[1]!;
+    const id = nameToId?.get(phrase);
+    const term = termToKey?.get(phrase);
+    if (id) out += `<button type="button" class="card-link" data-card-id="${escape(id)}">${escape(phrase)}</button>`;
+    else if (term) out += `<button type="button" class="term-link" data-term="${escape(term)}">${escape(phrase)}</button>`;
+    else out += applyInline(escape(phrase));
+    last = m.index + phrase.length;
+  }
+  out += applyInline(escape(raw.slice(last)));
+  return out;
+}
+
+// Line-level rendering for paragraphs and list items: bold a leading label that ends in a
+// colon ("HAND:", "CREATE (1 HP):", "Time Rift:") so the rulebook reads as structured
+// definitions, and inline-link every card/term in the rest.
+function richLine(raw: string, nameToId?: Map<string, string>, termToKey?: Map<string, string>): string {
   const m = raw.match(/^([^:.!?]{2,46}):(\s+)(.+)$/s);
   if (m) {
     const label = m[1]!.trim();
@@ -39,24 +78,24 @@ function richLine(raw: string, nameToId?: Map<string, string>): string {
     const labelHtml = id
       ? `<button type="button" class="card-link" data-card-id="${escape(id)}">${escape(m[1]!)}</button>`
       : `<strong>${escape(m[1]!)}</strong>`;
-    return `${labelHtml}:${m[2]}${applyInline(escape(m[3]!))}`;
+    return `${labelHtml}:${m[2]}${linkify(m[3]!, nameToId, termToKey)}`;
   }
-  return applyInline(escape(raw));
+  return linkify(raw, nameToId, termToKey);
 }
 
-function renderBody(lines: string[], nameToId?: Map<string, string>): string {
+function renderBody(lines: string[], nameToId?: Map<string, string>, termToKey?: Map<string, string>): string {
   const out: string[] = [];
   let bulletBuffer: string[] = [];
   let numberedBuffer: string[] = [];
 
   const flushBullets = () => {
     if (!bulletBuffer.length) return;
-    out.push(`<ul>${bulletBuffer.map((l) => `<li>${richLine(l, nameToId)}</li>`).join("")}</ul>`);
+    out.push(`<ul>${bulletBuffer.map((l) => `<li>${richLine(l, nameToId, termToKey)}</li>`).join("")}</ul>`);
     bulletBuffer = [];
   };
   const flushNumbered = () => {
     if (!numberedBuffer.length) return;
-    out.push(`<ol>${numberedBuffer.map((l) => `<li>${applyInline(escape(l))}</li>`).join("")}</ol>`);
+    out.push(`<ol>${numberedBuffer.map((l) => `<li>${linkify(l, nameToId, termToKey)}</li>`).join("")}</ol>`);
     numberedBuffer = [];
   };
   const flushAll = () => { flushBullets(); flushNumbered(); };
@@ -71,8 +110,8 @@ function renderBody(lines: string[], nameToId?: Map<string, string>): string {
       const m = line.match(/^(Q\.|S\.)\s+(.+?)\s+(A\.|C\.)\s+(.+)$/);
       if (m) {
         out.push(
-          `<div class="qa"><b>${escape(m[1]!)}</b><span>${applyInline(escape(m[2]!))}</span>` +
-          `<b>${escape(m[3]!)}</b><span>${applyInline(escape(m[4]!))}</span></div>`
+          `<div class="qa"><b>${escape(m[1]!)}</b><span>${linkify(m[2]!, nameToId, termToKey)}</span>` +
+          `<b>${escape(m[3]!)}</b><span>${linkify(m[4]!, nameToId, termToKey)}</span></div>`
         );
         continue;
       }
@@ -94,7 +133,7 @@ function renderBody(lines: string[], nameToId?: Map<string, string>): string {
     }
 
     flushAll();
-    out.push(`<p>${richLine(line, nameToId)}</p>`);
+    out.push(`<p>${richLine(line, nameToId, termToKey)}</p>`);
   }
   flushAll();
   return out.join("");
@@ -105,10 +144,11 @@ export function openRulesModal(modal: Modal, tooltip?: Tooltip): void {
   const subtitle = `${t("rulesDoc.subtitle")} • ${t("rulesDoc.tldr")}`;
   const sections = tArr<RuleSection>("rulesDoc.sections");
   const nameToId = buildNameToId();
+  const termToKey = buildTermToKey();
   const tocHtml = sections.map((s) => `<a href="#sec-${s.id}">${escape(s.title)}</a>`).join("");
-  const introHtml = `<p class="intro">${applyInline(escape(t("rulesDoc.intro")))}</p>`;
+  const introHtml = `<p class="intro">${linkify(t("rulesDoc.intro"), nameToId, termToKey)}</p>`;
   const sectionsHtml = sections
-    .map((s) => `<section id="sec-${s.id}"><h2>${escape(s.title)}</h2>${renderBody(s.body || [], nameToId)}</section>`)
+    .map((s) => `<section id="sec-${s.id}"><h2>${escape(s.title)}</h2>${renderBody(s.body || [], nameToId, termToKey)}</section>`)
     .join("");
   const closingHtml = `<div class="closing">${escape(t("rulesDoc.closing"))}</div>`;
   const bodyHtml = `<div class="rules">
@@ -128,15 +168,38 @@ export function openRulesModal(modal: Modal, tooltip?: Tooltip): void {
     });
   });
 
-  // Clicking a card name (in the encyclopedia or anywhere it appears) opens that card's
-  // info panel, reusing the live card tooltip so it reads identically on the table.
-  if (tooltip) {
-    body?.querySelectorAll<HTMLButtonElement>(".card-link").forEach((btn) => {
+  // A card name or glossary term in the rulebook opens the same info panel the table uses:
+  // on HOVER after a short delay (like hovering a card), and on click/tap (sticky, for touch).
+  // The hover-leave only hides a non-pinned panel, so a tapped one stays until a tap outside.
+  if (tooltip && body) {
+    const HOVER_DELAY = 300;
+    let hoverTimer = 0;
+    const wire = (btn: HTMLElement, run: (sticky: boolean) => void) => {
+      btn.addEventListener("pointerenter", (e) => {
+        if ((e as PointerEvent).pointerType === "touch") return;
+        window.clearTimeout(hoverTimer);
+        hoverTimer = window.setTimeout(() => run(false), HOVER_DELAY);
+      });
+      btn.addEventListener("pointerleave", () => {
+        window.clearTimeout(hoverTimer);
+        if (!tooltip.isSticky()) tooltip.hide();
+      });
       btn.addEventListener("click", (e) => {
         e.preventDefault();
-        const id = btn.dataset.cardId;
-        if (id) tooltip.showForDef(id, btn);
+        window.clearTimeout(hoverTimer);
+        run(true);
       });
+    };
+    body.querySelectorAll<HTMLButtonElement>(".card-link").forEach((btn) => {
+      const id = btn.dataset.cardId;
+      if (id) wire(btn, (sticky) => tooltip.showForDef(id, btn, sticky));
+    });
+    body.querySelectorAll<HTMLButtonElement>(".term-link").forEach((btn) => {
+      const key = btn.dataset.term;
+      if (!key) return;
+      const tt = t(`glossary.${key}.term`);
+      const def = t(`glossary.${key}.def`);
+      wire(btn, (sticky) => tooltip.showTerm(tt, def, btn, sticky));
     });
   }
 }

@@ -76,6 +76,20 @@
     "youSuffix": " (you)",
     "droppedSuffix": " (away)"
   },
+  "glossary": {
+    "etherResonance": {
+      "term": "Ether Resonance",
+      "def": "When the draw deck runs out, play pauses and the Discard is shuffled into a fresh deck (once per cycle). Each player then sacrifices one card: a Seal or Servant of their choice from their tableau, or, only if their tableau is empty, one card at random from their hand. If both the deck and the Discard are empty, nothing happens."
+    },
+    "ascension": {
+      "term": "Ascension",
+      "def": "At the end of your Closing phase, with at least 3 Seals on your tableau, you may declare Ascension (this is irrevocable). Every rival then gets one full turn, the Trial, to destroy, steal or disable your Seals. If you still hold at least 3 Seals when the turn returns to you, before your Focus, you win the game."
+    },
+    "servantShield": {
+      "term": "Servant Shield",
+      "def": "While a player has at least one Servant on their tableau, rivals cannot target that player's Seals at all. Every Servant must be destroyed first, even a targetable one such as Runic Warden, before any Seal can be reached."
+    }
+  },
   "kick": {
     "title": "Remove player",
     "body": "Remove {name} from the table? They will be sent to a new, empty room.",

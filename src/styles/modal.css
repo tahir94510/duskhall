@@ -295,6 +295,22 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
 .rules .card-link:hover,
 .rules .card-link:focus-visible { color: #fff; border-bottom-color: var(--ivory-dim); outline: none; }
 
+/* A glossary term (e.g. Ether Resonance): same affordance as a card name but italic, so a
+   rules concept reads distinctly from a card while still inviting a hover for its definition. */
+.rules .term-link {
+  font: inherit;
+  font-style: italic;
+  color: var(--ivory-dim);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: help;
+  border-bottom: 1px dotted var(--line-2);
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.rules .term-link:hover,
+.rules .term-link:focus-visible { color: var(--ivory); border-bottom-color: var(--ivory-dim); outline: none; }
+
 .rules .qa {
   display: grid;
   grid-template-columns: 14px 1fr;

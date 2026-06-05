@@ -76,6 +76,20 @@
     "youSuffix": " (sen)",
     "droppedSuffix": " (uzakta)"
   },
+  "glossary": {
+    "etherResonance": {
+      "term": "Eter Dalgalanması",
+      "def": "Çekme destesi tükendiğinde oyun durur ve Çöplük karıştırılarak yeni deste olur (döngü başına bir kez). Ardından her oyuncu bir kart feda eder: masasından seçtiği bir Mühür ya da Hizmetkâr; yalnızca masası tamamen boşsa elinden rastgele bir kart. Hem deste hem Çöplük boşsa hiçbir şey olmaz."
+    },
+    "ascension": {
+      "term": "Yükseliş",
+      "def": "Kapanış aşamanızın sonunda masanızda en az 3 Mühür varsa Yükseliş ilan edebilirsiniz (geri alınamaz). Sonra her rakip bir tam tur (Yargılama) boyunca Mühürlerinizi yok etmeye, çalmaya ya da etkisiz kılmaya çalışır. Sıra size döndüğünde, Odaklanma'dan önce hâlâ en az 3 Mührünüz duruyorsa oyunu kazanırsınız."
+    },
+    "servantShield": {
+      "term": "Hizmetkâr Kalkanı",
+      "def": "Bir oyuncunun masasında en az bir Hizmetkâr olduğu sürece rakipler o oyuncunun Mühürlerini hiçbir şekilde hedefleyemez. Önce tüm Hizmetkârlar yok edilmelidir; Rünik Bekçi gibi hedeflenebilir olanlar bile, ancak ondan sonra Mühürlere ulaşılabilir."
+    }
+  },
   "kick": {
     "title": "Oyuncuyu çıkar",
     "body": "{name} masadan çıkarılsın mı? Yeni ve boş bir odaya gönderilecek.",
