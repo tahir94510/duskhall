@@ -2419,8 +2419,12 @@ export class Game {
     // authoritative `removed[]` reconcile.
     if (!k.by || !this.hostOrRecent(k.by)) return;
     if (k.target === this.self.id) {
-      // We were kicked: wipe ALL our data for this room so we return as a brand-new
-      // presence (and can't reclaim the seat), then move to a fresh empty room.
+      // We were kicked: clear the old table's peer cursors at once so no rival lingers
+      // on screen during the room switch, wipe ALL our data for this room so we return as
+      // a brand-new presence (and can't reclaim the seat), then move to a fresh empty room.
+      // joinRoom() raises the loader synchronously, so the old table is covered immediately.
+      for (const el of this.cursorEls.values()) el.remove();
+      this.cursorEls.clear();
       this.clearRoomStorage(this.room);
       void this.joinRoom(newRoom()).then(() => toast(t("kick.kicked")));
       return;
