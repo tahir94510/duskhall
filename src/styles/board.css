@@ -113,10 +113,13 @@ body:not(.is-ready) .board__perspective { transition: none; }
   gap: var(--grid-gap);
   pointer-events: none;
 }
-.board__labels .seat-label--bottom { grid-column: 2; grid-row: 3; }
-.board__labels .seat-label--top { grid-column: 2; grid-row: 1; }
-.board__labels .seat-label--left { grid-column: 1; grid-row: 2; }
-.board__labels .seat-label--right { grid-column: 3; grid-row: 2; }
+/* Mirror the pinwheel zone placement (zones.css) so each seat's name/status/kick sits in
+   its own wide hand area. The cluster (positioned below) anchors to the inner edge and
+   centres along the long axis, so left:50% / top:50% still lands at the zone's centre. */
+.board__labels .seat-label--bottom { grid-column: 1 / span 2; grid-row: 3; }
+.board__labels .seat-label--top { grid-column: 2 / span 2; grid-row: 1; }
+.board__labels .seat-label--left { grid-column: 1; grid-row: 1 / span 2; }
+.board__labels .seat-label--right { grid-column: 3; grid-row: 2 / span 2; }
 
 .seat-label {
   position: relative;

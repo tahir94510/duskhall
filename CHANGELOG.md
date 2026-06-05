@@ -14,15 +14,21 @@ constant; no change to sync, privacy logic, stack detection, or the coordinate f
   `1400px` so large monitors and TVs fill more of the screen. Verified across 294
   viewport combinations (260px fold to 4K TV, portrait and landscape): cards never
   overflow their zone, and the deck and discard markers never overlap.
-- **Private zones are deeper and equal for every seat.** Zone depth grew `0.22` to
-  `0.28` (cards now fill about 65% of the zone, with breathing room). The canonical
-  `ZONES` (`src/table/SlotGrid.ts`) and the CSS grid strips (`board.css`,
-  `mobile.css`) move to the same `0.28` in lockstep, so the frosted panel and the
-  real private area line up. The zones are now congruent grid cells (`0.44 x 0.28`,
-  area `0.1232` each): before, bottom/top were `0.68 x 0.22` (area `0.150`) and
-  left/right `0.22 x 0.56` (`0.123`), so seats 0/1 had a 22% larger hand area than
-  seats 2/3, and since each client rotates its own seat to the bottom, players saw
-  different sizes. Now every seat's area is identical after rotation.
+- **Wider, deeper private zones that pinwheel into the board corners.** A square
+  board is required (so a 90deg seat rotation maps the field onto itself and all four
+  players share one coordinate space), which on a wide screen leaves unavoidable side
+  margins; but the board's own corners were unused. Each zone now covers its edge cell
+  plus one adjacent corner cell, so every seat's hand area is a wide `0.72 x 0.28`
+  rectangle (area `0.2016`, 64% larger than a centre-strip-only zone, and much wider),
+  with the free centre cell (`0.44 x 0.44`) holding the deck/discard. The four zones
+  are congruent (each is the next rotated 90deg), tile the board with no overlap, and
+  the canonical `ZONES` (`src/table/SlotGrid.ts`) move in lockstep with the CSS grid
+  spans (`zones.css`, `board.css`). This also fixed a real imbalance: before, bottom/top
+  zones were `0.68 x 0.22` (area `0.150`) and left/right `0.22 x 0.56` (`0.123`), so
+  seats 0/1 had a 22% larger hand area than seats 2/3, and since each client rotates its
+  own seat to the bottom, players saw different sizes. Now every seat's area is
+  identical after rotation (proven: each seat's own zone maps to the same physical
+  bottom slot `[0, 0.72, 0.72, 1]`), and the deck/discard touch no zone.
 - **Privacy footprint tracks the visible card.** `CARD_CANON_W/H` (the shared
   canonical card size used for the conceal/reveal test) was realigned from `0.085`
   (the old desktop card) to `0.125 x 0.181`, matching the enlarged card, so a card
@@ -33,7 +39,10 @@ constant; no change to sync, privacy logic, stack detection, or the coordinate f
 - **Polish.** Card-proportional corner radius and a card-scaled conceal blur (so
   roundness and hidden softness read the same from a 34px phone card to a 178px TV
   card), a crisper face-up card edge, a clearer lifted-card shadow, premium frosted
-  trays for the private zones, and seat-name type that scales with the board.
+  trays for the private zones, and seat-name type that scales with the board. The 404
+  page and the boot-failure / noscript cards, the only spots that still looked like a
+  generic website, now use the same atmospheric backdrop and premium frosted panel as
+  the live table.
 - **Fix: the header menu could not be closed with the keyboard from its own
   button.** Pressing Space or Enter on the focused "more" button closed the menu via
   keydown, then the browser's synthetic click reopened it. The keydown handler now

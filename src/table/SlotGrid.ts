@@ -20,16 +20,18 @@ export interface SlotPos {
 const SEAL_COUNT = 4;
 const SERVANT_COUNT = 3;
 
-// Each zone occupies a fixed rectangle in canonical space, matching the .table CSS
-// grid strips (28% deep on every breakpoint). The four rects are CONGRUENT — each is
-// 0.44 long x 0.28 deep — so after a seat's 90deg board rotation every player sees an
-// IDENTICAL private area at the bottom of their screen (no seat gets a bigger hand area
-// than another). They also line up with the drawn panel, so what looks private IS private.
+// The four zones PINWHEEL around the centre: each covers its edge cell PLUS one adjacent
+// corner cell, so every seat's hand area is a wide 0.72 x 0.28 rectangle (64% larger than
+// a centre-strip-only zone, and much wider) while staying CONGRUENT, each being the next
+// one rotated 90deg about the centre. After a seat's board rotation every player therefore
+// sees an IDENTICAL hand area. The zones tile the whole board with no overlap, leaving the
+// centre cell (0.44 x 0.44) free for the shared deck/discard. They line up with the drawn
+// panel, so what looks private IS private. The CSS grid spans (zones.css) mirror these.
 //
-// Seat 0 (bottom): x in [0.28, 0.72], y in [0.72, 1.0]
-// Seat 1 (top):    x in [0.28, 0.72], y in [0.0, 0.28]
-// Seat 2 (left):   x in [0.0, 0.28],  y in [0.28, 0.72]
-// Seat 3 (right):  x in [0.72, 1.0],  y in [0.28, 0.72]
+// Seat 0 (bottom): x in [0.0, 0.72], y in [0.72, 1.0]   (bottom edge + bottom-left corner)
+// Seat 1 (top):    x in [0.28, 1.0], y in [0.0, 0.28]   (top edge + top-right corner)
+// Seat 2 (left):   x in [0.0, 0.28], y in [0.0, 0.72]   (left edge + top-left corner)
+// Seat 3 (right):  x in [0.72, 1.0], y in [0.28, 1.0]   (right edge + bottom-right corner)
 
 interface ZoneRect {
   // canonical normalised rect
@@ -46,10 +48,10 @@ interface ZoneRect {
 // still counts as inside it. The inner edge (toward the centre) is the privacy boundary;
 // all four are kept congruent so every seat's area is the same size and shape.
 const ZONES: Record<Seat, ZoneRect> = {
-  0: { x0: 0.28, y0: 0.72, x1: 0.72, y1: 1.0, horizontal: true },
-  1: { x0: 0.28, y0: 0.0, x1: 0.72, y1: 0.28, horizontal: true },
-  2: { x0: 0.0, y0: 0.28, x1: 0.28, y1: 0.72, horizontal: false },
-  3: { x0: 0.72, y0: 0.28, x1: 1.0, y1: 0.72, horizontal: false }
+  0: { x0: 0.0, y0: 0.72, x1: 0.72, y1: 1.0, horizontal: true },
+  1: { x0: 0.28, y0: 0.0, x1: 1.0, y1: 0.28, horizontal: true },
+  2: { x0: 0.0, y0: 0.0, x1: 0.28, y1: 0.72, horizontal: false },
+  3: { x0: 0.72, y0: 0.28, x1: 1.0, y1: 1.0, horizontal: false }
 };
 
 // Is a canonical [0,1] point inside a seat's zone rectangle? Canonical (board-
