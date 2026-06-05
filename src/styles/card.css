@@ -53,6 +53,23 @@
    never flash above a still-animating card. */
 .card.is-animating { z-index: var(--z-anim); }
 
+/* Pointer lift (2.5D depth): a hovered card raises off the felt. The flat shadow
+   underlay (::before, a sibling of the 3D inner with NO inline transform, so :hover
+   reaches it cleanly) swells to the mid 'raised' cast and the card brightens a touch,
+   reading as picked up under the pointer. Geometry is untouched — the render loop owns
+   the card transform and the flip owns the inner transform, so a depth read built only
+   from shadow + light can never fight either. Gated to real hovering pointers so a tap
+   never leaves it stuck on touch; skipped for concealed (blurred) rival cards and for
+   cards already held or mid-animation (which carry their own elevation). */
+@media (hover: hover) {
+  .card:not(.is-concealed):not(.is-held):not(.is-animating):hover {
+    filter: brightness(1.045);
+  }
+  .card:not(.is-concealed):not(.is-held):not(.is-animating):hover::before {
+    box-shadow: var(--shadow-card-raised);
+  }
+}
+
 /* During a STACK flip, only the card that ends up on top stays visible and turns;
    the rest are made transparent for the turn so no inner FRONT leaks through at
    the 90° edge-on instant (where backface-visibility hides all faces and you'd

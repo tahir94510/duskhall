@@ -44,13 +44,16 @@
      variables so the non-rotating seat-label layer (.board__labels) can reuse the
      EXACT same tracks/gap and stay pixel-aligned with the zones at every
      breakpoint (mobile overrides only re-set these variables). */
-  /* Side strips = the four private zones. 28% deep gives a substantial hand area
-     (cards fill ~65% of it, with breathing room) and matches the canonical privacy
-     boundary (SlotGrid ZONES, bottom y0 0.72 = 28% from the edge) so the frosted
-     panel and the actual private area line up exactly. One depth on every breakpoint
-     keeps the private-area proportion identical across devices. Rows == cols so the
-     board stays square-symmetric for the 90° seat rotation, and the four strips stay
-     congruent so every seat's area is the same size. */
+  /* Three tracks per axis: the edge strips are 28% deep and the centre is the 44% middle.
+     Each private zone sits in the CENTRE cell along its own edge (a symmetric cross), so the
+     grid lines fall at 0.28 / 0.72 and the four 0.28 x 0.28 CORNERS are left as neutral
+     framing space owned by no one. 28% deep matches the canonical privacy boundary (SlotGrid
+     ZONES, 0.72/0.28) so the frosted panel and the actual private area line up exactly, and
+     the centred strip aligns with the canonical 0.28/0.72 ends. One depth on every breakpoint
+     keeps the private-area proportion identical across devices. Rows == cols so the board
+     stays square-symmetric for the 90° seat rotation, and the four strips stay congruent so
+     every seat's area is the same size. Keep these tracks in lockstep with the SlotGrid ZONES
+     and the zones.css spans. */
   --grid-cols: minmax(68px, 28%) 1fr minmax(68px, 28%);
   --grid-rows: minmax(68px, 28%) 1fr minmax(68px, 28%);
   --grid-gap: clamp(6px, 1.4vmin, 16px);
@@ -113,13 +116,13 @@ body:not(.is-ready) .board__perspective { transition: none; }
   gap: var(--grid-gap);
   pointer-events: none;
 }
-/* Mirror the pinwheel zone placement (zones.css) so each seat's name/status/kick sits in
-   its own wide hand area. The cluster (positioned below) anchors to the inner edge and
-   centres along the long axis, so left:50% / top:50% still lands at the zone's centre. */
-.board__labels .seat-label--bottom { grid-column: 1 / span 2; grid-row: 3; }
-.board__labels .seat-label--top { grid-column: 2 / span 2; grid-row: 1; }
-.board__labels .seat-label--left { grid-column: 1; grid-row: 1 / span 2; }
-.board__labels .seat-label--right { grid-column: 3; grid-row: 2 / span 2; }
+/* Mirror the centered zone placement (zones.css) so each seat's name/status/kick sits in
+   its own hand area. The cluster (positioned below) anchors to the inner edge and centres
+   along the long axis, so left:50% / top:50% still lands at the zone's centre. */
+.board__labels .seat-label--bottom { grid-column: 2; grid-row: 3; }
+.board__labels .seat-label--top { grid-column: 2; grid-row: 1; }
+.board__labels .seat-label--left { grid-column: 1; grid-row: 2; }
+.board__labels .seat-label--right { grid-column: 3; grid-row: 2; }
 
 .seat-label {
   position: relative;
@@ -252,7 +255,11 @@ body:not(.is-ready) .board__perspective { transition: none; }
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(135% 125% at 50% 40%, rgba(0, 0, 0, 0) 42%, rgba(0, 0, 0, 0.26) 80%, rgba(0, 0, 0, 0.46) 100%);
+    /* A faint warm pool of light at the table's heart so the eye is drawn to the
+       centre of play, painted under the vignette. */
+    radial-gradient(120% 110% at 50% 42%, rgba(243, 239, 229, 0.05) 0%, rgba(243, 239, 229, 0) 30%),
+    /* Deeper edge/corner darkening: the seats read as a lit table, not a flat wash. */
+    radial-gradient(135% 125% at 50% 40%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.30) 78%, rgba(0, 0, 0, 0.54) 100%);
 }
 
 /* Gentle scrim above the background and below the play surface: softens bright
@@ -265,6 +272,64 @@ body:not(.is-ready) .board__perspective { transition: none; }
   background:
     radial-gradient(118% 100% at 50% 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.16) 100%),
     linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.02) 24%, rgba(0, 0, 0, 0.02) 76%, rgba(0, 0, 0, 0.10) 100%);
+}
+
+/* Ornamental field frame: a quiet ivory hairline and a soft cast tracing exactly where the
+   square play field meets the side gutters. On a wide monitor / TV the gutters then read as
+   a deliberate framed border around a lit table, not empty dead space; on a phone (where the
+   field fills the width) it simply hugs the edge, harmless and faint. Centred and sized to
+   the SAME square as the play field (the .table --field expression, recomputed here since the
+   scrim is a sibling of .table), sitting above the felt background but below the table and
+   inert to pointer events, so it never touches gameplay, layout or the coordinate system. */
+.app-scrim::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  --frame-field: min(
+    calc(100vw - max(env(safe-area-inset-left), 12px) - max(env(safe-area-inset-right), 12px)),
+    calc(100dvh - max(env(safe-area-inset-top), 12px) - max(env(safe-area-inset-bottom), 12px)),
+    1400px
+  );
+  width: var(--frame-field);
+  height: var(--frame-field);
+  transform: translate(-50%, -50%);
+  border-radius: 22px;
+  box-shadow:
+    0 0 0 1px var(--gilt-soft),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.28),
+    0 30px 90px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+/* Brand-cohesive corner accents: four small Vaerum rhombus marks at the field corners,
+   ivory at low opacity, echoing the deck back and logo. Only meaningful (and only shown)
+   on wide screens where the framed gutters appear, so a phone stays clean. */
+@media (min-aspect-ratio: 5 / 4) {
+  .app-scrim::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    --frame-field: min(
+      calc(100vw - max(env(safe-area-inset-left), 12px) - max(env(safe-area-inset-right), 12px)),
+      calc(100dvh - max(env(safe-area-inset-top), 12px) - max(env(safe-area-inset-bottom), 12px)),
+      1400px
+    );
+    width: calc(var(--frame-field) + 64px);
+    height: calc(var(--frame-field) + 64px);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 64'><g fill='none' stroke='%23f3efe5' stroke-linecap='round' stroke-linejoin='round'><path d='M24 6 L38 32 L24 58 L10 32 Z' stroke-width='2'/><path d='M24 6 L24 58' stroke-width='1.4'/></g></svg>"),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 64'><g fill='none' stroke='%23f3efe5' stroke-linecap='round' stroke-linejoin='round'><path d='M24 6 L38 32 L24 58 L10 32 Z' stroke-width='2'/><path d='M24 6 L24 58' stroke-width='1.4'/></g></svg>"),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 64'><g fill='none' stroke='%23f3efe5' stroke-linecap='round' stroke-linejoin='round'><path d='M24 6 L38 32 L24 58 L10 32 Z' stroke-width='2'/><path d='M24 6 L24 58' stroke-width='1.4'/></g></svg>"),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 64'><g fill='none' stroke='%23f3efe5' stroke-linecap='round' stroke-linejoin='round'><path d='M24 6 L38 32 L24 58 L10 32 Z' stroke-width='2'/><path d='M24 6 L24 58' stroke-width='1.4'/></g></svg>");
+    background-repeat: no-repeat;
+    background-size: 13px 17px;
+    background-position: top left, top right, bottom left, bottom right;
+    opacity: 0.16;
+  }
 }
 
 .board__layer {
@@ -322,7 +387,12 @@ body:not(.is-ready) .board__perspective { transition: none; }
      the felt — an inset edge gives the empty slot a little carved depth. */
   border: 1px solid rgba(243, 239, 229, 0.3);
   background: radial-gradient(120% 90% at 50% 42%, rgba(243, 239, 229, 0.07) 0%, rgba(243, 239, 229, 0) 72%);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(243, 239, 229, 0.05);
+  /* A carved well: dark inner frame, top catch-light, and a soft inner cast so the
+     empty deck/discard slot reads as a real recessed drop target seated on the felt. */
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(243, 239, 229, 0.06),
+    inset 0 10px 22px rgba(0, 0, 0, 0.34);
   display: grid;
   place-items: center;
   transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);

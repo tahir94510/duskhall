@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.9.11: Symmetric table, deeper atmosphere, pointer-lift depth, framed gutters
+
+A presentation pass to make the table read like a premium, Steam-quality card game
+rather than a flat web page: a balanced symmetric layout, richer depth and atmosphere,
+and a tactile pointer feel. One canonical constant moves with its CSS in lockstep; no
+change to sync, the coordinate frame, stack detection, or what is private (card
+positions stay device independent and identical for every player). 177 tests green.
+
+- **Symmetric centered-cross zones, replacing the pinwheel.** The 0.9.10 pinwheel
+  (each zone grabbing one board corner) read lopsided. Each private zone is now a
+  centered strip in the middle of its own edge (`0.44 x 0.28`, 28% deep), with the four
+  `0.28 x 0.28` corners left as neutral framing space owned by no one. This restores the
+  symmetric you/opponent/left/right layout the design notes describe. The four zones are
+  still exactly congruent (each the next rotated 90deg, equal `0.1232` area) and provably
+  non-overlapping (a 0.28 inset clears the perpendicular strips), so after each client
+  rotates its own seat to the bottom every player sees an identical hand area. The
+  canonical `ZONES` (`src/table/SlotGrid.ts`) and the CSS grid spans (`zones.css`,
+  `board.css`, `mobile.css`, restored to the 3-track grid with lines at 0.28 / 0.72)
+  changed together, so the live drag hit-test and the canonical privacy math agree on
+  every device; the deck/discard dock is clear of every zone.
+- **Deeper table atmosphere.** A faint warm pool of light at the centre of play and a
+  deeper edge vignette so the seats read as a lit table; carved-tray inset shading on the
+  frosted zones and the deck/discard wells so they read as real recessed surfaces.
+- **Pointer-lift depth (2.5D feel).** A hovered card raises off the felt: its flat shadow
+  underlay swells to a mid raised cast and the card brightens slightly. Built only from
+  shadow and light on the card's `::before` underlay, so it never fights the render loop's
+  card transform or the flip, keeping drag and the coordinate system untouched. Gated to
+  hover-capable pointers (no stuck state on touch) and skipped for concealed, held and
+  animating cards. Honors reduced motion.
+- **Framed wide-screen gutters.** On a wide monitor or TV the centered square field used
+  to leave bare side margins. The field boundary now carries a quiet ivory hairline and a
+  soft cast, with four faint Vaerum rhombus corner marks on wide aspect ratios, so the
+  gutters read as a deliberate frame around a lit table. A fixed overlay on the existing
+  scrim layer: above the felt, below the table, inert to pointer events, with no DOM,
+  layout or coordinate impact.
+
 ## 0.9.10: Bigger, consistent cards; deeper, equal private zones; polish
 
 A presentation and consistency pass so the table reads like a premium digital card

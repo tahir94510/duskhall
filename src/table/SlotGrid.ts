@@ -20,18 +20,24 @@ export interface SlotPos {
 const SEAL_COUNT = 4;
 const SERVANT_COUNT = 3;
 
-// The four zones PINWHEEL around the centre: each covers its edge cell PLUS one adjacent
-// corner cell, so every seat's hand area is a wide 0.72 x 0.28 rectangle (64% larger than
-// a centre-strip-only zone, and much wider) while staying CONGRUENT, each being the next
-// one rotated 90deg about the centre. After a seat's board rotation every player therefore
-// sees an IDENTICAL hand area. The zones tile the whole board with no overlap, leaving the
-// centre cell (0.44 x 0.44) free for the shared deck/discard. They line up with the drawn
-// panel, so what looks private IS private. The CSS grid spans (zones.css) mirror these.
+// The four zones are CENTERED edge strips forming a symmetric CROSS with full square (D4)
+// symmetry: each runs along its own board EDGE, centred on it (the middle 44% of the edge)
+// and 0.28 deep. The inset from each corner equals the strip DEPTH (0.28), which is exactly
+// what keeps a strip clear of the perpendicular strips: the four 0.28 x 0.28 CORNERS are
+// left as neutral framing space, owned by no one. This is the calm, symmetric layout the
+// design doc describes (you / opponent / left / right), and it reads BALANCED rather than
+// the lopsided pinwheel it replaces. The strips stay CONGRUENT, each being the next rotated
+// 90deg about the centre (all are the same 0.44 x 0.28 rectangle), so after a seat's board
+// rotation every player sees an IDENTICAL hand area at the bottom, the invariant the shared
+// coordinate frame relies on. The strips never overlap (proven: a 0.28 inset clears the
+// perpendicular 0.28-deep strip) and never reach the centre, leaving it free for the shared
+// deck/discard. They line up with the drawn panel, so what looks private IS private. The CSS
+// grid spans (zones.css) mirror these exact fractions (grid lines at 0.28 and 0.72).
 //
-// Seat 0 (bottom): x in [0.0, 0.72], y in [0.72, 1.0]   (bottom edge + bottom-left corner)
-// Seat 1 (top):    x in [0.28, 1.0], y in [0.0, 0.28]   (top edge + top-right corner)
-// Seat 2 (left):   x in [0.0, 0.28], y in [0.0, 0.72]   (left edge + top-left corner)
-// Seat 3 (right):  x in [0.72, 1.0], y in [0.28, 1.0]   (right edge + bottom-right corner)
+// Seat 0 (bottom): x in [0.28, 0.72], y in [0.72, 1.0]
+// Seat 1 (top):    x in [0.28, 0.72], y in [0.0, 0.28]
+// Seat 2 (left):   x in [0.0, 0.28], y in [0.28, 0.72]
+// Seat 3 (right):  x in [0.72, 1.0], y in [0.28, 0.72]
 
 interface ZoneRect {
   // canonical normalised rect
@@ -43,15 +49,17 @@ interface ZoneRect {
   // For left seat, seals are on the inner edge (x near 0.28), etc.
 }
 
-// Each seat's private zone runs all the way to its board EDGE (0 or 1 on the outer
-// side), matching the drawn strip, so a card resting at the very edge of a player's area
-// still counts as inside it. The inner edge (toward the centre) is the privacy boundary;
-// all four are kept congruent so every seat's area is the same size and shape.
+// Each seat's private zone runs all the way to its board EDGE on the OUTER (depth) side
+// (0 or 1), matching the drawn strip, so a card resting at the very edge of a player's
+// area still counts as inside it. The inner edge (toward the centre) is the privacy
+// boundary, and the two ends along the edge are inset 0.28 (the strip depth) to leave the
+// corners free and clear of the perpendicular strips. All four are kept congruent so every
+// seat's area is the same size and shape.
 const ZONES: Record<Seat, ZoneRect> = {
-  0: { x0: 0.0, y0: 0.72, x1: 0.72, y1: 1.0, horizontal: true },
-  1: { x0: 0.28, y0: 0.0, x1: 1.0, y1: 0.28, horizontal: true },
-  2: { x0: 0.0, y0: 0.0, x1: 0.28, y1: 0.72, horizontal: false },
-  3: { x0: 0.72, y0: 0.28, x1: 1.0, y1: 1.0, horizontal: false }
+  0: { x0: 0.28, y0: 0.72, x1: 0.72, y1: 1.0, horizontal: true },
+  1: { x0: 0.28, y0: 0.0, x1: 0.72, y1: 0.28, horizontal: true },
+  2: { x0: 0.0, y0: 0.28, x1: 0.28, y1: 0.72, horizontal: false },
+  3: { x0: 0.72, y0: 0.28, x1: 1.0, y1: 0.72, horizontal: false }
 };
 
 // Is a canonical [0,1] point inside a seat's zone rectangle? Canonical (board-
