@@ -4,6 +4,7 @@
 // magnetic snap; CSS draws the matching outlines.
 
 import type { Seat } from "./rotation.js";
+import { APRON_FRAC } from "./constants.js";
 
 export type SlotKind = "seal" | "servant";
 
@@ -159,47 +160,36 @@ export function cardZoneOverlap(nx: number, ny: number, rot: number, cardWFrac: 
   return { seat, frac: (ix * iy) / area };
 }
 
-const ROW_GAP = 0.018; // gap between the two rows (Seal row vs Servant row), in canonical units
+// Spacing between adjacent ledge slots, along the seat's edge, in canonical units. A touch over
+// one card width (CARD_CANON_W 0.125) so the 4 Seals + 3 Servants sit shoulder-to-shoulder in a
+// single tidy row without overlapping.
+const LEDGE_STEP = 0.128;
 
-// v3.2: per-seat slot grid is intentionally empty. The visual was cluttering
-// the table and the snap-to-slot magnetism is now reserved for the central
-// Deck / Discard dock (see Game.applySnap). Returning [] for every seat keeps
-// every consumer working without rendering slot outlines.
-export function slotsForSeat(_seat: Seat): SlotPos[] { return []; }
-
-// Legacy implementation preserved below for the day per-seat slots come back.
-// @ts-expect-error kept intentionally unused for future revival
-function _legacySlotsForSeat(seat: Seat): SlotPos[] {
-  const rect = ZONES[seat];
+// Per-seat tableau slots: 4 Seal + 3 Servant positions laid in ONE row across that seat's
+// off-board ledge apron, just OUTSIDE the seat's own board edge (canonical coords beyond [0,1],
+// at the apron centre line APRON_FRAC/2 out). Because the ledge lives in the rotating board
+// layer, every viewer sees their OWN ledge as a horizontal row in front of them and rivals'
+// ledges around the table — fully symmetric. Used for the snap targets (Game.applySnap) and the
+// drawn slot outlines (Board.paintSlotGrid). Seals fill the first SEAL_COUNT positions, Servants
+// the rest, so the face-up tableau reads left-to-right as Seals then Servants in each own view.
+export function slotsForSeat(seat: Seat): SlotPos[] {
+  const total = SEAL_COUNT + SERVANT_COUNT; // 7
+  const mid = 1 + APRON_FRAC / 2; // apron centre line just past the [0,1] edge
   const out: SlotPos[] = [];
-  const longSide = rect.horizontal ? rect.x1 - rect.x0 : rect.y1 - rect.y0;
-  const shortSide = rect.horizontal ? rect.y1 - rect.y0 : rect.x1 - rect.x0;
-  const halfRow = (shortSide - ROW_GAP) / 2;
-
-  for (let k = 0; k < 2; k++) {
-    const kind: SlotKind = k === 0 ? "seal" : "servant";
-    const count = kind === "seal" ? SEAL_COUNT : SERVANT_COUNT;
-    for (let i = 0; i < count; i++) {
-      // even spacing along the long side
-      const t = (i + 0.5) / count;
-      const longPos = rect.horizontal ? rect.x0 + t * longSide : rect.y0 + t * longSide;
-      // distance from inner edge: seal row sits closer to centre
-      const innerOffset = k * (halfRow + ROW_GAP) + halfRow / 2;
-      let nx = 0;
-      let ny = 0;
-      if (rect.horizontal) {
-        nx = longPos;
-        // seat 0: inner edge is y0 (top of bottom zone). Move "outward" (away from centre) by innerOffset.
-        // seat 1: inner edge is y1 (bottom of top zone). Move outward (upward) by innerOffset.
-        if (seat === 0) ny = rect.y0 + innerOffset;
-        else ny = rect.y1 - innerOffset;
-      } else {
-        ny = longPos;
-        if (seat === 2) nx = rect.x0 + innerOffset;
-        else nx = rect.x1 - innerOffset;
-      }
-      out.push({ seat, kind, index: i, nx, ny });
+  for (let i = 0; i < total; i++) {
+    // Even, centred spread along the seat's edge.
+    const along = 0.5 + (i - (total - 1) / 2) * LEDGE_STEP;
+    const kind: SlotKind = i < SEAL_COUNT ? "seal" : "servant";
+    const index = i < SEAL_COUNT ? i : i - SEAL_COUNT;
+    let nx = 0;
+    let ny = 0;
+    switch (seat) {
+      case 0: nx = along; ny = mid; break;       // bottom apron: y just past 1
+      case 1: nx = along; ny = 1 - mid; break;   // top apron: y just past 0 (= -APRON_FRAC/2)
+      case 2: nx = 1 - mid; ny = along; break;   // left apron: x just past 0
+      case 3: nx = mid; ny = along; break;       // right apron: x just past 1
     }
+    out.push({ seat, kind, index, nx, ny });
   }
   return out;
 }

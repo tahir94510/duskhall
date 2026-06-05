@@ -9,13 +9,21 @@
   position: fixed;
   top: 50%;
   left: 50%;
-  /* Square side = min(usable width, usable height), capped. The env() insets keep
-     it clear of notches / rounded corners. */
-  --field: min(
+  /* Usable square = min(usable width, usable height), capped. The env() insets keep it clear
+     of notches / rounded corners. This is the EXTENDED play square: the inner board PLUS one
+     off-board ledge apron on each side. */
+  --field-cap: min(
     calc(100vw - max(env(safe-area-inset-left), 12px) - max(env(safe-area-inset-right), 12px)),
     calc(100dvh - max(env(safe-area-inset-top), 12px) - max(env(safe-area-inset-bottom), 12px)),
     1400px
   );
+  /* The inner board (the zones/dock/cards canonical [0,1] square) is the usable square minus a
+     ledge apron on each side. 1.36 = 1 + 2*APRON_FRAC (constants.ts APRON_FRAC = 0.18); keep in
+     step. The apron is the band each player's Seal/Servant ledge sits in, just outside their
+     own board edge. Because inner + 2*apron == --field-cap, a card clamped to the extended
+     square (DragController) always stays on the visible page, on every device. */
+  --field: calc(var(--field-cap) / 1.36);
+  --apron: calc(var(--field) * 0.18);
   /* Card size, expressed as a fraction of the SQUARE field so it scales the same
      proportion on every device (phone → 4K TV). Defined here (not :root) because
      --field is .table-scoped. Height is 1.45× width. 0.125 keeps the card height
@@ -288,10 +296,15 @@ body:not(.is-ready) .board__perspective { transition: none; }
   position: absolute;
   top: 50%;
   left: 50%;
-  --frame-field: min(
-    calc(100vw - max(env(safe-area-inset-left), 12px) - max(env(safe-area-inset-right), 12px)),
-    calc(100dvh - max(env(safe-area-inset-top), 12px) - max(env(safe-area-inset-bottom), 12px)),
-    1400px
+  /* Rings the INNER board (the play square), matching .table --field: the usable square divided
+     by 1.36 (1 + 2*APRON_FRAC), so the hairline traces the board edge with the ledge aprons
+     just outside it. Recomputed here since the scrim is a sibling of .table. */
+  --frame-field: calc(
+    min(
+      calc(100vw - max(env(safe-area-inset-left), 12px) - max(env(safe-area-inset-right), 12px)),
+      calc(100dvh - max(env(safe-area-inset-top), 12px) - max(env(safe-area-inset-bottom), 12px)),
+      1400px
+    ) / 1.36
   );
   width: var(--frame-field);
   height: var(--frame-field);
@@ -330,30 +343,37 @@ body:not(.is-ready) .board__perspective { transition: none; }
 
 .slot-mark {
   position: absolute;
+  /* One card per slot, so a placed Seal/Servant fills its outline exactly. */
+  width: var(--card-w);
+  height: var(--card-h);
   border-radius: var(--r-card);
   border: 1px dashed rgba(243, 239, 229, 0.10);
-  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), opacity var(--dur) var(--ease);
 }
 
-.slot-mark--seal { border-style: solid; border-color: rgba(243, 239, 229, 0.08); }
-.slot-mark--servant { border-style: dashed; border-color: rgba(243, 239, 229, 0.08); }
+.slot-mark--seal { border-style: solid; border-color: rgba(243, 239, 229, 0.14); }
+.slot-mark--servant { border-style: dashed; border-color: rgba(243, 239, 229, 0.12); }
+/* Slot outlines show on your OWN ledge only (Game.refreshZones gates by seat). */
+.slot-mark.is-hidden { display: none; }
 
 .slot-mark.is-hot {
   border-color: rgba(243, 239, 229, 0.45);
   background: rgba(243, 239, 229, 0.04);
 }
 
-/* Per-seat tableau shelf: a single framed band in the public ring in front of each player,
-   where they lay out face-up Seals and Servants overlapping. Sized/placed by
-   Board.paintTableauShelves (inline left/top/width/height as board fractions), so it scales
-   identically on every device. A quiet carved frame so it reads as a real surface without
-   adding noise; cards rest ON TOP of it (higher z). */
-.tableau-shelf {
+/* Per-seat tableau LEDGE: a single framed band in the apron just OUTSIDE each player's own
+   board edge, where they lay out face-up Seals and Servants. Sized/placed by Board.paintLedges
+   (inline left/top as board fractions just beyond [0,1], width/height in card units), so it
+   scales identically on every device and rotates with the board (each viewer sees their own
+   ledge in front of them). A quiet carved frame so it reads as a real surface without adding
+   noise; cards rest ON TOP of it (higher z). It sits OUTSIDE the inner board, so the layers it
+   lives in must not clip — see the overflow rule below. */
+.tableau-ledge {
   position: absolute;
   transform: translate(-50%, -50%);
   border-radius: var(--r-card);
-  /* Drawn exactly like the deck/discard dock slot (solid hairline frame + carved well) so the
-     tableau reads as a real, consistent drop target — just wider, to hold a fanned row. */
+  /* Drawn like the deck/discard dock slot (solid hairline frame + carved well) so the tableau
+     reads as a real, consistent drop target — just wider, to hold the Seal/Servant row. */
   border: 1px solid rgba(243, 239, 229, 0.3);
   background: radial-gradient(120% 90% at 50% 42%, rgba(243, 239, 229, 0.07) 0%, rgba(243, 239, 229, 0) 72%);
   box-shadow:
@@ -365,17 +385,17 @@ body:not(.is-ready) .board__perspective { transition: none; }
   pointer-events: none;
 }
 
-/* A shelf for an empty seat is not drawn (like an empty hidden zone), so an empty table is
+/* A ledge for an empty seat is not drawn (like an empty hidden zone), so an empty table is
    never ringed with stray frames. Game.refreshZones toggles this by seat occupancy. */
-.tableau-shelf.is-hidden { display: none; }
+.tableau-ledge.is-hidden { display: none; }
 
-/* The shelf label (e.g. "Seals · Servants") shows only on YOUR OWN shelf, which the board
+/* The ledge label (e.g. "Seals · Servants") shows only on YOUR OWN ledge, which the board
    rotation always brings to the bottom (horizontal), so the label never overflows a narrow
-   side shelf. Rivals' shelves stay clean frames. The label counter-rotates the board so it
+   side ledge. Rivals' ledges stay clean frames. The label counter-rotates the board so it
    reads upright for the local viewer, exactly like the deck/discard labels. */
-.tableau-shelf__label { display: none; }
-.tableau-shelf.is-self .tableau-shelf__label { display: block; }
-.tableau-shelf__label {
+.tableau-ledge__label { display: none; }
+.tableau-ledge.is-self .tableau-ledge__label { display: block; }
+.tableau-ledge__label {
   font-family: var(--font-display);
   font-size: clamp(7px, calc(var(--card-w) * 0.115), 11px);
   font-weight: 600;
@@ -391,7 +411,7 @@ body:not(.is-ready) .board__perspective { transition: none; }
   transform-origin: center;
   transition: transform var(--dur-slow) var(--ease);
 }
-body:not(.is-ready) .tableau-shelf__label { transition: none; }
+body:not(.is-ready) .tableau-ledge__label { transition: none; }
 
 .dock {
   position: absolute;
@@ -458,10 +478,10 @@ body:not(.is-ready) .dock__label { transition: none; }
 
 /* The marker CENTRES sit at DECK_NX / DISCARD_NX (constants.ts: 0.43 / 0.57) of
    the board, so a dealt pile (stored at those same centre fractions) lands dead
-   centre on its marker on every device. The two piles sit a little closer together
-   than before so the public centre opens a tableau-shelf band in front of every seat
-   (incl. the side seats) without the deck/discard intruding. Keep these percentages in
-   sync with constants.ts. translate(-50%, -50%) centres the box on the point. */
+   centre on its marker on every device. The two piles sit as a tidy pair just off
+   centre; with the Seal/Servant tableaus moved to the off-board ledges, the inner
+   board centre is otherwise clear. Keep these percentages in sync with constants.ts.
+   translate(-50%, -50%) centres the box on the point. */
 .dock__slot--deck { left: 43%; transform: translate(-50%, -50%); }
 .dock__slot--discard { left: 57%; transform: translate(-50%, -50%); }
 

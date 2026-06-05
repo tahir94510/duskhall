@@ -38,8 +38,9 @@ import {
   isTidyStack
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
-import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
-import { cardZoneOverlap, pointInZoneCanonical, ZONE_PRIVACY_FRAC, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
+import { DECK_NX, DECK_NY, DISCARD_NX, DISCARD_NY } from "../table/constants.js";
+import { cardZoneOverlap, pointInZoneCanonical, ZONE_PRIVACY_FRAC, CARD_CANON_W, CARD_CANON_H, slotsForSeat, SNAP_RADIUS, BREAK_RADIUS } from "../table/SlotGrid.js";
+import { snapSeed, type SnapTarget } from "../table/playfield.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry } from "../net/realtime.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
@@ -568,9 +569,18 @@ export class Game {
         if (!top) return [];
         return findStackOverlapping(this.state, this.boardSize, top.id, this.cardMetrics());
       },
-      // v3.7: snap-to-slot is removed. The user places cards by hand and the
-      // dock + per-seat slots are pure visual scaffolding.
-      applySnap: (_ownerSeat, nx, ny) => ({ nx, ny, snapped: false }),
+      // Sticky magnetic snap to the shared deck/discard dock and the player's OWN Seal/Servant
+      // ledge slots (the off-board apron in front of them). Targets are canonical, so every
+      // viewer's snap matches their own rotated ledge. Hysteresis lives in snapSeed.
+      applySnap: (nx, ny, snapKey) => {
+        const seat = this.self.seat as Seat;
+        const targets: SnapTarget[] = [
+          { key: "deck", nx: DECK_NX, ny: DECK_NY },
+          { key: "discard", nx: DISCARD_NX, ny: DISCARD_NY },
+          ...slotsForSeat(seat).map((s) => ({ key: `${s.kind}${s.index}`, nx: s.nx, ny: s.ny }))
+        ];
+        return snapSeed(nx, ny, targets, snapKey, SNAP_RADIUS, BREAK_RADIUS);
+      },
       onCardMoved: (ids) => {
         for (const id of ids) this.dirtyIds.add(id);
         this.scheduleFlush();
@@ -2947,17 +2957,19 @@ export class Game {
         }
       }
     }
-    // Tableau shelves follow seat occupancy like the hidden hand zones: a seat's shelf shows
-    // only when someone is there (active, away/claimed, or it is your own seat), and hides
-    // when the seat is empty, so an empty table is not ringed with stray frames. Only your own
-    // shelf carries the "Seals · Servants" label (the board rotation brings it upright at the
-    // bottom), keeping rivals' shelves as clean frames.
-    for (const shelf of this.refs.slotLayer.querySelectorAll<HTMLElement>(".tableau-shelf")) {
-      const seat = Number(shelf.dataset.seat);
+    // Tableau ledges follow seat occupancy like the hidden hand zones: a seat's ledge shows
+    // only when someone is there (active, away/claimed, or it is your own seat), and hides when
+    // the seat is empty, so an empty table is not ringed with stray frames. Only your own ledge
+    // carries the "Seals · Servants" label (the board rotation brings it upright at the bottom),
+    // keeping rivals' ledges as clean frames. The inner SLOT OUTLINES show on your OWN ledge
+    // only (where you place and snap), so rivals' ledges stay clean and the table reads quiet.
+    for (const el of this.refs.slotLayer.querySelectorAll<HTMLElement>(".tableau-ledge, .slot-mark")) {
+      const seat = Number(el.dataset.seat);
       const isSelfSeat = !this.spectator && seat === this.self.seat;
       const occupied = isSelfSeat || this.activeSeats.has(seat) || this.seatClaims.has(seat);
-      shelf.classList.toggle("is-hidden", !occupied);
-      shelf.classList.toggle("is-self", isSelfSeat);
+      const isMark = el.classList.contains("slot-mark");
+      el.classList.toggle("is-hidden", isMark ? !isSelfSeat : !occupied);
+      if (!isMark) el.classList.toggle("is-self", isSelfSeat);
     }
   }
 

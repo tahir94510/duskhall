@@ -1,4 +1,5 @@
 import { slotsForSeat } from "./SlotGrid.js";
+import { APRON_FRAC } from "./constants.js";
 import type { Seat } from "./rotation.js";
 import { t } from "../i18n/index.js";
 import { ICON_CLOSE } from "../ui/icons.js";
@@ -95,7 +96,7 @@ export function buildTable(host: HTMLElement): BoardRefs {
   };
 
   paintSlotGrid(refs);
-  paintTableauShelves(refs);
+  paintLedges(refs);
   return refs;
 }
 
@@ -117,46 +118,47 @@ function paintSlotGrid(refs: BoardRefs): void {
   }
 }
 
-// One tableau shelf per seat: a single framed slot, drawn exactly like the deck/discard dock
-// (one card tall) but 3.5 card-widths wide — half the width of a full 7-card row (4 Seals + 3
-// Servants), since those cards are laid out OVERLAPPING (each half shown), like a fanned row.
-// It sits in the public ring just in front of each player's hand zone, congruent across seats
-// (each centred 0.27 in from its own board edge) and clear of the central deck/discard, so a
-// player sees plainly where to place their Seals and Servants. A guide, not a snap target, so
-// it can never crowd or break the layout. It lives in the rotating board layer, so each viewer
-// sees their own shelf horizontal at the bottom (label upright) and rivals' shelves around the
-// table at their own angles. `vertical` seats (left/right) get the long axis along their edge.
-const SHELF_INSET = 0.27; // centre distance from the board edge (ZONE_DEPTH 0.18 + half a card)
-const SHELVES: Array<{ seat: Seat; cx: number; cy: number; vertical: boolean }> = [
-  { seat: 0, cx: 0.5, cy: 1 - SHELF_INSET, vertical: false },
-  { seat: 1, cx: 0.5, cy: SHELF_INSET, vertical: false },
-  { seat: 2, cx: SHELF_INSET, cy: 0.5, vertical: true },
-  { seat: 3, cx: 1 - SHELF_INSET, cy: 0.5, vertical: true }
+// One tableau LEDGE per seat: a single framed band sitting in the apron just OUTSIDE that
+// seat's own board edge (centre at the apron mid-line, APRON_FRAC/2 past the [0,1] edge), one
+// card tall and a 7-card row wide, holding the player's face-up Seals and Servants. Moving it
+// off the board frees the private hand zone and declutters the centre, while the slot row
+// inside it (paintSlotGrid) gives 4 Seal + 3 Servant snap positions. It lives in the rotating
+// board layer, so each viewer sees their OWN ledge as a horizontal band in front of them
+// (label upright) and rivals' ledges around the table at their own angles. The off-board cards
+// stay on the visible page because the drag clamp keeps every body inside the extended square
+// (DragController / playfield.ts). `vertical` seats (left/right) get the long axis along their
+// edge. Positions can be just outside [0,1]; the layers do not clip (overflow visible).
+const LEDGES: Array<{ seat: Seat; cx: number; cy: number; vertical: boolean }> = [
+  { seat: 0, cx: 0.5, cy: 1 + APRON_FRAC / 2, vertical: false },
+  { seat: 1, cx: 0.5, cy: -APRON_FRAC / 2, vertical: false },
+  { seat: 2, cx: -APRON_FRAC / 2, cy: 0.5, vertical: true },
+  { seat: 3, cx: 1 + APRON_FRAC / 2, cy: 0.5, vertical: true }
 ];
 
-function paintTableauShelves(refs: BoardRefs): void {
-  for (const s of SHELVES) {
-    const shelf = document.createElement("div");
-    shelf.className = "tableau-shelf";
-    shelf.dataset.seat = String(s.seat);
-    shelf.style.left = `${s.cx * 100}%`;
-    shelf.style.top = `${s.cy * 100}%`;
-    // One card tall, 3.5 cards wide along the player's edge. For side seats the long axis runs
-    // vertically, so the width/height swap. Sizes are in card units so they scale with the board.
-    const long = "calc(var(--card-w) * 3.5)";
+function paintLedges(refs: BoardRefs): void {
+  for (const l of LEDGES) {
+    const ledge = document.createElement("div");
+    ledge.className = "tableau-ledge";
+    ledge.dataset.seat = String(l.seat);
+    ledge.style.left = `${l.cx * 100}%`;
+    ledge.style.top = `${l.cy * 100}%`;
+    // One card tall, a 7-card row wide along the player's edge (4 Seals + 3 Servants, matching
+    // the slot row). For side seats the long axis runs vertically, so width/height swap. Sizes
+    // are in card units so they scale with the board.
+    const long = "calc(var(--card-w) * 7.3)";
     const short = "var(--card-h)";
-    shelf.style.width = s.vertical ? short : long;
-    shelf.style.height = s.vertical ? long : short;
+    ledge.style.width = l.vertical ? short : long;
+    ledge.style.height = l.vertical ? long : short;
     // The label counter-rotates the board rotation so it reads upright for the local viewer
     // (matching the deck/discard labels), and is updated on language change by refreshDockLabels.
-    shelf.innerHTML = `<span class="tableau-shelf__label">${escapeHtml(t("table.tableau"))}</span>`;
-    refs.slotLayer.appendChild(shelf);
+    ledge.innerHTML = `<span class="tableau-ledge__label">${escapeHtml(t("table.tableau"))}</span>`;
+    refs.slotLayer.appendChild(ledge);
   }
 }
 
 export function repaintSlots(refs: BoardRefs): void {
   paintSlotGrid(refs);
-  paintTableauShelves(refs);
+  paintLedges(refs);
 }
 
 // Re-label the deck/discard markers when the language changes.
@@ -165,8 +167,8 @@ export function refreshDockLabels(refs: BoardRefs): void {
   const discard = refs.discardSlot.querySelector<HTMLElement>(".dock__label");
   if (deck) deck.textContent = t("table.deck");
   if (discard) discard.textContent = t("table.discard");
-  // Per-seat tableau shelf labels share the language refresh.
-  for (const label of refs.slotLayer.querySelectorAll<HTMLElement>(".tableau-shelf__label")) {
+  // Per-seat tableau ledge labels share the language refresh.
+  for (const label of refs.slotLayer.querySelectorAll<HTMLElement>(".tableau-ledge__label")) {
     label.textContent = t("table.tableau");
   }
 }
