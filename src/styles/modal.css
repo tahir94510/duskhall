@@ -278,6 +278,23 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
 .rules strong { font-weight: 600; color: var(--ivory); }
 .rules em { font-style: italic; color: var(--ivory-dim); }
 
+/* A clickable card name in the rulebook: reads like the bold label it replaces, plus a quiet
+   dotted underline that brightens on hover, so players learn the names are tappable for full
+   card info without the text turning into loud links. */
+.rules .card-link {
+  font: inherit;
+  font-weight: 600;
+  color: var(--ivory);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  border-bottom: 1px dotted var(--line-3);
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.rules .card-link:hover,
+.rules .card-link:focus-visible { color: #fff; border-bottom-color: var(--ivory-dim); outline: none; }
+
 .rules .qa {
   display: grid;
   grid-template-columns: 14px 1fr;

@@ -250,7 +250,7 @@ export class Game {
       stackFor: (id) => findConnectedStack(this.state, this.boardSize, id, this.cardMetrics())
     });
     this.header = new Header({
-      onRules: () => { void this.audio.play("ui-open"); openRulesModal(this.modal); },
+      onRules: () => { void this.audio.play("ui-open"); openRulesModal(this.modal, this.tooltip); },
       onSupport: () => { void this.audio.play("ui-open"); openSupportModal(this.modal, { patreonUrl: this.config.patreonUrl, buyMeACoffeeUrl: this.config.buyMeACoffeeUrl, supportUrl: this.config.supportUrl }); },
       onFeedback: () => { void this.audio.play("ui-open"); openFeedbackModal(this.modal, this.config.issuesUrl, this.config.feedbackUrl); },
       onLegal: () => { void this.audio.play("ui-open"); openLegalModal(this.modal); },

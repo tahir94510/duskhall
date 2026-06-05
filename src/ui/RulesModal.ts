@@ -1,5 +1,16 @@
 import { Modal, escape } from "./Modal.js";
 import { t, tArr } from "../i18n/index.js";
+import { CARD_DEFS } from "../game/cards.js";
+import type { Tooltip } from "./Tooltip.js";
+
+// Localised card name -> def id, so the rulebook can turn a card name (e.g. an encyclopedia
+// entry's leading label) into a clickable button that opens that card's info panel. Rebuilt
+// per open() because it depends on the active locale.
+function buildNameToId(): Map<string, string> {
+  const m = new Map<string, string>();
+  for (const d of CARD_DEFS) m.set(t(`cards.${d.id}.name`), d.id);
+  return m;
+}
 
 interface RuleSection {
   id: string;
@@ -18,23 +29,29 @@ function applyInline(escaped: string): string {
 // Line-level rendering for paragraphs and list items: bold a leading label
 // that ends in a colon ("HAND:", "CREATE (1 HP):", "Time Rift:") so the
 // rulebook reads as structured definitions instead of a flat wall of text.
-function richLine(raw: string): string {
-  const escaped = escape(raw);
-  const m = escaped.match(/^([^:.!?]{2,46}):(\s+)(.+)$/s);
+function richLine(raw: string, nameToId?: Map<string, string>): string {
+  // Detect the leading "Label: rest" on the RAW line so a card-name label can be matched
+  // against nameToId (whose keys are unescaped), then escape each part for output.
+  const m = raw.match(/^([^:.!?]{2,46}):(\s+)(.+)$/s);
   if (m) {
-    return `<strong>${m[1]}</strong>:${m[2]}${applyInline(m[3]!)}`;
+    const label = m[1]!.trim();
+    const id = nameToId?.get(label);
+    const labelHtml = id
+      ? `<button type="button" class="card-link" data-card-id="${escape(id)}">${escape(m[1]!)}</button>`
+      : `<strong>${escape(m[1]!)}</strong>`;
+    return `${labelHtml}:${m[2]}${applyInline(escape(m[3]!))}`;
   }
-  return applyInline(escaped);
+  return applyInline(escape(raw));
 }
 
-function renderBody(lines: string[]): string {
+function renderBody(lines: string[], nameToId?: Map<string, string>): string {
   const out: string[] = [];
   let bulletBuffer: string[] = [];
   let numberedBuffer: string[] = [];
 
   const flushBullets = () => {
     if (!bulletBuffer.length) return;
-    out.push(`<ul>${bulletBuffer.map((l) => `<li>${richLine(l)}</li>`).join("")}</ul>`);
+    out.push(`<ul>${bulletBuffer.map((l) => `<li>${richLine(l, nameToId)}</li>`).join("")}</ul>`);
     bulletBuffer = [];
   };
   const flushNumbered = () => {
@@ -77,20 +94,21 @@ function renderBody(lines: string[]): string {
     }
 
     flushAll();
-    out.push(`<p>${richLine(line)}</p>`);
+    out.push(`<p>${richLine(line, nameToId)}</p>`);
   }
   flushAll();
   return out.join("");
 }
 
-export function openRulesModal(modal: Modal): void {
+export function openRulesModal(modal: Modal, tooltip?: Tooltip): void {
   const title = t("rulesDoc.title");
   const subtitle = `${t("rulesDoc.subtitle")} • ${t("rulesDoc.tldr")}`;
   const sections = tArr<RuleSection>("rulesDoc.sections");
+  const nameToId = buildNameToId();
   const tocHtml = sections.map((s) => `<a href="#sec-${s.id}">${escape(s.title)}</a>`).join("");
   const introHtml = `<p class="intro">${applyInline(escape(t("rulesDoc.intro")))}</p>`;
   const sectionsHtml = sections
-    .map((s) => `<section id="sec-${s.id}"><h2>${escape(s.title)}</h2>${renderBody(s.body || [])}</section>`)
+    .map((s) => `<section id="sec-${s.id}"><h2>${escape(s.title)}</h2>${renderBody(s.body || [], nameToId)}</section>`)
     .join("");
   const closingHtml = `<div class="closing">${escape(t("rulesDoc.closing"))}</div>`;
   const bodyHtml = `<div class="rules">
@@ -109,4 +127,16 @@ export function openRulesModal(modal: Modal): void {
       target?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
+
+  // Clicking a card name (in the encyclopedia or anywhere it appears) opens that card's
+  // info panel, reusing the live card tooltip so it reads identically on the table.
+  if (tooltip) {
+    body?.querySelectorAll<HTMLButtonElement>(".card-link").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const id = btn.dataset.cardId;
+        if (id) tooltip.showForDef(id, btn);
+      });
+    });
+  }
 }
