@@ -48,7 +48,15 @@
     <style>
       html, body {
         margin: 0; padding: 0; height: 100%;
-        background: #000; color: #f3efe5;
+        /* Same atmospheric backdrop as the live table, so a broken link still feels
+           like Vaerum rather than a blank error page. */
+        background-color: #07060b;
+        background-image:
+          radial-gradient(120% 90% at 50% 32%, rgba(96, 86, 126, 0.22) 0%, rgba(20, 18, 28, 0) 58%),
+          radial-gradient(150% 120% at 50% 120%, rgba(54, 47, 74, 0.26) 0%, rgba(8, 8, 12, 0) 64%),
+          linear-gradient(180deg, #0c0a12 0%, #08070b 52%, #050406 100%);
+        background-repeat: no-repeat; background-size: cover;
+        color: #f3efe5;
         font-family: "Inter", system-ui, -apple-system, sans-serif;
       }
       .wrap {
@@ -56,22 +64,31 @@
         display: grid; place-items: center;
         text-align: center; padding: 24px;
       }
+      /* Premium frosted panel matching the in-app modals/zone trays. */
       .card {
-        max-width: 360px;
-        border: 1px solid rgba(243, 239, 229, 0.14);
-        border-radius: 14px;
-        padding: 28px 24px;
-        background: #0a0a0a;
+        max-width: 380px;
+        border: 1px solid rgba(243, 239, 229, 0.16);
+        border-radius: 16px;
+        padding: 32px 28px;
+        background:
+          radial-gradient(120% 90% at 50% 0%, rgba(243, 239, 229, 0.06) 0%, rgba(243, 239, 229, 0) 60%),
+          linear-gradient(180deg, rgba(22, 21, 28, 0.92) 0%, rgba(12, 11, 16, 0.94) 100%);
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(243, 239, 229, 0.07), inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+        -webkit-backdrop-filter: blur(12px) saturate(115%);
+        backdrop-filter: blur(12px) saturate(115%);
       }
-      svg { width: 40px; height: 56px; margin: 0 auto 14px; }
-      h1 { margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+      svg { width: 42px; height: 58px; margin: 0 auto 16px; filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.5)); }
+      h1 { margin: 0 0 6px; font-size: 16px; font-weight: 600; letter-spacing: 0.02em; }
       p { margin: 0 0 18px; font-size: 13px; line-height: 1.55; color: #aea99d; }
       a {
-        display: inline-block; padding: 8px 18px;
-        background: #f3efe5; color: #000; text-decoration: none;
-        border-radius: 8px; font-weight: 600; font-size: 12px;
-        letter-spacing: 0.04em;
+        display: inline-block; padding: 10px 22px;
+        background: linear-gradient(180deg, #f7f3ea 0%, #e9e4d8 100%); color: #0a0a0a; text-decoration: none;
+        border-radius: 9px; font-weight: 600; font-size: 12px;
+        letter-spacing: 0.06em; text-transform: uppercase;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        transition: transform 0.18s ease, filter 0.18s ease;
       }
+      a:hover { filter: brightness(1.05); transform: translateY(-1px); }
     </style>
   </head>
   <body>
