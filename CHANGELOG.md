@@ -1,28 +1,34 @@
 # Changelog
 
-## 0.9.11: Symmetric table, deeper atmosphere, pointer-lift depth, framed gutters
+## 0.9.11: Symmetric wide-hand table, even lighting, pointer-lift depth, framed gutters
 
 A presentation pass to make the table read like a premium, Steam-quality card game
-rather than a flat web page: a balanced symmetric layout, richer depth and atmosphere,
-and a tactile pointer feel. One canonical constant moves with its CSS in lockstep; no
-change to sync, the coordinate frame, stack detection, or what is private (card
+rather than a flat web page: a balanced symmetric layout with generous hand areas, even
+lighting, and a tactile pointer feel. The zone change touches one canonical rule and its
+CSS in lockstep; no change to sync, the coordinate frame, or stack detection (card
 positions stay device independent and identical for every player). 177 tests green.
 
-- **Symmetric centered-cross zones, replacing the pinwheel.** The 0.9.10 pinwheel
-  (each zone grabbing one board corner) read lopsided. Each private zone is now a
-  centered strip in the middle of its own edge (`0.44 x 0.28`, 28% deep), with the four
-  `0.28 x 0.28` corners left as neutral framing space owned by no one. This restores the
-  symmetric you/opponent/left/right layout the design notes describe. The four zones are
-  still exactly congruent (each the next rotated 90deg, equal `0.1232` area) and provably
-  non-overlapping (a 0.28 inset clears the perpendicular strips), so after each client
-  rotates its own seat to the bottom every player sees an identical hand area. The
-  canonical `ZONES` (`src/table/SlotGrid.ts`) and the CSS grid spans (`zones.css`,
-  `board.css`, `mobile.css`, restored to the 3-track grid with lines at 0.28 / 0.72)
-  changed together, so the live drag hit-test and the canonical privacy math agree on
-  every device; the deck/discard dock is clear of every zone.
-- **Deeper table atmosphere.** A faint warm pool of light at the centre of play and a
-  deeper edge vignette so the seats read as a lit table; carved-tray inset shading on the
-  frosted zones and the deck/discard wells so they read as real recessed surfaces.
+- **Symmetric trapezoid hand areas, replacing the pinwheel.** The 0.9.10 pinwheel (each
+  zone grabbing one board corner) read lopsided, and a plain centered strip felt cramped.
+  Each private zone is now a full-width edge band, 28% deep, clipped to a trapezoid: it
+  spans nearly the whole board edge (wide, easy to read your whole hand) and tapers to the
+  inner 0.44, so the four trapezoids meet along the board diagonals with no overlap and the
+  centre `0.44 x 0.44` stays free for the deck/discard. The four are exactly congruent (each
+  the next rotated 90deg, area `0.2016`, about 64% more than a centre strip and as large as
+  the old pinwheel) with full square symmetry, so after each client rotates its own seat to
+  the bottom every player sees an identical hand area. Ownership now resolves by the nearest
+  board edge to the card centre (the diagonal corner split) in the shared canonical frame:
+  `cardZoneOverlap` and `pointInZoneCanonical` (`src/table/SlotGrid.ts`) and the CSS
+  clip-paths (`zones.css`) use the same rule, and `Game.pointInZone` resolves live drags
+  through it too (instead of an axis-aligned zone box, which would be ambiguous on the
+  trapezoids), so drag-drop, concealment and cursors agree for every seat on every device.
+  The deck/discard dock is provably clear of every zone.
+- **Even table lighting.** Removed the bright-centre / dark-edge hotspot: the felt now uses
+  a single gentle, shallow vignette so the table reads as uniformly lit, and the wide-screen
+  field frame casts a softer shadow.
+- **Open seats stay visible.** An empty seat still draws its frosted trapezoid quietly, so
+  the table always reads as a full four-seat board rather than one lonely strip when you are
+  the only player seated.
 - **Pointer-lift depth (2.5D feel).** A hovered card raises off the felt: its flat shadow
   underlay swells to a mid raised cast and the card brightens slightly. Built only from
   shadow and light on the card's `::before` underlay, so it never fights the render loop's

@@ -39,7 +39,7 @@ import {
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
-import { cardZoneOwner, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
+import { cardZoneOwner, pointInZoneCanonical, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry } from "../net/realtime.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
@@ -794,12 +794,14 @@ export class Game {
   }
 
   private pointInZone(seat: number, x: number, y: number): boolean {
-    const z = this.physicalZoneForSeat(seat);
-    if (!z) return false;
-    // Zone divs are axis-aligned grid cells (they are NOT rotated), so their
-    // on-screen bounding box is exact for the hit test.
-    const r = z.getBoundingClientRect();
-    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    // Resolve ownership in the shared canonical frame, not from the zone div's screen box:
+    // the zones are now trapezoids (clipped panels) whose bounding boxes overlap at the
+    // corners, so a pixel-box test would be ambiguous there. screenToCanonical inverts this
+    // viewer's board rotation, and pointInZoneCanonical applies the same nearest-edge
+    // (diagonal corner split) rule every client and the conceal logic use, so drag-drop
+    // ownership agrees for all seats on every device.
+    const { nx, ny } = this.screenToCanonical(x, y);
+    return pointInZoneCanonical(seat as Seat, nx, ny);
   }
 
   private initialDealLocal(): void {

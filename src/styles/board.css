@@ -44,16 +44,15 @@
      variables so the non-rotating seat-label layer (.board__labels) can reuse the
      EXACT same tracks/gap and stay pixel-aligned with the zones at every
      breakpoint (mobile overrides only re-set these variables). */
-  /* Three tracks per axis: the edge strips are 28% deep and the centre is the 44% middle.
-     Each private zone sits in the CENTRE cell along its own edge (a symmetric cross), so the
-     grid lines fall at 0.28 / 0.72 and the four 0.28 x 0.28 CORNERS are left as neutral
-     framing space owned by no one. 28% deep matches the canonical privacy boundary (SlotGrid
-     ZONES, 0.72/0.28) so the frosted panel and the actual private area line up exactly, and
-     the centred strip aligns with the canonical 0.28/0.72 ends. One depth on every breakpoint
-     keeps the private-area proportion identical across devices. Rows == cols so the board
-     stays square-symmetric for the 90° seat rotation, and the four strips stay congruent so
-     every seat's area is the same size. Keep these tracks in lockstep with the SlotGrid ZONES
-     and the zones.css spans. */
+  /* Three tracks per axis: the edge bands are 28% deep and the centre is the 44% middle. Each
+     private zone spans its WHOLE edge (full row/column) and is clipped to a trapezoid in
+     zones.css, so every seat's hand area is nearly the full edge wide while the four trapezoids
+     meet along the diagonals (no overlap) and the centre 0.44 x 0.44 cell stays free for the
+     deck/discard. 28% deep matches the canonical ZONE_DEPTH (SlotGrid.ts) so the drawn panel
+     and the private area line up exactly. One depth on every breakpoint keeps the proportion
+     identical across devices. Rows == cols so the board stays square-symmetric for the 90° seat
+     rotation, and the four trapezoids stay congruent so every seat's area is the same size.
+     Keep these tracks in lockstep with the SlotGrid ZONE_DEPTH and the zones.css clip-paths. */
   --grid-cols: minmax(68px, 28%) 1fr minmax(68px, 28%);
   --grid-rows: minmax(68px, 28%) 1fr minmax(68px, 28%);
   --grid-gap: clamp(6px, 1.4vmin, 16px);
@@ -119,10 +118,10 @@ body:not(.is-ready) .board__perspective { transition: none; }
 /* Mirror the centered zone placement (zones.css) so each seat's name/status/kick sits in
    its own hand area. The cluster (positioned below) anchors to the inner edge and centres
    along the long axis, so left:50% / top:50% still lands at the zone's centre. */
-.board__labels .seat-label--bottom { grid-column: 2; grid-row: 3; }
-.board__labels .seat-label--top { grid-column: 2; grid-row: 1; }
-.board__labels .seat-label--left { grid-column: 1; grid-row: 2; }
-.board__labels .seat-label--right { grid-column: 3; grid-row: 2; }
+.board__labels .seat-label--bottom { grid-column: 1 / 4; grid-row: 3; }
+.board__labels .seat-label--top { grid-column: 1 / 4; grid-row: 1; }
+.board__labels .seat-label--left { grid-column: 1; grid-row: 1 / 4; }
+.board__labels .seat-label--right { grid-column: 3; grid-row: 1 / 4; }
 
 .seat-label {
   position: relative;
@@ -255,11 +254,10 @@ body:not(.is-ready) .board__perspective { transition: none; }
   inset: 0;
   pointer-events: none;
   background:
-    /* A faint warm pool of light at the table's heart so the eye is drawn to the
-       centre of play, painted under the vignette. */
-    radial-gradient(120% 110% at 50% 42%, rgba(243, 239, 229, 0.05) 0%, rgba(243, 239, 229, 0) 30%),
-    /* Deeper edge/corner darkening: the seats read as a lit table, not a flat wash. */
-    radial-gradient(135% 125% at 50% 40%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.30) 78%, rgba(0, 0, 0, 0.54) 100%);
+    /* A gentle, even vignette: the corners settle a touch darker so the felt has depth, but
+       the falloff starts late and stays shallow so the table reads as uniformly lit, with no
+       bright-centre / dark-edge hotspot. */
+    radial-gradient(150% 135% at 50% 48%, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.16) 88%, rgba(0, 0, 0, 0.30) 100%);
 }
 
 /* Gentle scrim above the background and below the play surface: softens bright
@@ -297,8 +295,8 @@ body:not(.is-ready) .board__perspective { transition: none; }
   border-radius: 22px;
   box-shadow:
     0 0 0 1px var(--gilt-soft),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.28),
-    0 30px 90px rgba(0, 0, 0, 0.55);
+    inset 0 0 0 1px rgba(0, 0, 0, 0.22),
+    0 16px 50px rgba(0, 0, 0, 0.3);
   pointer-events: none;
 }
 
