@@ -59,11 +59,13 @@
 
 @media (max-width: 760px) {
   .table {
-    /* Field-proportional tracks (NOT vw/vh): the play field is a SQUARE
-       (--field), so the strips must be a fraction of THAT, not of the viewport.
-       Rows and cols use IDENTICAL % and px floor so the board stays square-symmetric
-       (the 90° seat-rotation perspective depends on it) and the centre 1fr never
-       collapses on a tall phone where the viewport is far from square. */
+    /* Field-proportional 3-track grid (NOT vw/vh): the play field is a SQUARE
+       (--field), so the strips must be a fraction of THAT, not of the viewport. Same
+       28% edge / 44% centre split as the desktop base (grid lines at 0.28/0.72) so the
+       centered-cross strips stay on the exact canonical SlotGrid fractions; only the px
+       floor shrinks for phones. Rows and cols use IDENTICAL % and px floor so the board
+       stays square-symmetric (the 90° seat-rotation perspective depends on it) and the
+       centre 1fr never collapses on a tall phone where the viewport is far from square. */
     --grid-cols: minmax(58px, 28%) 1fr minmax(58px, 28%);
     --grid-rows: minmax(58px, 28%) 1fr minmax(58px, 28%);
     /* Cards scale with the square field, so the dock fits the centre row at any
@@ -103,8 +105,9 @@
 
 @media (max-width: 480px) {
   .table {
-    /* Same 28% deep private zones as every other breakpoint (congruent across seats),
-       still field-proportional and still rows==cols (square-symmetric). */
+    /* Same centered-cross strips as every other breakpoint (28% deep, congruent across
+       seats), still field-proportional and still rows==cols (square-symmetric). Only the
+       px floor shrinks for the smallest phones. */
     --grid-cols: minmax(54px, 28%) 1fr minmax(54px, 28%);
     --grid-rows: minmax(54px, 28%) 1fr minmax(54px, 28%);
     --grid-gap: 6px;

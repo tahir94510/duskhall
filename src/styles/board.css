@@ -44,13 +44,16 @@
      variables so the non-rotating seat-label layer (.board__labels) can reuse the
      EXACT same tracks/gap and stay pixel-aligned with the zones at every
      breakpoint (mobile overrides only re-set these variables). */
-  /* Side strips = the four private zones. 28% deep gives a substantial hand area
-     (cards fill ~65% of it, with breathing room) and matches the canonical privacy
-     boundary (SlotGrid ZONES, bottom y0 0.72 = 28% from the edge) so the frosted
-     panel and the actual private area line up exactly. One depth on every breakpoint
-     keeps the private-area proportion identical across devices. Rows == cols so the
-     board stays square-symmetric for the 90° seat rotation, and the four strips stay
-     congruent so every seat's area is the same size. */
+  /* Three tracks per axis: the edge strips are 28% deep and the centre is the 44% middle.
+     Each private zone sits in the CENTRE cell along its own edge (a symmetric cross), so the
+     grid lines fall at 0.28 / 0.72 and the four 0.28 x 0.28 CORNERS are left as neutral
+     framing space owned by no one. 28% deep matches the canonical privacy boundary (SlotGrid
+     ZONES, 0.72/0.28) so the frosted panel and the actual private area line up exactly, and
+     the centred strip aligns with the canonical 0.28/0.72 ends. One depth on every breakpoint
+     keeps the private-area proportion identical across devices. Rows == cols so the board
+     stays square-symmetric for the 90° seat rotation, and the four strips stay congruent so
+     every seat's area is the same size. Keep these tracks in lockstep with the SlotGrid ZONES
+     and the zones.css spans. */
   --grid-cols: minmax(68px, 28%) 1fr minmax(68px, 28%);
   --grid-rows: minmax(68px, 28%) 1fr minmax(68px, 28%);
   --grid-gap: clamp(6px, 1.4vmin, 16px);
@@ -113,13 +116,13 @@ body:not(.is-ready) .board__perspective { transition: none; }
   gap: var(--grid-gap);
   pointer-events: none;
 }
-/* Mirror the pinwheel zone placement (zones.css) so each seat's name/status/kick sits in
-   its own wide hand area. The cluster (positioned below) anchors to the inner edge and
-   centres along the long axis, so left:50% / top:50% still lands at the zone's centre. */
-.board__labels .seat-label--bottom { grid-column: 1 / span 2; grid-row: 3; }
-.board__labels .seat-label--top { grid-column: 2 / span 2; grid-row: 1; }
-.board__labels .seat-label--left { grid-column: 1; grid-row: 1 / span 2; }
-.board__labels .seat-label--right { grid-column: 3; grid-row: 2 / span 2; }
+/* Mirror the centered zone placement (zones.css) so each seat's name/status/kick sits in
+   its own hand area. The cluster (positioned below) anchors to the inner edge and centres
+   along the long axis, so left:50% / top:50% still lands at the zone's centre. */
+.board__labels .seat-label--bottom { grid-column: 2; grid-row: 3; }
+.board__labels .seat-label--top { grid-column: 2; grid-row: 1; }
+.board__labels .seat-label--left { grid-column: 1; grid-row: 2; }
+.board__labels .seat-label--right { grid-column: 3; grid-row: 2; }
 
 .seat-label {
   position: relative;

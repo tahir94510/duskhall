@@ -57,10 +57,11 @@
   transition: opacity 600ms var(--ease), border-color 600ms var(--ease);
 }
 
-/* Pinwheel placement: each zone spans its edge cell plus one adjacent corner cell, so
-   every seat's hand area is a wide rectangle. Mirrors the canonical ZONES in SlotGrid.ts;
-   the centre cell (col 2 / row 2) is left free for the deck/discard dock. */
-.zone--top { grid-column: 2 / span 2; grid-row: 1; }
-.zone--left { grid-column: 1; grid-row: 1 / span 2; }
-.zone--right { grid-column: 3; grid-row: 2 / span 2; }
-.zone--self, .zone--bottom { grid-column: 1 / span 2; grid-row: 3; }
+/* Centered-cross placement on the 3-track board grid (board.css): each zone sits in the
+   CENTRE cell along its own edge (the middle 44%, 28% deep), with the four corner cells left
+   as neutral framing space. Grid lines fall at 0.28 / 0.72. Mirrors the canonical ZONES in
+   SlotGrid.ts exactly; the centre cell is left free for the deck/discard dock. */
+.zone--top { grid-column: 2; grid-row: 1; }
+.zone--left { grid-column: 1; grid-row: 2; }
+.zone--right { grid-column: 3; grid-row: 2; }
+.zone--self, .zone--bottom { grid-column: 2; grid-row: 3; }
