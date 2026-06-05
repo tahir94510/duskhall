@@ -20,24 +20,23 @@ export interface SlotPos {
 const SEAL_COUNT = 4;
 const SERVANT_COUNT = 3;
 
-// The four zones are CENTERED edge strips forming a symmetric CROSS with full square (D4)
-// symmetry: each runs along its own board EDGE, centred on it (the middle 44% of the edge)
-// and 0.28 deep. The inset from each corner equals the strip DEPTH (0.28), which is exactly
-// what keeps a strip clear of the perpendicular strips: the four 0.28 x 0.28 CORNERS are
-// left as neutral framing space, owned by no one. This is the calm, symmetric layout the
-// design doc describes (you / opponent / left / right), and it reads BALANCED rather than
-// the lopsided pinwheel it replaces. The strips stay CONGRUENT, each being the next rotated
-// 90deg about the centre (all are the same 0.44 x 0.28 rectangle), so after a seat's board
-// rotation every player sees an IDENTICAL hand area at the bottom, the invariant the shared
-// coordinate frame relies on. The strips never overlap (proven: a 0.28 inset clears the
-// perpendicular 0.28-deep strip) and never reach the centre, leaving it free for the shared
-// deck/discard. They line up with the drawn panel, so what looks private IS private. The CSS
-// grid spans (zones.css) mirror these exact fractions (grid lines at 0.28 and 0.72).
+// The four zones are full-width EDGE BANDS, ZONE_DEPTH (0.28) deep, that meet along the two
+// board diagonals so each seat owns a TRAPEZOID: the seat's whole board edge (wide) tapering
+// to the 0.44 inner edge, with the four corners split evenly between the two seats that share
+// them. This is the symmetric you/opponent/left/right table the design doc describes (full
+// D4 symmetry, each trapezoid the next rotated 90deg about the centre, so after a seat's board
+// rotation every player sees an IDENTICAL hand area), but each hand area is now nearly the
+// full board edge wide and about 64% larger in area than a centre-only strip, so a player
+// reads their whole hand at a glance. Ownership is resolved by the NEAREST board edge to the
+// card centre (the diagonal split), gated to ZONE_DEPTH so the centre 0.44 x 0.44 stays public
+// for the shared deck/discard. The drawn panels (zones.css) are clipped to the same trapezoids,
+// so what looks private IS private.
 //
-// Seat 0 (bottom): x in [0.28, 0.72], y in [0.72, 1.0]
-// Seat 1 (top):    x in [0.28, 0.72], y in [0.0, 0.28]
-// Seat 2 (left):   x in [0.0, 0.28], y in [0.28, 0.72]
-// Seat 3 (right):  x in [0.72, 1.0], y in [0.28, 0.72]
+// Seat 0 (bottom): nearest the y=1 edge, within 0.28; widest at y=1, tapering to x in [0.28,0.72]
+// Seat 1 (top):    nearest the y=0 edge
+// Seat 2 (left):   nearest the x=0 edge
+// Seat 3 (right):  nearest the x=1 edge
+// The corners belong to whichever of the two adjacent edges is closer (a 45deg diagonal split).
 
 interface ZoneRect {
   // canonical normalised rect
@@ -49,27 +48,55 @@ interface ZoneRect {
   // For left seat, seals are on the inner edge (x near 0.28), etc.
 }
 
-// Each seat's private zone runs all the way to its board EDGE on the OUTER (depth) side
-// (0 or 1), matching the drawn strip, so a card resting at the very edge of a player's
-// area still counts as inside it. The inner edge (toward the centre) is the privacy
-// boundary, and the two ends along the edge are inset 0.28 (the strip depth) to leave the
-// corners free and clear of the perpendicular strips. All four are kept congruent so every
-// seat's area is the same size and shape.
+// How deep each edge band reaches in from its board edge. The centre square of side
+// (1 - 2*depth) = 0.44 stays public for the shared deck/discard.
+export const ZONE_DEPTH = 0.28;
+
+// The full-width edge band for each seat (the trapezoid's bounding rectangle). These OVERLAP
+// at the corners by design; the diagonal split between adjacent seats is resolved by
+// nearestSeat (the card centre's closest board edge), and the drawn panel is clipped to the
+// matching trapezoid in zones.css. zoneRect exposes these bounding bands.
 const ZONES: Record<Seat, ZoneRect> = {
-  0: { x0: 0.28, y0: 0.72, x1: 0.72, y1: 1.0, horizontal: true },
-  1: { x0: 0.28, y0: 0.0, x1: 0.72, y1: 0.28, horizontal: true },
-  2: { x0: 0.0, y0: 0.28, x1: 0.28, y1: 0.72, horizontal: false },
-  3: { x0: 0.72, y0: 0.28, x1: 1.0, y1: 0.72, horizontal: false }
+  0: { x0: 0.0, y0: 1 - ZONE_DEPTH, x1: 1.0, y1: 1.0, horizontal: true },
+  1: { x0: 0.0, y0: 0.0, x1: 1.0, y1: ZONE_DEPTH, horizontal: true },
+  2: { x0: 0.0, y0: 0.0, x1: ZONE_DEPTH, y1: 1.0, horizontal: false },
+  3: { x0: 1 - ZONE_DEPTH, y0: 0.0, x1: 1.0, y1: 1.0, horizontal: false }
 };
 
-// Is a canonical [0,1] point inside a seat's zone rectangle? Canonical (board-
-// shared) space, so it is correct for every viewer regardless of board rotation —
-// unlike the viewport-pixel zone hit test. Used to claim ownership when a player
-// flips / rotates / gathers / shuffles a card that is sitting in their own zone,
-// matching what a drag-drop into the zone already does.
+// Perpendicular distance from a canonical point to a seat's own board edge.
+function edgeDist(seat: Seat, nx: number, ny: number): number {
+  switch (seat) {
+    case 0: return 1 - ny; // bottom edge y=1
+    case 1: return ny;     // top edge y=0
+    case 2: return nx;     // left edge x=0
+    case 3: return 1 - nx; // right edge x=1
+  }
+}
+
+// The seat whose board EDGE is closest to (nx, ny). This is the diagonal corner split: a
+// point in a corner belongs to whichever of the two adjacent edges it is nearer. Ties (a
+// point exactly on a diagonal, measure zero) break by seat order, deterministically for every
+// client.
+function nearestSeat(nx: number, ny: number): Seat {
+  let best: Seat = 0;
+  for (const s of [1, 2, 3] as Seat[]) if (edgeDist(s, nx, ny) < edgeDist(best, nx, ny)) best = s;
+  return best;
+}
+
+// The seat whose trapezoid contains the point, or null if it is in the public centre. Used
+// for live drag-drop ownership (via Game.pointInZone -> screenToCanonical) and the point test.
+export function seatForCanonicalPoint(nx: number, ny: number): Seat | null {
+  const s = nearestSeat(nx, ny);
+  return edgeDist(s, nx, ny) < ZONE_DEPTH ? s : null;
+}
+
+// Is a canonical [0,1] point inside a seat's trapezoid? Canonical (board-shared) space, so it
+// is correct for every viewer regardless of board rotation — unlike a viewport-pixel zone box,
+// which on the trapezoids would overlap at the corners. Used by Game.pointInZone (live drag),
+// and to claim ownership when a player flips / rotates / gathers / shuffles a card sitting in
+// their own zone, matching what a drag-drop into the zone already does.
 export function pointInZoneCanonical(seat: Seat, nx: number, ny: number): boolean {
-  const z = ZONES[seat];
-  return nx >= z.x0 && nx <= z.x1 && ny >= z.y0 && ny <= z.y1;
+  return seatForCanonicalPoint(nx, ny) === seat;
 }
 
 /** A seat's private-zone rectangle in canonical [0,1] coords (shared across viewers). */
@@ -104,12 +131,14 @@ export function cardZoneOwner(nx: number, ny: number, rot: number, cardWFrac: nu
 }
 
 /**
- * The seat whose private zone overlaps the card the MOST, with that overlap as a
- * fraction of the card's area (0..1), or null if no zone is touched. cardZoneOwner gates
- * this at ZONE_PRIVACY_FRAC (eager hide, late reveal). `nx, ny` is the card CENTRE
- * fraction; `cardWFrac, cardHFrac` are the card's size as fractions of the board.
- * Rotation-aware (an odd quarter-turn swaps the footprint). Zones never overlap, so the
- * single best match is unambiguous.
+ * The seat that owns the card and how far it has entered that seat's zone, as a fraction of
+ * the card's area (0..1), or null if the card is in the public centre. cardZoneOwner gates
+ * this at ZONE_PRIVACY_FRAC (eager hide, late reveal). `nx, ny` is the card CENTRE fraction;
+ * `cardWFrac, cardHFrac` are the card's size as fractions of the board. The owner is the seat
+ * whose board edge is nearest the card centre (the diagonal corner split), so a card straddling
+ * a corner belongs to one player unambiguously; the fraction is then how much of the card's
+ * footprint has crossed into that seat's full-width edge band. Rotation-aware (an odd
+ * quarter-turn swaps the footprint).
  */
 export function cardZoneOverlap(nx: number, ny: number, rot: number, cardWFrac: number, cardHFrac: number): { seat: Seat; frac: number } | null {
   const quarter = ((Math.round(rot) % 2) + 2) % 2; // 0 or 1 (odd turn swaps w/h)
@@ -117,17 +146,13 @@ export function cardZoneOverlap(nx: number, ny: number, rot: number, cardWFrac: 
   const h = quarter === 1 ? cardWFrac : cardHFrac;
   const area = w * h;
   if (area <= 0) return null;
+  const seat = nearestSeat(nx, ny);
+  const z = ZONES[seat];
   const cx0 = nx - w / 2, cy0 = ny - h / 2, cx1 = nx + w / 2, cy1 = ny + h / 2;
-  let best: { seat: Seat; frac: number } | null = null;
-  for (const seat of [0, 1, 2, 3] as Seat[]) {
-    const z = ZONES[seat];
-    const ix = Math.min(cx1, z.x1) - Math.max(cx0, z.x0);
-    const iy = Math.min(cy1, z.y1) - Math.max(cy0, z.y0);
-    if (ix <= 0 || iy <= 0) continue;
-    const frac = (ix * iy) / area;
-    if (!best || frac > best.frac) best = { seat, frac };
-  }
-  return best;
+  const ix = Math.min(cx1, z.x1) - Math.max(cx0, z.x0);
+  const iy = Math.min(cy1, z.y1) - Math.max(cy0, z.y0);
+  if (ix <= 0 || iy <= 0) return null;
+  return { seat, frac: (ix * iy) / area };
 }
 
 const ROW_GAP = 0.018; // gap between the two rows (Seal row vs Servant row), in canonical units

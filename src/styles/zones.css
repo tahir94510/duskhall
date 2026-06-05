@@ -37,7 +37,9 @@
    and every name reads upright. The zone div itself is now purely the frosted
    panel + its occupancy state (colour / dimming). */
 
-.zone--empty { opacity: 0.3; color: var(--ivory-mute); }
+/* An open seat still draws its frosted trapezoid, just quietly, so the table always reads as a
+   full four-seat board (a framed surface) rather than one lonely strip when seats are empty. */
+.zone--empty { opacity: 0.42; color: var(--ivory-mute); }
 .zone--active {
   color: var(--seat-color);
   border-color: color-mix(in oklab, var(--seat-color) 42%, transparent);
@@ -57,11 +59,14 @@
   transition: opacity 600ms var(--ease), border-color 600ms var(--ease);
 }
 
-/* Centered-cross placement on the 3-track board grid (board.css): each zone sits in the
-   CENTRE cell along its own edge (the middle 44%, 28% deep), with the four corner cells left
-   as neutral framing space. Grid lines fall at 0.28 / 0.72. Mirrors the canonical ZONES in
-   SlotGrid.ts exactly; the centre cell is left free for the deck/discard dock. */
-.zone--top { grid-column: 2; grid-row: 1; }
-.zone--left { grid-column: 1; grid-row: 2; }
-.zone--right { grid-column: 3; grid-row: 2; }
-.zone--self, .zone--bottom { grid-column: 2; grid-row: 3; }
+/* Trapezoid placement on the 3-track board grid (board.css). Each zone spans its WHOLE board
+   edge (the edge band, 28% deep) and is clipped to a trapezoid: wide at the board edge,
+   tapering to the inner 44% so adjacent zones meet along the board diagonals with no overlap
+   and the centre 0.44 x 0.44 stays free for the deck/discard. The clip matches the canonical
+   nearest-edge split in SlotGrid.ts, so what looks private IS private. Each hand area is now
+   nearly the full edge wide, so a player reads their whole hand at a glance. The inner taper
+   is 0.28 of the board: 28% of the strip's long side, 100% of its depth (a true 45deg corner). */
+.zone--top { grid-column: 1 / 4; grid-row: 1; clip-path: polygon(0% 0%, 100% 0%, 72% 100%, 28% 100%); }
+.zone--left { grid-column: 1; grid-row: 1 / 4; clip-path: polygon(0% 0%, 100% 28%, 100% 72%, 0% 100%); }
+.zone--right { grid-column: 3; grid-row: 1 / 4; clip-path: polygon(100% 0%, 100% 100%, 0% 72%, 0% 28%); }
+.zone--self, .zone--bottom { grid-column: 1 / 4; grid-row: 3; clip-path: polygon(28% 0%, 72% 0%, 100% 100%, 0% 100%); }

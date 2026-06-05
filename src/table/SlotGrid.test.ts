@@ -52,9 +52,9 @@ describe("cardZoneOwner: privacy-first — a sliver in conceals, almost-fully-ou
   });
 
   it("is rotation-aware: an odd quarter-turn swaps the footprint", () => {
-    // Seat 2 (left): x[0.0,0.28], y[0.28,0.72]. A card rotated 90° presents H x W.
+    // Seat 2 (left): the x=0 edge band, x[0.0,0.28]. A card rotated 90° presents H x W.
     // Centre near the left edge; with the swapped (wider-than-tall) footprint it sits
-    // mostly inside the tall-thin left zone differently than unrotated.
+    // inside the left band differently than unrotated.
     const upright = cardZoneOwner(0.13, 0.5, 0, W, H);
     const turned = cardZoneOwner(0.13, 0.5, 1, W, H);
     // Both resolve to seat 2 here, but the function must not throw and must apply the
