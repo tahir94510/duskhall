@@ -1021,6 +1021,17 @@ export class Game {
       this.selfConnAt = Date.now();
       this.bus.updateMe(this.presencePayload());
     });
+
+    // Back/forward cache (bfcache) restore: the browser resumes a FROZEN page (sometimes
+    // after discarding it to save memory). The realtime socket is dead and the board may be
+    // stale, yet no loader is showing. The cleanest, bug-free recovery is a full reload, which
+    // replays the exact first-load flow — the inline splash paints instantly, boot() reconnects
+    // and restores the room/snapshot, and hideLoader() runs only once everything is synced.
+    // `event.persisted` is true ONLY on a bfcache restore, never on a normal load, so this can
+    // never loop. (A normal tab discard already triggers a real reload, which is handled too.)
+    window.addEventListener("pageshow", (e) => {
+      if ((e as PageTransitionEvent).persisted) window.location.reload();
+    });
   }
 
   private wheelCooldownUntil = 0;
