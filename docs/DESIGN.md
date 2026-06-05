@@ -39,7 +39,13 @@ Card positions store the card CENTRE as a canonical fraction; the render loop tu
 - `DECK_NX = 0.43`, `DECK_NY = 0.5`
 - `DISCARD_NX = 0.57`, `DISCARD_NY = 0.5`
 
-`board.css` paints the two dock markers at these same percentages (`left: 43%` / `57%`, centred with `translate(-50%, -50%)`), and the initial deal pile is anchored to the same numbers, so the markers and the dealt pile can never drift apart. They sit a little closer to centre than the board edges so the public ring opens a tableau-shelf band in front of every seat, clear of the deck/discard.
+`board.css` paints the two dock markers at these same percentages (`left: 43%` / `57%`, centred with `translate(-50%, -50%)`), and the initial deal pile is anchored to the same numbers, so the markers and the dealt pile can never drift apart.
+
+### Off-board ledges and the extended play square
+
+The canonical `[0, 1]²` is the **inner board** (zones, dock, hand). Each side has an off-board **ledge apron** of depth `APRON_FRAC = 0.18` (`src/table/constants.ts`), so canonical coords run over the **extended square** `[-APRON_FRAC, 1+APRON_FRAC]²`. Each player's Seal/Servant tableau sits in their own edge's apron (`slotsForSeat` in `SlotGrid.ts`: 4 Seal + 3 Servant slots), drawn by `Board.paintLedges`. Because the ledges live in the rotating board layer, every viewer sees their own ledge in front of them and rivals' ledges around the table — symmetric and identical for all (D4 symmetry). Apron cards are public (outside the hand zone), and off-board canonical coords sync untouched (`inputGuard` `COORD_MIN/MAX = -3/4`).
+
+`board.css` sizes the inner board as `--field = --field-cap / 1.36` (`1.36 = 1 + 2*APRON_FRAC`) and `--apron = --field * 0.18`, so the extended square equals the centered viewport-min square. The drag clamp (`clampSeedToField`, `src/table/playfield.ts`) keeps every card body inside the extended square, which therefore keeps every card on the visible PAGE on any device/aspect — rotation-aware (an odd quarter-turn swaps the card's width/height). Sticky magnetic snapping to the dock and a player's own ledge slots lives in `snapSeed` (same file); both helpers are pure and unit-tested (`playfield.test.ts`). Keep the `1.36` divisor and `--apron` in `board.css` in step with `APRON_FRAC`.
 
 Magnet snap is removed; players place cards by hand. The dock slots are visual targets only.
 
