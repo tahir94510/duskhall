@@ -1,34 +1,43 @@
 .zone {
   position: relative;
   border-radius: var(--r-zone);
-  /* A premium frosted tray: a faint top-lit vertical gradient over the felt gives
-     the panel real depth, and an inset top catch-light + dark base edge make it
-     read as a carved surface rather than a flat wash. */
+  /* A light frosted-glass tray: it SOFTENS the felt behind it (backdrop blur) and carries a
+     faint top catch-light and a clean hairline edge, so each seat's area reads as a defined
+     surface that sits gently ABOVE the table, never a dark wall. A near-zero white tint keeps
+     it a raised glass tray rather than a dark well, so the four trays frame the play surface
+     instead of caving it into a box. */
   background:
-    linear-gradient(180deg, rgba(243, 239, 229, 0.05) 0%, rgba(18, 18, 18, 0) 38%),
-    rgba(16, 16, 16, 0.3);
-  border: 1px solid var(--line);
-  /* Carved tray depth: a fine top catch-light, a dark inner frame, and a soft base
-     shading toward the bottom so the panel reads as a real recessed surface. */
-  box-shadow:
-    inset 0 1px 0 rgba(243, 239, 229, 0.06),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.24),
-    inset 0 -14px 28px rgba(0, 0, 0, 0.22);
-  backdrop-filter: blur(12px) saturate(112%);
-  -webkit-backdrop-filter: blur(12px) saturate(112%);
+    linear-gradient(180deg, rgba(243, 239, 229, 0.04) 0%, rgba(243, 239, 229, 0) 50%),
+    rgba(255, 255, 255, 0.012);
+  /* Faint edge on purpose: a strong border on all four trapezoids draws the diagonal seams
+     into a 'box' illusion. A whisper of an edge lets the opponent/empty trays sit quietly so
+     the play surface stays open and only YOUR tray (and active opponents) read clearly. */
+  border: 1px solid rgba(243, 239, 229, 0.05);
+  box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.04);
+  backdrop-filter: blur(9px) saturate(106%);
+  -webkit-backdrop-filter: blur(9px) saturate(106%);
   transition: border-color var(--dur) var(--ease), opacity var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
   isolation: isolate;
   z-index: var(--z-zone);
   pointer-events: none;
 }
 
-/* Self zone stays glass-clear so the owner reads their hand at a glance, but keeps
-   a soft inner frame + top catch-light so it still reads as a real, premium tray. */
+/* Your own hand tray, the most defined surface on the table so "this is your area" is
+   unmistakable, yet still light so you read your hand at a glance. Cards render ABOVE the zone
+   (higher z), so the frost only softens the felt behind the tray, never your own cards. A
+   brighter top catch-light, a stronger ivory edge and a soft outer halo set it apart as the
+   active, owned surface. */
 .zone--self {
-  background: linear-gradient(180deg, rgba(243, 239, 229, 0.045) 0%, rgba(18, 18, 18, 0) 42%), rgba(18, 18, 18, 0.1);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.07), inset 0 0 0 1px rgba(243, 239, 229, 0.06);
+  background:
+    linear-gradient(180deg, rgba(243, 239, 229, 0.11) 0%, rgba(243, 239, 229, 0) 52%),
+    rgba(255, 255, 255, 0.045);
+  backdrop-filter: blur(8px) saturate(112%);
+  -webkit-backdrop-filter: blur(8px) saturate(112%);
+  border-color: rgba(243, 239, 229, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(243, 239, 229, 0.14),
+    inset 0 0 0 1px rgba(243, 239, 229, 0.07),
+    0 -3px 22px rgba(243, 239, 229, 0.04);
 }
 
 /* The player name, status light and host kick control no longer live inside the
@@ -39,7 +48,7 @@
 
 /* An open seat still draws its frosted trapezoid, just quietly, so the table always reads as a
    full four-seat board (a framed surface) rather than one lonely strip when seats are empty. */
-.zone--empty { opacity: 0.42; color: var(--ivory-mute); }
+.zone--empty { opacity: 0.22; color: var(--ivory-mute); }
 .zone--active {
   color: var(--seat-color);
   border-color: color-mix(in oklab, var(--seat-color) 42%, transparent);

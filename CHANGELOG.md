@@ -26,9 +26,11 @@ positions stay device independent and identical for every player). 177 tests gre
 - **Even table lighting.** Removed the bright-centre / dark-edge hotspot: the felt now uses
   a single gentle, shallow vignette so the table reads as uniformly lit, and the wide-screen
   field frame casts a softer shadow.
-- **Open seats stay visible.** An empty seat still draws its frosted trapezoid quietly, so
-  the table always reads as a full four-seat board rather than one lonely strip when you are
-  the only player seated.
+- **Your hand tray reads clearly; the table stays open.** Your own zone is a clearly defined,
+  lit frosted tray (so "this is your area" is obvious and you read your whole hand at a
+  glance), while opponent and empty zones sit very quietly. That keeps the four diagonal
+  trapezoid seams from reading as a dark "box", so the play surface stays open and premium.
+  An occupied opponent's tray still picks up its seat accent so you can see where they are.
 - **Pointer-lift depth (2.5D feel).** A hovered card raises off the felt: its flat shadow
   underlay swells to a mid raised cast and the card brightens slightly. Built only from
   shadow and light on the card's `::before` underlay, so it never fights the render loop's
