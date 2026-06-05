@@ -71,7 +71,7 @@ OLUŞTUR (1 HP): elden 1 Büyü oynayın, ya da masanıza 1 Mühür veya 1 Hizme
 
 ARAŞTIR (1 HP): desteden 1 ekstra kart çekin.
 
-ARINDIR (1 HP): elinizden 1 kart atın, ardından 1 kart çekin. Arındır ile çekilen kart aynı turda başka bir Arındır ile atılamaz.
+ARINDIR (1 HP): elinizden 1 kart atın, ardından 1 kart çekin. Arındır ile çekilen kart aynı turda başka bir Arındır ile atılamaz. Arındır elinizin boyutunu değiştirmez (takas), Araştır ise eli bir kart büyütür; eliniz doluyken ya da kullanamayacağınız bir kartı döndürmek için Arındır'ı, yalnızca daha çok kart istediğinizde Araştır'ı seçin.
 
 AŞAMA 3, KAPANIŞ: Önce aktif tüm Mühür efektleri devreye girer (Ölüçağıranın Gözü kartını şimdi alır). Sonra el limiti kontrol edilir ve 7'ye iner. Ölüçağıranın Gözü'nün yeni aldığı kart da bu limite dahildir ve atılacak kart o olabilir. Kapanış tamamlandıktan sonra masanızda en az 3 Mühür varsa Yükseliş ilan edebilirsiniz (bkz. bölüm 10).
 
@@ -185,7 +185,9 @@ S. Kan Kefareti için elimde kaç kart olmalı? C. En az 2. Daha azıyla oynanam
 
 S. Kan Kefareti'nin attığı 2 kartı kim seçer? C. Kimse. Kartlar elinden rastgele çıkar, bu yüzden bedeli ödemek her zaman bir risktir.
 
-S. Zihin Paraziti'ni masamda 3 Hizmetkâr varken oynayabilir miyim? C. Hayır. Çalınan Hizmetkâr limitinizi doldurur; oynanamaz, HP harcanmaz.
+S. Zihin Paraziti'ni masamda 3 Hizmetkâr varken oynayabilir miyim? C. Hayır. Ele geçirilen Hizmetkâr sınırınızı doldurur; oynanamaz, HP harcanmaz.
+
+S. Zihin Paraziti ile bir Buzul Ucube'yi ele geçirirsem tur atlar mıyım? C. Hayır. Ele geçirmek yok etmek değildir; tur atlatma cezası tetiklenmez, yalnız Buzul Ucube yok edildiğinde işler.
 
 S. Gölge Hırsızlığı Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. El koruma altındadır.
 

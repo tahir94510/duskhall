@@ -46,11 +46,11 @@ but your total HP can never exceed 5. Becomes active from the turn AFTER it is p
 *It still stands when all else has fallen.*
 
 ### Necromancer's Eye (Seal, 4 copies)
-At the start of your Closing phase, before the hand-limit check, you MUST take the top
-card of the Discard into your hand. Each additional copy takes one more. If the Discard
-is empty the effect fizzles. Works on the very turn it is placed. The card you take
-counts toward your hand, so if you go over 7 you can discard it (or any other card) in
-the same Closing.
+At the start of your Closing phase, before the hand-limit check, take the top card of the
+Discard into your hand (each extra copy takes one more). Because this happens before the
+limit check, if your hand goes over 7 you simply discard down as usual and may discard the
+card you just took, so it never costs you a card you wanted to keep. If the Discard is
+empty, nothing happens. It works the turn it is placed.
 
 *The dead keep their accounts in long, patient ledgers.*
 
@@ -66,9 +66,9 @@ untargetable, the spell cannot be cast, no HP is spent.
 *A clean cut between the seen and the sealed.*
 
 ### Shadow Theft (Spell, 6 copies)
-Spend 1 HP. Choose a rival; their hand is turned face-down and one card is taken at
-random into your hand. If their hand is empty or shielded by Veil of Void, this spell
-cannot be cast.
+Spend 1 HP. Choose a rival. Their hand is shuffled face-down so no one can see it, then
+one card is taken from it at random into your hand; neither of you chooses which. If their
+hand is empty or protected by Veil of Void, this spell cannot be cast and no HP is spent.
 
 *Every secret has a weight you can lift.*
 
@@ -80,10 +80,11 @@ remaining draws come from the new deck.
 *Open the eye that never blinks.*
 
 ### Mind Parasite (Spell, 4 copies)
-Spend 1 HP. Take control of one Servant from a rival's tableau and move it to your own.
-The stolen Servant counts toward your 3-Servant limit. If you already have 3 Servants
-or the target has no Servants, this spell cannot be cast, no HP is spent. All ongoing
-effects transfer to the new owner.
+Spend 1 HP. Take control of one Servant on a rival's tableau and move it to yours. It
+counts toward your 3-Servant limit and keeps all of its ongoing effects, now under your
+control. Taking control is not the same as destroying, so stealing a Glacial Aberration
+does not trigger its skip-a-turn penalty. If you already have 3 Servants, or the target
+has none, this spell cannot be cast and no HP is spent.
 
 *Loyalty is a door, and you have the key.*
 
@@ -136,10 +137,11 @@ Seals.
 *Patience etched in iron.*
 
 ### Glacial Aberration (Servant, 4 copies)
-When this Servant is destroyed, the player who destroyed it skips their entire next turn
-(Focus, Action, and Closing). Interventions may still be played during the skipped turn.
-The penalty applies even if the destruction was indirect (Shadow Slayer entry, Karmic
-Reflection redirect, etc.).
+When this Servant is destroyed, whoever destroyed it skips their entire next turn (Focus,
+Action, and Closing); they may still play Interventions during that skipped turn. The
+penalty applies even when the destruction is indirect, such as a Shadow Slayer's entry or
+a Karmic Reflection redirect. Only destruction triggers it: having this Servant stolen,
+for example by Mind Parasite, does not.
 
 *A winter that keeps its own time.*
 

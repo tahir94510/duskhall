@@ -357,7 +357,7 @@
     "necromancersEye": {
       "name": "Necromancer's Eye",
       "type": "Seal",
-      "effect": "At the start of your Closing phase, before the hand-limit check, you MUST take the top card of the Discard into your hand. Each additional copy takes one more. If the Discard is empty the effect fizzles. Works on the very turn it is placed. The card you take counts toward your hand, so if you go over 7 you can discard it (or any other card) in the same Closing.",
+      "effect": "At the start of your Closing phase, before the hand-limit check, take the top card of the Discard into your hand (each extra copy takes one more). Because this happens before the limit check, if your hand goes over 7 you simply discard down as usual and may discard the card you just took, so it never costs you a card you wanted to keep. If the Discard is empty, nothing happens. It works the turn it is placed.",
       "flavor": "The dead keep their accounts in long, patient ledgers."
     },
     "etherStrike": {
@@ -369,7 +369,7 @@
     "shadowTheft": {
       "name": "Shadow Theft",
       "type": "Spell",
-      "effect": "Spend 1 HP. Choose a rival; their hand is turned face-down and one card is taken at random into your hand. If their hand is empty or shielded by Veil of Void, this spell cannot be cast.",
+      "effect": "Spend 1 HP. Choose a rival. Their hand is shuffled face-down so no one can see it, then one card is taken from it at random into your hand; neither of you chooses which. If their hand is empty or protected by Veil of Void, this spell cannot be cast and no HP is spent.",
       "flavor": "Every secret has a weight you can lift."
     },
     "ancientSight": {
@@ -381,7 +381,7 @@
     "mindParasite": {
       "name": "Mind Parasite",
       "type": "Spell",
-      "effect": "Spend 1 HP. Take control of one Servant from a rival's tableau and move it to your own. The stolen Servant counts toward your 3-Servant limit. If you already have 3 Servants or the target has no Servants, this spell cannot be cast, no HP is spent. All ongoing effects transfer to the new owner.",
+      "effect": "Spend 1 HP. Take control of one Servant on a rival's tableau and move it to yours. It counts toward your 3-Servant limit and keeps all of its ongoing effects, now under your control. Taking control is not the same as destroying, so stealing a Glacial Aberration does not trigger its skip-a-turn penalty. If you already have 3 Servants, or the target has none, this spell cannot be cast and no HP is spent.",
       "flavor": "Loyalty is a door, and you have the key."
     },
     "twistOfFate": {
@@ -417,7 +417,7 @@
     "glacialAberration": {
       "name": "Glacial Aberration",
       "type": "Servant",
-      "effect": "When this Servant is destroyed, the player who destroyed it skips their entire next turn (Focus, Action, and Closing). Interventions may still be played during the skipped turn. The penalty applies even if the destruction was indirect (Shadow Slayer entry, Karmic Reflection redirect, etc.).",
+      "effect": "When this Servant is destroyed, whoever destroyed it skips their entire next turn (Focus, Action, and Closing); they may still play Interventions during that skipped turn. The penalty applies even when the destruction is indirect, such as a Shadow Slayer's entry or a Karmic Reflection redirect. Only destruction triggers it: having this Servant stolen, for example by Mind Parasite, does not.",
       "flavor": "A winter that keeps its own time."
     },
     "shadowSlayer": {
@@ -482,7 +482,7 @@
           "PHASE 2, ACTION: You have 2 HP this turn (3 to 5 if Crimson Monolith is in play, capped at 5). Spend each HP on any single action below, in any combination. Unspent HP is lost; it does not roll over.",
           "CREATE (1 HP): cast 1 Spell from hand, or place 1 Seal or 1 Servant onto your tableau.",
           "STUDY (1 HP): draw 1 extra card from the deck.",
-          "CLEANSE (1 HP): discard 1 card from your hand, then draw 1 card. The card drawn by Cleanse cannot be discarded by another Cleanse in the same turn.",
+          "CLEANSE (1 HP): discard 1 card from your hand, then draw 1 card. The card drawn by Cleanse cannot be discarded by another Cleanse in the same turn. Cleanse keeps your hand the same size (a swap), while Study grows it by one; reach for Cleanse when your hand is full or to cycle out a card you cannot use, and for Study when you simply want more cards.",
           "PHASE 3, CLOSING: First, every active Seal trigger fires (Necromancer's Eye takes its card from the Discard now). Then check the hand limit and discard down to 7 if needed. A card just taken by Necromancer's Eye counts toward the limit, and it can be the one you discard. After Closing is complete, if you have at least 3 Seals on your tableau you MAY declare Ascension (see section 10)."
         ]
       },
@@ -561,12 +561,12 @@
           "Time Rift: During your Focus phase you draw 3 cards instead of 2. Each additional copy adds +1 draw (max 4 copies, 6 cards). Becomes active from the turn AFTER it is placed.",
           "Veil of Void: Your other Seals and your hand cannot be targeted by enemy spells or effects. Veil of Void itself remains targetable. Active immediately when placed. Multiple copies do not stack.",
           "Crimson Monolith: During your Action phase you spend 3 HP instead of 2. Each additional copy adds +1 HP, but your total HP can never exceed 5. Becomes active from the turn AFTER it is placed.",
-          "Necromancer's Eye: At the start of your Closing phase, before the hand-limit check, you MUST take the top card of the Discard into your hand. Each additional copy takes one more. If the Discard is empty the effect fizzles. Works on the very turn it is placed. The card you take counts toward your hand, so if you go over 7 you can discard it (or any other card) in the same Closing.",
+          "Necromancer's Eye: At the start of your Closing phase, before the hand-limit check, take the top card of the Discard into your hand (each extra copy takes one more). Because it happens before the limit check, if your hand goes over 7 you discard down as usual and may discard the card you just took, so it never costs you a card you wanted. If the Discard is empty, nothing happens. Active the turn it is placed.",
           "SPELLS (24 total):",
           "Ether Strike: 1 HP. Destroy 1 card on a rival's tableau. Servant Shield applies.",
-          "Shadow Theft: 1 HP. Choose a rival; their hand is turned face-down and 1 card is taken at random into your hand. Blocked by Veil of Void.",
+          "Shadow Theft: 1 HP. Choose a rival; their hand is shuffled face-down (hidden from everyone) and 1 card is taken from it at random into your hand. Neither player chooses which. Blocked by Veil of Void.",
           "Ancient Sight: 1 HP. Draw 3 cards from the deck. Self-targeted only; no opponent involved.",
-          "Mind Parasite: 1 HP. Take control of one Servant from a rival's tableau. Counts toward your 3-Servant limit.",
+          "Mind Parasite: 1 HP. Take control of one Servant on a rival's tableau; it keeps its effects and counts toward your 3-Servant limit. Taking control is not destroying, so a stolen Glacial Aberration does not trigger its skip penalty.",
           "Twist of Fate: 1 HP. Swap every card in your hand with every card in a chosen rival's hand. Blocked by Veil of Void.",
           "INTERVENTIONS (16 total):",
           "Silence!: 0 HP. Cancel a freshly cast Spell or Intervention. Both cards go to the Discard. Universal target.",
@@ -574,7 +574,7 @@
           "Blood Atonement: 0 HP. Selfish. When one of your Seals is about to be destroyed, 2 cards leave your hand at random to save it. Nobody picks them.",
           "SERVANTS (16 total):",
           "Runic Warden: While in play, ALL of your Seals gain untargetable. Servant Shield still applies, so rivals must clear your Wardens first.",
-          "Glacial Aberration: When destroyed, the destroyer skips their entire next turn (Focus, Action, Closing). Interventions still allowed during the skip.",
+          "Glacial Aberration: When destroyed, the destroyer skips their entire next turn (Focus, Action, Closing); Interventions are still allowed during the skip. Only destruction triggers this, not being stolen (e.g. by Mind Parasite).",
           "Shadow Slayer: On entry, if any rival has a Servant you MUST destroy one. If it kills a Glacial Aberration this way, YOU receive the skip penalty."
         ]
       },
@@ -594,6 +594,7 @@
           "Q. Blood Atonement needs how many cards in hand? A. At least 2. With fewer, it cannot be played.",
           "Q. Who picks the 2 cards Blood Atonement discards? A. Nobody. They leave your hand at random, so paying the cost is always a gamble.",
           "Q. Mind Parasite when your tableau already has 3 Servants? A. Cannot be cast; no HP spent.",
+          "Q. If I take a Glacial Aberration with Mind Parasite, do I skip a turn? A. No. Taking control is not destroying, so its skip-a-turn penalty does not trigger; it only fires when the Aberration is destroyed.",
           "Q. Shadow Theft against a hand protected by Veil of Void? A. Not legal; cannot be cast.",
           "Q. Twist of Fate against Veil of Void? A. Not legal; the targeted player's hand is shielded.",
           "Q. Can a player skipped by Glacial Aberration still play Interventions? A. Yes. Interventions are reactive and ignore turn order.",
