@@ -15,15 +15,18 @@ balance numbers are unchanged. 177 tests green throughout.
   Ownership resolves by the nearest board edge to the card centre in the shared canonical
   frame (`cardZoneOverlap`, `pointInZoneCanonical` in `src/table/SlotGrid.ts`); the CSS
   clip-paths and `Game.pointInZone` use the same rule, so drag-drop, concealment and cursors
-  agree for every seat. The hand depth is 24% of the board, opening a tableau band in front.
-- **Per-seat tableau shelves.** A single framed band sits in the public ring in front of
-  each player for their face-up Seals and Servants, laid out overlapping like a fanned row.
-  Congruent across seats and clear of the deck/discard (which moved a touch closer together
-  to make room); only your own shelf shows its "Seals / Servants" label.
-- **Safer dragging and privacy.** A dragged card (or pile) is clamped so it can never leave
-  the board entirely, so a card is never lost off-screen. Concealment is now sticky: a card
-  hides the instant any part enters a zone and only reveals once it has fully cleared it, so
-  you can arrange cards in your own hidden area without ever flashing one to the table.
+  agree for every seat. The hand depth is 18% of the board, leaving room for a tableau shelf
+  in front of every seat that clears the deck/discard on each edge.
+- **Per-seat tableau shelves.** A single framed slot, drawn exactly like the deck/discard dock
+  (one card tall) but 3.5 card-widths wide (half a 7-card row, since Seals and Servants are
+  laid out overlapping like a fanned row), sits in front of each player. Congruent across
+  seats, clear of the deck/discard, and shown only when a seat is occupied (like the hidden
+  zones); only your own shelf shows its "Seals / Servants" label.
+- **Safer dragging and privacy.** A dragged card (or pile) is clamped so its whole body stays
+  inside the square field: it never hangs half off the top/bottom of the page and is never
+  lost off-screen, while its body can still fill every in-field area. Concealment is sticky: a
+  card hides the instant any part enters a zone and reveals only once it has fully cleared it,
+  so you can arrange cards in your own hidden area without ever flashing one to the table.
 - **Under-glass own cards + even lighting.** A card resting in your own hand area gains a
   thin glass sheen (no blur, stays sharp). The felt uses one gentle, even vignette (no
   bright-centre / dark-edge hotspot), and the redundant board edge padding was removed.
@@ -37,8 +40,9 @@ balance numbers are unchanged. 177 tests green throughout.
   EN and TR across every copy: Necromancer's Eye (a free benefit, not a "must" trap), Shadow
   Theft (the rival's hand is shuffled face-down and one card taken at random), and the
   steal-is-not-destroy interaction of Mind Parasite and Glacial Aberration; plus when to use
-  Study vs Cleanse. In the rulebook, card names are now clickable and open that card's full
-  info panel (the same one you get hovering a card on the table).
+  Study vs Cleanse. In the rulebook, card names and key terms (Ether Resonance, Ascension,
+  Servant Shield) open an info panel on hover or tap, the same panel you get from a card on
+  the table, so you can check any reference without leaving the page.
 - **Robust tab restore.** Returning to a tab the browser froze into the back/forward cache
   now reloads cleanly, replaying the first-load flow (splash, reconnect, then the loader
   clears once everything is synced) instead of resuming on a dead socket.
