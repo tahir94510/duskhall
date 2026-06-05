@@ -117,18 +117,21 @@ function paintSlotGrid(refs: BoardRefs): void {
   }
 }
 
-// One tableau shelf per seat: a single framed band in the public ring just in front of each
-// player's hand zone, where they lay out their face-up Seals and Servants OVERLAPPING (each
-// half shown), exactly like a fanned row in hand. It is a guide, not a snap target, so it can
-// never crowd or break the layout; cards may extend past it. The four shelves are congruent
-// (each 0.30 in from its own board edge) so every seat gets the same area, and they sit clear
-// of the central deck/discard. They live in the rotating board layer, so each player sees their
-// own shelf horizontal at the bottom (label upright) and the rivals' shelves around the table.
-const SHELVES: Array<{ seat: Seat; left: number; top: number; w: number; h: number }> = [
-  { seat: 0, left: 50, top: 70, w: 48, h: 12 },
-  { seat: 1, left: 50, top: 30, w: 48, h: 12 },
-  { seat: 2, left: 30, top: 50, w: 12, h: 48 },
-  { seat: 3, left: 70, top: 50, w: 12, h: 48 }
+// One tableau shelf per seat: a single framed slot, drawn exactly like the deck/discard dock
+// (one card tall) but 3.5 card-widths wide — half the width of a full 7-card row (4 Seals + 3
+// Servants), since those cards are laid out OVERLAPPING (each half shown), like a fanned row.
+// It sits in the public ring just in front of each player's hand zone, congruent across seats
+// (each centred 0.27 in from its own board edge) and clear of the central deck/discard, so a
+// player sees plainly where to place their Seals and Servants. A guide, not a snap target, so
+// it can never crowd or break the layout. It lives in the rotating board layer, so each viewer
+// sees their own shelf horizontal at the bottom (label upright) and rivals' shelves around the
+// table at their own angles. `vertical` seats (left/right) get the long axis along their edge.
+const SHELF_INSET = 0.27; // centre distance from the board edge (ZONE_DEPTH 0.18 + half a card)
+const SHELVES: Array<{ seat: Seat; cx: number; cy: number; vertical: boolean }> = [
+  { seat: 0, cx: 0.5, cy: 1 - SHELF_INSET, vertical: false },
+  { seat: 1, cx: 0.5, cy: SHELF_INSET, vertical: false },
+  { seat: 2, cx: SHELF_INSET, cy: 0.5, vertical: true },
+  { seat: 3, cx: 1 - SHELF_INSET, cy: 0.5, vertical: true }
 ];
 
 function paintTableauShelves(refs: BoardRefs): void {
@@ -136,10 +139,14 @@ function paintTableauShelves(refs: BoardRefs): void {
     const shelf = document.createElement("div");
     shelf.className = "tableau-shelf";
     shelf.dataset.seat = String(s.seat);
-    shelf.style.left = `${s.left}%`;
-    shelf.style.top = `${s.top}%`;
-    shelf.style.width = `${s.w}%`;
-    shelf.style.height = `${s.h}%`;
+    shelf.style.left = `${s.cx * 100}%`;
+    shelf.style.top = `${s.cy * 100}%`;
+    // One card tall, 3.5 cards wide along the player's edge. For side seats the long axis runs
+    // vertically, so the width/height swap. Sizes are in card units so they scale with the board.
+    const long = "calc(var(--card-w) * 3.5)";
+    const short = "var(--card-h)";
+    shelf.style.width = s.vertical ? short : long;
+    shelf.style.height = s.vertical ? long : short;
     // The label counter-rotates the board rotation so it reads upright for the local viewer
     // (matching the deck/discard labels), and is updated on language change by refreshDockLabels.
     shelf.innerHTML = `<span class="tableau-shelf__label">${escapeHtml(t("table.tableau"))}</span>`;

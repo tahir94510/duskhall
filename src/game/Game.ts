@@ -2947,10 +2947,17 @@ export class Game {
         }
       }
     }
-    // Mark the local player's own tableau shelf so only it shows the "Seals · Servants" label
-    // (always rotated to the bottom, horizontal), keeping rivals' shelves as clean frames.
+    // Tableau shelves follow seat occupancy like the hidden hand zones: a seat's shelf shows
+    // only when someone is there (active, away/claimed, or it is your own seat), and hides
+    // when the seat is empty, so an empty table is not ringed with stray frames. Only your own
+    // shelf carries the "Seals · Servants" label (the board rotation brings it upright at the
+    // bottom), keeping rivals' shelves as clean frames.
     for (const shelf of this.refs.slotLayer.querySelectorAll<HTMLElement>(".tableau-shelf")) {
-      shelf.classList.toggle("is-self", !this.spectator && Number(shelf.dataset.seat) === this.self.seat);
+      const seat = Number(shelf.dataset.seat);
+      const isSelfSeat = !this.spectator && seat === this.self.seat;
+      const occupied = isSelfSeat || this.activeSeats.has(seat) || this.seatClaims.has(seat);
+      shelf.classList.toggle("is-hidden", !occupied);
+      shelf.classList.toggle("is-self", isSelfSeat);
     }
   }
 

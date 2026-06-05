@@ -44,18 +44,19 @@
      variables so the non-rotating seat-label layer (.board__labels) can reuse the
      EXACT same tracks/gap and stay pixel-aligned with the zones at every
      breakpoint (mobile overrides only re-set these variables). */
-  /* Three tracks per axis: the edge bands are 24% deep and the centre is the 52% middle. Each
+  /* Three tracks per axis: the edge bands are 18% deep and the centre is the 64% middle. Each
      private zone spans its WHOLE edge (full row/column) and is clipped to a trapezoid in
      zones.css, so every seat's hand area is nearly the full edge wide while the four trapezoids
-     meet along the diagonals (no overlap) and the centre 0.52 x 0.52 cell stays free for the
-     deck/discard AND the per-seat tableau shelves. 24% deep matches the canonical ZONE_DEPTH
-     (SlotGrid.ts) so the drawn panel and the private area line up exactly. One depth on every
+     meet along the diagonals (no overlap) and the centre 0.64 x 0.64 cell stays free for the
+     deck/discard AND a one-card-tall tableau shelf in front of every seat. 18% deep matches the
+     canonical ZONE_DEPTH (SlotGrid.ts) so the drawn panel and the private area line up exactly,
+     and it leaves the shelf room to clear the deck/discard on every edge. One depth on every
      breakpoint keeps the proportion identical across devices. Rows == cols so the board stays
      square-symmetric for the 90° seat rotation, and the four trapezoids stay congruent so every
      seat's area is the same size. Keep these tracks in lockstep with the SlotGrid ZONE_DEPTH
      and the zones.css clip-paths. */
-  --grid-cols: minmax(60px, 24%) 1fr minmax(60px, 24%);
-  --grid-rows: minmax(60px, 24%) 1fr minmax(60px, 24%);
+  --grid-cols: minmax(46px, 18%) 1fr minmax(46px, 18%);
+  --grid-rows: minmax(46px, 18%) 1fr minmax(46px, 18%);
   --grid-gap: clamp(6px, 1.4vmin, 16px);
   grid-template-columns: var(--grid-cols);
   grid-template-rows: var(--grid-rows);
@@ -351,13 +352,22 @@ body:not(.is-ready) .board__perspective { transition: none; }
   position: absolute;
   transform: translate(-50%, -50%);
   border-radius: var(--r-card);
-  border: 1px dashed rgba(243, 239, 229, 0.11);
-  background: linear-gradient(180deg, rgba(243, 239, 229, 0.025) 0%, rgba(243, 239, 229, 0) 72%);
-  box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.05), inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+  /* Drawn exactly like the deck/discard dock slot (solid hairline frame + carved well) so the
+     tableau reads as a real, consistent drop target — just wider, to hold a fanned row. */
+  border: 1px solid rgba(243, 239, 229, 0.3);
+  background: radial-gradient(120% 90% at 50% 42%, rgba(243, 239, 229, 0.07) 0%, rgba(243, 239, 229, 0) 72%);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(243, 239, 229, 0.06),
+    inset 0 10px 22px rgba(0, 0, 0, 0.34);
   display: grid;
   place-items: center;
   pointer-events: none;
 }
+
+/* A shelf for an empty seat is not drawn (like an empty hidden zone), so an empty table is
+   never ringed with stray frames. Game.refreshZones toggles this by seat occupancy. */
+.tableau-shelf.is-hidden { display: none; }
 
 /* The shelf label (e.g. "Seals · Servants") shows only on YOUR OWN shelf, which the board
    rotation always brings to the bottom (horizontal), so the label never overflows a narrow

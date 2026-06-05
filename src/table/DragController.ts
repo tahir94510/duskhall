@@ -255,11 +255,12 @@ export class DragController {
       seedNy = snap.ny;
     }
 
-    // Keep the whole dragged group on the board: clamp the seed so every card's
-    // CENTRE stays within the canonical [0,1] square. A card can hang at most half
-    // off an edge but can never leave the play area entirely, so a card is never lost
-    // off-screen and always stays grabbable. The pile keeps its rigid relative layout.
-    ({ nx: seedNx, ny: seedNy } = this.clampSeedToBoard(s, seedNx, seedNy));
+    // Keep the whole dragged group's BODIES inside the square play field: clamp the seed so
+    // every card's full footprint stays within [0,1]. A card therefore never hangs off an
+    // edge (no half-card off the top/bottom of the page) and never leaves the field, while its
+    // body can still fill every in-field area (hand zone, tableau shelf, dock). The square is
+    // always within the page, so this also keeps cards on-screen. The pile stays rigid.
+    ({ nx: seedNx, ny: seedNy } = this.clampSeedToBoard(s, seedNx, seedNy, m));
 
     for (const id of s.ids) {
       const rel = s.relOffsets.get(id);
@@ -370,11 +371,17 @@ export class DragController {
     this.session = null;
   };
 
-  /** Clamp the dragged group's seed (canonical) so EVERY card centre in the group stays
-   *  within the [0,1] board. Uses the pile's relative-offset bounds so the group moves as
-   *  one rigid block and no card slips fully off an edge. If a pile is somehow wider than
-   *  the board, the seed itself is clamped to [0,1] as a floor. Pure, no side effects. */
-  private clampSeedToBoard(s: DragSession, seedNx: number, seedNy: number): { nx: number; ny: number } {
+  /** Clamp the dragged group's seed (canonical) so every card's full BODY stays within the
+   *  [0,1] square play field. Uses the pile's relative-offset bounds (so the group moves as a
+   *  rigid block) plus a half-card inset so no card hangs off an edge. The inset uses the
+   *  card's larger (height) dimension for both axes, so a card stays fully on-field at any
+   *  rotation. If a pile is wider than the field, the seed falls back to [0,1]. Pure. */
+  private clampSeedToBoard(
+    s: DragSession,
+    seedNx: number,
+    seedNy: number,
+    m: { width: number; height: number; cardW: number; cardH: number }
+  ): { nx: number; ny: number } {
     let minDx = 0, maxDx = 0, minDy = 0, maxDy = 0;
     for (const { dx, dy } of s.relOffsets.values()) {
       if (dx < minDx) minDx = dx;
@@ -382,11 +389,14 @@ export class DragController {
       if (dy < minDy) minDy = dy;
       if (dy > maxDy) maxDy = dy;
     }
+    // Half the card's larger side as a fraction of the field (rotation-safe for both axes).
+    const halfX = m.cardH / 2 / m.width;
+    const halfY = m.cardH / 2 / m.height;
     const clamp = (v: number, lo: number, hi: number): number =>
       lo <= hi ? Math.min(Math.max(v, lo), hi) : Math.min(Math.max(v, 0), 1);
     return {
-      nx: clamp(seedNx, -minDx, 1 - maxDx),
-      ny: clamp(seedNy, -minDy, 1 - maxDy)
+      nx: clamp(seedNx, halfX - minDx, 1 - halfX - maxDx),
+      ny: clamp(seedNy, halfY - minDy, 1 - halfY - maxDy)
     };
   }
 
