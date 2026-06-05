@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.9.10: Bigger, consistent cards; deeper, equal private zones; polish
+
+A presentation and consistency pass so the table reads like a premium digital card
+game at every size, plus a small interaction fix. CSS and one shared canonical
+constant; no change to sync, privacy logic, stack detection, or the coordinate frame
+(card positions stay device independent and identical for every player).
+
+- **Cards are bigger and scale by one consistent proportion.** Card size is now a
+  fraction of the square board (`--card-w` on `.table`, `0.125` of the field on
+  pointer devices, `0.14`-`0.145` on touch), replacing the old `8.4vmin` desktop /
+  `0.15` mobile split that left desktop cards small. The board cap grew `1180px` to
+  `1400px` so large monitors and TVs fill more of the screen. Verified across 294
+  viewport combinations (260px fold to 4K TV, portrait and landscape): cards never
+  overflow their zone, and the deck and discard markers never overlap.
+- **Private zones are deeper and equal for every seat.** Zone depth grew `0.22` to
+  `0.28` (cards now fill about 65% of the zone, with breathing room). The canonical
+  `ZONES` (`src/table/SlotGrid.ts`) and the CSS grid strips (`board.css`,
+  `mobile.css`) move to the same `0.28` in lockstep, so the frosted panel and the
+  real private area line up. The zones are now congruent grid cells (`0.44 x 0.28`,
+  area `0.1232` each): before, bottom/top were `0.68 x 0.22` (area `0.150`) and
+  left/right `0.22 x 0.56` (`0.123`), so seats 0/1 had a 22% larger hand area than
+  seats 2/3, and since each client rotates its own seat to the bottom, players saw
+  different sizes. Now every seat's area is identical after rotation.
+- **Privacy footprint tracks the visible card.** `CARD_CANON_W/H` (the shared
+  canonical card size used for the conceal/reveal test) was realigned from `0.085`
+  (the old desktop card) to `0.125 x 0.181`, matching the enlarged card, so a card
+  reads as private right as it visually enters a zone and public as it leaves, the
+  same for the actor and every onlooker. Deck and discard piles are provably never
+  auto-owned. `SlotGrid` privacy tests now derive their boundaries from the real
+  constants (parametric), so future re-tuning cannot silently invalidate them.
+- **Polish.** Card-proportional corner radius and a card-scaled conceal blur (so
+  roundness and hidden softness read the same from a 34px phone card to a 178px TV
+  card), a crisper face-up card edge, a clearer lifted-card shadow, premium frosted
+  trays for the private zones, and seat-name type that scales with the board.
+- **Fix: the header menu could not be closed with the keyboard from its own
+  button.** Pressing Space or Enter on the focused "more" button closed the menu via
+  keydown, then the browser's synthetic click reopened it. The keydown handler now
+  excludes the trigger (mirroring the existing pointerdown guard). Also hardened the
+  modal focus trap (focus on the panel can no longer escape on Shift+Tab), made
+  `shuffleStack` reseat survivors contiguously if a card vanishes mid-gesture, read
+  `localStorage` once in `Audio.readBool`, and completed `DragController.destroy`.
+
 ## 0.9.9: Reset deck works for everyone; per-viewer angle restored
 
 Two user-reported issues.

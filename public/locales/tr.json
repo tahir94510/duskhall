@@ -167,6 +167,17 @@
     "empty": "Henüz güncelleme yok.",
     "entries": [
       {
+        "v": "2026-06-05",
+        "date": "5 Haziran 2026",
+        "title": "Daha büyük, daha net bir masa",
+        "items": [
+          "Kartlar daha büyük ve daha net; artık küçük bir telefondan 4K TV'ye kadar her ekranda aynı oranda ölçekleniyor. Böylece masa, büyük monitörlerde ortada küçük bir ada gibi durmak yerine her yerde dolu ve gerçek hissettiriyor.",
+          "Gizli alanınız daha derin ve ferah; ayrıca her koltuk artık birebir aynı boyutta el alanına sahip. Bir kart, alanınıza girer girmez gizli, çıkar çıkmaz herkese açık okunuyor; hem sizin hem de izleyenlerin gözünde aynı.",
+          "Genel cila: daha keskin kart kenarları, gizli alanlar için premium buzlu cam tepsiler ve kaldırılan bir kartın veya destenin altında daha belirgin bir gölge.",
+          "Düzeltme: üst menü, kendi butonundan klavyeyle kapatılamıyordu (Boşluk ya da Enter onu yeniden açıyordu). Artık beklendiği gibi kapanıyor."
+        ]
+      },
+      {
         "v": "2026-06-04.5",
         "date": "4 Haziran 2026",
         "title": "Deste sıfırlama herkeste çalışıyor",
