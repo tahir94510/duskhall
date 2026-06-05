@@ -36,10 +36,10 @@ Card positions are stored in a single canonical normalised frame `[0, 1]²` of t
 
 Card positions store the card CENTRE as a canonical fraction; the render loop turns that centre into the on-screen top-left by subtracting half the measured card size, so a pile sits on its marker identically on every device and never drifts on resize. Dock anchors are fixed CENTRE constants in `src/table/constants.ts`:
 
-- `DECK_NX = 0.40`, `DECK_NY = 0.5`
-- `DISCARD_NX = 0.60`, `DISCARD_NY = 0.5`
+- `DECK_NX = 0.43`, `DECK_NY = 0.5`
+- `DISCARD_NX = 0.57`, `DISCARD_NY = 0.5`
 
-`board.css` paints the two dock markers at these same percentages (`left: 40%` / `60%`, centred with `translate(-50%, -50%)`), and the initial deal pile is anchored to the same numbers, so the markers and the dealt pile can never drift apart.
+`board.css` paints the two dock markers at these same percentages (`left: 43%` / `57%`, centred with `translate(-50%, -50%)`), and the initial deal pile is anchored to the same numbers, so the markers and the dealt pile can never drift apart. They sit a little closer to centre than the board edges so the public ring opens a tableau-shelf band in front of every seat, clear of the deck/discard.
 
 Magnet snap is removed; players place cards by hand. The dock slots are visual targets only.
 
