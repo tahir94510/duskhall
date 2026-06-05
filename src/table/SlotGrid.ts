@@ -20,14 +20,16 @@ export interface SlotPos {
 const SEAL_COUNT = 4;
 const SERVANT_COUNT = 3;
 
-// Each zone occupies a fixed rectangle in canonical space. These were chosen to
-// match the .table CSS grid: bottom strip ~22vh, top strip ~18vh, side strips
-// ~17vw. We approximate the same rectangles in normalised board coords.
+// Each zone occupies a fixed rectangle in canonical space, matching the .table CSS
+// grid strips (28% deep on every breakpoint). The four rects are CONGRUENT — each is
+// 0.44 long x 0.28 deep — so after a seat's 90deg board rotation every player sees an
+// IDENTICAL private area at the bottom of their screen (no seat gets a bigger hand area
+// than another). They also line up with the drawn panel, so what looks private IS private.
 //
-// Seat 0 (bottom): y in [0.78, 0.96], x in [0.10, 0.90]
-// Seat 1 (top):    y in [0.04, 0.22], x in [0.10, 0.90]
-// Seat 2 (left):   x in [0.04, 0.22], y in [0.20, 0.80]
-// Seat 3 (right):  x in [0.78, 0.96], y in [0.20, 0.80]
+// Seat 0 (bottom): x in [0.28, 0.72], y in [0.72, 1.0]
+// Seat 1 (top):    x in [0.28, 0.72], y in [0.0, 0.28]
+// Seat 2 (left):   x in [0.0, 0.28],  y in [0.28, 0.72]
+// Seat 3 (right):  x in [0.72, 1.0],  y in [0.28, 0.72]
 
 interface ZoneRect {
   // canonical normalised rect
@@ -35,19 +37,19 @@ interface ZoneRect {
   // orientation: which axis the row runs along (horizontal or vertical)
   horizontal: boolean;
   // direction: which side is "in front" (closer to the centre)
-  // For bottom seat, seals are on the inner edge (y near 0.78)
-  // For left seat, seals are on the inner edge (x near 0.22), etc.
+  // For bottom seat, seals are on the inner edge (y near 0.72)
+  // For left seat, seals are on the inner edge (x near 0.28), etc.
 }
 
 // Each seat's private zone runs all the way to its board EDGE (0 or 1 on the outer
 // side), matching the drawn strip, so a card resting at the very edge of a player's area
-// still counts as inside it (it was wrongly treated as public when the rect stopped a few
-// percent short of the edge). The inner side is the privacy boundary toward the centre.
+// still counts as inside it. The inner edge (toward the centre) is the privacy boundary;
+// all four are kept congruent so every seat's area is the same size and shape.
 const ZONES: Record<Seat, ZoneRect> = {
-  0: { x0: 0.16, y0: 0.78, x1: 0.84, y1: 1.0, horizontal: true },
-  1: { x0: 0.16, y0: 0.0, x1: 0.84, y1: 0.22, horizontal: true },
-  2: { x0: 0.0, y0: 0.22, x1: 0.22, y1: 0.78, horizontal: false },
-  3: { x0: 0.78, y0: 0.22, x1: 1.0, y1: 0.78, horizontal: false }
+  0: { x0: 0.28, y0: 0.72, x1: 0.72, y1: 1.0, horizontal: true },
+  1: { x0: 0.28, y0: 0.0, x1: 0.72, y1: 0.28, horizontal: true },
+  2: { x0: 0.0, y0: 0.28, x1: 0.28, y1: 0.72, horizontal: false },
+  3: { x0: 0.72, y0: 0.28, x1: 1.0, y1: 0.72, horizontal: false }
 };
 
 // Is a canonical [0,1] point inside a seat's zone rectangle? Canonical (board-

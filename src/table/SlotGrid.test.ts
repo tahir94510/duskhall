@@ -7,10 +7,11 @@ import { cardZoneOwner, cardZoneOverlap, ZONE_PRIVACY_FRAC, zoneRect, pointInZon
 // never silently invalidates these assertions.
 const W = CARD_CANON_W;
 const H = CARD_CANON_H;
-// Bottom zone (seat 0) starts at y = 0.78. For a card centred at (0.5, ny) with its full
-// width inside, the in-fraction is (ny + H/2 - 0.78) / H. Invert it to place a card at a
-// chosen overlap, so each case targets an exact fraction regardless of H.
-const Z0_TOP = 0.78;
+// Bottom zone (seat 0) top edge, read straight from the production zone so the test
+// tracks any depth change. For a card centred at (0.5, ny) with its full width inside,
+// the in-fraction is (ny + H/2 - Z0_TOP) / H. Invert it to place a card at a chosen
+// overlap, so each case targets an exact fraction regardless of zone depth or card size.
+const Z0_TOP = zoneRect(0).y0;
 const nyForFrac = (f: number): number => Z0_TOP - H / 2 + f * H;
 
 describe("cardZoneOwner: privacy-first — a sliver in conceals, almost-fully-out reveals", () => {
