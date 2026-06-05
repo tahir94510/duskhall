@@ -59,7 +59,11 @@
   grid-template-columns: var(--grid-cols);
   grid-template-rows: var(--grid-rows);
   gap: var(--grid-gap);
-  padding: clamp(6px, 1.4vmin, 16px);
+  /* No outer padding: --field already subtracts the safe-area insets, so the square
+     field is inset from the screen edges. Extra padding here only shrank the play area
+     and made the hand zones feel cramped against the edge. The inter-track gap below
+     keeps the zones off the deck/discard centre. */
+  padding: 0;
 }
 
 .board {

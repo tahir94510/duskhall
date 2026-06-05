@@ -255,6 +255,12 @@ export class DragController {
       seedNy = snap.ny;
     }
 
+    // Keep the whole dragged group on the board: clamp the seed so every card's
+    // CENTRE stays within the canonical [0,1] square. A card can hang at most half
+    // off an edge but can never leave the play area entirely, so a card is never lost
+    // off-screen and always stays grabbable. The pile keeps its rigid relative layout.
+    ({ nx: seedNx, ny: seedNy } = this.clampSeedToBoard(s, seedNx, seedNy));
+
     for (const id of s.ids) {
       const rel = s.relOffsets.get(id);
       const c = this.state.cards.get(id);
@@ -363,6 +369,26 @@ export class DragController {
     this.hooks.onReleased(e.clientX, e.clientY, e.pointerType);
     this.session = null;
   };
+
+  /** Clamp the dragged group's seed (canonical) so EVERY card centre in the group stays
+   *  within the [0,1] board. Uses the pile's relative-offset bounds so the group moves as
+   *  one rigid block and no card slips fully off an edge. If a pile is somehow wider than
+   *  the board, the seed itself is clamped to [0,1] as a floor. Pure, no side effects. */
+  private clampSeedToBoard(s: DragSession, seedNx: number, seedNy: number): { nx: number; ny: number } {
+    let minDx = 0, maxDx = 0, minDy = 0, maxDy = 0;
+    for (const { dx, dy } of s.relOffsets.values()) {
+      if (dx < minDx) minDx = dx;
+      if (dx > maxDx) maxDx = dx;
+      if (dy < minDy) minDy = dy;
+      if (dy > maxDy) maxDy = dy;
+    }
+    const clamp = (v: number, lo: number, hi: number): number =>
+      lo <= hi ? Math.min(Math.max(v, lo), hi) : Math.min(Math.max(v, 0), 1);
+    return {
+      nx: clamp(seedNx, -minDx, 1 - maxDx),
+      ny: clamp(seedNy, -minDy, 1 - maxDy)
+    };
+  }
 
   /** True between pointerdown on a card and pointerup. */
   isActive(): boolean { return this.session !== null; }
