@@ -44,13 +44,15 @@
      variables so the non-rotating seat-label layer (.board__labels) can reuse the
      EXACT same tracks/gap and stay pixel-aligned with the zones at every
      breakpoint (mobile overrides only re-set these variables). */
-  /* Side strips = the four private zones. 22% matches the canonical privacy
-     boundary (SlotGrid ZONES, e.g. bottom y0 0.78 = 22% from the edge) so the
-     frosted panel and the actual private area line up, and it matches the touch
-     breakpoints — one consistent private-area proportion across every device.
-     Rows == cols so the board stays square-symmetric for the 90° seat rotation. */
-  --grid-cols: minmax(68px, 22%) 1fr minmax(68px, 22%);
-  --grid-rows: minmax(68px, 22%) 1fr minmax(68px, 22%);
+  /* Side strips = the four private zones. 28% deep gives a substantial hand area
+     (cards fill ~65% of it, with breathing room) and matches the canonical privacy
+     boundary (SlotGrid ZONES, bottom y0 0.72 = 28% from the edge) so the frosted
+     panel and the actual private area line up exactly. One depth on every breakpoint
+     keeps the private-area proportion identical across devices. Rows == cols so the
+     board stays square-symmetric for the 90° seat rotation, and the four strips stay
+     congruent so every seat's area is the same size. */
+  --grid-cols: minmax(68px, 28%) 1fr minmax(68px, 28%);
+  --grid-rows: minmax(68px, 28%) 1fr minmax(68px, 28%);
   --grid-gap: clamp(6px, 1.4vmin, 16px);
   grid-template-columns: var(--grid-cols);
   grid-template-rows: var(--grid-rows);
