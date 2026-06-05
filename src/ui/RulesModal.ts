@@ -12,14 +12,24 @@ function buildNameToId(): Map<string, string> {
   return m;
 }
 
-// Glossary terms (non-card rules concepts) that get the same hover/tap info panel. Localised
-// term text -> glossary key. Keep this list in step with the `glossary` block in the locales.
+// Non-card rules concepts that get the SAME hover/tap info panel as a card name: glossary
+// entries AND the four card-type categories (Seal/Spell/Intervention/Servant). The map value
+// is a source-tagged key — "g:<glossaryKey>" or "c:<categoryKey>" — so a single linkify pass
+// and a single wiring path cover every term consistently. Localised term text -> tagged key.
+// Keep these lists in step with the `glossary` and `categories` blocks in the locales.
 const GLOSSARY_KEYS = ["etherResonance", "ascension", "servantShield"];
+const CATEGORY_KEYS = ["seal", "spell", "intervention", "servant"];
 function buildTermToKey(): Map<string, string> {
   const m = new Map<string, string>();
   for (const key of GLOSSARY_KEYS) {
     const term = t(`glossary.${key}.term`);
-    if (term && term !== `glossary.${key}.term`) m.set(term, key);
+    if (term && term !== `glossary.${key}.term`) m.set(term, `g:${key}`);
+  }
+  for (const key of CATEGORY_KEYS) {
+    const name = t(`categories.${key}.name`);
+    // Don't let a type name shadow a card actually named after it (none today), and skip a
+    // missing key gracefully. Longest-phrase-first in linkify keeps multi-word names winning.
+    if (name && name !== `categories.${key}.name` && !m.has(name)) m.set(name, `c:${key}`);
   }
   return m;
 }
@@ -195,11 +205,14 @@ export function openRulesModal(modal: Modal, tooltip?: Tooltip): void {
       if (id) wire(btn, (sticky) => tooltip.showForDef(id, btn, sticky));
     });
     body.querySelectorAll<HTMLButtonElement>(".term-link").forEach((btn) => {
-      const key = btn.dataset.term;
-      if (!key) return;
-      const tt = t(`glossary.${key}.term`);
-      const def = t(`glossary.${key}.def`);
-      wire(btn, (sticky) => tooltip.showTerm(tt, def, btn, sticky));
+      const tag = btn.dataset.term;
+      if (!tag) return;
+      // "c:<key>" -> card-type category (name + description); anything else -> glossary term.
+      const isCat = tag.startsWith("c:");
+      const key = tag.slice(2);
+      const title = isCat ? t(`categories.${key}.name`) : t(`glossary.${key}.term`);
+      const def = isCat ? t(`categories.${key}.description`) : t(`glossary.${key}.def`);
+      wire(btn, (sticky) => tooltip.showTerm(title, def, btn, sticky));
     });
   }
 }

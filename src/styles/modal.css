@@ -288,7 +288,9 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   background: none;
   border: 0;
   padding: 0;
-  cursor: pointer;
+  /* Normal cursor (like a card on the table): the info panel opens on hover, so the text
+     should not pretend to be a navigational link. The dotted underline is the affordance. */
+  cursor: default;
   border-bottom: 1px dotted var(--line-3);
   transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 }
@@ -304,7 +306,9 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   background: none;
   border: 0;
   padding: 0;
-  cursor: help;
+  /* Same normal-cursor rationale as .card-link: hovering reveals the definition, no help/link
+     cursor needed. Used for both glossary terms and card-type names (Seal/Servant/...). */
+  cursor: default;
   border-bottom: 1px dotted var(--line-2);
   transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 }
