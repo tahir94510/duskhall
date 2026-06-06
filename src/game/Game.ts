@@ -18,7 +18,7 @@ import { openShortcutsModal } from "../ui/ShortcutsPanel.js";
 import { openSettingsModal } from "../ui/SettingsModal.js";
 import { openDiagnosticsModal } from "../ui/DiagnosticsModal.js";
 import { ContextBar } from "../ui/ContextBar.js";
-import { GuidePanel, GuideIndicator, type GuideVM, type GuideSeatInfo } from "../ui/GuidePanel.js";
+import { GuidePanel, type GuideVM, type GuideSeatInfo } from "../ui/GuidePanel.js";
 import { DebugHud } from "../ui/DebugHud.js";
 import { toast } from "../ui/Toast.js";
 import { t, onLocaleChange } from "../i18n/index.js";
@@ -43,7 +43,7 @@ import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
 import { cardZoneOverlap, pointInZoneCanonical, ZONE_PRIVACY_FRAC, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
 import { clampSeedToPage, type ClampCard } from "../table/playfield.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry, GuideWire } from "../net/realtime.js";
-import { initialGuide, startGuide, applyIntent, adoptGuide, type GuideState } from "./guide.js";
+import { initialGuide, startGuide, setOpen as setGuideOpenState, advance as advanceGuide, chooseFirst as chooseFirstGuide, adoptGuide, type GuideState } from "./guide.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
@@ -140,7 +140,6 @@ export class Game {
   // from the card LWW state — it never restricts play.
   private guide: GuideState = initialGuide();
   private guidePanel!: GuidePanel;
-  private guideIndicator!: GuideIndicator;
   private audio = new AudioEngine();
   private drag!: DragController;
   private tooltip!: Tooltip;
@@ -271,8 +270,7 @@ export class Game {
       onLegal: () => { void this.audio.play("ui-open"); openLegalModal(this.modal); },
       onReset: () => { if (this.spectator) return; void this.audio.play("ui-open"); this.handleReset(); },
       onResetDeck: () => { if (!this.isHost()) return; this.confirmResetDeck(); },
-      onStartGame: () => { if (!this.isHost()) return; this.confirmStartGuide(); },
-      onToggleGuide: () => { void this.audio.play("ui-open"); this.guidePanel.toggle(); },
+      onOpenGuide: () => { if (!this.isHost()) return; void this.audio.play("ui-open"); this.openGuide(); },
       onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio, () => this.onLocale()); },
       onShortcuts: () => { void this.audio.play("ui-open"); openShortcutsModal(this.modal); },
       onUpdates: () => { void this.audio.play("ui-open"); this.markUpdatesSeen(); openUpdatesModal(this.modal); },
@@ -282,18 +280,16 @@ export class Game {
     });
     document.body.appendChild(this.header.el);
 
-    // The rulebook walkthrough: a draggable, dismissible guide plus an auto corner
-    // indicator. Both read the same host-authoritative GuideState, so they can never
-    // disagree. They never gate card play.
+    // The rulebook walkthrough: a fixed, collapsible panel anchored by the menu. Its
+    // visibility (open/closed) is host-authoritative and synced via GuideState; the
+    // minimize/maximize is a local view preference. It never gates card play.
     this.guidePanel = new GuidePanel({
-      onToggleReady: (on) => this.onGuideReady(on),
+      onAdvance: () => this.onGuideAdvance(),
       onChooseFirst: (seat) => this.onGuideChooseFirst(seat),
-      onRestart: () => { if (this.isHost()) this.confirmStartGuide(); },
-      onClose: () => { void this.audio.play("ui-close"); }
+      onStartRestart: () => { if (this.isHost()) this.confirmStartGuide(); },
+      onClose: () => { if (this.isHost()) this.closeGuide(); }
     });
-    this.guideIndicator = new GuideIndicator();
     document.body.appendChild(this.guidePanel.el);
-    document.body.appendChild(this.guideIndicator.el);
 
     this.header.setFeedbackAvailable(hasFeedbackChannel(this.config.issuesUrl, this.config.feedbackUrl));
     // Show the "New" badge on the Updates row when this device hasn't opened the latest
@@ -1351,7 +1347,7 @@ export class Game {
     return Array.from(this.activeSeats);
   }
 
-  /** Build the read-model the panel and indicator render from. */
+  /** Build the read-model the panel renders from. */
   private buildGuideVM(): GuideVM {
     const seats: GuideSeatInfo[] = [];
     for (const p of this.players.values()) {
@@ -1360,7 +1356,6 @@ export class Game {
           seat: p.seat,
           name: p.name,
           color: SEAT_COLORS[p.seat] ?? SEAT_COLORS[0]!,
-          ready: this.guide.ready.includes(p.seat),
           isSelf: p.id === this.self.id
         });
       }
@@ -1369,14 +1364,12 @@ export class Game {
     return { state: this.guide, seats, selfSeat: this.claimSeat, spectator: this.spectator, isHost: this.isHost() };
   }
 
-  /** Push the latest guide state to the panel, the corner indicator and the header
-   *  (which switches the host button between Start and Restart). */
+  /** Push the latest guide state to the panel and reflect the open/closed state on the
+   *  host's menu button (the open control is disabled while the panel is open). */
   private refreshGuide(): void {
     if (!this.guidePanel) return;
-    const vm = this.buildGuideVM();
-    this.guidePanel.update(vm);
-    this.guideIndicator.update(vm);
-    this.header.setGameStarted(this.guide.started);
+    this.guidePanel.update(this.buildGuideVM());
+    this.header.setGuideOpen(this.guide.open);
   }
 
   /** Adopt a new guide state locally; if we're the host, broadcast it as authoritative. */
@@ -1389,44 +1382,55 @@ export class Game {
 
   private broadcastGuideState(): void {
     const g = this.guide;
-    this.bus.sendGuide({ kind: "state", started: g.started, firstSeat: g.firstSeat, progress: g.progress, ready: g.ready, v: g.v, by: this.self.id });
+    this.bus.sendGuide({ kind: "state", open: g.open, started: g.started, firstSeat: g.firstSeat, progress: g.progress, v: g.v, by: this.self.id });
   }
 
   private handleGuide(msg: GuideWire): void {
     if (msg.kind === "state") {
-      const incoming: GuideState = { started: msg.started, firstSeat: msg.firstSeat, progress: msg.progress, ready: msg.ready, v: msg.v };
+      const incoming: GuideState = { open: msg.open, started: msg.started, firstSeat: msg.firstSeat, progress: msg.progress, v: msg.v };
       const adopted = adoptGuide(this.guide, incoming);
       if (adopted !== this.guide) { this.guide = adopted; this.refreshGuide(); }
       return;
     }
-    // Intents are folded in by the host ONLY; non-hosts ignore them and wait for the
-    // host's authoritative state echo.
+    // The only intent is "advance", folded in by the host ONLY. The host resolves the
+    // sender's REAL seat from presence (never trusts a claimed seat) and lets the pure
+    // gate decide: during the turn loop only the player whose turn it is can advance.
     if (!this.isHost()) return;
-    const next = msg.action === "chooseFirst"
-      ? applyIntent(this.guide, { kind: "chooseFirst", seat: msg.seat }, this.guideSeatedSeats())
-      : applyIntent(this.guide, { kind: "ready", seat: msg.seat, on: msg.action === "ready" }, this.guideSeatedSeats());
-    this.applyGuideLocal(next, true);
+    if (msg.action !== "advance") return;
+    const senderSeat = this.players.get(msg.by)?.seat ?? -1;
+    this.applyGuideLocal(advanceGuide(this.guide, senderSeat, this.guideSeatedSeats(), false), true);
   }
 
-  /** This client toggled its own confirmation for the current step. */
-  private onGuideReady(on: boolean): void {
-    if (this.spectator || this.claimSeat < 0) return;
+  /** Host: open the guide panel for the whole table. */
+  private openGuide(): void {
+    if (!this.isHost() || this.guide.open) return;
+    this.applyGuideLocal(setGuideOpenState(this.guide, true), true);
+  }
+
+  /** Host: close the guide panel for everyone. */
+  private closeGuide(): void {
+    if (!this.isHost() || !this.guide.open) return;
+    void this.audio.play("ui-close");
+    this.applyGuideLocal(setGuideOpenState(this.guide, false), true);
+  }
+
+  /** A player tapped the confirm tick to complete the current step. The host applies
+   *  it directly (the gate checks setup-host vs turn-player); a non-host sends an
+   *  advance intent that the host validates. */
+  private onGuideAdvance(): void {
+    if (this.spectator) return;
     if (this.isHost()) {
-      this.applyGuideLocal(applyIntent(this.guide, { kind: "ready", seat: this.claimSeat, on }, this.guideSeatedSeats()), true);
+      this.applyGuideLocal(advanceGuide(this.guide, this.claimSeat, this.guideSeatedSeats(), true), true);
     } else {
-      this.bus.sendGuide({ kind: "intent", action: on ? "ready" : "unready", seat: this.claimSeat, by: this.self.id });
+      this.bus.sendGuide({ kind: "intent", action: "advance", by: this.self.id });
     }
     void this.audio.play("ui-open");
   }
 
-  /** This client picked the first player on the chooseFirst step. */
+  /** Host picked the first player on the chooseFirst step (host only). */
   private onGuideChooseFirst(seat: number): void {
-    if (this.spectator) return;
-    if (this.isHost()) {
-      this.applyGuideLocal(applyIntent(this.guide, { kind: "chooseFirst", seat }, this.guideSeatedSeats()), true);
-    } else {
-      this.bus.sendGuide({ kind: "intent", action: "chooseFirst", seat, by: this.self.id });
-    }
+    if (!this.isHost()) return;
+    this.applyGuideLocal(chooseFirstGuide(this.guide, seat), true);
     void this.audio.play("ui-open");
   }
 
@@ -1448,7 +1452,6 @@ export class Game {
       // Fresh shuffle + gather (reuses the deck reset), then (re)start the walkthrough.
       this.resetDeck();
       this.applyGuideLocal(startGuide(this.guide), true);
-      if (!this.guidePanel.isVisible()) this.guidePanel.show();
     });
   }
 
@@ -2981,7 +2984,7 @@ export class Game {
       this.bus.sendReconcile({ v: this.patchVersion, by: this.self.id, cards, removed: this.buildRemovedList() });
       // Re-broadcast the authoritative guide state so a peer that missed a guide
       // packet (or joined mid-walkthrough) converges within the reconcile cadence.
-      if (this.guide.started) this.broadcastGuideState();
+      if (this.guide.open || this.guide.started) this.broadcastGuideState();
       if (this.debug) this.debug.sent++;
     }, 2000);
   }

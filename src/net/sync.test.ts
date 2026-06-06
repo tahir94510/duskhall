@@ -226,32 +226,27 @@ describe("sanitizeRemoved: validate the authoritative removed-players list", () 
 });
 
 describe("sanitizeGuide: validate the rulebook-walkthrough sync off the wire", () => {
-  it("accepts a well-formed host state, clamping seats and deduping ready", () => {
-    const g = sanitizeGuide({ kind: "state", started: true, firstSeat: 2, progress: 5, ready: [0, 0, 1, 9, -1], v: 3, by: "host" });
-    expect(g).toEqual({ kind: "state", started: true, firstSeat: 2, progress: 5, ready: [0, 1], v: 3, by: "host" });
+  it("accepts a well-formed host state, clamping firstSeat into [-1,3]", () => {
+    const g = sanitizeGuide({ kind: "state", open: true, started: true, firstSeat: 2, progress: 5, v: 3, by: "host" });
+    expect(g).toEqual({ kind: "state", open: true, started: true, firstSeat: 2, progress: 5, v: 3, by: "host" });
+    const c = sanitizeGuide({ kind: "state", open: true, started: true, firstSeat: 99, progress: 0, v: 1, by: "h" });
+    if (c && c.kind === "state") expect(c.firstSeat).toBe(3);
   });
-  it("caps the ready list at four seats and clamps firstSeat into [-1,3]", () => {
-    const g = sanitizeGuide({ kind: "state", started: true, firstSeat: 99, progress: 0, ready: [0, 1, 2, 3], v: 1, by: "h" });
+  it("coerces missing/odd flags and keeps progress/version at full magnitude", () => {
+    const g = sanitizeGuide({ kind: "state", started: 1, firstSeat: 0, progress: 99999, v: 4242, by: "h" });
     expect(g).not.toBeNull();
     if (g && g.kind === "state") {
-      expect(g.ready.length).toBe(4);
-      expect(g.firstSeat).toBe(3);
+      expect(g.open).toBe(false);   // missing -> false
+      expect(g.started).toBe(false); // non-boolean -> false
+      expect(g.progress).toBe(99999);
+      expect(g.v).toBe(4242);
     }
   });
-  it("keeps progress/version at full magnitude (wide ints, not coordinate clamp)", () => {
-    const g = sanitizeGuide({ kind: "state", started: true, firstSeat: 0, progress: 99999, ready: [], v: 4242, by: "h" });
-    expect(g).not.toBeNull();
-    if (g && g.kind === "state") { expect(g.progress).toBe(99999); expect(g.v).toBe(4242); }
-  });
-  it("accepts a client intent and clamps its seat", () => {
-    expect(sanitizeGuide({ kind: "intent", action: "ready", seat: 1, by: "p" }))
-      .toEqual({ kind: "intent", action: "ready", seat: 1, by: "p" });
-    const c = sanitizeGuide({ kind: "intent", action: "chooseFirst", seat: 88, by: "p" });
-    expect(c).not.toBeNull();
-    if (c && c.kind === "intent") expect(c.seat).toBe(3);
-  });
-  it("rejects an unknown intent action and malformed messages", () => {
-    expect(sanitizeGuide({ kind: "intent", action: "explode", seat: 0, by: "p" })).toBe(null);
+  it("accepts the advance intent and rejects anything else", () => {
+    expect(sanitizeGuide({ kind: "intent", action: "advance", by: "p" }))
+      .toEqual({ kind: "intent", action: "advance", by: "p" });
+    expect(sanitizeGuide({ kind: "intent", action: "ready", by: "p" })).toBe(null);
+    expect(sanitizeGuide({ kind: "intent", action: "explode", by: "p" })).toBe(null);
     expect(sanitizeGuide({ kind: "nope" })).toBe(null);
     expect(sanitizeGuide(null)).toBe(null);
     expect(sanitizeGuide("state")).toBe(null);

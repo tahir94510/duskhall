@@ -40,8 +40,6 @@ export const ICON_INFO = svgEl(`<circle cx="12" cy="12" r="9" fill="none" stroke
 export const ICON_FEEDBACK = svgEl(`<path d="M4 5 H20 A1.5 1.5 0 0 1 21.5 6.5 V15 A1.5 1.5 0 0 1 20 16.5 H9 L5 20 V16.5 H4 A1.5 1.5 0 0 1 2.5 15 V6.5 A1.5 1.5 0 0 1 4 5 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 9.5 H17 M7 12.5 H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`);
 // Spark / "what's new": a four-point sparkle for the updates row.
 export const ICON_SPARK = svgEl(`<path d="M12 3 L13.7 9.3 L20 11 L13.7 12.7 L12 19 L10.3 12.7 L4 11 L10.3 9.3 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>`);
-// Start / begin the adventure: a play triangle inside a soft ring.
-export const ICON_PLAY = svgEl(`<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 8.5 L16 12 L10 15.5 Z" fill="currentColor"/>`);
 // Guide / walkthrough: a guiding compass needle.
 export const ICON_GUIDE = svgEl(`<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 12 L15.5 8.5 L13.2 13 L8.5 15.5 L10.8 11 Z" fill="currentColor"/>`);
 // Eye / spectator: a calm outline eye for the spectator-count row.

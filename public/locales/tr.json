@@ -43,9 +43,7 @@
     "connOnline": "Çevrimiçi",
     "connConnecting": "Bağlanıyor...",
     "connOffline": "Çevrimdışı",
-    "guide": "Rehber",
-    "startGame": "Macerayı başlat",
-    "restartGame": "Oyunu yeniden başlat"
+    "guide": "Rehber"
   },
   "diag": {
     "title": "Bağlantı sınaması",
@@ -98,7 +96,7 @@
     },
     "tableau": {
       "term": "Masa",
-      "def": "Mühürlerinizi ve Hizmetkârlarınızı açık dizdiğiniz alan — en fazla 4 Mühür ve 3 Hizmetkâr. Mühür ve Hizmetkâr etkileri yalnızca burada işler, elde değil."
+      "def": "Mühürlerinizi ve Hizmetkârlarınızı açık dizdiğiniz alan; en fazla 4 Mühür ve 3 Hizmetkâr. Mühür ve Hizmetkâr etkileri yalnızca burada işler, elde değil."
     },
     "deck": {
       "term": "Deste",
@@ -130,7 +128,7 @@
     },
     "cleanse": {
       "term": "Arındır",
-      "def": "Bir Aksiyon (1 HP): elinizden 1 kart atıp 1 kart çekin — el boyutunu koruyan bir takas."
+      "def": "Bir Aksiyon (1 HP): elinizden 1 kart atıp 1 kart çekin. Bu takas el boyutunu korur."
     },
     "hp": {
       "term": "HP",
@@ -142,7 +140,7 @@
     },
     "untargetable": {
       "term": "Hedeflenemez",
-      "def": "Düşman eylemlerine bağışık. Hedeflenemezlik katmanlıdır — alttaki karta ulaşmadan önce her bağımsız koruma katmanı ayrı ayrı kaldırılmalıdır."
+      "def": "Düşman eylemlerine bağışık. Hedeflenemezlik katmanlıdır: alttaki karta ulaşmadan önce her bağımsız koruma katmanı ayrı ayrı kaldırılmalıdır."
     }
   },
   "kick": {
@@ -236,6 +234,17 @@
     "badge": "Yeni",
     "empty": "Henüz güncelleme yok.",
     "entries": [
+      {
+        "v": "2026-06-06",
+        "date": "6 Haziran 2026",
+        "title": "Yeni oyuncular için yerleşik rehber",
+        "items": [
+          "Artık tüm masayı bir oyun boyunca adım adım yönlendiren isteğe bağlı bir Rehber var: hazırlık, kimin başlayacağı ve her oyuncunun sırası. Yalnızca ne yapılacağını önerir. Kartları yine dilediğin gibi taşımakta, çevirmekte ve karıştırmakta özgürsün.",
+          "Rehberi host menüden açar ve herkeste görünür. Hazırlık adımlarını host yürütür, oyunu panelin içinden başlatır ya da yeniden başlatır. Oyun sırasında her fazı, sırası gelen oyuncu onay işaretine basarak tamamlar.",
+          "Panelin üst barı kimin sırasında olduğunu ve mevcut fazı gösterir. Yer kazanmak için paneli bu bara küçültebilir, istediğin an tekrar büyütebilirsin.",
+          "Desteyi sıfırla ve Rehber kontrolleri artık yalnızca host'a aittir; böylece oyun yanlışlıkla sıfırlanmaz."
+        ]
+      },
       {
         "v": "2026-06-05",
         "date": "5 Haziran 2026",
@@ -342,7 +351,7 @@
           "Vaerum sana ve arkadaşlarına ortak bir masa sunar. Kartları gerçek zamanlı olarak birlikte dağıtır, taşır, çevirir, toplar, karıştırır ve döndürürsünüz. Kuralları kendiliğinden uygulamaz; tıpkı yüz yüze oynar gibi kuralları kendiniz işletirsiniz.",
           "Her oyuncunun, masanın kendi kenarında özel bir alanı vardır. Bu alana koyduğun kartlar diğerlerinden gizlenir; onlar kartın yüzünü değil, yalnızca bulanık bir arkasını görür. Bir kartı alanından dışarı sürükleyince herkese görünür olur, geri sürükleyince yeniden gizlenir. Kart, alanının kenarını geçtiği anda gizliyle görünür arasında geçiş yapar ve bu, her oyuncuda ve her ekranda aynı görünür.",
           "Temel hareketler: kartı sürükleyerek taşı, tüm yığını taşımak için Ctrl'ye basılı tutarak sürükle. Bir kartı çevirmek için üzerinde tekerleği kaydır, tüm desteyi çevirmek için sağ tıkla (ya da Ctrl+tekerlek). Dağınık bir desteyi derli toplu yapmak için G, karıştırmak için M, yana döndürmek için Shift+tekerlek. Telefonda kartı basılı tutarak hızlı eylemleri aç. Tüm listeyi menüdeki Kısayollar bölümünde bulabilirsin.",
-          "Menüde iki yardımcı daha var. Rehber'i açtığında bir oyunun tüm akışını adım adım gösterir — hazırlık, kimin başlayacağı ve her oyuncunun sırası — ve masa Hazır'a dokunarak birlikte ilerler; yalnızca önerir, oyununu asla kısıtlamaz. Oda sahibinde (host) ayrıca Macerayı başlat vardır: deste toplanıp karıştırılarak yeni bir oyun başlatır (oyun başladıktan sonra Yeniden başlat olur); Desteyi sıfırla ise tüm kartları karışık tek desteye döndürür."
+          "Menüde host'a özel iki kontrol daha var. Rehberi aç, kural rehberini tüm masaya gösterir: hazırlığı, kimin başlayacağını ve her oyuncunun sırasını anlatır; adımı, sırası gelen oyuncu onay işaretine basarak ilerletir. Hazırlık adımlarını host yürütür ve panelin içinden oyunu Başlat ya da Yeniden başlat ile başlatabilir; bu, deste toplanıp karıştırılarak temiz bir başlangıç sağlar. Desteyi sıfırla ise tüm kartları karışık tek desteye döndürür. Rehber yalnızca önerir. Oyununu asla kısıtlamaz."
         ]
       },
       {
@@ -504,7 +513,7 @@
   "rulesDoc": {
     "title": "Vaerum: Eterin Vârisleri",
     "subtitle": "Tam Kural Kitabı",
-    "tldr": "2 ila 4 oyuncu. 30 ila 60 dakika. 14 yaş ve üzeri. Yeni misin? Menüden Rehber'i aç — tüm masayı bir oyun boyunca adım adım yönlendirir.",
+    "tldr": "2 ila 4 oyuncu. 30 ila 60 dakika. 14 yaş ve üzeri. Yeni misin? Menüden Rehber'i aç; tüm masayı bir oyun boyunca adım adım yönlendirir.",
     "intro": "Her şeyin merkezinde, kaynağı bilinmeyen ve çok önce paramparça olmuş bir güç vardır: Eter. Onun parçaları yüzyıllar boyunca sessiz ittifaklarla, fısıltıyla verilen sözlerle ve soğukkanlı ihanetlerle el değiştirdi. Artık sen de o masadasın: ileri görüşlü, kurnaz, Eter'i hâlâ kendi iradesine boyun eğdirebilen ender kişilerden biri. Burada dostluk yoktur, merhamet yoktur, şans yoktur. Yalnızca manipülasyon, strateji ve hiç durmayan bir güç savaşı vardır.",
     "sections": [
       {
@@ -716,47 +725,50 @@
   },
   "guide": {
     "title": "Rehber",
-    "close": "Rehberi gizle",
+    "close": "Rehberi kapat",
+    "minimize": "Küçült",
+    "maximize": "Büyüt",
+    "confirm": "Bu adımı tamamla",
+    "hostConfirms": "Bu adımı host onaylar.",
+    "waitYourTurn": "Sıranı bekle.",
+    "yourTurn": "Sıra sende. Bitirince onay işaretine bas.",
     "aPlayer": "bir oyuncu",
     "youTag": "sen",
-    "introBody": "Masayı kurallar boyunca adım adım yönlendireceğim. Burada hiçbir şey zorunlu değil — kartları dilediğin gibi taşıyabilir, çevirebilir ve karıştırabilirsin. Herkes Hazır'a dokununca birlikte ilerleriz.",
-    "introHostHint": "Menüyü açıp Başlat'ı seç. Deste toplanıp karıştırılır ve yeni bir oyun başlar.",
-    "introWaiting": "Oyunun başlaması için host bekleniyor…",
-    "imReady": "Hazırım",
-    "notYet": "Henüz değil",
-    "readyCount": "{done}/{total} hazır",
-    "spectatorNote": "İzleyicisin.",
-    "restart": "Rehberi yeniden başlat",
-    "pickPrompt": "İlk oynayacak oyuncuya dokun",
+    "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir. Kartları dilediğin gibi taşımakta, çevirmekte ve karıştırmakta özgürsün.",
+    "introWaiting": "Oyunun başlaması için host bekleniyor.",
+    "start": "Başlat",
+    "restart": "Yeniden başlat",
+    "spectatorNote": "Bu oyunu izliyorsun.",
+    "pickWait": "İlk oyuncuyu host seçiyor.",
     "turnHeading": "Sıra: {name}",
-    "roundLabel": "Tur {n}",
-    "firstChosen": "İlk oyuncu: {name}.",
+    "roundLabel": "Tur {n}.",
+    "firstChosen": "İlk oyuncu {name}.",
     "steps": {
       "shuffle": {
         "title": "Hazırlık",
-        "body": "Desteyi ortada kapalı şekilde karıştırın. Her oyuncuya gizli tutacağı 5 kart dağıtın, kalanı çekme destesi olarak bırakın. Herkes hazır olunca Hazır'a dokun."
+        "body": "Desteyi ortada kapalı şekilde karıştırın. Her oyuncuya gizli tutacağı 5 kart dağıtın, kalanı çekme destesi olarak bırakın. Herkes hazır olunca host onay işaretine basar."
       },
       "reveal": {
-        "title": "Kim başlıyor?",
-        "body": "Her oyuncu destenin en üstündeki kartı açar. En yüksek tür başlar; sıralama: Hizmetkâr > Büyü > Mühür > Müdahale. Beraberlikte yalnızca o oyuncular yeniden açar. Açtıktan sonra Hazır'a dokun."
+        "title": "Kim başlıyor",
+        "body": "Her oyuncu destenin en üstündeki kartı açar. En yüksek tür başlar; sıralama şöyle: önce Hizmetkâr, sonra Büyü, sonra Mühür, sonra Müdahale. İki oyuncu eşitse yalnızca onlar yeniden açar. Bu bittiğinde host onay işaretine basar."
       },
       "chooseFirst": {
-        "title": "İlk oyuncuyu seç",
-        "body": "En yüksek kartı açan oyuncuyu seçin. Oyun oradan saat yönünde ilerler."
+        "title": "İlk oyuncu",
+        "body": "En yüksek kartı açan oyuncuyu host seçer. Oyun oradan saat yönünde devam eder."
       }
     },
     "phase": {
       "focus": {
         "title": "Odak",
-        "body": "Desteden 2 kart çek (sahada Zaman Yarığı mühürün varsa daha fazla). Çektiğinde Hazır'a dokun."
+        "body": "Desteden 2 kart çek. Sahada Zaman Yarığı mühürün varsa daha fazla çekersin. Çektiğinde onay işaretine bas."
       },
       "action": {
         "title": "Eylem",
-        "body": "2 hamle puanın var. Her birini şunlardan birine harca: Yarat (bir Büyü, Mühür ya da Hizmetkâr oyna), İncele (1 kart çek) veya Arındır (1 kart at, sonra 1 çek). Müdahaleler bedavadır ve her an oynanabilir. Bitince Hazır'a dokun."
+        "body": "2 hamle puanın var. Her birini tek bir eyleme harca: Yarat (bir Büyü, Mühür ya da Hizmetkâr oyna), İncele (1 kart çek) ya da Arındır (1 kart at, sonra 1 kart çek). Müdahaleler bedavadır ve her an oynanabilir. Bitince onay işaretine bas."
       },
       "closing": {
         "title": "Kapanış",
-        "body": "Aktif Mühür etkilerini tetikle, sonra elini 7 karta indir. 3 veya daha fazla Mühürle Yükseliş ilan edebilirsin. Sırayı devretmek için Hazır'a dokun."
+        "body": "Aktif Mühür etkilerini tetikle, sonra elini 7 karta indir. 3 veya daha fazla Mührün varsa Yükseliş ilan edebilirsin. Sırayı sonraki oyuncuya geçirmek için onay işaretine bas."
       }
     }
   }

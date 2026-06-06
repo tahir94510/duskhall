@@ -130,23 +130,22 @@ export interface KickMsg {
 }
 
 /** Guide (rulebook walkthrough) sync. Two shapes share one channel: the host
- *  broadcasts the authoritative `state`; any client may send an `intent` (I'm
- *  ready / I picked the first player) that only the host folds in. The guide is
- *  informational and entirely separate from the card LWW state, so a malformed or
- *  hostile message can at worst nudge the shared narration, never the board. */
+ *  broadcasts the authoritative `state`; the player whose turn it is may send an
+ *  `advance` intent the host validates. The guide is informational and entirely
+ *  separate from the card state, so a malformed or hostile message can at worst nudge
+ *  the shared narration, never the board. */
 export interface GuideStateWire {
   kind: "state";
+  open: boolean;
   started: boolean;
   firstSeat: number;
   progress: number;
-  ready: number[];
   v: number;
   by: string;
 }
 export interface GuideIntentWire {
   kind: "intent";
-  action: "ready" | "unready" | "chooseFirst";
-  seat: number;
+  action: "advance";
   by: string;
 }
 export type GuideWire = GuideStateWire | GuideIntentWire;
@@ -229,38 +228,27 @@ export function sanitizeRemoved(raw: unknown): RemovedEntry[] {
   })).filter((r) => !!r.id);
 }
 
-/** Validate a guide message off the wire (pure). Seats clamped to 0..3, the ready
- *  list deduped and capped at 4, version/progress kept as wide ints. Returns null on
- *  anything malformed so a junk frame is dropped before it reaches the reducer. */
+/** Validate a guide message off the wire (pure). Seats clamped to 0..3, version and
+ *  progress kept as wide ints. Returns null on anything malformed so a junk frame is
+ *  dropped before it reaches the reducer. */
 export function sanitizeGuide(raw: unknown): GuideWire | null {
   if (!raw || typeof raw !== "object") return null;
   const g = raw as Partial<GuideStateWire> & Partial<GuideIntentWire>;
   const by = safeString(g.by, 40);
   if (g.kind === "state") {
-    const ready = Array.isArray(g.ready)
-      ? Array.from(new Set(g.ready
-          .map((s) => (typeof s === "number" ? Math.round(s) : -1))
-          .filter((s) => s >= 0 && s <= 3))).slice(0, 4)
-      : [];
     return {
       kind: "state",
+      open: g.open === true,
       started: g.started === true,
       firstSeat: typeof g.firstSeat === "number" ? Math.max(-1, Math.min(3, Math.round(g.firstSeat))) : -1,
       progress: safeInt(g.progress, 0),
-      ready,
       v: safeInt(g.v, 0),
       by
     };
   }
   if (g.kind === "intent") {
-    const action = g.action;
-    if (action !== "ready" && action !== "unready" && action !== "chooseFirst") return null;
-    return {
-      kind: "intent",
-      action,
-      seat: typeof g.seat === "number" ? Math.max(-1, Math.min(3, Math.round(g.seat))) : -1,
-      by
-    };
+    if (g.action !== "advance") return null;
+    return { kind: "intent", action: "advance", by };
   }
   return null;
 }

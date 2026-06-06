@@ -1,28 +1,27 @@
 import { t } from "../i18n/index.js";
-import { viewOf, type GuideState, type GuideView } from "../game/guide.js";
+import { viewOf, confirmerOf, type GuideState, type GuideView } from "../game/guide.js";
 
-// The Guide is a draggable, dismissible "chatbox" that narrates the rulebook flow.
-// It NEVER enforces anything — players stay free to move/flip/shuffle cards. It only
-// tells the table what the rulebook says to do next and lets everyone advance
-// together via a per-seat "everyone ready" control. Its position survives hide/show
-// (stored in localStorage); only an explicit restart resets the walkthrough.
-
-const POS_KEY = "kabal:guide:pos";
-const VIS_KEY = "kabal:guide:vis";
+// The Guide is a fixed, collapsible panel that narrates the rulebook flow. It never
+// enforces anything: players stay free to move, flip and shuffle cards. It only tells
+// the table what to do next and lets the right person advance the step.
+//
+// Visibility (open/closed) is host-controlled and arrives through GuideState, so the
+// whole table sees the same panel. Minimize/maximize is a LOCAL view preference: the
+// minimized form is just the top bar (status, the confirm tick, the resize and close
+// buttons); maximizing drops the full body below it. During the intro and setup the
+// panel stays maximized (the text matters); the turn loop allows minimizing.
 
 export interface GuideSeatInfo {
   seat: number;
   name: string;
   color: string;
-  ready: boolean;
   isSelf: boolean;
 }
 
-/** Everything the panel needs to render, computed by Game so the panel and the
- *  corner indicator always agree (both read the same GuideState via viewOf). */
+/** Everything the panel needs to render, computed by Game. */
 export interface GuideVM {
   state: GuideState;
-  /** Seated players (active), with per-seat ready flags for the current step. */
+  /** Seated players (active). */
   seats: GuideSeatInfo[];
   /** This client's seat, or -1 if spectating. */
   selfSeat: number;
@@ -31,13 +30,13 @@ export interface GuideVM {
 }
 
 export interface GuideHooks {
-  /** Toggle THIS client's confirmation for the current step. */
-  onToggleReady(on: boolean): void;
-  /** Pick the first player (chooseFirst step). */
+  /** Complete the current step (the tick). Game decides if this client is allowed. */
+  onAdvance(): void;
+  /** Host: pick the first player on the chooseFirst step. */
   onChooseFirst(seat: number): void;
-  /** Host: restart the walkthrough from the first step (Game shows the confirm). */
-  onRestart(): void;
-  /** Hide the panel (state is preserved). */
+  /** Host: start or restart the walkthrough (Game shows the confirm). */
+  onStartRestart(): void;
+  /** Host: close the panel for everyone (the × button). */
   onClose(): void;
 }
 
@@ -47,17 +46,13 @@ function esc(s: string): string {
 
 export class GuidePanel {
   el: HTMLElement;
-  private titleEl: HTMLElement;
+  private barTextEl: HTMLElement;
   private bodyEl: HTMLElement;
-  private footEl: HTMLElement;
-  private headEl: HTMLElement;
-  private visible = false;
+  private tickBtn: HTMLButtonElement;
+  private resizeBtn: HTMLButtonElement;
+  private closeBtn: HTMLButtonElement;
   private vm: GuideVM | null = null;
-  private dragging = false;
-  private dragDX = 0;
-  private dragDY = 0;
-  private posX = -1;
-  private posY = -1;
+  private minimized = false;
 
   constructor(private hooks: GuideHooks) {
     this.el = document.createElement("section");
@@ -65,122 +60,43 @@ export class GuidePanel {
     this.el.hidden = true;
     this.el.setAttribute("aria-label", t("guide.title"));
     this.el.innerHTML = `
-      <header class="guide__head" data-role="head">
-        <span class="guide__grip" aria-hidden="true"></span>
-        <span class="guide__title" data-role="title">${esc(t("guide.title"))}</span>
-        <button type="button" class="guide__close" data-action="close" aria-label="${esc(t("guide.close"))}">×</button>
+      <header class="guide__bar">
+        <div class="guide__status" data-role="status"></div>
+        <div class="guide__controls">
+          <button type="button" class="guide__btn guide__tick" data-action="tick" hidden></button>
+          <button type="button" class="guide__btn guide__resize" data-action="resize" hidden></button>
+          <button type="button" class="guide__btn guide__close" data-action="close" hidden aria-label="${esc(t("guide.close"))}">&times;</button>
+        </div>
       </header>
       <div class="guide__body" data-role="body"></div>
-      <footer class="guide__foot" data-role="foot"></footer>
     `;
-    this.headEl = this.el.querySelector('[data-role="head"]')!;
-    this.titleEl = this.el.querySelector('[data-role="title"]')!;
+    this.barTextEl = this.el.querySelector('[data-role="status"]')!;
     this.bodyEl = this.el.querySelector('[data-role="body"]')!;
-    this.footEl = this.el.querySelector('[data-role="foot"]')!;
-    this.bindClose();
-    this.bindDrag();
-    this.restorePos();
-    this.restoreVis();
+    this.tickBtn = this.el.querySelector('[data-action="tick"]')!;
+    this.resizeBtn = this.el.querySelector('[data-action="resize"]')!;
+    this.closeBtn = this.el.querySelector('[data-action="close"]')!;
+    this.bind();
   }
 
-  private bindClose(): void {
-    this.el.querySelector('[data-action="close"]')?.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.hide();
-      this.hooks.onClose();
+  private bind(): void {
+    this.tickBtn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); this.hooks.onAdvance(); });
+    this.closeBtn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); this.hooks.onClose(); });
+    this.resizeBtn.addEventListener("click", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      this.minimized = !this.minimized;
+      this.render();
     });
-  }
-
-  // Drag by the header only, in screen space, clamped so the panel can never be
-  // dragged fully off-screen (its grab handle always stays reachable).
-  private bindDrag(): void {
-    this.headEl.addEventListener("pointerdown", (e) => {
-      if (e.target instanceof Element && e.target.closest('[data-action="close"]')) return;
-      this.dragging = true;
-      const r = this.el.getBoundingClientRect();
-      this.dragDX = e.clientX - r.left;
-      this.dragDY = e.clientY - r.top;
-      this.headEl.setPointerCapture(e.pointerId);
-      this.el.classList.add("is-dragging");
-    });
-    this.headEl.addEventListener("pointermove", (e) => {
-      if (!this.dragging) return;
-      this.moveTo(e.clientX - this.dragDX, e.clientY - this.dragDY);
-    });
-    const end = (e: PointerEvent) => {
-      if (!this.dragging) return;
-      this.dragging = false;
-      this.el.classList.remove("is-dragging");
-      try { this.headEl.releasePointerCapture(e.pointerId); } catch {}
-      this.savePos();
-    };
-    this.headEl.addEventListener("pointerup", end);
-    this.headEl.addEventListener("pointercancel", end);
-    // Keep the panel on-screen across viewport resizes/rotations.
-    window.addEventListener("resize", () => { if (this.posX >= 0) this.moveTo(this.posX, this.posY); });
-  }
-
-  private moveTo(x: number, y: number): void {
-    const r = this.el.getBoundingClientRect();
-    const maxX = window.innerWidth - Math.min(r.width, window.innerWidth) - 8;
-    const maxY = window.innerHeight - 44; // keep the header grabbable
-    this.posX = Math.max(8, Math.min(x, Math.max(8, maxX)));
-    this.posY = Math.max(8, Math.min(y, Math.max(8, maxY)));
-    this.el.style.left = `${this.posX}px`;
-    this.el.style.top = `${this.posY}px`;
-    this.el.style.right = "auto";
-    this.el.style.bottom = "auto";
-  }
-
-  private savePos(): void {
-    try { localStorage.setItem(POS_KEY, JSON.stringify({ x: this.posX, y: this.posY })); } catch {}
-  }
-  private restorePos(): void {
-    try {
-      const raw = localStorage.getItem(POS_KEY);
-      if (!raw) return;
-      const p = JSON.parse(raw) as { x: number; y: number };
-      if (typeof p.x === "number" && typeof p.y === "number") { this.posX = p.x; this.posY = p.y; }
-    } catch {}
-  }
-  private restoreVis(): void {
-    try { this.visible = localStorage.getItem(VIS_KEY) === "1"; } catch {}
-    this.el.hidden = !this.visible;
-  }
-  private saveVis(): void {
-    try { localStorage.setItem(VIS_KEY, this.visible ? "1" : "0"); } catch {}
-  }
-
-  isVisible(): boolean { return this.visible; }
-
-  toggle(): void { this.visible ? this.hide() : this.show(); }
-
-  show(): void {
-    this.visible = true;
-    this.el.hidden = false;
-    this.saveVis();
-    // Place at the stored spot, or a sensible default near the top-left of the board.
-    if (this.posX >= 0) this.moveTo(this.posX, this.posY);
-    else this.moveTo(16, 96);
-    this.render();
-  }
-  hide(): void {
-    this.visible = false;
-    this.el.hidden = true;
-    this.saveVis();
   }
 
   refreshLocale(): void {
     this.el.setAttribute("aria-label", t("guide.title"));
-    this.titleEl.textContent = t("guide.title");
-    this.el.querySelector('[data-action="close"]')?.setAttribute("aria-label", t("guide.close"));
+    this.closeBtn.setAttribute("aria-label", t("guide.close"));
     this.render();
   }
 
   update(vm: GuideVM): void {
     this.vm = vm;
-    if (this.visible) this.render();
+    this.render();
   }
 
   private seatName(seat: number): string {
@@ -190,136 +106,129 @@ export class GuidePanel {
   private render(): void {
     const vm = this.vm;
     if (!vm) return;
+
+    // Visibility is host-controlled via state.open.
+    this.el.hidden = !vm.state.open;
+    if (!vm.state.open) return;
+
     const view = viewOf(vm.state, vm.seats.map((s) => s.seat));
-    this.bodyEl.innerHTML = this.renderBody(vm, view);
-    this.footEl.innerHTML = this.renderFoot(vm, view);
-    this.wireFoot(vm, view);
+    // The intro and setup stay maximized; only the turn loop can minimize.
+    const canMinimize = view.phase === "turn";
+    const minimized = canMinimize && this.minimized;
+    this.el.classList.toggle("is-min", minimized);
+
+    this.renderBar(vm, view, canMinimize);
+    if (minimized) {
+      this.bodyEl.hidden = true;
+    } else {
+      this.bodyEl.hidden = false;
+      this.bodyEl.innerHTML = this.renderBody(vm, view);
+      this.wireBody(vm);
+    }
+  }
+
+  private renderBar(vm: GuideVM, view: GuideView, canMinimize: boolean): void {
+    // Status text: title in the intro, the step title in setup, name + phase in a turn.
+    if (view.phase === "intro") {
+      this.barTextEl.innerHTML = `<span class="guide__bar-title">${esc(t("guide.title"))}</span>`;
+    } else if (view.phase === "setup" && view.step) {
+      this.barTextEl.innerHTML = `<span class="guide__bar-title">${esc(t(`guide.steps.${view.step.id}.title`))}</span>`;
+    } else {
+      const name = view.turnSeat >= 0 ? this.seatName(view.turnSeat) : t("guide.aPlayer");
+      const phase = view.turnPhase ?? "focus";
+      this.barTextEl.innerHTML =
+        `<span class="guide__bar-title">${esc(t("guide.turnHeading", { name }))}</span>` +
+        `<span class="guide__bar-phase" data-phase="${esc(phase)}">${esc(t(`guide.phase.${phase}.title`))}</span>`;
+    }
+
+    // The confirm tick: shown for confirmable steps, enabled only for the responsible
+    // party (the host in setup, the active player in a turn).
+    const who = confirmerOf(view);
+    if (who === "none") {
+      this.tickBtn.hidden = true;
+    } else {
+      this.tickBtn.hidden = false;
+      const allowed = who === "host" ? vm.isHost : (view.turnSeat >= 0 && vm.selfSeat === view.turnSeat);
+      this.tickBtn.disabled = !allowed;
+      this.tickBtn.innerHTML = ICON_CHECK;
+      this.tickBtn.setAttribute("aria-label", t("guide.confirm"));
+      this.tickBtn.title = allowed ? t("guide.confirm") : (who === "host" ? t("guide.hostConfirms") : t("guide.waitYourTurn"));
+    }
+
+    // Minimize/maximize toggle: only when minimizing is allowed.
+    this.resizeBtn.hidden = !canMinimize;
+    if (canMinimize) {
+      const min = this.minimized;
+      this.resizeBtn.innerHTML = min ? ICON_EXPAND : ICON_COLLAPSE;
+      this.resizeBtn.setAttribute("aria-label", t(min ? "guide.maximize" : "guide.minimize"));
+      this.resizeBtn.title = t(min ? "guide.maximize" : "guide.minimize");
+    }
+
+    // Close is host-only (the host opens and closes the panel for the table).
+    this.closeBtn.hidden = !vm.isHost;
   }
 
   private renderBody(vm: GuideVM, view: GuideView): string {
     if (view.phase === "intro") {
-      const hint = vm.isHost ? t("guide.introHostHint") : t("guide.introWaiting");
-      return `
-        <p class="guide__lead">${esc(t("guide.introBody"))}</p>
-        <p class="guide__hint">${esc(hint)}</p>`;
+      const action = vm.isHost
+        ? `<button type="button" class="guide__primary" data-action="start">${esc(t("guide.start"))}</button>`
+        : `<p class="guide__muted">${esc(t("guide.introWaiting"))}</p>`;
+      return `<p class="guide__lead">${esc(t("guide.introBody"))}</p>${action}`;
     }
+
     if (view.phase === "setup" && view.step) {
       const id = view.step.id;
-      return `
-        <h3 class="guide__step-title">${esc(t(`guide.steps.${id}.title`))}</h3>
-        <p class="guide__step-body">${esc(t(`guide.steps.${id}.body`))}</p>`;
+      const text = `<p class="guide__step-body">${esc(t(`guide.steps.${id}.body`))}</p>`;
+      if (view.step.kind === "chooseFirst") {
+        if (vm.isHost) {
+          const picks = vm.seats
+            .map((s) => `<button type="button" class="guide__pick" data-pick="${s.seat}" style="--seat:${esc(s.color)}">${esc(s.name)}${s.isSelf ? ` <em>${esc(t("guide.youTag"))}</em>` : ""}</button>`)
+            .join("");
+          return `${text}<div class="guide__picks">${picks}</div>`;
+        }
+        return `${text}<p class="guide__muted">${esc(t("guide.pickWait"))}</p>`;
+      }
+      // confirm step: a hint about who advances it
+      const hint = vm.isHost ? "" : `<p class="guide__muted">${esc(t("guide.hostConfirms"))}</p>`;
+      return `${text}${hint}`;
     }
+
     // turn loop
-    const turnName = view.turnSeat >= 0 ? this.seatName(view.turnSeat) : t("guide.aPlayer");
     const phase = view.turnPhase ?? "focus";
+    const yours = view.turnSeat >= 0 && vm.selfSeat === view.turnSeat;
     const first = vm.state.firstSeat >= 0 ? this.seatName(vm.state.firstSeat) : null;
-    const firstLine = first ? `<p class="guide__hint">${esc(t("guide.firstChosen", { name: first }))}</p>` : "";
-    return `
-      <p class="guide__turn">${esc(t("guide.turnHeading", { name: turnName }))}
-        <span class="guide__round">${esc(t("guide.roundLabel", { n: view.round }))}</span></p>
-      <h3 class="guide__step-title">${esc(t(`guide.phase.${phase}.title`))}</h3>
-      <p class="guide__step-body">${esc(t(`guide.phase.${phase}.body`))}</p>
-      ${firstLine}`;
-  }
-
-  private renderFoot(vm: GuideVM, view: GuideView): string {
-    if (view.phase === "intro") {
-      return vm.isHost ? "" : `<span class="guide__muted">${esc(t("guide.introWaiting"))}</span>`;
-    }
-    const reset = vm.isHost
-      ? `<button type="button" class="guide__restart" data-action="restart">${esc(t("guide.restart"))}</button>`
+    const firstLine = first ? `<p class="guide__hint">${esc(t("guide.firstChosen", { name: first }))} ${esc(t("guide.roundLabel", { n: view.round }))}</p>` : "";
+    const turnHint = vm.spectator ? `<p class="guide__muted">${esc(t("guide.spectatorNote"))}</p>`
+      : yours ? `<p class="guide__hint">${esc(t("guide.yourTurn"))}</p>`
+      : `<p class="guide__muted">${esc(t("guide.waitYourTurn"))}</p>`;
+    const restart = vm.isHost
+      ? `<button type="button" class="guide__restart" data-action="start">${esc(t("guide.restart"))}</button>`
       : "";
-
-    // chooseFirst step: a button per seated player; anyone seated may pick.
-    if (view.phase === "setup" && view.step?.kind === "chooseFirst") {
-      const picks = vm.seats
-        .map((s) => `<button type="button" class="guide__pick" data-pick="${s.seat}" style="--seat:${esc(s.color)}">${esc(s.name)}${s.isSelf ? ` <em>${esc(t("guide.youTag"))}</em>` : ""}</button>`)
-        .join("");
-      return `
-        <div class="guide__picks" role="group" aria-label="${esc(t("guide.pickPrompt"))}">${picks}</div>
-        <div class="guide__foot-row">${reset}</div>`;
-    }
-
-    // confirm / turn-phase: the per-seat "everyone ready" control.
-    const total = vm.seats.length;
-    const done = vm.seats.filter((s) => s.ready).length;
-    const segs = vm.seats
-      .map((s) => `<span class="guide__seg${s.ready ? " is-on" : ""}" style="--seat:${esc(s.color)}" title="${esc(s.name)}"></span>`)
-      .join("");
-    const selfReady = vm.seats.find((s) => s.isSelf)?.ready ?? false;
-    let cta = "";
-    if (vm.spectator) {
-      cta = `<span class="guide__muted">${esc(t("guide.spectatorNote"))}</span>`;
-    } else {
-      const label = selfReady ? t("guide.notYet") : t("guide.imReady");
-      cta = `<button type="button" class="guide__ready${selfReady ? " is-on" : ""}" data-action="ready">${esc(label)}</button>`;
-    }
     return `
-      <div class="guide__segs" role="img" aria-label="${esc(t("guide.readyCount", { done, total }))}">${segs}</div>
-      <div class="guide__foot-row">
-        ${cta}
-        <span class="guide__count">${esc(t("guide.readyCount", { done, total }))}</span>
-        ${reset}
-      </div>`;
+      <p class="guide__step-body">${esc(t(`guide.phase.${phase}.body`))}</p>
+      ${firstLine}
+      ${turnHint}
+      ${restart ? `<div class="guide__foot-row">${restart}</div>` : ""}`;
   }
 
-  private wireFoot(vm: GuideVM, view: GuideView): void {
-    this.footEl.querySelector('[data-action="restart"]')?.addEventListener("click", (e) => {
+  private wireBody(vm: GuideVM): void {
+    this.bodyEl.querySelector('[data-action="start"]')?.addEventListener("click", (e) => {
       e.preventDefault(); e.stopPropagation();
-      this.hooks.onRestart();
+      this.hooks.onStartRestart();
     });
-    const readyBtn = this.footEl.querySelector('[data-action="ready"]');
-    if (readyBtn) {
-      readyBtn.addEventListener("click", (e) => {
-        e.preventDefault(); e.stopPropagation();
-        const selfReady = vm.seats.find((s) => s.isSelf)?.ready ?? false;
-        this.hooks.onToggleReady(!selfReady);
+    if (vm.isHost) {
+      this.bodyEl.querySelectorAll<HTMLButtonElement>("[data-pick]").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const seat = Number(btn.dataset.pick);
+          if (Number.isFinite(seat)) this.hooks.onChooseFirst(seat);
+        });
       });
     }
-    this.footEl.querySelectorAll<HTMLButtonElement>("[data-pick]").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.preventDefault(); e.stopPropagation();
-        const seat = Number(btn.dataset.pick);
-        if (Number.isFinite(seat)) this.hooks.onChooseFirst(seat);
-      });
-    });
-    void view;
   }
 }
 
-/** A small, auto-driven corner badge showing whose turn it is and the current
- *  phase. It is read-only (no manual upkeep) and is hidden entirely during free
- *  play — it only appears once the walkthrough reaches the turn loop. Sits just left
- *  of the header menu button. */
-export class GuideIndicator {
-  el: HTMLElement;
-  constructor() {
-    this.el = document.createElement("div");
-    this.el.className = "phase-ind";
-    this.el.hidden = true;
-    this.el.setAttribute("role", "status");
-    this.el.setAttribute("aria-live", "polite");
-    this.el.innerHTML = `
-      <span class="phase-ind__turn" data-role="turn"></span>
-      <span class="phase-ind__phase" data-role="phase"></span>`;
-  }
-
-  update(vm: GuideVM): void {
-    const view = viewOf(vm.state, vm.seats.map((s) => s.seat));
-    if (view.phase !== "turn" || view.turnSeat < 0 || !view.turnPhase) {
-      this.el.hidden = true;
-      return;
-    }
-    const name = vm.seats.find((s) => s.seat === view.turnSeat)?.name ?? t("guide.aPlayer");
-    const turnEl = this.el.querySelector<HTMLElement>('[data-role="turn"]')!;
-    const phaseEl = this.el.querySelector<HTMLElement>('[data-role="phase"]')!;
-    turnEl.textContent = t("guide.turnHeading", { name });
-    phaseEl.textContent = t(`guide.phase.${view.turnPhase}.title`);
-    phaseEl.dataset.phase = view.turnPhase;
-    this.el.hidden = false;
-  }
-
-  refreshLocale(vm: GuideVM | null): void {
-    if (vm) this.update(vm);
-  }
-}
+// Small inline icons, single-weight strokes to match the rest of the UI.
+const ICON_CHECK = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICON_COLLAPSE = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14 H18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+const ICON_EXPAND = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9 L12 15 L18 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
