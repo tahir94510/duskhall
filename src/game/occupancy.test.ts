@@ -92,6 +92,18 @@ describe("kick/leave transition: a left seat releases its cards to the table", (
     expect(cardIsRivalOwned(dropped, 1, 0, false)).toBe(true); // still private
     expect(seatIsOwned(dropped, 1)).toBe(true);
   });
+
+  it("full presence lifecycle: a card is freed ONLY when its owner is truly gone", () => {
+    // Seat 1 is a rival. Walk the states a player passes through and assert that the owner's
+    // card stays concealed/owned through every transient state, and turns public only when the
+    // seat is neither active nor claimed (i.e. exit, kick, or away-grace expiry removed it).
+    const active = occ([0, 1], [0, 1]);    // playing normally
+    const away = occ([0], [0, 1]);         // dropped / refresh / tab-hidden — claim persists
+    const gone = occ([0], [0]);            // exited / kicked / grace expired — claim removed
+    expect(cardIsRivalOwned(active, 1, 0, false)).toBe(true);  // concealed while active
+    expect(cardIsRivalOwned(away, 1, 0, false)).toBe(true);    // STILL concealed while away
+    expect(cardIsRivalOwned(gone, 1, 0, false)).toBe(false);   // public only once truly gone
+  });
 });
 
 describe("host = earliest active joiner; transfers on leave; returnee never steals it", () => {
