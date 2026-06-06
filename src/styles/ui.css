@@ -333,6 +333,12 @@
   top: 0;
   left: 0;
   width: min(290px, 82vw);
+  /* Cap the panel to the viewport so it can ALWAYS be placed fully on-screen: with width and
+     height both bounded below the page size, Tooltip.position() can keep the whole panel inside
+     the margins on the smallest phones (it never runs off the page or breaks the layout).
+     overflow:hidden (below) clips a rare over-long definition rather than overflowing. */
+  max-height: calc(100dvh - 24px);
+  box-sizing: border-box;
   background-color: rgba(10, 10, 12, 0.96);
   /* Art is CENTRED so the card's subject sits in the middle of the panel even
      when the image does not fully cover it. `overflow: hidden` + border-radius

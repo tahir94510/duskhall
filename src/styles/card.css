@@ -63,7 +63,13 @@
    cards already held or mid-animation (which carry their own elevation). */
 @media (hover: hover) {
   .card:not(.is-concealed):not(.is-held):not(.is-animating):hover {
-    filter: brightness(1.045);
+    filter: brightness(1.05);
+    /* Lift the hovered card ABOVE its neighbours so it is fully readable even when it sits
+       under others in a pile. !important is required to beat the inline stacking z (set by the
+       render loop to the card's resting z); --z-hover (450) stays below the held/anim band so a
+       dragged/flipping card and peer cursors always remain on top. Snaps (z has no transition),
+       while the shadow + brightness below give the smooth 2.5D "picked up" read. */
+    z-index: var(--z-hover) !important;
   }
   .card:not(.is-concealed):not(.is-held):not(.is-animating):hover::before {
     box-shadow: var(--shadow-card-raised);

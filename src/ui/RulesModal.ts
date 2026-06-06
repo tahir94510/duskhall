@@ -17,7 +17,15 @@ function buildNameToId(): Map<string, string> {
 // is a source-tagged key — "g:<glossaryKey>" or "c:<categoryKey>" — so a single linkify pass
 // and a single wiring path cover every term consistently. Localised term text -> tagged key.
 // Keep these lists in step with the `glossary` and `categories` blocks in the locales.
-const GLOSSARY_KEYS = ["etherResonance", "ascension", "servantShield"];
+const GLOSSARY_KEYS = [
+  "etherResonance", "ascension", "servantShield",
+  // Core vocabulary so EVERY rules term opens its info panel: the zones, the turn phases, the
+  // 1-HP actions, HP itself, the Ascension trial, and untargetable status.
+  "hand", "tableau", "deck", "discard",
+  "focus", "action", "closing",
+  "create", "study", "cleanse",
+  "hp", "trial", "untargetable"
+];
 const CATEGORY_KEYS = ["seal", "spell", "intervention", "servant"];
 function buildTermToKey(): Map<string, string> {
   const m = new Map<string, string>();

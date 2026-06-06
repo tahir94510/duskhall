@@ -88,6 +88,58 @@
     "servantShield": {
       "term": "Servant Shield",
       "def": "While a player has at least one Servant on their tableau, rivals cannot target that player's Seals at all. Every Servant must be destroyed first, even a targetable one such as Runic Warden, before any Seal can be reached."
+    },
+    "hand": {
+      "term": "Hand",
+      "def": "Your hidden cards. Rivals see the count, not the contents. The hand limit is 7 (excess is discarded at Closing); Seals and Servants do nothing while in your hand."
+    },
+    "tableau": {
+      "term": "Tableau",
+      "def": "Your face-up zone holding your Seals and Servants — at most 4 Seals and 3 Servants. Seal and Servant effects work only here, never from the hand."
+    },
+    "deck": {
+      "term": "Deck",
+      "def": "The shared face-down central pile you draw from. When it empties, Ether Resonance shuffles the Discard into a fresh deck."
+    },
+    "discard": {
+      "term": "Discard",
+      "def": "The shared face-up pile of spent Spells, cancelled cards, and destroyed Seals and Servants."
+    },
+    "focus": {
+      "term": "Focus",
+      "def": "Phase 1 of your turn: draw 2 cards from the deck (3 or more with Time Rift in play)."
+    },
+    "action": {
+      "term": "Action",
+      "def": "Phase 2 of your turn: spend your 2 HP (up to 5 with Crimson Monolith) on any mix of Create, Study and Cleanse. Unspent HP is lost."
+    },
+    "closing": {
+      "term": "Closing",
+      "def": "Phase 3 of your turn: every active Seal trigger fires, then you discard down to the hand limit of 7. After Closing you may declare Ascension."
+    },
+    "create": {
+      "term": "Create",
+      "def": "An Action (1 HP): cast 1 Spell from your hand, or place 1 Seal or 1 Servant onto your tableau."
+    },
+    "study": {
+      "term": "Study",
+      "def": "An Action (1 HP): draw 1 extra card from the deck."
+    },
+    "cleanse": {
+      "term": "Cleanse",
+      "def": "An Action (1 HP): discard 1 card from your hand, then draw 1 — a swap that keeps your hand the same size."
+    },
+    "hp": {
+      "term": "HP",
+      "def": "The action points for your turn: 2 by default, up to 5 with Crimson Monolith. Create, Study and Cleanse each cost 1 HP; Interventions cost none. Unspent HP does not carry over."
+    },
+    "trial": {
+      "term": "Trial",
+      "def": "After you declare Ascension, every rival gets one full turn to destroy, steal or disable your Seals before the turn returns to you."
+    },
+    "untargetable": {
+      "term": "Untargetable",
+      "def": "Immune to enemy actions. Untargetability is layered — each independent protective layer must be removed on its own before the card beneath it can be targeted."
     }
   },
   "kick": {

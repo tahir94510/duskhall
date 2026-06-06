@@ -2260,8 +2260,10 @@ export class Game {
     // their just-freed cards are immediately grabbable (not stuck until the 6s TTL).
     const el = this.cursorEls.get(l.id);
     if (el) { el.remove(); this.cursorEls.delete(l.id); }
+    // Clear by holder ID (robust to seat-reassignment races) AND by seat (covers a hold whose
+    // by-id we somehow missed), so a leaver/kicked/away-expired peer never strands a lock.
     for (const [cid, h] of this.heldByOther) {
-      if (h.seat === l.seat) this.heldByOther.delete(cid);
+      if (h.by === l.id || h.seat === l.seat) this.heldByOther.delete(cid);
     }
     // Free ONLY this seat and repaint. We deliberately do NOT re-run applyPresence
     // here: it was being fed this.lastRoster (a stale snapshot), which — with the
@@ -2517,7 +2519,7 @@ export class Game {
 
   // --- Ephemeral hold-lock: a card a peer is holding can't be grabbed/edited
   // by us until they release it or the TTL lapses (crash/leave safety). ---
-  private heldByOther = new Map<string, { seat: number; until: number }>();
+  private heldByOther = new Map<string, { seat: number; by: string; until: number }>();
   private holdSweepHandle = 0;
   private static readonly HOLD_TTL_MS = 6000;
 
@@ -2534,7 +2536,7 @@ export class Game {
       for (const id of h.ids) {
         const prev = this.heldByOther.get(id);
         if (!prev || prev.seat !== h.seat) changed = true;
-        this.heldByOther.set(id, { seat: h.seat, until: h.until });
+        this.heldByOther.set(id, { seat: h.seat, by: h.by, until: h.until });
       }
       this.scheduleHoldSweep();
     }
