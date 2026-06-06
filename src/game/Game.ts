@@ -218,7 +218,13 @@ export class Game {
   // within the window cancels the timer and keeps their seat. Each client runs
   // this independently and converges (claims are local; card release is LWW).
   private awayTimers = new Map<number, number>();
-  private static readonly AWAY_GRACE_MS = 30000;
+  // How long a dropped player's seat (and concealed cards, and host role) is held before the
+  // system auto-evicts them. Generous on purpose: a refresh, a network blip, a phone locking or
+  // an app-switch must NEVER cost a player their hand or presence — only a deliberate exit, a
+  // host kick, or a genuinely long absence releases them. (The host can still kick an unwanted
+  // away player immediately.) SENIORITY_RECOVERY_MS tracks this, preserving the no-two-hosts
+  // invariant below.
+  private static readonly AWAY_GRACE_MS = 120000;
   // How recently the stored identity must have been active for us to RECOVER our
   // seniority (joinedAt) on (re)connect. A quick refresh/drop is well within this
   // window, so we keep host; an absence longer than this (our seat was released long
