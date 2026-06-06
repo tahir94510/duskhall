@@ -22,6 +22,17 @@
   pointer-events: none;
 }
 
+/* An OCCUPIED rival zone (active player or away/dropped, but NOT your own and NOT an empty seat)
+   lifts above the card layer so that seat's concealed cards render BENEATH its frosted glass:
+   a rival arranging or dragging cards in their hidden area reads as soft shapes UNDER the tray,
+   not sharp cards on top of it — a cleaner, "behind the glass" impression. Your own zone
+   (.zone--self) and empty seats stay below the cards, so your hand and any public card there
+   read perfectly sharp. The zone is pointer-events:none, so lifting it never blocks input. */
+.zone--active:not(.zone--self),
+.zone--dropped:not(.zone--self) {
+  z-index: var(--z-zone-over);
+}
+
 /* Your own hand tray, the most defined surface on the table so "this is your area" is
    unmistakable, yet still light so you read your hand at a glance. Cards render ABOVE the zone
    (higher z), so the frost only softens the felt behind the tray, never your own cards. A

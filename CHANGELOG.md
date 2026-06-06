@@ -31,6 +31,15 @@ numbers are unchanged. 187 tests green.
   true pointer location (the inline position transform had been cancelling the CSS centering, so
   every peer cursor sat half-a-dot down-right). Combined with the existing 70 ms glide, peers see
   each other's cursors in real time, smooth and pixel-accurate, re-projected into their own view.
+- **Rivals' private cards sit UNDER the glass.** An occupied rival's hand tray now lifts just
+  above the card layer, so that seat's concealed cards read as soft shapes beneath the frosted
+  zone — a rival arranging or dragging in their hidden area no longer shows sharp on top of the
+  tray. Your own hand and the public centre stay perfectly sharp (your tray and empty seats stay
+  below the cards).
+- **Longer away grace.** A dropped player (refresh, network blip, phone lock, app switch) keeps
+  their seat, presence and concealed cards far longer before auto-eviction (30 s → 120 s). Only a
+  deliberate exit, a host kick, or a genuinely long absence releases them; the host can still kick
+  an away player immediately. The no-two-hosts seniority invariant tracks the new window.
 
 - **Clean table, main's proportions.** The off-board ledges and the on-board tableau shelves
   were removed and the board is full-size again, with main's hidden-zone depth (`ZONE_DEPTH`
