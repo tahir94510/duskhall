@@ -232,21 +232,23 @@ describe("sanitizeGuide: validate the rulebook-walkthrough sync off the wire", (
   });
   it("caps the ready list at four seats and clamps firstSeat into [-1,3]", () => {
     const g = sanitizeGuide({ kind: "state", started: true, firstSeat: 99, progress: 0, ready: [0, 1, 2, 3], v: 1, by: "h" });
-    expect(g!.kind).toBe("state");
-    if (g!.kind === "state") {
+    expect(g).not.toBeNull();
+    if (g && g.kind === "state") {
       expect(g.ready.length).toBe(4);
       expect(g.firstSeat).toBe(3);
     }
   });
   it("keeps progress/version at full magnitude (wide ints, not coordinate clamp)", () => {
     const g = sanitizeGuide({ kind: "state", started: true, firstSeat: 0, progress: 99999, ready: [], v: 4242, by: "h" });
-    if (g!.kind === "state") { expect(g.progress).toBe(99999); expect(g.v).toBe(4242); }
+    expect(g).not.toBeNull();
+    if (g && g.kind === "state") { expect(g.progress).toBe(99999); expect(g.v).toBe(4242); }
   });
   it("accepts a client intent and clamps its seat", () => {
     expect(sanitizeGuide({ kind: "intent", action: "ready", seat: 1, by: "p" }))
       .toEqual({ kind: "intent", action: "ready", seat: 1, by: "p" });
     const c = sanitizeGuide({ kind: "intent", action: "chooseFirst", seat: 88, by: "p" });
-    if (c!.kind === "intent") expect(c.seat).toBe(3);
+    expect(c).not.toBeNull();
+    if (c && c.kind === "intent") expect(c.seat).toBe(3);
   });
   it("rejects an unknown intent action and malformed messages", () => {
     expect(sanitizeGuide({ kind: "intent", action: "explode", seat: 0, by: "p" })).toBe(null);

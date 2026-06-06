@@ -356,6 +356,9 @@ export class Game {
     this.installBeforeUnload();
     this.installVisibility();
     this.refreshZones();
+    // Seed the guide read-model so the panel/indicator render correctly the moment a
+    // player opens them, even before the first presence sync arrives.
+    this.refreshGuide();
     this.startRenderLoop();
     this.startReconcile();
 

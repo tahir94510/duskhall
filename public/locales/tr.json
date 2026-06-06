@@ -341,7 +341,8 @@
         "body": [
           "Vaerum sana ve arkadaşlarına ortak bir masa sunar. Kartları gerçek zamanlı olarak birlikte dağıtır, taşır, çevirir, toplar, karıştırır ve döndürürsünüz. Kuralları kendiliğinden uygulamaz; tıpkı yüz yüze oynar gibi kuralları kendiniz işletirsiniz.",
           "Her oyuncunun, masanın kendi kenarında özel bir alanı vardır. Bu alana koyduğun kartlar diğerlerinden gizlenir; onlar kartın yüzünü değil, yalnızca bulanık bir arkasını görür. Bir kartı alanından dışarı sürükleyince herkese görünür olur, geri sürükleyince yeniden gizlenir. Kart, alanının kenarını geçtiği anda gizliyle görünür arasında geçiş yapar ve bu, her oyuncuda ve her ekranda aynı görünür.",
-          "Temel hareketler: kartı sürükleyerek taşı, tüm yığını taşımak için Ctrl'ye basılı tutarak sürükle. Bir kartı çevirmek için üzerinde tekerleği kaydır, tüm desteyi çevirmek için sağ tıkla (ya da Ctrl+tekerlek). Dağınık bir desteyi derli toplu yapmak için G, karıştırmak için M, yana döndürmek için Shift+tekerlek. Telefonda kartı basılı tutarak hızlı eylemleri aç. Tüm listeyi menüdeki Kısayollar bölümünde bulabilirsin."
+          "Temel hareketler: kartı sürükleyerek taşı, tüm yığını taşımak için Ctrl'ye basılı tutarak sürükle. Bir kartı çevirmek için üzerinde tekerleği kaydır, tüm desteyi çevirmek için sağ tıkla (ya da Ctrl+tekerlek). Dağınık bir desteyi derli toplu yapmak için G, karıştırmak için M, yana döndürmek için Shift+tekerlek. Telefonda kartı basılı tutarak hızlı eylemleri aç. Tüm listeyi menüdeki Kısayollar bölümünde bulabilirsin.",
+          "Menüde iki yardımcı daha var. Rehber'i açtığında bir oyunun tüm akışını adım adım gösterir — hazırlık, kimin başlayacağı ve her oyuncunun sırası — ve masa Hazır'a dokunarak birlikte ilerler; yalnızca önerir, oyununu asla kısıtlamaz. Oda sahibinde (host) ayrıca Macerayı başlat vardır: deste toplanıp karıştırılarak yeni bir oyun başlatır (oyun başladıktan sonra Yeniden başlat olur); Desteyi sıfırla ise tüm kartları karışık tek desteye döndürür."
         ]
       },
       {
@@ -503,7 +504,7 @@
   "rulesDoc": {
     "title": "Vaerum: Eterin Vârisleri",
     "subtitle": "Tam Kural Kitabı",
-    "tldr": "2 ila 4 oyuncu. 30 ila 60 dakika. 14 yaş ve üzeri.",
+    "tldr": "2 ila 4 oyuncu. 30 ila 60 dakika. 14 yaş ve üzeri. Yeni misin? Menüden Rehber'i aç — tüm masayı bir oyun boyunca adım adım yönlendirir.",
     "intro": "Her şeyin merkezinde, kaynağı bilinmeyen ve çok önce paramparça olmuş bir güç vardır: Eter. Onun parçaları yüzyıllar boyunca sessiz ittifaklarla, fısıltıyla verilen sözlerle ve soğukkanlı ihanetlerle el değiştirdi. Artık sen de o masadasın: ileri görüşlü, kurnaz, Eter'i hâlâ kendi iradesine boyun eğdirebilen ender kişilerden biri. Burada dostluk yoktur, merhamet yoktur, şans yoktur. Yalnızca manipülasyon, strateji ve hiç durmayan bir güç savaşı vardır.",
     "sections": [
       {

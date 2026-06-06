@@ -215,6 +215,8 @@ Closing order: Seal triggers first, then hand-limit check.
 
 Vaerum on the web is a sandbox. There is no automated rules engine; players follow this rulebook themselves.
 
+An optional Guide (in the menu) narrates this rulebook step by step — setup, the first-player draw, and each turn's Focus, Action and Closing phases. The whole table advances together: each step shows a per-seat "ready" control and moves on once everyone has tapped it. The Guide only suggests; it never restricts play. The room host can Start adventure to gather and shuffle the deck for a fresh game (the same control becomes Restart once play is underway), and Reset deck returns every card to one shuffled pile. While the Guide is running, a small corner indicator shows whose turn it is and the current phase. These controls are host-only; everyone can open or hide the Guide and confirm their own steps.
+
 Mouse and keyboard: left-press and drag moves the card under the cursor; hold Ctrl while you drag to move the whole stack. Right-click flips the stack under the cursor (a lone card flips by itself). Scroll flips the single card under the cursor; Ctrl plus scroll flips the whole stack. Shift plus scroll rotates ninety degrees sideways (it does not flip the face); over a pile it turns and squares up the whole stack. Press G to gather the stack under the cursor into a tidy pile, and M to shuffle it.
 
 Touch screens: drag with one finger to move a card. Press and hold a card to open its action bar, with buttons for flip, rotate, gather, shuffle and card info. Flip turns the whole pile under your finger at once, or a lone card if that is all there is; gather and shuffle are greyed out for a single card.

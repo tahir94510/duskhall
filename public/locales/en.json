@@ -341,7 +341,8 @@
         "body": [
           "Vaerum gives you and your friends a shared table. You deal, move, flip, gather, shuffle and rotate the cards together in real time. It never enforces the rules, so you play by the rulebook yourselves, just as you would in person.",
           "Each player has a private area along their own edge of the table. Any card you place in your area is hidden from the others, who see only a blurred card back. Drag a card out of your area to reveal it to everyone, and back in to hide it again. A card switches between hidden and visible as it crosses the edge of your area, and it looks the same to every player on any screen.",
-          "The basics: drag a card to move it, or hold Ctrl while dragging to move a whole stack. Scroll over a card to flip it, or right-click (Ctrl-scroll) to flip a whole pile. Press G to gather a loose pile into a tidy stack, M to shuffle it, and Shift-scroll to turn it sideways. On a phone, press and hold a card to open its quick actions. You can find the full list under Shortcuts in the menu."
+          "The basics: drag a card to move it, or hold Ctrl while dragging to move a whole stack. Scroll over a card to flip it, or right-click (Ctrl-scroll) to flip a whole pile. Press G to gather a loose pile into a tidy stack, M to shuffle it, and Shift-scroll to turn it sideways. On a phone, press and hold a card to open its quick actions. You can find the full list under Shortcuts in the menu.",
+          "Two extra helpers sit in the menu. Open the Guide for a step-by-step walkthrough of a whole game — setup, who goes first, and each player's turn — which the table advances together by tapping Ready; it only suggests and never restricts your play. The room host also has Start adventure, which gathers and shuffles the deck for a fresh game (it becomes Restart once play is underway), and Reset deck, which simply returns every card to one shuffled pile."
         ]
       },
       {
@@ -503,7 +504,7 @@
   "rulesDoc": {
     "title": "Vaerum: Heirs of the Ether",
     "subtitle": "The Complete Rulebook",
-    "tldr": "2 to 4 players. 30 to 60 minutes. Ages 14+.",
+    "tldr": "2 to 4 players. 30 to 60 minutes. Ages 14+. New here? Open the Guide from the menu — it walks the whole table through a game, step by step.",
     "intro": "At the centre of all things lies the Ether, a sourceless force, fractured long ago. Its shards have changed hands through silent treaties, whispered threats, and quiet betrayals. You sit at the table now: a visionary, a schemer, one of the few who can still bend the Ether to a will. There is no friendship here. There is no mercy. There is no luck. Only manipulation, strategy, and the unblinking war for power.",
     "sections": [
       {
