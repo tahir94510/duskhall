@@ -71,14 +71,12 @@
   /* z layers */
   --z-bg: -2;
   --z-scrim: -1;
+  /* Every frosted seat tray rests BELOW the card layer (--z-board), so cards always paint on
+     top of the glass. Privacy comes from the per-card concealment blur (card.css .is-concealed),
+     not from lifting a rival's tray over the cards — that lift also buried moving cards and the
+     seat labels under the glass and double-blurred rival cards, so it was removed. */
   --z-zone: 2;
   --z-board: 5;
-  /* An OCCUPIED rival zone lifts just above the card layer (zones.css) so that seat's concealed
-     cards sit UNDER its frosted glass — a rival's private moves read as shapes beneath the tray,
-     never sharp on top of it. Above --z-board (5) but below the held/anim, seat and cursor
-     bands, and only for active/away rival zones (your own hand and empty seats stay below the
-     cards, so they read sharp). */
-  --z-zone-over: 6;
   --z-card: 10;
   /* A hovered card lifts to this band so it reads ABOVE its neighbours (resting z is capped at
      CARD_Z_CEILING = 400, Game.ts), while staying BELOW the animation/held band (--z-anim: 500)

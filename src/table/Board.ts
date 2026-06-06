@@ -56,9 +56,6 @@ export function buildTable(host: HTMLElement): BoardRefs {
 
   const board = document.createElement("div");
   board.className = "board";
-  // The seat-label layer is a sibling of (and painted after / above) the rotating
-  // perspective, so the names/lights/kick stay upright and always above cards.
-  // Physical group order matches `zones`: [bottom, top, left, right].
   board.innerHTML = `
     <div class="board__perspective" data-role="perspective">
       <div class="board__slots" data-role="slots"></div>
@@ -68,18 +65,26 @@ export function buildTable(host: HTMLElement): BoardRefs {
         <div class="dock__slot dock__slot--discard" data-role="discard"><span class="dock__label">${escapeHtml(t("table.discard"))}</span></div>
       </div>
     </div>
-    <div class="board__labels" data-role="labels">
-      ${["bottom", "top", "left", "right"].map((slot) => `
-        <div class="seat-label seat-label--${slot}">
-          <span class="seat-label__cluster">
-            <i class="seat-label__dot" aria-hidden="true"></i>
-            <span class="seat-label__text" data-role="name"></span>
-            <button class="seat-label__kick" type="button" data-action="kick" hidden>${ICON_CLOSE}</button>
-          </span>
-        </div>`).join("")}
-    </div>
   `;
   root.appendChild(board);
+
+  // The seat-label layer is a SIBLING of .board (a direct child of the table), NOT a child
+  // of it: .board is a z-index stacking context, so a label nested inside it could be
+  // covered by any sibling zone painted later. As a top-level layer at --z-seat it is
+  // unconditionally above every zone and card, so names/lights/kick are ALWAYS visible and
+  // upright (it never rotates with the board). Physical order matches `zones`.
+  const labelLayer = document.createElement("div");
+  labelLayer.className = "board__labels";
+  labelLayer.dataset.role = "labels";
+  labelLayer.innerHTML = ["bottom", "top", "left", "right"].map((slot) => `
+    <div class="seat-label seat-label--${slot}">
+      <span class="seat-label__cluster">
+        <i class="seat-label__dot" aria-hidden="true"></i>
+        <span class="seat-label__text" data-role="name"></span>
+        <button class="seat-label__kick" type="button" data-action="kick" hidden>${ICON_CLOSE}</button>
+      </span>
+    </div>`).join("");
+  root.appendChild(labelLayer);
 
   const refs: BoardRefs = {
     root,
@@ -91,7 +96,7 @@ export function buildTable(host: HTMLElement): BoardRefs {
     slotLayer: board.querySelector<HTMLDivElement>('[data-role="slots"]')!,
     bgLayer,
     zones,
-    labels: Array.from(board.querySelectorAll<HTMLDivElement>(".seat-label"))
+    labels: Array.from(labelLayer.querySelectorAll<HTMLDivElement>(".seat-label"))
   };
 
   paintSlotGrid(refs);

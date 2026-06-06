@@ -25,6 +25,9 @@ export interface ContextHooks {
   onInfo(id: string): void;
   /** Returns the stack containing `id` so the bar can disable irrelevant actions. */
   stackFor(id: string): string[];
+  /** True when the pile is already gathered & squared, so Gather would do nothing and
+   *  greys out (gather is idempotent on a tidy pile — offering it is misleading). */
+  isPileTidy(id: string): boolean;
   /** True when the card currently reads face-up to the local player, so the
    *  Info button can disable itself on a face-down card (nothing to show). */
   canShowInfo(id: string): boolean;
@@ -84,8 +87,10 @@ export class ContextBar {
       else btn.removeAttribute("aria-disabled");
     };
     // Gather and shuffle are multi-card actions: a lone card has nothing to
-    // gather or mix, so they grey out. Flip and rotate always apply.
-    setDisabled("gather", !isStack);
+    // gather or mix, so they grey out. Gather ALSO greys out on a pile that is
+    // already gathered & squared (it would do nothing), so the control never looks
+    // tappable-but-dead. Shuffle stays available on any pile (it is repeatable).
+    setDisabled("gather", !isStack || this.hooks.isPileTidy(id));
     setDisabled("mix", !isStack);
     // Info only makes sense for a card that currently reads face-up.
     setDisabled("info", !this.hooks.canShowInfo(id));

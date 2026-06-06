@@ -49,11 +49,19 @@ export function preloadCardArt(defIds: Iterable<string>, timeoutMs = 4000): Prom
       (url) =>
         new Promise<void>((resolve) => {
           const img = new Image();
-          const done = () => resolve();
-          img.onload = done;
+          let settled = false;
+          const done = () => { if (!settled) { settled = true; resolve(); } };
+          // Resolve only once the bitmap is DECODED, not merely downloaded, so a card
+          // face is paint-ready the instant the table is revealed (no decode pop-in on
+          // first show). decode() is guarded for older browsers and never rejects the job.
+          const decodeThenDone = () => {
+            if (typeof img.decode === "function") img.decode().then(done, done);
+            else done();
+          };
+          img.onload = decodeThenDone;
           img.onerror = done;
           img.src = url;
-          if (img.complete) done();
+          if (img.complete) decodeThenDone();
         })
     );
     const all = Promise.all(jobs).then(() => undefined);

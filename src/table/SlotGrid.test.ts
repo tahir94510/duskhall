@@ -99,6 +99,16 @@ describe("cardZoneOverlap: reports the best seat and the in-fraction", () => {
     // Far enough into the centre that no band is touched on any axis → public.
     expect(cardZoneOverlap(0.5, 1 - ZONE_DEPTH - H / 2 - 0.01, 0, W, H)).toBe(null);
   });
+  it("corner ownership goes to the band the card overlaps MOST (backs the rival-zone drop guard)", () => {
+    // A card straddling the bottom-right corner. Pushed deep into the bottom band but only
+    // grazing the right edge → owned by the bottom seat (0): a player may keep it in their own
+    // hand even when it clips a neighbour's corner. Slid deep into the right band instead →
+    // owned by the right seat (3), so the drop guard (cardZoneOwner → isRivalOwned) snaps it back.
+    const mostlyBottom = cardZoneOverlap(0.66, 0.95, 0, W, H);
+    expect(mostlyBottom!.seat).toBe(0);
+    const mostlyRight = cardZoneOverlap(0.97, 0.66, 0, W, H);
+    expect(mostlyRight!.seat).toBe(3);
+  });
   it("cardZoneOwner gates the same overlap at the privacy threshold", () => {
     const ny = nyForFrac(0.2);
     const o = cardZoneOverlap(0.5, ny, 0, W, H)!;

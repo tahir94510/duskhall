@@ -235,6 +235,18 @@
     "empty": "No updates yet.",
     "entries": [
       {
+        "v": "2026-06-06.2",
+        "date": "June 6, 2026",
+        "title": "Cleaner layering, loading and layout",
+        "items": [
+          "Player names and the green status light are always crisp above the frosted hand trays now, a card you drag past someone else's area stays on top of it instead of sliding underneath, and a rival's hand shows a single soft blur (the old double blur is gone). Your privacy is unchanged.",
+          "Controls that belong to the host (or that you don't have) no longer flash for a moment when you open the table — the game waits until it knows the real seating before showing them.",
+          "The table now appears fully drawn instead of popping its card art in. If you leave the tab for a while and come back, a brief loading only appears when the art actually needs to reload; a quick switch comes back instantly.",
+          "The deck and the discard pile no longer touch on phones, and on small screens the guide drops below the top bar so it no longer overlaps the logo or the menu button.",
+          "Small fixes: the Start button's spacing is tidy, the Gather button greys out when a pile is already gathered, and the 'who goes first' line shows only on the first round."
+        ]
+      },
+      {
         "v": "2026-06-06.1",
         "date": "June 6, 2026",
         "title": "Guide flow and menu fixes",
