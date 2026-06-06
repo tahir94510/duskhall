@@ -235,6 +235,17 @@
     "empty": "Henüz güncelleme yok.",
     "entries": [
       {
+        "v": "2026-06-06.1",
+        "date": "6 Haziran 2026",
+        "title": "Rehber ve menü düzeltmeleri",
+        "items": [
+          "Rehber artık her adımda tam olarak doğru düğmeleri gösteriyor: ilk oyuncuyu seçerken onay tiki görünmüyor, küçültme düğmesi yalnızca kullanılabildiğinde çıkıyor ve kapatma düğmesi yalnızca ev sahibine ait. Yalnızca ev sahibine ya da yalnızca izleyiciye özel menü öğeleri artık yanlış oyunculara sızmıyor.",
+          "Üç nokta menüsü artık rehber panelinin arkasında değil, önünde açılıyor.",
+          "Rehber yeni bir odada varsayılan olarak açılır, böylece yeni gelenler onu mutlaka görür; bir sonraki gelişinizde onu açık mı kapalı mı bıraktığınızı hatırlar.",
+          "Desteyi sıfırla artık tüm kartları toplayıp düzleşen desteyi herkes için karıştırıyor; kartları karıştırmadan yerine oturtmak yerine."
+        ]
+      },
+      {
         "v": "2026-06-06",
         "date": "6 Haziran 2026",
         "title": "Yeni oyuncular için yerleşik rehber",

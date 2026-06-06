@@ -6,10 +6,10 @@ import { viewOf, confirmerOf, type GuideState, type GuideView } from "../game/gu
 // the table what to do next and lets the right person advance the step.
 //
 // Visibility (open/closed) is host-controlled and arrives through GuideState, so the
-// whole table sees the same panel. Minimize/maximize is a LOCAL view preference: the
-// minimized form is just the top bar (status, the confirm tick, the resize and close
-// buttons); maximizing drops the full body below it. During the intro and setup the
-// panel stays maximized (the text matters); the turn loop allows minimizing.
+// whole table sees the same panel. Minimize/maximize is a LOCAL view preference and is
+// available in every phase: the minimized form is just the top bar (status, the confirm
+// tick, the resize and close buttons); maximizing drops the full body below it. The
+// confirm tick lives in the bar, so a setup step can still be confirmed while minimized.
 
 export interface GuideSeatInfo {
   seat: number;
@@ -112,8 +112,10 @@ export class GuidePanel {
     if (!vm.state.open) return;
 
     const view = viewOf(vm.state, vm.seats.map((s) => s.seat));
-    // The intro and setup stay maximized; only the turn loop can minimize.
-    const canMinimize = view.phase === "turn";
+    // The panel can always be collapsed to its top bar — the bar keeps the status and
+    // the confirm tick, so a confirm step is still completable while minimized; only the
+    // body (lead text, the first-player picks, the restart row) is tucked away.
+    const canMinimize = true;
     const minimized = canMinimize && this.minimized;
     this.el.classList.toggle("is-min", minimized);
 

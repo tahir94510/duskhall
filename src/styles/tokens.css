@@ -93,6 +93,11 @@
      layer but below cursors/header so they never cover a peer's cursor. */
   --z-anim: 500;
   --z-cursor: 600;
+  /* The rulebook Guide panel sits above the board, cards and peer cursors, but
+     BELOW the header (800) so the three-dot menu, which drops down from the
+     header into the same top-right corner, always overlays the Guide instead of
+     being half-hidden behind it. */
+  --z-guide: 700;
   --z-header: 800;
   --z-tooltip: 900;
   --z-modal: 1000;

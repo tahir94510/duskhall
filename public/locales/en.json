@@ -235,6 +235,17 @@
     "empty": "No updates yet.",
     "entries": [
       {
+        "v": "2026-06-06.1",
+        "date": "June 6, 2026",
+        "title": "Guide and menu fixes",
+        "items": [
+          "The Guide now shows exactly the right controls at each step: the confirm check no longer appears while you are choosing who goes first, the minimize button only shows when it can be used, and the close button is the host's alone. Host-only and spectator-only menu items no longer leak to the wrong players.",
+          "The three-dot menu now opens above the Guide panel instead of behind it.",
+          "The Guide opens by default in a new room so newcomers always meet it, and it remembers whether you left it open or closed the next time you come back.",
+          "Reset deck now gathers every card and riffles the squared pile for everyone, instead of snapping the cards into place with no shuffle."
+        ]
+      },
+      {
         "v": "2026-06-06",
         "date": "June 6, 2026",
         "title": "A built-in guide for new players",
