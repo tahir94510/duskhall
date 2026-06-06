@@ -40,6 +40,7 @@ import {
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
 import { cardZoneOverlap, pointInZoneCanonical, ZONE_PRIVACY_FRAC, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
+import { clampSeedToPage, type ClampCard } from "../table/playfield.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry } from "../net/realtime.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
@@ -570,6 +571,19 @@ export class Game {
       },
       // Snap-to-slot is inert: there are no per-seat slots, so the table places cards by hand.
       applySnap: (_ownerSeat, nx, ny) => ({ nx, ny, snapped: false }),
+      // Keep a dragged card on the PAGE, not just the board: it may be dragged into the off-board
+      // margin but never off-screen. Clamp runs in screen space (exact for every device/seat).
+      clampSeed: (nx, ny, cards: ClampCard[]) => {
+        const { w, h } = this.cardMetrics();
+        const M = 4; // keep a sliver on-screen at the very edge
+        const bounds = {
+          minX: M,
+          minY: M,
+          maxX: Math.max(M, window.innerWidth - M),
+          maxY: Math.max(M, window.innerHeight - M)
+        };
+        return clampSeedToPage(nx, ny, cards, this.boardBox(), this.self.seat as Seat, w, h, bounds);
+      },
       onCardMoved: (ids) => {
         for (const id of ids) this.dirtyIds.add(id);
         this.scheduleFlush();

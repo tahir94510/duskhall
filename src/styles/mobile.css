@@ -66,8 +66,8 @@
        floor shrinks for phones. Rows and cols use IDENTICAL % and px floor so the board
        stays square-symmetric (the 90° seat-rotation perspective depends on it) and the
        centre 1fr never collapses on a tall phone where the viewport is far from square. */
-    --grid-cols: minmax(38px, 18%) 1fr minmax(38px, 18%);
-    --grid-rows: minmax(38px, 18%) 1fr minmax(38px, 18%);
+    --grid-cols: minmax(58px, 28%) 1fr minmax(58px, 28%);
+    --grid-rows: minmax(58px, 28%) 1fr minmax(58px, 28%);
     /* Cards scale with the square field, so the dock fits the centre row at any
        aspect ratio and never spills into the strips. --field is .table-scoped, so
        redefine --card-h here too (the :root calc can't see --field). */
@@ -108,8 +108,8 @@
     /* Same centered-cross strips as every other breakpoint (28% deep, congruent across
        seats), still field-proportional and still rows==cols (square-symmetric). Only the
        px floor shrinks for the smallest phones. */
-    --grid-cols: minmax(34px, 18%) 1fr minmax(34px, 18%);
-    --grid-rows: minmax(34px, 18%) 1fr minmax(34px, 18%);
+    --grid-cols: minmax(54px, 28%) 1fr minmax(54px, 28%);
+    --grid-rows: minmax(54px, 28%) 1fr minmax(54px, 28%);
     --grid-gap: 6px;
     --card-w: clamp(42px, calc(var(--field) * 0.145), 100px);
     --card-h: calc(var(--card-w) * 1.45);

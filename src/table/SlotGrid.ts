@@ -17,6 +17,9 @@ export interface SlotPos {
   ny: number;
 }
 
+const SEAL_COUNT = 4;
+const SERVANT_COUNT = 3;
+
 // The four zones are full-width EDGE BANDS, ZONE_DEPTH (0.28) deep, that meet along the two
 // board diagonals so each seat owns a TRAPEZOID: the seat's whole board edge (wide) tapering
 // to the 0.44 inner edge, with the four corners split evenly between the two seats that share
@@ -45,13 +48,9 @@ interface ZoneRect {
   // For left seat, seals are on the inner edge (x near 0.28), etc.
 }
 
-// How deep each edge band (private hand zone) reaches in from its board edge. The centre
-// square of side (1 - 2*depth) = 0.64 stays public, holding the shared deck/discard AND a
-// one-card-tall tableau shelf in front of each player (where face-up Seals/Servants are laid
-// out, overlapping). 0.18 keeps the hand a full-edge trapezoid while leaving room for that
-// shelf to clear the deck/discard on every edge; ZONES, the CSS grid tracks and the trapezoid
-// clip-paths all key off this value.
-export const ZONE_DEPTH = 0.18;
+// How deep each edge band reaches in from its board edge. The centre square of side
+// (1 - 2*depth) = 0.44 stays public for the shared deck/discard.
+export const ZONE_DEPTH = 0.28;
 
 // The full-width edge band for each seat (the trapezoid's bounding rectangle). These OVERLAP
 // at the corners by design; the diagonal split between adjacent seats is resolved by
@@ -84,11 +83,15 @@ function nearestSeat(nx: number, ny: number): Seat {
   return best;
 }
 
-// The seat whose trapezoid contains the point, or null if it is in the public centre. Used
-// for live drag-drop ownership (via Game.pointInZone -> screenToCanonical) and the point test.
+// The seat whose trapezoid contains the point, or null if it is in the public centre (or in the
+// off-board margin). Used for live drag-drop ownership (via Game.pointInZone -> screenToCanonical)
+// and the point test. The band is the ON-BOARD strip 0 <= edgeDist < ZONE_DEPTH: a point OUTSIDE
+// the board (edgeDist < 0, i.e. dragged into the page margin past an edge) is NOT a private zone,
+// so cards can be placed in the off-table margins freely (only the page limits the drag).
 export function seatForCanonicalPoint(nx: number, ny: number): Seat | null {
   const s = nearestSeat(nx, ny);
-  return edgeDist(s, nx, ny) < ZONE_DEPTH ? s : null;
+  const d = edgeDist(s, nx, ny);
+  return d >= 0 && d < ZONE_DEPTH ? s : null;
 }
 
 // Is a canonical [0,1] point inside a seat's trapezoid? Canonical (board-shared) space, so it
@@ -156,10 +159,50 @@ export function cardZoneOverlap(nx: number, ny: number, rot: number, cardWFrac: 
   return { seat, frac: (ix * iy) / area };
 }
 
-// Per-seat slot grid is intentionally empty: the table has no dedicated Seal/Servant area, so
-// players lay their tableau out by hand anywhere in their own zone. Returning [] for every seat
-// keeps every consumer working without rendering slot outlines or snap targets.
+const ROW_GAP = 0.018; // gap between the two rows (Seal row vs Servant row), in canonical units
+
+// v3.2: per-seat slot grid is intentionally empty. The visual was cluttering
+// the table and the snap-to-slot magnetism is now reserved for the central
+// Deck / Discard dock (see Game.applySnap). Returning [] for every seat keeps
+// every consumer working without rendering slot outlines.
 export function slotsForSeat(_seat: Seat): SlotPos[] { return []; }
+
+// Legacy implementation preserved below for the day per-seat slots come back.
+// @ts-expect-error kept intentionally unused for future revival
+function _legacySlotsForSeat(seat: Seat): SlotPos[] {
+  const rect = ZONES[seat];
+  const out: SlotPos[] = [];
+  const longSide = rect.horizontal ? rect.x1 - rect.x0 : rect.y1 - rect.y0;
+  const shortSide = rect.horizontal ? rect.y1 - rect.y0 : rect.x1 - rect.x0;
+  const halfRow = (shortSide - ROW_GAP) / 2;
+
+  for (let k = 0; k < 2; k++) {
+    const kind: SlotKind = k === 0 ? "seal" : "servant";
+    const count = kind === "seal" ? SEAL_COUNT : SERVANT_COUNT;
+    for (let i = 0; i < count; i++) {
+      // even spacing along the long side
+      const t = (i + 0.5) / count;
+      const longPos = rect.horizontal ? rect.x0 + t * longSide : rect.y0 + t * longSide;
+      // distance from inner edge: seal row sits closer to centre
+      const innerOffset = k * (halfRow + ROW_GAP) + halfRow / 2;
+      let nx = 0;
+      let ny = 0;
+      if (rect.horizontal) {
+        nx = longPos;
+        // seat 0: inner edge is y0 (top of bottom zone). Move "outward" (away from centre) by innerOffset.
+        // seat 1: inner edge is y1 (bottom of top zone). Move outward (upward) by innerOffset.
+        if (seat === 0) ny = rect.y0 + innerOffset;
+        else ny = rect.y1 - innerOffset;
+      } else {
+        ny = longPos;
+        if (seat === 2) nx = rect.x0 + innerOffset;
+        else nx = rect.x1 - innerOffset;
+      }
+      out.push({ seat, kind, index: i, nx, ny });
+    }
+  }
+  return out;
+}
 
 export function allSlots(): SlotPos[] {
   const out: SlotPos[] = [];

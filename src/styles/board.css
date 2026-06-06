@@ -44,19 +44,17 @@
      variables so the non-rotating seat-label layer (.board__labels) can reuse the
      EXACT same tracks/gap and stay pixel-aligned with the zones at every
      breakpoint (mobile overrides only re-set these variables). */
-  /* Three tracks per axis: the edge bands are 18% deep and the centre is the 64% middle. Each
+  /* Three tracks per axis: the edge bands are 28% deep and the centre is the 44% middle. Each
      private zone spans its WHOLE edge (full row/column) and is clipped to a trapezoid in
      zones.css, so every seat's hand area is nearly the full edge wide while the four trapezoids
-     meet along the diagonals (no overlap) and the centre 0.64 x 0.64 cell stays free for the
-     deck/discard AND a one-card-tall tableau shelf in front of every seat. 18% deep matches the
-     canonical ZONE_DEPTH (SlotGrid.ts) so the drawn panel and the private area line up exactly,
-     and it leaves the shelf room to clear the deck/discard on every edge. One depth on every
-     breakpoint keeps the proportion identical across devices. Rows == cols so the board stays
-     square-symmetric for the 90° seat rotation, and the four trapezoids stay congruent so every
-     seat's area is the same size. Keep these tracks in lockstep with the SlotGrid ZONE_DEPTH
-     and the zones.css clip-paths. */
-  --grid-cols: minmax(46px, 18%) 1fr minmax(46px, 18%);
-  --grid-rows: minmax(46px, 18%) 1fr minmax(46px, 18%);
+     meet along the diagonals (no overlap) and the centre 0.44 x 0.44 cell stays free for the
+     deck/discard. 28% deep matches the canonical ZONE_DEPTH (SlotGrid.ts) so the drawn panel and
+     the private area line up exactly. One depth on every breakpoint keeps the proportion
+     identical across devices. Rows == cols so the board stays square-symmetric for the 90° seat
+     rotation, and the four trapezoids stay congruent so every seat's area is the same size. Keep
+     these tracks in lockstep with the SlotGrid ZONE_DEPTH and the zones.css clip-paths. */
+  --grid-cols: minmax(68px, 28%) 1fr minmax(68px, 28%);
+  --grid-rows: minmax(68px, 28%) 1fr minmax(68px, 28%);
   --grid-gap: clamp(6px, 1.4vmin, 16px);
   grid-template-columns: var(--grid-cols);
   grid-template-rows: var(--grid-rows);

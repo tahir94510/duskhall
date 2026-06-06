@@ -8,14 +8,15 @@ hover terms are made consistent and complete. Card positions stay device indepen
 identical for every player; the shared canonical frame, sync and balance numbers are
 unchanged. 185 tests green.
 
-- **Clean table, no dedicated Seal/Servant areas.** The off-board ledges and the on-board
-  tableau shelves were removed, and the board is full-size again (no shrink/apron). Players lay
-  their face-up Seals and Servants by hand anywhere in their own area, matching main's design.
-- **Drag fixed (no more sticking short of the edges).** The drag clamp is now rotation-aware
-  per card (an odd quarter-turn swaps the card's width/height), fixing the bug where the
-  horizontal inset used the card's tall side so cards stuck ~45% short of the left/right edges
-  and corners. An upright card now sits flush to any edge and into a corner; the clamp keeps
-  every card body on the board. Pure, unit-tested (`src/table/playfield.ts`).
+- **Clean table, main's proportions.** The off-board ledges and the on-board tableau shelves
+  were removed and the board is full-size again, with main's hidden-zone depth (`ZONE_DEPTH`
+  0.28, a 0.44 public centre) and card sizing restored. Players lay their face-up Seals and
+  Servants by hand anywhere in their own area.
+- **Drag is page-bound, not board-bound.** A card can now be dragged off the board into the
+  surrounding margin — only the PAGE limits it; it can never go off-screen. The clamp runs in
+  screen pixels (`clampSeedToPage`, `src/table/playfield.ts`), so it is exact for every device,
+  aspect ratio and seat rotation, and the off-board margins are public (droppable). This also
+  fixes the old bug where cards stuck short of the edges/corners.
 - **Rulebook: consistent, complete hover terms.** Every hover term — a card name, a glossary
   term, or a card-type name (Seal/Spell/Intervention/Servant) — now reads IDENTICALLY (same
   weight and quiet dotted underline, no more some-bold/some-italic) and opens the same info

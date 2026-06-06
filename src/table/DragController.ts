@@ -1,5 +1,5 @@
 import type { BoardState } from "./types.js";
-import { clampSeedToField, type ClampCard } from "./playfield.js";
+import type { ClampCard } from "./playfield.js";
 
 export interface DragHooks {
   /** False for spectators (room full), blocks all card manipulation. */
@@ -18,6 +18,10 @@ export interface DragHooks {
   pickStackUnder(clientX: number, clientY: number): string[];
   /** Optional magnetic snap: nudge a single canonical (nx, ny) to nearest slot. */
   applySnap(ownerSeat: number, nx: number, ny: number): { nx: number; ny: number; snapped: boolean };
+  /** Clamp the dragged group's seed so every card stays on the PAGE (not just the board): a card
+   *  can be dragged into the off-board margin but never off-screen. `cards` are the group's
+   *  canonical offsets + rotations from the seed. */
+  clampSeed(nx: number, ny: number, cards: ClampCard[]): { nx: number; ny: number };
   onCardMoved(ids: string[]): void;
   /** Pointer released over (x, y): re-arm the hover tooltip without a re-enter.
    *  `pointerType` lets the handler skip the auto-probe on touch (info is explicit
@@ -256,11 +260,14 @@ export class DragController {
       seedNy = snap.ny;
     }
 
-    // Keep the whole dragged group's BODIES inside the [0,1] board square: clamp the seed so
-    // every card's full footprint stays on the board. A card never hangs off an edge and is
-    // never lost off-screen, while its body can still fill every in-board area. The pile stays
-    // rigid.
-    ({ nx: seedNx, ny: seedNy } = this.clampSeedToBoard(s, seedNx, seedNy, m));
+    // Keep the whole dragged group on the PAGE (not just the board): a card can be dragged off
+    // the board into the surrounding margin, but never off-screen. The pile stays rigid.
+    const clampCards: ClampCard[] = [];
+    for (const [id, rel] of s.relOffsets) {
+      const c = this.state.cards.get(id);
+      clampCards.push({ dx: rel.dx, dy: rel.dy, rot: c ? c.rot : 0 });
+    }
+    ({ nx: seedNx, ny: seedNy } = this.hooks.clampSeed(seedNx, seedNy, clampCards));
 
     for (const id of s.ids) {
       const rel = s.relOffsets.get(id);
@@ -370,26 +377,6 @@ export class DragController {
     this.hooks.onReleased(e.clientX, e.clientY, e.pointerType);
     this.session = null;
   };
-
-  /** Clamp the dragged group's seed (canonical) so every card's full BODY stays within the
-   *  [0,1] board square. Each card's half-extent on each axis comes from its OWN rotation (an
-   *  odd quarter-turn swaps width/height), so an upright card sits flush to any edge and into a
-   *  corner while a sideways card is still fully contained — fixing the old bug where the
-   *  horizontal inset used the card's tall side and cards stuck ~45% short of the left/right
-   *  edges. Pure (delegates to clampSeedToField). */
-  private clampSeedToBoard(
-    s: DragSession,
-    seedNx: number,
-    seedNy: number,
-    m: { width: number; height: number; cardW: number; cardH: number }
-  ): { nx: number; ny: number } {
-    const cards: ClampCard[] = [];
-    for (const [id, rel] of s.relOffsets) {
-      const c = this.state.cards.get(id);
-      cards.push({ dx: rel.dx, dy: rel.dy, rot: c ? c.rot : 0 });
-    }
-    return clampSeedToField(seedNx, seedNy, cards, m.cardW / 2 / m.width, m.cardH / 2 / m.height);
-  }
 
   /** True between pointerdown on a card and pointerup. */
   isActive(): boolean { return this.session !== null; }
