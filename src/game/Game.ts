@@ -279,7 +279,6 @@ export class Game {
       onReset: () => { if (this.spectator) return; void this.audio.play("ui-open"); this.handleReset(); },
       onResetDeck: () => { if (!this.isHost()) return; this.confirmResetDeck(); },
       onOpenGuide: () => { if (!this.isHost()) return; void this.audio.play("ui-open"); this.openGuide(); },
-      onRestartGuide: () => { if (!this.isHost()) return; this.confirmRestartGuide(); },
       onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio, () => this.onLocale()); },
       onShortcuts: () => { void this.audio.play("ui-open"); openShortcutsModal(this.modal); },
       onUpdates: () => { void this.audio.play("ui-open"); this.markUpdatesSeen(); openUpdatesModal(this.modal); },
@@ -296,6 +295,7 @@ export class Game {
       onAdvance: () => this.onGuideAdvance(),
       onChooseFirst: (seat) => this.onGuideChooseFirst(seat),
       onStartRestart: () => { if (this.isHost()) this.startGuideFlow(); },
+      onRestart: () => { if (this.isHost()) this.confirmRestartGuide(); },
       onClose: () => { if (this.isHost()) this.closeGuide(); }
     });
     document.body.appendChild(this.guidePanel.el);
@@ -1379,7 +1379,6 @@ export class Game {
     if (!this.guidePanel) return;
     this.guidePanel.update(this.buildGuideVM());
     this.header.setGuideOpen(this.guide.open);
-    this.header.setGuideStarted(this.guide.started);
   }
 
   /** Adopt a new guide state locally; if we're the host, broadcast it as authoritative. */
@@ -2073,18 +2072,36 @@ export class Game {
   }
 
   // The reset-deck flourish, shared by the actor and every peer (the latter via the
-  // snapshot's cosmetic shuffle hint). The cards first SLIDE to the deck slot under
-  // the normal .card transform transition (scattered → gathered); once that settle
-  // window has passed we riffle the squared pile in place, so a reset reads as a
-  // real gather-and-shuffle rather than an instant snap. `sound` plays the shuffle
-  // cue exactly as the riffle begins (the actor only — peers replay the visual
-  // silently, like every other remote gesture), so the audio never leads the motion.
-  // Skipped under reduced motion (MOTION === 0), where the state applies instantly.
+  // snapshot's cosmetic shuffle hint). The cards SLIDE to the deck slot and any showing
+  // face turns down (both via the normal CSS transitions, since the cards are not yet
+  // elevated), then the squared pile riffles in place. The wait before the riffle is
+  // sized to exactly what has to happen first — nothing (riffle at once) for a deck that
+  // is already squared and face-down on the slot, the gather slide if cards must travel,
+  // or the flip if any face must turn — so there is never dead time. `sound` (the actor
+  // only, like every other gesture) plays a gather cue as the cards move and the shuffle
+  // cue exactly as the riffle begins, so the audio always tracks the motion. Under
+  // reduced motion the state applies instantly and only the shuffle cue plays.
   private riffleDeckAfterGather(ids: string[], sound = false): void {
-    if (!MOTION) { if (sound) void this.audio.play("shuffle"); return; }
     const present = ids.filter((id) => this.cardEls.has(id) && this.state.cards.has(id));
-    if (!present.length) { if (sound) void this.audio.play("shuffle"); return; }
-    window.setTimeout(() => {
+    if (!present.length || !MOTION) { if (sound) void this.audio.play("shuffle"); return; }
+    // Read the PRE-render DOM to see what will actually change: a transform mismatch
+    // means the card must slide, and a painted is-faceup means it must turn down. The
+    // state was already updated above, so we compare the target to what is on screen.
+    const { w: cardW, h: cardH } = this.cardMetrics();
+    let willMove = false;
+    let willFlip = false;
+    for (const id of present) {
+      const c = this.state.cards.get(id)!;
+      const el = this.cardEls.get(id)!;
+      if (el.dataset.tf !== this.cardTransform(c.x, c.y, c.rot, cardW, cardH)) willMove = true;
+      if (el.classList.contains("is-faceup")) willFlip = true;
+      if (willMove && willFlip) break;
+    }
+    // Wait only as long as the longest pre-riffle motion: the face turn dominates the
+    // gather slide when both run, and a static deck waits not at all.
+    const wait = willFlip ? FLIP_ANIM_MS : (willMove ? STACK_TIDY_MS : 0);
+    if (sound && (willMove || willFlip)) void this.audio.play("gather");
+    const riffle = () => {
       // Re-confirm the cards are still on the table and idle (a fresh deal / hop may
       // have wiped them, or a drag may have grabbed one) before wobbling them. Never
       // riffle a card we are actively holding — that would fight the live drag.
@@ -2094,7 +2111,9 @@ export class Game {
       this.elevateDuringAnim(live, SHUFFLE_ANIM_MS);
       this.applyShuffleJitter(live);
       if (sound) void this.audio.play("shuffle");
-    }, STACK_TIDY_MS);
+    };
+    if (wait > 0) window.setTimeout(riffle, wait);
+    else riffle();
   }
 
   private scheduleFlush(): void {

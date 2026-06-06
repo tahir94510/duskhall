@@ -17,17 +17,22 @@ sync, the canonical frame and the balance numbers are unchanged. 214 tests green
 - **The Guide opens by default, and remembers.** A brand-new room opens the Guide for the
   whole table so newcomers always meet it. Once the host opens or closes it, that choice
   is remembered for the room and restored across a refresh.
-- **Reset deck shuffles for real.** Resetting the deck now gathers every card to the deck
-  slot and riffles the squared pile, for the host and every peer alike, instead of
-  snapping the cards into place. The shuffle sound is timed to the riffle, so the audio
-  no longer leads the motion. Reduced motion still applies the new pile instantly.
-- **Start begins the guide only; it no longer reshuffles your cards.** Pressing Start
-  just begins the narration, leaving the table as it is. The intro suggests Reset deck
-  first for a fresh shuffled deck. Restart moved to a host-only icon in the header, asks
-  for confirmation, and resets only the Guide — never the cards.
-- **Minimize is a turn-loop control.** The guide stays fully visible through the intro
-  and setup (where the guidance matters); the minimize button is shown but inactive until
-  the turns begin, then collapses the panel to its bar.
+- **Reset deck shuffles for real, with no dead time.** Resetting the deck gathers every
+  card to the slot and riffles the squared pile, for the host and every peer alike. The
+  wait before the riffle is now sized to exactly what has to happen first — nothing for a
+  deck already squared and face-down, the gather slide if cards must travel, or the face
+  turn if any card shows its front — so it never stalls. The gather and shuffle cues are
+  timed to the motion, so the audio no longer leads it. Reduced motion applies instantly.
+- **Start begins the guide only; it no longer reshuffles your cards.** Pressing Start just
+  begins the narration, leaving the table as it is. The intro suggests Reset deck first
+  for a fresh shuffled deck. Restart is now a host-only button in the Guide's own bar: it
+  asks for confirmation and resets only the Guide — never the cards.
+- **Minimize is a turn-loop control, for everyone.** The guide stays fully visible through
+  the intro and setup (where the guidance matters); each player's own minimize button is
+  shown but inactive until the turns begin, then collapses the panel to its bar.
+- **A tidier Guide bar.** The bar (and the whole panel when minimized) now stands the same
+  height as the header buttons beside it, and shares the menu's corner radius, so the
+  top-right cluster reads as one set.
 
 ## 0.9.13: A built-in rulebook guide
 

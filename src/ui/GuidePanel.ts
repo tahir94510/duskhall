@@ -35,8 +35,11 @@ export interface GuideHooks {
   /** Host: pick the first player on the chooseFirst step. */
   onChooseFirst(seat: number): void;
   /** Host: start the walkthrough from the intro. Begins the narration only — it does
-   *  not gather or reshuffle the cards. (Restart lives in the header.) */
+   *  not gather or reshuffle the cards. */
   onStartRestart(): void;
+  /** Host: restart the walkthrough from its first step. Game asks for confirmation and
+   *  resets ONLY the guide — the cards on the table are untouched. */
+  onRestart(): void;
   /** Host: close the panel for everyone (the × button). */
   onClose(): void;
 }
@@ -50,6 +53,7 @@ export class GuidePanel {
   private barTextEl: HTMLElement;
   private bodyEl: HTMLElement;
   private tickBtn: HTMLButtonElement;
+  private restartBtn: HTMLButtonElement;
   private resizeBtn: HTMLButtonElement;
   private closeBtn: HTMLButtonElement;
   private vm: GuideVM | null = null;
@@ -65,6 +69,7 @@ export class GuidePanel {
         <div class="guide__status" data-role="status"></div>
         <div class="guide__controls">
           <button type="button" class="guide__btn guide__tick" data-action="tick" hidden></button>
+          <button type="button" class="guide__btn guide__restart" data-action="restart" hidden></button>
           <button type="button" class="guide__btn guide__resize" data-action="resize" hidden></button>
           <button type="button" class="guide__btn guide__close" data-action="close" hidden aria-label="${esc(t("guide.close"))}">&times;</button>
         </div>
@@ -74,6 +79,7 @@ export class GuidePanel {
     this.barTextEl = this.el.querySelector('[data-role="status"]')!;
     this.bodyEl = this.el.querySelector('[data-role="body"]')!;
     this.tickBtn = this.el.querySelector('[data-action="tick"]')!;
+    this.restartBtn = this.el.querySelector('[data-action="restart"]')!;
     this.resizeBtn = this.el.querySelector('[data-action="resize"]')!;
     this.closeBtn = this.el.querySelector('[data-action="close"]')!;
     this.bind();
@@ -81,6 +87,7 @@ export class GuidePanel {
 
   private bind(): void {
     this.tickBtn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); this.hooks.onAdvance(); });
+    this.restartBtn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); this.hooks.onRestart(); });
     this.closeBtn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); this.hooks.onClose(); });
     this.resizeBtn.addEventListener("click", (e) => {
       e.preventDefault(); e.stopPropagation();
@@ -159,6 +166,16 @@ export class GuidePanel {
       this.tickBtn.title = allowed ? t("guide.confirm") : (who === "host" ? t("guide.hostConfirms") : t("guide.waitYourTurn"));
     }
 
+    // Restart: host-only, and only once the walkthrough is running (there is nothing to
+    // restart in the intro). It re-runs the guide from the first step and never touches
+    // the cards — Game shows a confirmation before applying it.
+    this.restartBtn.hidden = !(vm.isHost && vm.state.started);
+    if (!this.restartBtn.hidden) {
+      this.restartBtn.innerHTML = ICON_RESTART;
+      this.restartBtn.setAttribute("aria-label", t("guide.restart"));
+      this.restartBtn.title = t("guide.restart");
+    }
+
     // Minimize/maximize toggle: always shown, but interactive only in the turn loop.
     // Disabled buttons emit no click, so no extra guard is needed before then.
     this.resizeBtn.hidden = false;
@@ -235,3 +252,5 @@ export class GuidePanel {
 const ICON_CHECK = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ICON_COLLAPSE = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14 H18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 const ICON_EXPAND = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9 L12 15 L18 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+// Restart: a circular refresh arrow, matching the header's reset glyph family.
+const ICON_RESTART = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12 A 7 7 0 1 1 12 19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M2 9 L5 12 L8 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
