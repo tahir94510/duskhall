@@ -19,7 +19,15 @@ sync, the canonical frame and the balance numbers are unchanged. 214 tests green
   is remembered for the room and restored across a refresh.
 - **Reset deck shuffles for real.** Resetting the deck now gathers every card to the deck
   slot and riffles the squared pile, for the host and every peer alike, instead of
-  snapping the cards into place. Reduced motion still applies the new pile instantly.
+  snapping the cards into place. The shuffle sound is timed to the riffle, so the audio
+  no longer leads the motion. Reduced motion still applies the new pile instantly.
+- **Start begins the guide only; it no longer reshuffles your cards.** Pressing Start
+  just begins the narration, leaving the table as it is. The intro suggests Reset deck
+  first for a fresh shuffled deck. Restart moved to a host-only icon in the header, asks
+  for confirmation, and resets only the Guide — never the cards.
+- **Minimize is a turn-loop control.** The guide stays fully visible through the intro
+  and setup (where the guidance matters); the minimize button is shown but inactive until
+  the turns begin, then collapses the panel to its bar.
 
 ## 0.9.13: A built-in rulebook guide
 

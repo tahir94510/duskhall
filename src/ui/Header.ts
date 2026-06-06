@@ -1,4 +1,4 @@
-import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EYE, ICON_EXIT, ICON_FEEDBACK, ICON_INFO, ICON_SPARK, ICON_GUIDE } from "./icons.js";
+import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET_DECK, ICON_RESET, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EYE, ICON_EXIT, ICON_FEEDBACK, ICON_INFO, ICON_SPARK, ICON_GUIDE } from "./icons.js";
 import { t } from "../i18n/index.js";
 import { inviteUrl } from "../net/room.js";
 import { flashConfirm } from "./feedback.js";
@@ -14,6 +14,9 @@ export interface HeaderHooks {
   /** Host-only: open the rulebook Guide panel for the table (closing is done from
    *  the panel itself). */
   onOpenGuide(): void;
+  /** Host-only: restart the rulebook walkthrough from its first step. Asks for
+   *  confirmation and only resets the Guide — the cards on the table are untouched. */
+  onRestartGuide(): void;
   onSettings(): void;
   onShortcuts(): void;
   /** Open the "What's new" / updates panel (and clear the New badge). */
@@ -45,6 +48,9 @@ export class Header {
   private menuOpen = false;
   private spectator = false;
   private host = false;
+  // Whether the rulebook walkthrough is running. The "Restart guide" row only makes
+  // sense (and only shows) once it has started.
+  private guideStarted = false;
 
   constructor(private hooks: HeaderHooks) {
     this.el = document.createElement("header");
@@ -116,6 +122,10 @@ export class Header {
           <span class="header__menu-icon">${ICON_GUIDE}</span>
           <span class="header__menu-label" data-i18n="ui.guide">${esc(t("ui.guide"))}</span>
         </button>
+        <button type="button" class="header__menu-row" data-action="restart-guide" role="menuitem" data-role="restart-guide">
+          <span class="header__menu-icon">${ICON_RESET}</span>
+          <span class="header__menu-label" data-i18n="ui.restartGuide">${esc(t("ui.restartGuide"))}</span>
+        </button>
         <button type="button" class="header__menu-row" data-action="reset-deck" role="menuitem" data-role="reset-deck">
           <span class="header__menu-icon">${ICON_RESET_DECK}</span>
           <span class="header__menu-label" data-i18n="ui.resetDeck">${esc(t("ui.resetDeck"))}</span>
@@ -181,6 +191,7 @@ export class Header {
     this.menu.querySelector<HTMLButtonElement>('[data-action="updates"]')?.addEventListener("click", wrap(this.hooks.onUpdates));
     this.menu.querySelector<HTMLButtonElement>('[data-action="legal"]')?.addEventListener("click", wrap(this.hooks.onLegal));
     this.menu.querySelector<HTMLButtonElement>('[data-action="guide"]')?.addEventListener("click", wrap(this.hooks.onOpenGuide));
+    this.menu.querySelector<HTMLButtonElement>('[data-action="restart-guide"]')?.addEventListener("click", wrap(this.hooks.onRestartGuide));
     this.menu.querySelector<HTMLButtonElement>('[data-action="reset-deck"]')?.addEventListener("click", wrap(this.hooks.onResetDeck));
     this.menu.querySelector<HTMLButtonElement>('[data-action="reset"]')?.addEventListener("click", wrap(this.hooks.onReset));
     // Connection row doubles as the "run the self-test" button. It does NOT close
@@ -330,16 +341,26 @@ export class Header {
     guide.setAttribute("aria-disabled", open ? "true" : "false");
   }
 
-  // Open guide, Reset deck are host-only (and never shown to a spectator). Exit room
-  // stays available to every seated player. The play divider shows whenever any control
-  // below it is visible.
+  /** Reflect whether the walkthrough is running, so the host's "Restart guide" row
+   *  only appears once there is a walkthrough to restart. */
+  setGuideStarted(started: boolean): void {
+    this.guideStarted = started;
+    this.applyPlayControls();
+  }
+
+  // Open guide, Restart guide and Reset deck are host-only (and never shown to a
+  // spectator); Restart guide additionally needs a running walkthrough. Exit room stays
+  // available to every seated player. The play divider shows whenever any control below
+  // it is visible.
   private applyPlayControls(): void {
     const guide = this.menu.querySelector<HTMLElement>('[data-role="guide"]');
+    const restartGuide = this.menu.querySelector<HTMLElement>('[data-role="restart-guide"]');
     const resetDeck = this.menu.querySelector<HTMLElement>('[data-role="reset-deck"]');
     const resetRoom = this.menu.querySelector<HTMLElement>('[data-role="reset-room"]');
     const divider = this.menu.querySelector<HTMLElement>('[data-role="play-divider"]');
     const hostOnly = this.host && !this.spectator;
     if (guide) guide.hidden = !hostOnly;
+    if (restartGuide) restartGuide.hidden = !(hostOnly && this.guideStarted);
     if (resetDeck) resetDeck.hidden = !hostOnly;
     if (resetRoom) resetRoom.hidden = this.spectator;
     if (divider) divider.hidden = this.spectator;

@@ -34,7 +34,8 @@ export interface GuideHooks {
   onAdvance(): void;
   /** Host: pick the first player on the chooseFirst step. */
   onChooseFirst(seat: number): void;
-  /** Host: start or restart the walkthrough (Game shows the confirm). */
+  /** Host: start the walkthrough from the intro. Begins the narration only — it does
+   *  not gather or reshuffle the cards. (Restart lives in the header.) */
   onStartRestart(): void;
   /** Host: close the panel for everyone (the × button). */
   onClose(): void;
@@ -112,10 +113,11 @@ export class GuidePanel {
     if (!vm.state.open) return;
 
     const view = viewOf(vm.state, vm.seats.map((s) => s.seat));
-    // The panel can always be collapsed to its top bar — the bar keeps the status and
-    // the confirm tick, so a confirm step is still completable while minimized; only the
-    // body (lead text, the first-player picks, the restart row) is tucked away.
-    const canMinimize = true;
+    // Minimize is a TURN-PHASE feature: the button is shown in every phase so it is
+    // discoverable, but it only becomes interactive once the turn loop begins (the
+    // intro and setup keep their guidance visible). The bar still carries the confirm
+    // tick, so even a minimized turn step stays completable.
+    const canMinimize = view.phase === "turn";
     const minimized = canMinimize && this.minimized;
     this.el.classList.toggle("is-min", minimized);
 
@@ -157,14 +159,15 @@ export class GuidePanel {
       this.tickBtn.title = allowed ? t("guide.confirm") : (who === "host" ? t("guide.hostConfirms") : t("guide.waitYourTurn"));
     }
 
-    // Minimize/maximize toggle: only when minimizing is allowed.
-    this.resizeBtn.hidden = !canMinimize;
-    if (canMinimize) {
-      const min = this.minimized;
-      this.resizeBtn.innerHTML = min ? ICON_EXPAND : ICON_COLLAPSE;
-      this.resizeBtn.setAttribute("aria-label", t(min ? "guide.maximize" : "guide.minimize"));
-      this.resizeBtn.title = t(min ? "guide.maximize" : "guide.minimize");
-    }
+    // Minimize/maximize toggle: always shown, but interactive only in the turn loop.
+    // Disabled buttons emit no click, so no extra guard is needed before then.
+    this.resizeBtn.hidden = false;
+    this.resizeBtn.disabled = !canMinimize;
+    const min = canMinimize && this.minimized;
+    this.resizeBtn.innerHTML = min ? ICON_EXPAND : ICON_COLLAPSE;
+    const resizeLabel = !canMinimize ? "guide.minimizeTurnOnly" : (min ? "guide.maximize" : "guide.minimize");
+    this.resizeBtn.setAttribute("aria-label", t(resizeLabel));
+    this.resizeBtn.title = t(resizeLabel);
 
     // Close is host-only (the host opens and closes the panel for the table).
     this.closeBtn.hidden = !vm.isHost;
@@ -203,14 +206,12 @@ export class GuidePanel {
     const turnHint = vm.spectator ? `<p class="guide__muted">${esc(t("guide.spectatorNote"))}</p>`
       : yours ? `<p class="guide__hint">${esc(t("guide.yourTurn"))}</p>`
       : `<p class="guide__muted">${esc(t("guide.waitYourTurn"))}</p>`;
-    const restart = vm.isHost
-      ? `<button type="button" class="guide__restart" data-action="start">${esc(t("guide.restart"))}</button>`
-      : "";
+    // Restart now lives in the header as a host-only control (it re-runs the guide
+    // without touching the cards), so the body carries no restart button.
     return `
       <p class="guide__step-body">${esc(t(`guide.phase.${phase}.body`))}</p>
       ${firstLine}
-      ${turnHint}
-      ${restart ? `<div class="guide__foot-row">${restart}</div>` : ""}`;
+      ${turnHint}`;
   }
 
   private wireBody(vm: GuideVM): void {

@@ -107,7 +107,6 @@
 .guide__hint { margin: 8px 0 0; color: var(--ivory); font-size: 12px; }
 .guide__muted { margin: 8px 0 0; color: var(--ivory-mute); font-size: 12px; }
 
-.guide__foot-row { margin-top: 12px; display: flex; gap: 8px; }
 
 .guide__primary {
   margin-top: 12px;
@@ -122,18 +121,6 @@
   cursor: pointer;
 }
 .guide__primary:hover { background: #fff; border-color: #fff; }
-
-.guide__restart {
-  height: 30px;
-  padding: 0 14px;
-  font-size: 12px;
-  border-radius: 8px;
-  border: 1px solid var(--line-2);
-  background: rgba(22, 22, 22, 0.6);
-  color: var(--ivory-dim);
-  cursor: pointer;
-}
-.guide__restart:hover { color: var(--ivory); border-color: var(--line-3); }
 
 /* chooseFirst: a tappable chip per seated player, tinted with their seat accent. */
 .guide__picks { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }

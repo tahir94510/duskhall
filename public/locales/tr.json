@@ -43,7 +43,8 @@
     "connOnline": "Çevrimiçi",
     "connConnecting": "Bağlanıyor...",
     "connOffline": "Çevrimdışı",
-    "guide": "Rehber"
+    "guide": "Rehber",
+    "restartGuide": "Rehberi yeniden başlat"
   },
   "diag": {
     "title": "Bağlantı sınaması",
@@ -237,12 +238,13 @@
       {
         "v": "2026-06-06.1",
         "date": "6 Haziran 2026",
-        "title": "Rehber ve menü düzeltmeleri",
+        "title": "Rehber akışı ve menü düzeltmeleri",
         "items": [
-          "Rehber artık her adımda tam olarak doğru düğmeleri gösteriyor: ilk oyuncuyu seçerken onay tiki görünmüyor, küçültme düğmesi yalnızca kullanılabildiğinde çıkıyor ve kapatma düğmesi yalnızca ev sahibine ait. Yalnızca ev sahibine ya da yalnızca izleyiciye özel menü öğeleri artık yanlış oyunculara sızmıyor.",
-          "Üç nokta menüsü artık rehber panelinin arkasında değil, önünde açılıyor.",
-          "Rehber yeni bir odada varsayılan olarak açılır, böylece yeni gelenler onu mutlaka görür; bir sonraki gelişinizde onu açık mı kapalı mı bıraktığınızı hatırlar.",
-          "Desteyi sıfırla artık tüm kartları toplayıp düzleşen desteyi herkes için karıştırıyor; kartları karıştırmadan yerine oturtmak yerine."
+          "Rehber artık her adımda tam olarak doğru düğmeleri gösteriyor: ilk oyuncuyu seçerken onay tiki görünmüyor ve kapatma düğmesi yalnızca ev sahibine ait. Yalnızca ev sahibine ya da yalnızca izleyiciye özel menü öğeleri artık yanlış oyunculara sızmıyor.",
+          "Üç nokta menüsü artık rehber panelinin arkasında değil önünde açılıyor; rehber yeni bir odada varsayılan olarak açılır ve onu en son açık mı kapalı mı bıraktığınızı hatırlar.",
+          "Başlat artık yalnızca rehberi başlatır ve kartlarınızı olduğu gibi bırakır (yeni bir karıştırma isterseniz giriş metni önce Desteyi sıfırla'yı önerir). Yeniden başlat menüde yalnızca ev sahibine özel bir düğmeye taşındı: onay ister ve yalnızca rehberi sıfırlar, kartları asla.",
+          "Küçültme artık bir tur aşaması özelliği: rehber kurulum boyunca tam olarak görünür kalır, küçültme düğmesi turlar başlayınca etkinleşir.",
+          "Desteyi sıfırla tüm kartları toplayıp düzleşen desteyi herkes için karıştırıyor; karıştırma sesi de titreşime göre zamanlanıyor, kartları karıştırmadan yerine oturtmak yerine."
         ]
       },
       {
@@ -730,8 +732,8 @@
     "confirm": "Başlat"
   },
   "restartGameConfirm": {
-    "title": "Oyun yeniden başlasın mı?",
-    "body": "Deste toplanıp yeniden karıştırılır ve kural rehberi ilk adımdan yeniden başlar. Bu tüm oyuncuları etkiler.",
+    "title": "Rehber yeniden başlasın mı?",
+    "body": "Kural rehberi herkes için ilk adıma döner. Masadaki kartlar olduğu gibi kalır.",
     "confirm": "Yeniden başlat"
   },
   "guide": {
@@ -739,13 +741,14 @@
     "close": "Rehberi kapat",
     "minimize": "Küçült",
     "maximize": "Büyüt",
+    "minimizeTurnOnly": "Rehberi, turlar başladığında küçültebilirsin.",
     "confirm": "Bu adımı tamamla",
     "hostConfirms": "Bu adımı host onaylar.",
     "waitYourTurn": "Sıranı bekle.",
     "yourTurn": "Sıra sende. Bitirince onay işaretine bas.",
     "aPlayer": "bir oyuncu",
     "youTag": "sen",
-    "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir. Kartları dilediğin gibi taşımakta, çevirmekte ve karıştırmakta özgürsün.",
+    "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir ve kartlarına hiç dokunmaz. Kartları dilediğin gibi taşımakta, çevirmekte ve karıştırmakta özgürsün. İpucu: yeni karıştırılmış bir desteyle başlamak istersen önce menüden Desteyi sıfırla'yı kullan, sonra Başlat'a bas.",
     "introWaiting": "Oyunun başlaması için host bekleniyor.",
     "start": "Başlat",
     "restart": "Yeniden başlat",

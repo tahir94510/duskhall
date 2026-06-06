@@ -43,7 +43,8 @@
     "connOnline": "Online",
     "connConnecting": "Connecting...",
     "connOffline": "Offline",
-    "guide": "Guide"
+    "guide": "Guide",
+    "restartGuide": "Restart guide"
   },
   "diag": {
     "title": "Connection self-test",
@@ -237,12 +238,13 @@
       {
         "v": "2026-06-06.1",
         "date": "June 6, 2026",
-        "title": "Guide and menu fixes",
+        "title": "Guide flow and menu fixes",
         "items": [
-          "The Guide now shows exactly the right controls at each step: the confirm check no longer appears while you are choosing who goes first, the minimize button only shows when it can be used, and the close button is the host's alone. Host-only and spectator-only menu items no longer leak to the wrong players.",
-          "The three-dot menu now opens above the Guide panel instead of behind it.",
-          "The Guide opens by default in a new room so newcomers always meet it, and it remembers whether you left it open or closed the next time you come back.",
-          "Reset deck now gathers every card and riffles the squared pile for everyone, instead of snapping the cards into place with no shuffle."
+          "The Guide now shows exactly the right controls at each step: the confirm check no longer appears while you are choosing who goes first, and the close button is the host's alone. Host-only and spectator-only menu items no longer leak to the wrong players.",
+          "The three-dot menu now opens above the Guide panel instead of behind it, and the Guide opens by default in a new room while remembering whether you last left it open or closed.",
+          "Start now simply begins the guide and leaves your cards exactly as they are (the intro suggests Reset deck first if you want a fresh shuffle). Restart moved to a host-only button in the menu: it asks to confirm and resets only the guide, never the cards.",
+          "Minimize is now a turn-loop control: the guide stays fully visible through setup, and the minimize button becomes active once the turns begin.",
+          "Reset deck gathers every card and riffles the squared pile for everyone, with the shuffle sound timed to the riffle, instead of snapping the cards into place."
         ]
       },
       {
@@ -730,8 +732,8 @@
     "confirm": "Start"
   },
   "restartGameConfirm": {
-    "title": "Restart the game?",
-    "body": "The deck is gathered and reshuffled, and the rulebook guide restarts from the first step. This affects all players.",
+    "title": "Restart the guide?",
+    "body": "The rulebook guide goes back to its first step for everyone. The cards on the table are left exactly as they are.",
     "confirm": "Restart"
   },
   "guide": {
@@ -739,13 +741,14 @@
     "close": "Close guide",
     "minimize": "Minimize",
     "maximize": "Maximize",
+    "minimizeTurnOnly": "You can minimize the guide once the turns begin.",
     "confirm": "Mark this step done",
     "hostConfirms": "The host confirms this step.",
     "waitYourTurn": "Wait for your turn.",
     "yourTurn": "It is your turn. Tap the check when you are done.",
     "aPlayer": "a player",
     "youTag": "you",
-    "introBody": "This guide walks the whole table through a game, one step at a time. It only suggests what to do next. You stay free to move, flip and shuffle the cards however you like.",
+    "introBody": "This guide walks the whole table through a game, one step at a time. It only suggests what to do next, and never moves your cards. You stay free to move, flip and shuffle them however you like. Tip: use Reset deck from the menu first if you want to begin from a freshly shuffled deck, then press Start.",
     "introWaiting": "Waiting for the host to start the game.",
     "start": "Start",
     "restart": "Restart",
