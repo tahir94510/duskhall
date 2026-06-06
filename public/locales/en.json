@@ -737,11 +737,6 @@
     "body": "Every card on the table is gathered, shuffled face-down and returned to the deck. This affects all players.",
     "confirm": "Reset deck"
   },
-  "startGameConfirm": {
-    "title": "Begin the adventure?",
-    "body": "The deck is gathered, shuffled face-down, and the rulebook guide starts from the beginning. This affects all players.",
-    "confirm": "Start"
-  },
   "restartGameConfirm": {
     "title": "Restart the guide?",
     "body": "The rulebook guide goes back to its first step for everyone. The cards on the table are left exactly as they are.",
