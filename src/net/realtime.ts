@@ -58,11 +58,12 @@ export interface SeatClaim {
   connAt?: number;
 }
 
-/** Cosmetic-only hint attached to a patch so REMOTE peers replay the same flourish
- *  the actor saw (a solid-block flip or a riffle shuffle) instead of snapping the
- *  state. It never affects the authoritative state — the receiver still applies the
- *  card values via LWW and reads only the direction (`toFaceUp`) from here. Old
- *  clients ignore the field entirely. */
+/** Cosmetic-only hint attached to a patch (or the reset-deck snapshot) so REMOTE
+ *  peers replay the same flourish the actor saw (a solid-block flip or a riffle
+ *  shuffle) instead of snapping the state. It never affects the authoritative
+ *  state — the receiver still applies the card values via LWW (or wholesale for a
+ *  snapshot) and reads only the direction (`toFaceUp`) from here. Old clients
+ *  ignore the field entirely. */
 export interface PatchAnim {
   kind: "flip" | "shuffle";
   ids: string[];
@@ -90,7 +91,8 @@ export interface CardPatch {
   cards: PatchCard[];
   /** Only populated on snapshots: the authoritative peer's known seat claims. */
   claims?: SeatClaim[];
-  /** Optional cosmetic animation hint (patches only, never snapshots). */
+  /** Optional cosmetic animation hint. Rides on flip/shuffle patches and on the
+   *  reset-deck snapshot (so peers riffle the regathered pile). */
   anim?: PatchAnim;
   /** Authoritatively-removed players (reconcile patches + snapshots). Lets a client
    *  that missed a `left`/`kick` converge within the reconcile cadence instead of
@@ -821,9 +823,10 @@ export class RealtimeBus {
       // coordinate — validate as a wide int so it is never clamped to the board range.
       const sanitized: CardPatch = { v: safeInt(p.v, 0), by, cards: this.sanitizeCards(p.cards) };
       if (msg.type === "snapshot" && p.claims) sanitized.claims = this.sanitizeClaims(p.claims);
-      // The cosmetic anim hint rides on patches only (never snapshots, which apply
-      // wholesale). Sanitised so a malformed/oversize hint can never reach Game.
-      if (msg.type === "patch" && p.anim) {
+      // The cosmetic anim hint rides on patches (a flip/shuffle flourish) AND on the
+      // reset-deck snapshot (so peers riffle the gathered pile instead of snapping).
+      // Sanitised so a malformed/oversize hint can never reach Game.
+      if (p.anim) {
         const a = this.sanitizeAnim(p.anim);
         if (a) sanitized.anim = a;
       }

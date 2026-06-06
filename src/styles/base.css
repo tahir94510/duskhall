@@ -3,6 +3,16 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* The `hidden` attribute must ALWAYS win. The UA `[hidden] { display: none }`
+   rule has attribute specificity (0,1,0), so any class that sets `display`
+   (e.g. `.guide__btn { display: grid }`, `.header__menu-row { display: grid }`)
+   ties it and — being authored later — overrides it. That left "hidden"
+   controls visibly stuck on screen: the guide confirm tick during the
+   choose-first step, the minimize button during setup, the close button for
+   non-hosts, and the host-only / spectator-only menu rows for everyone. A
+   single high-priority reset fixes every case at once. */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   padding: 0;

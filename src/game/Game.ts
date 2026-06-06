@@ -110,6 +110,10 @@ const LS_SEEN_ABOUT = "kabal:seen-about";
 // Updates row shows a "New" badge while this differs from the latest entry; opening the
 // panel writes the latest here and clears the badge until the next update ships.
 const LS_SEEN_UPDATES = "kabal:seen-updates";
+// Per-ROOM record of whether the host left the rulebook Guide panel open. A brand-new
+// room (no record) opens the Guide by default so newcomers always meet it; once the
+// host opens or closes it, that choice is remembered and restored across a refresh.
+const LS_GUIDE_OPEN_PREFIX = "kabal:guide-open:";
 
 // `joinedAt` is the player's PERSISTED seniority in this room (their original join
 // time). It survives a refresh/reconnect so the host keeps host and seating order
@@ -140,6 +144,10 @@ export class Game {
   // from the card LWW state — it never restricts play.
   private guide: GuideState = initialGuide();
   private guidePanel!: GuidePanel;
+  // Set once we have decided this room's initial Guide visibility as host (default
+  // open for a fresh room, otherwise the host's remembered choice). Reset on a room
+  // hop so the next room gets its own default.
+  private guideSeeded = false;
   private audio = new AudioEngine();
   private drag!: DragController;
   private tooltip!: Tooltip;
@@ -1405,6 +1413,7 @@ export class Game {
   private openGuide(): void {
     if (!this.isHost() || this.guide.open) return;
     this.applyGuideLocal(setGuideOpenState(this.guide, true), true);
+    this.storeGuideOpen(true);
   }
 
   /** Host: close the guide panel for everyone. */
@@ -1412,6 +1421,37 @@ export class Game {
     if (!this.isHost() || !this.guide.open) return;
     void this.audio.play("ui-close");
     this.applyGuideLocal(setGuideOpenState(this.guide, false), true);
+    this.storeGuideOpen(false);
+  }
+
+  private guideOpenKey(): string { return LS_GUIDE_OPEN_PREFIX + this.room; }
+
+  /** Remember the host's open/closed choice for this room so a refresh restores it. */
+  private storeGuideOpen(open: boolean): void {
+    try { localStorage.setItem(this.guideOpenKey(), open ? "1" : "0"); } catch {}
+  }
+
+  /** The host's remembered Guide visibility for this room, or null if never set. */
+  private readStoredGuideOpen(): boolean | null {
+    try {
+      const v = localStorage.getItem(this.guideOpenKey());
+      return v === null ? null : v === "1";
+    } catch { return null; }
+  }
+
+  /** Decide this room's INITIAL Guide visibility, once, as the host. A brand-new room
+   *  (no remembered choice) opens the Guide by default so newcomers always meet it; a
+   *  remembered choice (the host opened/closed it before a refresh) is restored. Skipped
+   *  entirely if authoritative guide state already exists (v > 0) — e.g. adopted from a
+   *  peer on join — so we never stomp a state the table is already sharing. */
+  private seedGuideOpenIfHost(): void {
+    if (this.guideSeeded || this.spectator || !this.isHost()) return;
+    this.guideSeeded = true;
+    if (this.guide.v !== 0) return; // a peer/host already established the guide state
+    const stored = this.readStoredGuideOpen();
+    const open = stored === null ? true : stored;
+    if (open !== this.guide.open) this.applyGuideLocal(setGuideOpenState(this.guide, open), true);
+    this.storeGuideOpen(open);
   }
 
   /** A player tapped the confirm tick to complete the current step. The host applies
@@ -2015,9 +2055,36 @@ export class Game {
     }
     this.state.topZ = z;
     this.scheduleFlush();
-    this.sendSnapshot();
+    // Carry a shuffle hint on the snapshot so peers riffle the regathered pile in
+    // step with us (the cards still converge wholesale from the snapshot — the hint
+    // is purely cosmetic). Then play the same gather-settle-then-riffle here.
+    const deckIds = order.map((o) => o.instanceId);
+    this.sendSnapshot({ kind: "shuffle", ids: deckIds });
+    this.riffleDeckAfterGather(deckIds);
     void this.audio.play("shuffle");
     toast(t("ui.deckReset"));
+  }
+
+  // The reset-deck flourish, shared by the actor and every peer (the latter via the
+  // snapshot's cosmetic shuffle hint). The cards first SLIDE to the deck slot under
+  // the normal .card transform transition (scattered → gathered); once that settle
+  // window has passed we riffle the squared pile in place, so a reset reads as a
+  // real gather-and-shuffle rather than an instant snap. Skipped under reduced
+  // motion (MOTION === 0), where the state simply applies instantly.
+  private riffleDeckAfterGather(ids: string[]): void {
+    if (!MOTION) return;
+    const present = ids.filter((id) => this.cardEls.has(id) && this.state.cards.has(id));
+    if (!present.length) return;
+    window.setTimeout(() => {
+      // Re-confirm the cards are still on the table and idle (a fresh deal / hop may
+      // have wiped them, or a drag may have grabbed one) before wobbling them. Never
+      // riffle a card we are actively holding — that would fight the live drag.
+      const live = present.filter((id) =>
+        this.cardEls.has(id) && !this.animTimers.has(id) && !this.myHeldIds.includes(id));
+      if (!live.length) return;
+      this.elevateDuringAnim(live, SHUFFLE_ANIM_MS);
+      this.applyShuffleJitter(live);
+    }, STACK_TIDY_MS);
   }
 
   private scheduleFlush(): void {
@@ -2260,6 +2327,9 @@ export class Game {
       this.header.setSpectators(spectatorCount);
       // Host-only controls (Start/Restart, Reset deck) follow the live host election.
       this.header.setHostMode(this.self.id === nowHost && !this.spectator);
+      // The first time we settle as this room's host, decide the Guide's initial
+      // visibility (open by default for a fresh room, else the host's remembered choice).
+      this.seedGuideOpenIfHost();
       // Names / seats / ready membership may have shifted; repaint the guide read-model.
       this.refreshGuide();
       if (this.debug) {
@@ -2764,7 +2834,7 @@ export class Game {
     }, totalMs + 80);
   }
 
-  private sendSnapshot(): void {
+  private sendSnapshot(anim?: PatchAnim): void {
     this.patchVersion++;
     const cards: PatchCard[] = Array.from(this.state.cards.values()).slice(0, 200).map((c) => this.wireCard(c));
     // Teach the receiver our known seat claims so a player who dropped before
@@ -2773,7 +2843,11 @@ export class Game {
     // Teach the receiver who we have authoritatively removed (kicked/left) so a joiner
     // or a client that missed the one-shot message converges instead of resurrecting
     // them from a lingering presence echo.
-    this.bus.sendSnapshot({ v: this.patchVersion, by: this.self.id, cards, claims, removed: this.buildRemovedList() });
+    const snap: CardPatch = { v: this.patchVersion, by: this.self.id, cards, claims, removed: this.buildRemovedList() };
+    // A reset-deck snapshot carries a cosmetic shuffle hint so peers riffle the
+    // freshly gathered pile in step with the actor instead of snapping it square.
+    if (anim) snap.anim = anim;
+    this.bus.sendSnapshot(snap);
   }
 
   // Snapshot of the players we have authoritatively removed (kicked/left), for the
@@ -2849,9 +2923,18 @@ export class Game {
     // that missed a one-shot left/kick frees the seat and tombstones the player here,
     // so a kicked/departed player never lingers as "away" on some screens.
     if (p.removed && p.removed.length) this.applyRemoved(p.removed);
-    // Replay the actor's flip/shuffle flourish on our side (state is already set;
-    // this is purely cosmetic). Snapshots carry no anim hint.
-    if (!isSnapshot && p.anim) this.playRemoteAnim(p.anim);
+    // Replay the actor's flourish on our side (state is already set; purely
+    // cosmetic). A patch hint (flip/shuffle on a pile already in place) plays at
+    // once; a snapshot hint is the reset-deck riffle, where the cards must first
+    // SLIDE to the deck — the requestRender below paints the new positions, then
+    // riffleDeckAfterGather waits out the settle window before the wobble.
+    if (p.anim) {
+      if (isSnapshot) {
+        if (p.anim.kind === "shuffle") this.riffleDeckAfterGather(p.anim.ids);
+      } else {
+        this.playRemoteAnim(p.anim);
+      }
+    }
     this.requestRender();
   }
 
@@ -3264,6 +3347,12 @@ export class Game {
     // Cancel every pending away-grace countdown so a stale timer can't fire
     // against the fresh room's seats.
     this.clearAwayTimers();
+    // Reset the rulebook Guide to its pristine state for the room we're entering, and
+    // re-arm the per-room seeding so the new room gets its own default (open) / the
+    // host's remembered choice for THAT room. The new room's slug is set by the caller
+    // right after this, so seedGuideOpenIfHost reads the correct stored key.
+    this.guide = initialGuide();
+    this.guideSeeded = false;
     this.requestRender();
   }
 

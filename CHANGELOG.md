@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.9.14: Guide and menu fixes, a real reset-deck shuffle
+
+A correctness pass over the Guide, the header menu and the reset-deck animation. The card
+sync, the canonical frame and the balance numbers are unchanged. 214 tests green.
+
+- **The `hidden` attribute now always hides.** A class that set `display` (the guide
+  buttons, the menu rows) silently overrode the browser's `[hidden]` rule, so controls
+  that should have been gone stayed on screen: the confirm tick during the choose-first
+  step, the minimize button during setup, the close button for non-hosts, and the
+  host-only / spectator-only menu rows for everyone. A single high-priority reset fixes
+  every case, so each control now shows, hides, enables and disables exactly as intended.
+- **The three-dot menu sits above the Guide.** The header menu drops into the same
+  top-right corner as the Guide panel; it now overlays the panel instead of opening
+  behind it.
+- **The Guide opens by default, and remembers.** A brand-new room opens the Guide for the
+  whole table so newcomers always meet it. Once the host opens or closes it, that choice
+  is remembered for the room and restored across a refresh.
+- **Reset deck shuffles for real.** Resetting the deck now gathers every card to the deck
+  slot and riffles the squared pile, for the host and every peer alike, instead of
+  snapping the cards into place. Reduced motion still applies the new pile instantly.
+
 ## 0.9.13: A built-in rulebook guide
 
 An optional, non-enforcing Guide that walks the whole table through a game, one step at
