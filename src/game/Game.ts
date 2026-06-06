@@ -101,6 +101,11 @@ const LIVE_CID_PREFIX = "kabal:livecid:";
 const LS_IDENT_PREFIX = "kabal:ident:";
 const IDENT_TTL_MS = 24 * 60 * 60 * 1000;
 const SNAPSHOT_TTL_MS = 12 * 60 * 60 * 1000; // a saved board restores only within 12h
+// Returning to the tab after this long may mean the browser evicted decoded art / paused
+// the socket long enough to drop us; we re-decode assets and (only if they aren't instantly
+// ready) show a brief loader so the table never reappears half-drawn. A quick switch under
+// this threshold returns silently.
+const TAB_AWAY_RELOAD_MS = 20000;
 // One-shot, per-device flag: set the first time this browser ever opens the app, so
 // the About panel auto-shows exactly once for a brand-new visitor and never again.
 // Not room-scoped and never swept by pruneStaleStorage / clearRoomStorage (it matches
@@ -269,7 +274,8 @@ export class Game {
       onRotate: (id) => this.rotateSmart(id),
       onInfo: (id) => this.showCardInfo(id),
       canShowInfo: (id) => this.canShowCardInfo(id),
-      stackFor: (id) => findConnectedStack(this.state, this.boardSize, id, this.cardMetrics())
+      stackFor: (id) => findConnectedStack(this.state, this.boardSize, id, this.cardMetrics()),
+      isPileTidy: (id) => this.pileIsTidy(id)
     });
     this.header = new Header({
       onRules: () => { void this.audio.play("ui-open"); openRulesModal(this.modal, this.tooltip); },
@@ -417,19 +423,36 @@ export class Game {
   private firstSync: Promise<void> = Promise.resolve();
   private armFirstSync(): void {
     this.firstSync = new Promise<void>((r) => { this.firstSyncResolve = r; });
-    // A new room means the previous room's authoritative board no longer counts.
+    // A new room means the previous room's authoritative board no longer counts, and the
+    // new room's roster is not yet known — so host-only UI is suppressed again until it is.
     this.gotSnapshot = false;
+    this.rosterReady = false;
     this.syncNudges = 0;
     window.clearTimeout(this.syncNudgeTimer);
   }
   private resolveFirstSync(): void {
     if (this.firstSyncResolve) { this.firstSyncResolve(); this.firstSyncResolve = null; }
+    // The roster/board is authoritative now: reveal the settled role (host vs not). Until
+    // this point we suppressed host-only UI to avoid a flash on a joining client.
+    if (!this.rosterReady) {
+      this.rosterReady = true;
+      this.applyRoleUI();
+      this.refreshZones();
+    }
   }
   // True once we've received an authoritative snapshot for the current room. A
   // joiner that sees peers in presence but has NOT got a snapshot keeps nudging
   // for one (requestSync), so a hello that raced ahead of presence is recovered
   // and the newcomer always converges onto the live board (never a stale deal).
   private gotSnapshot = false;
+  // Wall-clock when the tab was last hidden, so a return can tell a quick switch from a long
+  // background (which may have evicted decoded art) and re-warm assets / reveal cleanly.
+  private hiddenAt = 0;
+  // True once the roster is AUTHORITATIVE for this room — we are confirmed alone, or we
+  // have received the snapshot (which carries the seat claims). Host-only UI is suppressed
+  // until then: a freshly-joined client optimistically reads as the seat-0 host, so showing
+  // host controls before this flips would flash them on then off once the real host is known.
+  private rosterReady = false;
   private syncNudges = 0;
   private syncNudgeTimer = 0;
 
@@ -443,6 +466,24 @@ export class Game {
       preloadCardArt(defs).catch(() => {}),
       applyTableBackground(this.refs.bgLayer).catch(() => {})
     ]);
+  }
+
+  // On returning from a LONG background, re-decode the table assets and reveal cleanly.
+  // The loader is shown ONLY if the art is not (re)ready almost immediately — so a return
+  // where the browser kept everything decoded shows nothing, and one where it evicted the
+  // bitmaps briefly shows the loader instead of a half-drawn table. Capped so a missing
+  // asset can never strand the loader; the snapshot re-request already fired separately.
+  private async refreshAfterLongBackground(): Promise<void> {
+    const assets = this.preloadAssets();
+    const ready = await Promise.race([assets.then(() => true), delay(150).then(() => false)]);
+    if (ready) return;
+    showLoader();
+    try {
+      await Promise.race([assets, delay(4000)]);
+      this.renderAllCards();
+    } finally {
+      hideLoader();
+    }
   }
 
   // The seat we publish/claim to peers. -1 while spectating; otherwise our held
@@ -1049,11 +1090,14 @@ export class Game {
   private installVisibility(): void {
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
-        // Hidden: push the cursor off-board so peers stop showing a frozen ghost;
-        // it reappears on the next pointer move when we return.
+        // Hidden: remember when, and push the cursor off-board so peers stop showing a
+        // frozen ghost; it reappears on the next pointer move when we return.
+        this.hiddenAt = Date.now();
         if (!this.spectator) this.bus.sendCursor({ id: this.self.id, x: CURSOR_OFFBOARD, y: CURSOR_OFFBOARD, seat: this.claimSeat });
         return;
       }
+      const awayMs = this.hiddenAt ? Date.now() - this.hiddenAt : 0;
+      this.hiddenAt = 0;
       // Visible again: the requestAnimationFrame render loop was paused while
       // backgrounded, so force an immediate repaint, then re-ask the
       // authoritative peer for a snapshot. This heals anything that arrived (or
@@ -1071,6 +1115,10 @@ export class Game {
       // is monotonic and harmless when no tombstone exists.
       this.selfConnAt = Date.now();
       this.bus.updateMe(this.presencePayload());
+      // After a LONG background the browser may have dropped decoded art; re-warm it and,
+      // only if it isn't instantly ready, show a brief loader so the table never reappears
+      // half-drawn. A quick tab switch (under the threshold) returns silently.
+      if (awayMs > TAB_AWAY_RELOAD_MS) void this.refreshAfterLongBackground();
     });
 
     // Back/forward cache (bfcache) restore: the browser resumes a FROZEN page (sometimes
@@ -1370,7 +1418,21 @@ export class Game {
       }
     }
     seats.sort((a, b) => a.seat - b.seat);
-    return { state: this.guide, seats, selfSeat: this.claimSeat, spectator: this.spectator, isHost: this.isHost() };
+    // Suppress host-only guide controls (Start/close/restart) until the roster is
+    // authoritative, so a joining client never flashes them before it is demoted.
+    return { state: this.guide, seats, selfSeat: this.claimSeat, spectator: this.spectator, isHost: this.rosterReady && this.isHost() };
+  }
+
+  /** Apply every role-dependent piece of UI (host controls, spectator mode, guide panel)
+   *  from the current settled state. Routed through one method so it can be re-applied the
+   *  moment the roster becomes authoritative (resolveFirstSync) without duplicating logic,
+   *  and so host-only affordances stay gated on `rosterReady` everywhere. */
+  private applyRoleUI(): void {
+    this.header.setSpectatorMode(this.spectator);
+    this.header.setHostMode(this.rosterReady && this.isHost());
+    // First time we settle as this room's host, pick the guide's initial open/closed state.
+    this.seedGuideOpenIfHost();
+    this.refreshGuide();
   }
 
   /** Push the latest guide state to the panel and reflect the open/closed state on the
@@ -1446,7 +1508,9 @@ export class Game {
    *  entirely if authoritative guide state already exists (v > 0) — e.g. adopted from a
    *  peer on join — so we never stomp a state the table is already sharing. */
   private seedGuideOpenIfHost(): void {
-    if (this.guideSeeded || this.spectator || !this.isHost()) return;
+    // Wait for the authoritative roster: until then a joining client looks like the host and
+    // would auto-open the guide as "host", only to be demoted a moment later.
+    if (!this.rosterReady || this.guideSeeded || this.spectator || !this.isHost()) return;
     this.guideSeeded = true;
     if (this.guide.v !== 0) return; // a peer/host already established the guide state
     const stored = this.readStoredGuideOpen();
@@ -1975,6 +2039,17 @@ export class Game {
     return false;
   }
 
+  // True when gathering the pile under `id` would do nothing: a lone card, or a pile
+  // already collected and squared upright. Mirrors the early-return guard in gatherAt, so
+  // the context-bar Gather button can grey out exactly when the action is a no-op.
+  private pileIsTidy(id: string): boolean {
+    const stack = findConnectedStack(this.state, this.boardSize, id, this.cardMetrics());
+    if (stack.length < 2) return true;
+    const seed = this.state.cards.get(id);
+    if (!seed) return true;
+    return isTidyStack(this.state, stack, seed.x, seed.y, this.viewerUprightRot(seed.rot));
+  }
+
   private gatherAt(id: string): void {
     const stack = findConnectedStack(this.state, this.boardSize, id, this.cardMetrics());
     // Gather is a multi-card action: a lone card is already "gathered". Reject
@@ -2262,6 +2337,10 @@ export class Game {
       // way everywhere: earliest joiner (then id) wins the contested seat.
       const sorted = roster.slice().sort((a, b) => (a.joinedAt - b.joinedAt) || a.id.localeCompare(b.id));
       this.lastRoster = sorted;
+      // The roster is authoritative once we are demonstrably alone OR we have the snapshot
+      // (which carries every seat claim). Only then is it safe to show host-only UI — before
+      // that a joining client optimistically reads as the seat-0 host and would flash it.
+      if (!this.rosterReady && (sorted.length <= 1 || this.gotSnapshot)) this.rosterReady = true;
 
       // 1) Honour each present client's published seat; resolve collisions and
       // assign any unseated/overflow clients to the lowest free seat. A seat
@@ -2352,15 +2431,10 @@ export class Game {
       }
       if (this.spectator && !wasSpectator) toast(t("ui.roomFull"));
 
-      this.header.setSpectatorMode(this.spectator);
       this.header.setSpectators(spectatorCount);
-      // Host-only controls (Start/Restart, Reset deck) follow the live host election.
-      this.header.setHostMode(this.self.id === nowHost && !this.spectator);
-      // The first time we settle as this room's host, decide the Guide's initial
-      // visibility (open by default for a fresh room, else the host's remembered choice).
-      this.seedGuideOpenIfHost();
-      // Names / seats / ready membership may have shifted; repaint the guide read-model.
-      this.refreshGuide();
+      // Apply the role-dependent UI (host controls, guide, spectator mode) through one
+      // gate so it is suppressed until the roster is authoritative (no host-control flash).
+      this.applyRoleUI();
       if (this.debug) {
         this.debug.peers = this.activeSeats.size;
         this.debug.seat = this.claimSeat;
@@ -3177,7 +3251,9 @@ export class Game {
   private refreshZones(): void {
     const youSuffix = t("table.youSuffix");
     const droppedSuffix = t("table.droppedSuffix");
-    const host = this.isHost(); // used below to gate the per-zone "kick" buttons
+    // Gate the per-zone "kick" buttons on a settled roster too, so a joining client that
+    // momentarily reads as host never flashes kick controls on rival seats.
+    const host = this.rosterReady && this.isHost();
     for (let seat = 0; seat < SEAT_COUNT; seat++) {
       const z = this.physicalZoneForSeat(seat);
       if (!z) continue;

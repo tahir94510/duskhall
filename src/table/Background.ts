@@ -40,10 +40,19 @@ export function applyTableBackground(layer: HTMLElement): Promise<void> {
       new Promise<void>((resolve) => {
         if (!url) { resolve(); return; }
         const probe = new Image();
-        probe.onload = () => {
+        let settled = false;
+        const paint = () => {
+          if (settled) return;
+          settled = true;
           layer.style.backgroundImage = `url("${url}")`;
           layer.classList.add("is-loaded");
           resolve();
+        };
+        // Decode before painting so the surface never flashes in half-drawn on first
+        // reveal (guarded for older browsers; decode failure falls back to a plain paint).
+        probe.onload = () => {
+          if (typeof probe.decode === "function") probe.decode().then(paint, paint);
+          else paint();
         };
         // Keep the default gradient surface on error; stay quiet for a clean console.
         probe.onerror = () => resolve();

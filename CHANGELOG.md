@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.9.15: Layering, loader and responsive correctness
+
+A correctness pass over the table's stacking order, the host-only UI, asset loading and the
+small-screen layout. The card sync, the canonical frame and the balance numbers are
+unchanged. 215 tests green.
+
+- **Names, cards and trays layer correctly.** Occupied rival trays no longer lift above the
+  board, and the seat-label layer (name + status light + kick) moved to a top-level layer.
+  So player names and status dots are always crisp above the frosted glass, a card you drag
+  past a rival's area always stays on top of it instead of sliding under, and a rival's hand
+  shows a single concealment blur (the old double blur is gone). Privacy is unchanged.
+- **No host-control flash on load.** Host-only controls (guide Start/close/restart, the
+  per-seat kick, the auto-opened guide) are now held back until the room's roster is
+  authoritative, so a joining client never briefly shows controls it does not have.
+- **The table reveals fully painted, and re-warms after a long background.** Card art and the
+  background are now decoded (not just downloaded) before the table is shown, so faces never
+  pop in. Returning to the tab after a long while re-decodes the art and shows a brief loader
+  only if it is genuinely needed; a quick switch returns silently.
+- **Deck and discard never touch.** Their separation was widened so the two piles stay clear
+  of each other at every card size, including the larger mobile cards.
+- **The guide clears the header on phones.** On small screens the full-width guide now sits
+  below the header row instead of overlapping the logo and the three-dot button.
+- **Tidier controls.** The intro's Start button no longer carries a doubled top gap, and the
+  mobile Gather control greys out when the pile is already gathered (instead of looking
+  tappable but doing nothing). The guide's "X goes first" line shows only on round 1.
+
 ## 0.9.14: Guide and menu fixes, a real reset-deck shuffle
 
 A correctness pass over the Guide, the header menu and the reset-deck animation. The card

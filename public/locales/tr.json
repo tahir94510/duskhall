@@ -235,6 +235,18 @@
     "empty": "Henüz güncelleme yok.",
     "entries": [
       {
+        "v": "2026-06-06.2",
+        "date": "6 Haziran 2026",
+        "title": "Daha temiz katman, yükleme ve yerleşim",
+        "items": [
+          "Oyuncu adları ve yeşil durum ışığı artık buzlu el tepsilerinin üstünde her zaman net; başkasının alanının üzerinden sürüklediğin kart altına kaymak yerine üstte kalıyor ve rakibin eli tek bir yumuşak bulanıklıkla görünüyor (eski çift bulanıklık kalktı). Gizliliğin değişmedi.",
+          "Host'a ait olan (ya da sende olmayan) yetkiler masayı açtığında artık bir an için görünüp kaybolmuyor — oyun, gerçek oturma düzenini öğrenene kadar onları göstermiyor.",
+          "Masa artık kart görselleri sonradan belirmek yerine tam çizilmiş halde geliyor. Sekmeden bir süre ayrılıp döndüğünde, kısa bir yükleme yalnızca görseller gerçekten yeniden yüklenmesi gerektiğinde çıkıyor; hızlı geçişte anında geri geliyor.",
+          "Deste ile çöplük telefonlarda artık birbirine değmiyor ve küçük ekranlarda rehber üst çubuğun altına inerek logoyla veya menü düğmesiyle çakışmıyor.",
+          "Küçük düzeltmeler: Başlat düğmesinin boşluğu düzeldi, deste zaten toplanmışken Topla düğmesi soluklaşıyor ve 'ilk kim oynar' satırı yalnızca ilk turda görünüyor."
+        ]
+      },
+      {
         "v": "2026-06-06.1",
         "date": "6 Haziran 2026",
         "title": "Rehber akışı ve menü düzeltmeleri",

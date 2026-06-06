@@ -106,7 +106,7 @@
   overflow-y: auto;
 }
 .guide__body[hidden] { display: none; }
-.guide__lead { margin: 0 0 10px; }
+.guide__lead { margin: 0; }
 .guide__step-body { margin: 0; }
 .guide__hint { margin: 8px 0 0; color: var(--ivory); font-size: 12px; }
 .guide__muted { margin: 8px 0 0; color: var(--ivory-mute); font-size: 12px; }
@@ -155,13 +155,17 @@
 .header__menu-row--accent:disabled .header__menu-label,
 .header__menu-row--accent[disabled] .header__menu-label { color: var(--ivory-mute); }
 
-/* On phones, span the top of the screen rather than tuck beside the menu button. */
+/* On phones the guide spans the full width, so it must sit BELOW the header row
+   instead of in it — otherwise the full-width panel slides under the brand logo
+   (top-left) and the three-dot menu button (top-right), overlapping both. The
+   offset clears the header's button (up to 44px on coarse pointers) plus its top
+   inset, leaving the logo and menu their own strip. */
 @media (max-width: 520px) {
   .guide {
     left: 8px;
     right: 8px;
     width: auto;
-    top: max(env(safe-area-inset-top), 8px);
+    top: calc(max(env(safe-area-inset-top), 12px) + 48px);
   }
   .guide__body { max-height: 42vh; }
 }

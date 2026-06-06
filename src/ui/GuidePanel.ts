@@ -218,7 +218,10 @@ export class GuidePanel {
     // turn loop
     const phase = view.turnPhase ?? "focus";
     const yours = view.turnSeat >= 0 && vm.selfSeat === view.turnSeat;
-    const first = vm.state.firstSeat >= 0 ? this.seatName(vm.state.firstSeat) : null;
+    // The "X goes first / Round N" line is only meaningful on the opening round; once the
+    // loop is rolling the top bar already names whose turn it is, so later rounds drop it to
+    // keep the body focused on the current phase.
+    const first = view.round === 1 && vm.state.firstSeat >= 0 ? this.seatName(vm.state.firstSeat) : null;
     const firstLine = first ? `<p class="guide__hint">${esc(t("guide.firstChosen", { name: first }))} ${esc(t("guide.roundLabel", { n: view.round }))}</p>` : "";
     const turnHint = vm.spectator ? `<p class="guide__muted">${esc(t("guide.spectatorNote"))}</p>`
       : yours ? `<p class="guide__hint">${esc(t("guide.yourTurn"))}</p>`

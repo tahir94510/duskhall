@@ -7,10 +7,12 @@
 // these very same fractions, so the pile and its marker can never drift apart.
 
 // Horizontal centres of the two shared piles (canonical fractions). A tidy pair just off the
-// board centre. Their 0.14 separation exceeds a card width, so a dealt deck and discard never
-// overlap. Mirrored by board.css dock left%.
-export const DECK_NX = 0.43;
-export const DISCARD_NX = 0.57;
+// board centre. Their 0.20 separation clears the WIDEST card fraction at every breakpoint
+// (mobile bumps the card to ~0.145 of the field, which met the old 0.14 gap and made the deck
+// and discard touch), so a dealt deck and discard never overlap on any screen, while both stay
+// inside the reserved central band (0.28-0.72). Mirrored by board.css dock left%.
+export const DECK_NX = 0.40;
+export const DISCARD_NX = 0.60;
 
 // Vertical centre line of the dock (canonical fraction).
 export const DECK_NY = 0.5;
