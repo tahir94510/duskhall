@@ -737,11 +737,6 @@
     "body": "Masadaki tüm kartlar toplanır, kapalı şekilde karılır ve desteye geri konur. Bu işlem tüm oyuncuları etkiler.",
     "confirm": "Desteyi sıfırla"
   },
-  "startGameConfirm": {
-    "title": "Macera başlasın mı?",
-    "body": "Deste toplanır, kapalı şekilde karıştırılır ve kural rehberi en baştan başlar. Bu tüm oyuncuları etkiler.",
-    "confirm": "Başlat"
-  },
   "restartGameConfirm": {
     "title": "Rehber yeniden başlasın mı?",
     "body": "Kural rehberi herkes için ilk adıma döner. Masadaki kartlar olduğu gibi kalır.",

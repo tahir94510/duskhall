@@ -475,7 +475,9 @@ export class Game {
   // asset can never strand the loader; the snapshot re-request already fired separately.
   private async refreshAfterLongBackground(): Promise<void> {
     const assets = this.preloadAssets();
-    const ready = await Promise.race([assets.then(() => true), delay(150).then(() => false)]);
+    // Grace window: if the art re-decodes within it, never flash the loader. Sized a touch
+    // above the loader's own fade so a borderline-fast reload can't flicker it in and out.
+    const ready = await Promise.race([assets.then(() => true), delay(250).then(() => false)]);
     if (ready) return;
     showLoader();
     try {
