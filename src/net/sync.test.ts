@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { safeNumber, safeStamp, safeInt, withinByteCap } from "../security/inputGuard.js";
 import { isNewerWrite } from "./lww.js";
-import { classifyKey, maskHost, sanitizeAnim, sanitizeRemoved, clampCardTs } from "./realtime.js";
+import { classifyKey, maskHost, sanitizeAnim, sanitizeRemoved, clampCardTs, sanitizeGuide } from "./realtime.js";
 
 // A minimal unsigned JWT with a given role claim, for classifyKey tests.
 function fakeJwt(role: string): string {
@@ -222,5 +222,36 @@ describe("sanitizeRemoved: validate the authoritative removed-players list", () 
     expect(sanitizeRemoved(null)).toEqual([]);
     expect(sanitizeRemoved("nope")).toEqual([]);
     expect(sanitizeRemoved(undefined)).toEqual([]);
+  });
+});
+
+describe("sanitizeGuide: validate the rulebook-walkthrough sync off the wire", () => {
+  it("accepts a well-formed host state, clamping seats and deduping ready", () => {
+    const g = sanitizeGuide({ kind: "state", started: true, firstSeat: 2, progress: 5, ready: [0, 0, 1, 9, -1], v: 3, by: "host" });
+    expect(g).toEqual({ kind: "state", started: true, firstSeat: 2, progress: 5, ready: [0, 1], v: 3, by: "host" });
+  });
+  it("caps the ready list at four seats and clamps firstSeat into [-1,3]", () => {
+    const g = sanitizeGuide({ kind: "state", started: true, firstSeat: 99, progress: 0, ready: [0, 1, 2, 3], v: 1, by: "h" });
+    expect(g!.kind).toBe("state");
+    if (g!.kind === "state") {
+      expect(g.ready.length).toBe(4);
+      expect(g.firstSeat).toBe(3);
+    }
+  });
+  it("keeps progress/version at full magnitude (wide ints, not coordinate clamp)", () => {
+    const g = sanitizeGuide({ kind: "state", started: true, firstSeat: 0, progress: 99999, ready: [], v: 4242, by: "h" });
+    if (g!.kind === "state") { expect(g.progress).toBe(99999); expect(g.v).toBe(4242); }
+  });
+  it("accepts a client intent and clamps its seat", () => {
+    expect(sanitizeGuide({ kind: "intent", action: "ready", seat: 1, by: "p" }))
+      .toEqual({ kind: "intent", action: "ready", seat: 1, by: "p" });
+    const c = sanitizeGuide({ kind: "intent", action: "chooseFirst", seat: 88, by: "p" });
+    if (c!.kind === "intent") expect(c.seat).toBe(3);
+  });
+  it("rejects an unknown intent action and malformed messages", () => {
+    expect(sanitizeGuide({ kind: "intent", action: "explode", seat: 0, by: "p" })).toBe(null);
+    expect(sanitizeGuide({ kind: "nope" })).toBe(null);
+    expect(sanitizeGuide(null)).toBe(null);
+    expect(sanitizeGuide("state")).toBe(null);
   });
 });

@@ -42,7 +42,10 @@
     "connection": "Bağlantı",
     "connOnline": "Çevrimiçi",
     "connConnecting": "Bağlanıyor...",
-    "connOffline": "Çevrimdışı"
+    "connOffline": "Çevrimdışı",
+    "guide": "Rehber",
+    "startGame": "Macerayı başlat",
+    "restartGame": "Oyunu yeniden başlat"
   },
   "diag": {
     "title": "Bağlantı sınaması",
@@ -699,5 +702,61 @@
     "title": "Desteyi sıfırla?",
     "body": "Masadaki tüm kartlar toplanır, kapalı şekilde karılır ve desteye geri konur. Bu işlem tüm oyuncuları etkiler.",
     "confirm": "Desteyi sıfırla"
+  },
+  "startGameConfirm": {
+    "title": "Macera başlasın mı?",
+    "body": "Deste toplanır, kapalı şekilde karıştırılır ve kural rehberi en baştan başlar. Bu tüm oyuncuları etkiler.",
+    "confirm": "Başlat"
+  },
+  "restartGameConfirm": {
+    "title": "Oyun yeniden başlasın mı?",
+    "body": "Deste toplanıp yeniden karıştırılır ve kural rehberi ilk adımdan yeniden başlar. Bu tüm oyuncuları etkiler.",
+    "confirm": "Yeniden başlat"
+  },
+  "guide": {
+    "title": "Rehber",
+    "close": "Rehberi gizle",
+    "aPlayer": "bir oyuncu",
+    "youTag": "sen",
+    "introBody": "Masayı kurallar boyunca adım adım yönlendireceğim. Burada hiçbir şey zorunlu değil — kartları dilediğin gibi taşıyabilir, çevirebilir ve karıştırabilirsin. Herkes Hazır'a dokununca birlikte ilerleriz.",
+    "introHostHint": "Menüyü açıp Başlat'ı seç. Deste toplanıp karıştırılır ve yeni bir oyun başlar.",
+    "introWaiting": "Oyunun başlaması için host bekleniyor…",
+    "imReady": "Hazırım",
+    "notYet": "Henüz değil",
+    "readyCount": "{done}/{total} hazır",
+    "spectatorNote": "İzleyicisin.",
+    "restart": "Rehberi yeniden başlat",
+    "pickPrompt": "İlk oynayacak oyuncuya dokun",
+    "turnHeading": "Sıra: {name}",
+    "roundLabel": "Tur {n}",
+    "firstChosen": "İlk oyuncu: {name}.",
+    "steps": {
+      "shuffle": {
+        "title": "Hazırlık",
+        "body": "Desteyi ortada kapalı şekilde karıştırın. Her oyuncuya gizli tutacağı 5 kart dağıtın, kalanı çekme destesi olarak bırakın. Herkes hazır olunca Hazır'a dokun."
+      },
+      "reveal": {
+        "title": "Kim başlıyor?",
+        "body": "Her oyuncu destenin en üstündeki kartı açar. En yüksek tür başlar; sıralama: Hizmetkâr > Büyü > Mühür > Müdahale. Beraberlikte yalnızca o oyuncular yeniden açar. Açtıktan sonra Hazır'a dokun."
+      },
+      "chooseFirst": {
+        "title": "İlk oyuncuyu seç",
+        "body": "En yüksek kartı açan oyuncuyu seçin. Oyun oradan saat yönünde ilerler."
+      }
+    },
+    "phase": {
+      "focus": {
+        "title": "Odak",
+        "body": "Desteden 2 kart çek (sahada Zaman Yarığı mühürün varsa daha fazla). Çektiğinde Hazır'a dokun."
+      },
+      "action": {
+        "title": "Eylem",
+        "body": "2 hamle puanın var. Her birini şunlardan birine harca: Yarat (bir Büyü, Mühür ya da Hizmetkâr oyna), İncele (1 kart çek) veya Arındır (1 kart at, sonra 1 çek). Müdahaleler bedavadır ve her an oynanabilir. Bitince Hazır'a dokun."
+      },
+      "closing": {
+        "title": "Kapanış",
+        "body": "Aktif Mühür etkilerini tetikle, sonra elini 7 karta indir. 3 veya daha fazla Mühürle Yükseliş ilan edebilirsin. Sırayı devretmek için Hazır'a dokun."
+      }
+    }
   }
 }

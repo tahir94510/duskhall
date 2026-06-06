@@ -129,12 +129,35 @@ export interface KickMsg {
   connAt?: number;
 }
 
+/** Guide (rulebook walkthrough) sync. Two shapes share one channel: the host
+ *  broadcasts the authoritative `state`; any client may send an `intent` (I'm
+ *  ready / I picked the first player) that only the host folds in. The guide is
+ *  informational and entirely separate from the card LWW state, so a malformed or
+ *  hostile message can at worst nudge the shared narration, never the board. */
+export interface GuideStateWire {
+  kind: "state";
+  started: boolean;
+  firstSeat: number;
+  progress: number;
+  ready: number[];
+  v: number;
+  by: string;
+}
+export interface GuideIntentWire {
+  kind: "intent";
+  action: "ready" | "unready" | "chooseFirst";
+  seat: number;
+  by: string;
+}
+export type GuideWire = GuideStateWire | GuideIntentWire;
+
 export type GameMsg =
   | { type: "patch"; payload: CardPatch }
   | { type: "snapshot"; payload: CardPatch }
   | { type: "hold"; payload: HoldMsg }
   | { type: "left"; payload: LeftMsg }
   | { type: "kick"; payload: KickMsg }
+  | { type: "guide"; payload: GuideWire }
   | { type: "hello"; payload: { id: string } };
 
 type Listener<T> = (msg: T) => void;
@@ -204,6 +227,42 @@ export function sanitizeRemoved(raw: unknown): RemovedEntry[] {
     connAt: safeStamp(r.connAt, 0),
     seat: typeof r.seat === "number" ? Math.max(-1, Math.min(3, Math.round(r.seat))) : -1
   })).filter((r) => !!r.id);
+}
+
+/** Validate a guide message off the wire (pure). Seats clamped to 0..3, the ready
+ *  list deduped and capped at 4, version/progress kept as wide ints. Returns null on
+ *  anything malformed so a junk frame is dropped before it reaches the reducer. */
+export function sanitizeGuide(raw: unknown): GuideWire | null {
+  if (!raw || typeof raw !== "object") return null;
+  const g = raw as Partial<GuideStateWire> & Partial<GuideIntentWire>;
+  const by = safeString(g.by, 40);
+  if (g.kind === "state") {
+    const ready = Array.isArray(g.ready)
+      ? Array.from(new Set(g.ready
+          .map((s) => (typeof s === "number" ? Math.round(s) : -1))
+          .filter((s) => s >= 0 && s <= 3))).slice(0, 4)
+      : [];
+    return {
+      kind: "state",
+      started: g.started === true,
+      firstSeat: typeof g.firstSeat === "number" ? Math.max(-1, Math.min(3, Math.round(g.firstSeat))) : -1,
+      progress: safeInt(g.progress, 0),
+      ready,
+      v: safeInt(g.v, 0),
+      by
+    };
+  }
+  if (g.kind === "intent") {
+    const action = g.action;
+    if (action !== "ready" && action !== "unready" && action !== "chooseFirst") return null;
+    return {
+      kind: "intent",
+      action,
+      seat: typeof g.seat === "number" ? Math.max(-1, Math.min(3, Math.round(g.seat))) : -1,
+      by
+    };
+  }
+  return null;
 }
 
 export type KeyKind = "anon" | "publishable" | "service_role" | "secret" | "unknown";
@@ -282,7 +341,7 @@ export class RealtimeBus {
 
   // Per-sender receive-rate limiters: a flooding/buggy peer can't pin the CPU
   // because excess messages from a single id are dropped before dispatch.
-  private recvBuckets = new Map<string, { patch: TokenBucket; cursor: TokenBucket; hello: TokenBucket }>();
+  private recvBuckets = new Map<string, { patch: TokenBucket; cursor: TokenBucket; hello: TokenBucket; guide: TokenBucket }>();
 
   // Same-device fallback transport (BroadcastChannel). It runs ALONGSIDE Supabase
   // so two tabs/windows on one machine always sync, even when the websocket is
@@ -677,6 +736,16 @@ export class RealtimeBus {
     await Promise.race([send, new Promise<void>((r) => setTimeout(r, 700))]);
   }
 
+  /** Broadcast a guide message (host state re-broadcast, or a client intent). Not
+   *  rate-limited on send (low-frequency, byte-capped); the receive side caps per
+   *  sender so a flood can't pin the CPU. Mirrors locally first like every send. */
+  sendGuide(g: GuideWire): void {
+    if (!withinByteCap(g)) return;
+    this.local.sendGame({ type: "guide", payload: g });
+    if (!this.channel || this.status !== "online") return;
+    this.channel.send({ type: "broadcast", event: "game", payload: { type: "guide", payload: g } as GameMsg });
+  }
+
   /** Host-only: ask a player to leave. Only the target acts on it. */
   sendKick(target: string, by: string, connAt?: number): void {
     const payload: KickMsg = { target, by, connAt };
@@ -685,7 +754,7 @@ export class RealtimeBus {
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "kick", payload } as GameMsg });
   }
 
-  private bucketFor(id: string): { patch: TokenBucket; cursor: TokenBucket; hello: TokenBucket } {
+  private bucketFor(id: string): { patch: TokenBucket; cursor: TokenBucket; hello: TokenBucket; guide: TokenBucket } {
     let b = this.recvBuckets.get(id);
     if (!b) {
       // Generous ceilings (well above legitimate send rates) that still cap a
@@ -693,7 +762,11 @@ export class RealtimeBus {
       // plus commits) or peers would see stuttering, half-applied movement. `hello`
       // is rare (join / reconnect / a few nudges), so a tight bucket stops a peer
       // from spamming sync requests to make the host re-broadcast snapshots in a loop.
-      b = { patch: new TokenBucket(90, 60), cursor: new TokenBucket(80, 60), hello: new TokenBucket(8, 1) };
+      // `guide` carries the rulebook-walkthrough sync: host state re-broadcasts plus
+      // client ready/choose intents. Low-frequency (a click, a periodic reconcile), so
+      // a modest ceiling stops a peer from spamming guide frames while easily clearing
+      // legitimate use.
+      b = { patch: new TokenBucket(90, 60), cursor: new TokenBucket(80, 60), hello: new TokenBucket(8, 1), guide: new TokenBucket(20, 8) };
       this.recvBuckets.set(id, b);
     }
     return b;
@@ -803,6 +876,13 @@ export class RealtimeBus {
         release: h.release === true
       };
       for (const l of this.gameListeners) l({ type: "hold", payload: safe });
+    } else if (msg.type === "guide") {
+      const g = sanitizeGuide(msg.payload);
+      if (!g) return;
+      // Rate-limit guide frames per sender (cheap, but a peer should not be able to
+      // flood). The sender id is the message's own `by`.
+      if (g.by && !this.bucketFor(g.by).guide.consume()) return;
+      for (const l of this.gameListeners) l({ type: "guide", payload: g });
     } else if (msg.type === "hello") {
       const p = msg.payload as { id?: string } | undefined;
       if (p && typeof p.id === "string") {

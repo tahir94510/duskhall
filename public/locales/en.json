@@ -42,7 +42,10 @@
     "connection": "Connection",
     "connOnline": "Online",
     "connConnecting": "Connecting...",
-    "connOffline": "Offline"
+    "connOffline": "Offline",
+    "guide": "Guide",
+    "startGame": "Start adventure",
+    "restartGame": "Restart game"
   },
   "diag": {
     "title": "Connection self-test",
@@ -699,5 +702,61 @@
     "title": "Reset deck?",
     "body": "Every card on the table is gathered, shuffled face-down and returned to the deck. This affects all players.",
     "confirm": "Reset deck"
+  },
+  "startGameConfirm": {
+    "title": "Begin the adventure?",
+    "body": "The deck is gathered, shuffled face-down, and the rulebook guide starts from the beginning. This affects all players.",
+    "confirm": "Start"
+  },
+  "restartGameConfirm": {
+    "title": "Restart the game?",
+    "body": "The deck is gathered and reshuffled, and the rulebook guide restarts from the first step. This affects all players.",
+    "confirm": "Restart"
+  },
+  "guide": {
+    "title": "Guide",
+    "close": "Hide guide",
+    "aPlayer": "a player",
+    "youTag": "you",
+    "introBody": "I'll walk the table through the rules, one step at a time. Nothing here is forced — you stay free to move, flip and shuffle cards however you like. We simply advance together once everyone taps Ready.",
+    "introHostHint": "Open the menu and choose Start to begin. The deck is gathered and shuffled for a fresh game.",
+    "introWaiting": "Waiting for the host to start the game…",
+    "imReady": "I'm ready",
+    "notYet": "Not yet",
+    "readyCount": "{done}/{total} ready",
+    "spectatorNote": "You're spectating.",
+    "restart": "Restart guide",
+    "pickPrompt": "Tap the player who goes first",
+    "turnHeading": "{name}'s turn",
+    "roundLabel": "Round {n}",
+    "firstChosen": "{name} goes first.",
+    "steps": {
+      "shuffle": {
+        "title": "Setup",
+        "body": "Shuffle the deck face-down in the centre. Deal 5 cards to each player to hold hidden, and leave the rest as the draw pile. When everyone is set, tap Ready."
+      },
+      "reveal": {
+        "title": "Who goes first?",
+        "body": "Each player reveals the top card of the deck. The highest category goes first, in this order: Servant beats Spell beats Seal beats Intervention. On a tie, only those players reveal again. Tap Ready once you have revealed."
+      },
+      "chooseFirst": {
+        "title": "Pick the first player",
+        "body": "Select the player who revealed the highest card. From there, play proceeds clockwise."
+      }
+    },
+    "phase": {
+      "focus": {
+        "title": "Focus",
+        "body": "Draw 2 cards from the deck (more if you have Time Rift seals in play). Tap Ready when you have drawn."
+      },
+      "action": {
+        "title": "Action",
+        "body": "You have 2 action points. Spend each on one of: Create (play a Spell, Seal or Servant), Study (draw 1 card), or Cleanse (discard 1, then draw 1). Interventions cost nothing and may be played anytime. Tap Ready when you're done."
+      },
+      "closing": {
+        "title": "Closing",
+        "body": "Trigger your active Seal effects, then discard down to 7 cards in hand. With 3 or more Seals you may declare Ascension. Tap Ready to pass the turn on."
+      }
+    }
   }
 }
