@@ -295,11 +295,18 @@
   left: 0;
   pointer-events: none;
   z-index: var(--z-cursor);
-  transform: translate(-50%, -50%);
+  /* JS sets transform: translate(px, py) to the peer's exact pointer point (canonical →
+     our rotated view). The dot below centres ITSELF on that origin, so the ghost lands
+     exactly on the point — not half-a-dot down-right. The short transition glides the ghost
+     between network frames so a peer's cursor reads as smooth real-time motion, not jumps. */
   transition: transform 70ms linear;
 }
 .cursor-ghost__pointer {
-  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Centre the dot on the ghost origin (the peer's true pointer point) for 100% accuracy. */
+  transform: translate(-50%, -50%);
   width: 12px;
   height: 12px;
   border-radius: 50%;
@@ -333,6 +340,12 @@
   top: 0;
   left: 0;
   width: min(290px, 82vw);
+  /* Cap the panel to the viewport so it can ALWAYS be placed fully on-screen: with width and
+     height both bounded below the page size, Tooltip.position() can keep the whole panel inside
+     the margins on the smallest phones (it never runs off the page or breaks the layout).
+     overflow:hidden (below) clips a rare over-long definition rather than overflowing. */
+  max-height: calc(100dvh - 24px);
+  box-sizing: border-box;
   background-color: rgba(10, 10, 12, 0.96);
   /* Art is CENTRED so the card's subject sits in the middle of the panel even
      when the image does not fully cover it. `overflow: hidden` + border-radius

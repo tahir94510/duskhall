@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cardZoneOwner, cardZoneOverlap, ZONE_PRIVACY_FRAC, zoneRect, pointInZoneCanonical, CARD_CANON_W, CARD_CANON_H } from "./SlotGrid.js";
+import { cardZoneOwner, cardZoneOverlap, ZONE_PRIVACY_FRAC, ZONE_DEPTH, zoneRect, pointInZoneCanonical, CARD_CANON_W, CARD_CANON_H } from "./SlotGrid.js";
 
 // Use the REAL production footprint so the test tracks live behaviour: the privacy
 // boundary must follow the actual canonical card size (kept in step with board.css
@@ -83,6 +83,21 @@ describe("cardZoneOverlap: reports the best seat and the in-fraction", () => {
   });
   it("returns null in the central area (no zone touched)", () => {
     expect(cardZoneOverlap(0.5, 0.5, 0, W, H)).toBe(null);
+  });
+  it("stays detected while ANY part is in a band even when the nearest edge is a different seat (diagonal exit)", () => {
+    // A card sliding diagonally toward the bottom-right corner: its centre is nearest the RIGHT
+    // edge (seat 3) yet a sliver of its body is still in the BOTTOM band (seat 0). The union-aware
+    // overlap must still report it (non-null) so it stays concealed until FULLY out — the old
+    // nearest-seat-only test reported null here and revealed the card too early.
+    const nx = 0.65, ny = 0.63; // nearestSeat = 3 (1-nx < 1-ny), but body pokes into band 0
+    const o = cardZoneOverlap(nx, ny, 0, W, H);
+    expect(o).not.toBe(null);
+    expect(o!.seat).toBe(0); // owned by the band it actually overlaps
+    expect(o!.frac).toBeGreaterThan(0);
+  });
+  it("reveals only when fully clear of every band", () => {
+    // Far enough into the centre that no band is touched on any axis → public.
+    expect(cardZoneOverlap(0.5, 1 - ZONE_DEPTH - H / 2 - 0.01, 0, W, H)).toBe(null);
   });
   it("cardZoneOwner gates the same overlap at the privacy threshold", () => {
     const ny = nyForFrac(0.2);

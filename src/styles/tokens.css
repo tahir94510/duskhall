@@ -74,6 +74,10 @@
   --z-zone: 2;
   --z-board: 5;
   --z-card: 10;
+  /* A hovered card lifts to this band so it reads ABOVE its neighbours (resting z is capped at
+     CARD_Z_CEILING = 400, Game.ts), while staying BELOW the animation/held band (--z-anim: 500)
+     so it can never cover a card someone is dragging or flipping, nor the seat/cursor layers. */
+  --z-hover: 450;
   /* Seat labels (name + status light + kick) ride in their OWN non-rotating
      layer above every resting/animated card, so a card dropped into a zone can
      never cover the player's name or the host's kick control. It sits below

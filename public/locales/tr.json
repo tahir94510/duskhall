@@ -88,6 +88,58 @@
     "servantShield": {
       "term": "Hizmetkâr Kalkanı",
       "def": "Bir oyuncunun masasında en az bir Hizmetkâr olduğu sürece rakipler o oyuncunun Mühürlerini hiçbir şekilde hedefleyemez. Önce tüm Hizmetkârlar yok edilmelidir; Rünik Bekçi gibi hedeflenebilir olanlar bile, ancak ondan sonra Mühürlere ulaşılabilir."
+    },
+    "hand": {
+      "term": "El",
+      "def": "Gizli kartlarınız. Rakipler sayıyı görür, içeriği göremez. El limiti 7'dir (fazlası Kapanış'ta atılır); Mühürler ve Hizmetkârlar elde hiçbir etki göstermez."
+    },
+    "tableau": {
+      "term": "Masa",
+      "def": "Mühürlerinizi ve Hizmetkârlarınızı açık dizdiğiniz alan — en fazla 4 Mühür ve 3 Hizmetkâr. Mühür ve Hizmetkâr etkileri yalnızca burada işler, elde değil."
+    },
+    "deck": {
+      "term": "Deste",
+      "def": "Kart çektiğiniz ortak kapalı yığın. Tükendiğinde Eter Dalgalanması, Çöplüğü karıştırıp yeni bir deste oluşturur."
+    },
+    "discard": {
+      "term": "Çöplük",
+      "def": "Harcanmış Büyülerin, iptal edilen kartların ve yok edilen Mühür ile Hizmetkârların açık yığıldığı ortak alan."
+    },
+    "focus": {
+      "term": "Odaklanma",
+      "def": "Turunuzun 1. aşaması: desteden 2 kart çekin (Zaman Çatlağı varsa 3 veya daha fazla)."
+    },
+    "action": {
+      "term": "Aksiyon",
+      "def": "Turunuzun 2. aşaması: 2 HP'nizi (Kızıl Monolit ile 5'e kadar) Oluştur, Araştır ve Arındır arasında istediğiniz gibi harcayın. Kullanılmayan HP yanar."
+    },
+    "closing": {
+      "term": "Kapanış",
+      "def": "Turunuzun 3. aşaması: tüm aktif Mühür tetikleri devreye girer, ardından el limiti 7'ye iner. Kapanış'tan sonra Yükseliş ilan edebilirsiniz."
+    },
+    "create": {
+      "term": "Oluştur",
+      "def": "Bir Aksiyon (1 HP): elden 1 Büyü oynayın ya da masanıza 1 Mühür veya 1 Hizmetkâr koyun."
+    },
+    "study": {
+      "term": "Araştır",
+      "def": "Bir Aksiyon (1 HP): desteden 1 ekstra kart çekin."
+    },
+    "cleanse": {
+      "term": "Arındır",
+      "def": "Bir Aksiyon (1 HP): elinizden 1 kart atıp 1 kart çekin — el boyutunu koruyan bir takas."
+    },
+    "hp": {
+      "term": "HP",
+      "def": "Turunuzun eylem puanları: varsayılan 2, Kızıl Monolit ile 5'e kadar. Oluştur, Araştır ve Arındır 1'er HP; Müdahaleler bedavadır. Kullanılmayan HP bir sonraki tura aktarılmaz."
+    },
+    "trial": {
+      "term": "Sınav",
+      "def": "Yükseliş ilan ettikten sonra, sıra size dönene dek her rakip Mühürlerinizi yok etmek, çalmak veya etkisiz kılmak için bir tam tur kullanır."
+    },
+    "untargetable": {
+      "term": "Hedeflenemez",
+      "def": "Düşman eylemlerine bağışık. Hedeflenemezlik katmanlıdır — alttaki karta ulaşmadan önce her bağımsız koruma katmanı ayrı ayrı kaldırılmalıdır."
     }
   },
   "kick": {

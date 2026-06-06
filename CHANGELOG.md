@@ -3,10 +3,34 @@
 ## 0.9.12: Clean table restored, drag fix, consistent rulebook terms
 
 A correctness and polish pass. The dedicated Seal/Servant areas were removed and the table
-returned to main's clean, full-size symmetric design; the drag bug is fixed; and the rulebook
-hover terms are made consistent and complete. Card positions stay device independent and
-identical for every player; the shared canonical frame, sync and balance numbers are
-unchanged. 185 tests green.
+returned to main's clean, full-size symmetric design; the drag is page-bound; privacy is exact
+even on diagonal exits; a hovered card lifts above its neighbours; the rulebook is consistent
+and every term is explained; and a multiplayer hold-lock leak is closed. Card positions stay
+device independent and identical for every player; the shared canonical frame, sync and balance
+numbers are unchanged. 187 tests green.
+
+- **Privacy is exact on every zone exit, including diagonals.** A card now stays concealed until
+  it is FULLY out of every private band. The overlap test is union-aware (it checks all four
+  bands and keeps the largest), so when a card slides diagonally across a corner where two zones
+  meet — where the nearest seat flips — it no longer flashes visible while a sliver is still
+  inside. Holds via the existing eager-hide / late-reveal hysteresis. Regression-tested.
+- **A hovered card lifts above its neighbours.** Hovering raises the card into a dedicated z band
+  (450, above resting cards but below the held/animation and cursor layers) so it is fully
+  readable even under a pile, with the existing 2.5D shadow + brightness "picked up" read.
+- **Rulebook: every term is explained.** Added glossary entries for the zones (Hand, Tableau,
+  Deck, Discard), the turn phases (Focus, Action, Closing), the actions (Create, Study, Cleanse),
+  HP, the Ascension Trial and Untargetable status — in both languages — so every rules term opens
+  the same hover/tap info panel. Matching is case-insensitive and covers plural and leading-label
+  forms. The info panel is capped to the viewport so it never runs off the page or breaks the
+  layout on small screens.
+- **Multiplayer: no stranded hold-locks.** A peer's card locks are now cleared by holder id (not
+  only by seat) when they leave, are kicked, or their seat expires — so a card can never stay
+  ungrabbable after a peer drops, even across a seat-reassignment race (the 6s TTL was the only
+  safety net before).
+- **Peer cursors land exactly on the point.** The ghost cursor now centres its dot on the peer's
+  true pointer location (the inline position transform had been cancelling the CSS centering, so
+  every peer cursor sat half-a-dot down-right). Combined with the existing 70 ms glide, peers see
+  each other's cursors in real time, smooth and pixel-accurate, re-projected into their own view.
 
 - **Clean table, main's proportions.** The off-board ledges and the on-board tableau shelves
   were removed and the board is full-size again, with main's hidden-zone depth (`ZONE_DEPTH`

@@ -135,14 +135,15 @@ export function cardZoneOwner(nx: number, ny: number, rot: number, cardWFrac: nu
 }
 
 /**
- * The seat that owns the card and how far it has entered that seat's zone, as a fraction of
- * the card's area (0..1), or null if the card is in the public centre. cardZoneOwner gates
- * this at ZONE_PRIVACY_FRAC (eager hide, late reveal). `nx, ny` is the card CENTRE fraction;
- * `cardWFrac, cardHFrac` are the card's size as fractions of the board. The owner is the seat
- * whose board edge is nearest the card centre (the diagonal corner split), so a card straddling
- * a corner belongs to one player unambiguously; the fraction is then how much of the card's
- * footprint has crossed into that seat's full-width edge band. Rotation-aware (an odd
- * quarter-turn swaps the footprint).
+ * The seat whose private band the card's footprint overlaps MOST, and that overlap as a fraction
+ * of the card's area (0..1), or null if the card touches NO band at all (fully in the public
+ * centre or off the board). cardZoneOwner gates this at ZONE_PRIVACY_FRAC (eager hide, late
+ * reveal). `nx, ny` is the card CENTRE fraction; `cardWFrac, cardHFrac` are the card's size as
+ * fractions of the board. We test ALL FOUR edge bands (not just the nearest seat) and keep the
+ * largest overlap: this is what keeps a card concealed until it is FULLY out of every zone, even
+ * when it slides diagonally across a corner where two zones meet — there the nearest seat flips,
+ * but the card still overlaps the original band, so it stays private until no band overlaps at
+ * all. Rotation-aware (an odd quarter-turn swaps the footprint).
  */
 export function cardZoneOverlap(nx: number, ny: number, rot: number, cardWFrac: number, cardHFrac: number): { seat: Seat; frac: number } | null {
   const quarter = ((Math.round(rot) % 2) + 2) % 2; // 0 or 1 (odd turn swaps w/h)
@@ -150,13 +151,18 @@ export function cardZoneOverlap(nx: number, ny: number, rot: number, cardWFrac: 
   const h = quarter === 1 ? cardWFrac : cardHFrac;
   const area = w * h;
   if (area <= 0) return null;
-  const seat = nearestSeat(nx, ny);
-  const z = ZONES[seat];
   const cx0 = nx - w / 2, cy0 = ny - h / 2, cx1 = nx + w / 2, cy1 = ny + h / 2;
-  const ix = Math.min(cx1, z.x1) - Math.max(cx0, z.x0);
-  const iy = Math.min(cy1, z.y1) - Math.max(cy0, z.y0);
-  if (ix <= 0 || iy <= 0) return null;
-  return { seat, frac: (ix * iy) / area };
+  let best: { seat: Seat; frac: number } | null = null;
+  for (const s of [0, 1, 2, 3] as Seat[]) {
+    const z = ZONES[s];
+    const ix = Math.min(cx1, z.x1) - Math.max(cx0, z.x0);
+    const iy = Math.min(cy1, z.y1) - Math.max(cy0, z.y0);
+    if (ix <= 0 || iy <= 0) continue;
+    const frac = (ix * iy) / area;
+    // Strictly-greater keeps the lower seat index on an exact corner tie (deterministic for all).
+    if (!best || frac > best.frac) best = { seat: s, frac };
+  }
+  return best;
 }
 
 const ROW_GAP = 0.018; // gap between the two rows (Seal row vs Servant row), in canonical units
