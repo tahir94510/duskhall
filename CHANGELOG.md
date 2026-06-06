@@ -27,6 +27,10 @@ numbers are unchanged. 187 tests green.
   only by seat) when they leave, are kicked, or their seat expires — so a card can never stay
   ungrabbable after a peer drops, even across a seat-reassignment race (the 6s TTL was the only
   safety net before).
+- **Peer cursors land exactly on the point.** The ghost cursor now centres its dot on the peer's
+  true pointer location (the inline position transform had been cancelling the CSS centering, so
+  every peer cursor sat half-a-dot down-right). Combined with the existing 70 ms glide, peers see
+  each other's cursors in real time, smooth and pixel-accurate, re-projected into their own view.
 
 - **Clean table, main's proportions.** The off-board ledges and the on-board tableau shelves
   were removed and the board is full-size again, with main's hidden-zone depth (`ZONE_DEPTH`

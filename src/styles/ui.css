@@ -295,11 +295,18 @@
   left: 0;
   pointer-events: none;
   z-index: var(--z-cursor);
-  transform: translate(-50%, -50%);
+  /* JS sets transform: translate(px, py) to the peer's exact pointer point (canonical →
+     our rotated view). The dot below centres ITSELF on that origin, so the ghost lands
+     exactly on the point — not half-a-dot down-right. The short transition glides the ghost
+     between network frames so a peer's cursor reads as smooth real-time motion, not jumps. */
   transition: transform 70ms linear;
 }
 .cursor-ghost__pointer {
-  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Centre the dot on the ghost origin (the peer's true pointer point) for 100% accuracy. */
+  transform: translate(-50%, -50%);
   width: 12px;
   height: 12px;
   border-radius: 50%;
