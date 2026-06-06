@@ -4,7 +4,6 @@
 // magnetic snap; CSS draws the matching outlines.
 
 import type { Seat } from "./rotation.js";
-import { APRON_FRAC } from "./constants.js";
 
 export type SlotKind = "seal" | "servant";
 
@@ -17,9 +16,6 @@ export interface SlotPos {
   nx: number;
   ny: number;
 }
-
-const SEAL_COUNT = 4;
-const SERVANT_COUNT = 3;
 
 // The four zones are full-width EDGE BANDS, ZONE_DEPTH (0.28) deep, that meet along the two
 // board diagonals so each seat owns a TRAPEZOID: the seat's whole board edge (wide) tapering
@@ -160,39 +156,10 @@ export function cardZoneOverlap(nx: number, ny: number, rot: number, cardWFrac: 
   return { seat, frac: (ix * iy) / area };
 }
 
-// Spacing between adjacent ledge slots, along the seat's edge, in canonical units. A touch over
-// one card width (CARD_CANON_W 0.125) so the 4 Seals + 3 Servants sit shoulder-to-shoulder in a
-// single tidy row without overlapping.
-const LEDGE_STEP = 0.128;
-
-// Per-seat tableau slots: 4 Seal + 3 Servant positions laid in ONE row across that seat's
-// off-board ledge apron, just OUTSIDE the seat's own board edge (canonical coords beyond [0,1],
-// at the apron centre line APRON_FRAC/2 out). Because the ledge lives in the rotating board
-// layer, every viewer sees their OWN ledge as a horizontal row in front of them and rivals'
-// ledges around the table — fully symmetric. Used for the snap targets (Game.applySnap) and the
-// drawn slot outlines (Board.paintSlotGrid). Seals fill the first SEAL_COUNT positions, Servants
-// the rest, so the face-up tableau reads left-to-right as Seals then Servants in each own view.
-export function slotsForSeat(seat: Seat): SlotPos[] {
-  const total = SEAL_COUNT + SERVANT_COUNT; // 7
-  const mid = 1 + APRON_FRAC / 2; // apron centre line just past the [0,1] edge
-  const out: SlotPos[] = [];
-  for (let i = 0; i < total; i++) {
-    // Even, centred spread along the seat's edge.
-    const along = 0.5 + (i - (total - 1) / 2) * LEDGE_STEP;
-    const kind: SlotKind = i < SEAL_COUNT ? "seal" : "servant";
-    const index = i < SEAL_COUNT ? i : i - SEAL_COUNT;
-    let nx = 0;
-    let ny = 0;
-    switch (seat) {
-      case 0: nx = along; ny = mid; break;       // bottom apron: y just past 1
-      case 1: nx = along; ny = 1 - mid; break;   // top apron: y just past 0 (= -APRON_FRAC/2)
-      case 2: nx = 1 - mid; ny = along; break;   // left apron: x just past 0
-      case 3: nx = mid; ny = along; break;       // right apron: x just past 1
-    }
-    out.push({ seat, kind, index, nx, ny });
-  }
-  return out;
-}
+// Per-seat slot grid is intentionally empty: the table has no dedicated Seal/Servant area, so
+// players lay their tableau out by hand anywhere in their own zone. Returning [] for every seat
+// keeps every consumer working without rendering slot outlines or snap targets.
+export function slotsForSeat(_seat: Seat): SlotPos[] { return []; }
 
 export function allSlots(): SlotPos[] {
   const out: SlotPos[] = [];

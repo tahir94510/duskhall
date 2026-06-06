@@ -334,18 +334,22 @@
   "categories": {
     "seal": {
       "name": "Seal",
+      "namePlural": "Seals",
       "description": "A permanent structure placed on your tableau. Passive power. The path to Ascension."
     },
     "spell": {
       "name": "Spell",
+      "namePlural": "Spells",
       "description": "A one-shot attack played from the hand for 1 HP. Resolved, then discarded."
     },
     "intervention": {
       "name": "Intervention",
+      "namePlural": "Interventions",
       "description": "A reactive card. Costs no HP and may be played at any moment, even out of turn."
     },
     "servant": {
       "name": "Servant",
+      "namePlural": "Servants",
       "description": "A living shield on your tableau. Opponents must clear your Servants before they can target your Seals."
     }
   },

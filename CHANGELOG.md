@@ -1,38 +1,28 @@
 # Changelog
 
-## 0.9.12: Off-board ledges, page-bound drag, snapping, rulebook polish
+## 0.9.12: Clean table restored, drag fix, consistent rulebook terms
 
-A table-feel and interaction pass: the Seal/Servant tableaus move off the board, dragging
-is fixed and made page-safe on every device, cards snap into place, and the rulebook reads
-consistently. Card positions stay device independent and identical for every player; the
-shared canonical frame, sync and balance numbers are unchanged. 189 tests green.
+A correctness and polish pass. The dedicated Seal/Servant areas were removed and the table
+returned to main's clean, full-size symmetric design; the drag bug is fixed; and the rulebook
+hover terms are made consistent and complete. Card positions stay device independent and
+identical for every player; the shared canonical frame, sync and balance numbers are
+unchanged. 185 tests green.
 
-- **Seal/Servant ledges, off the board.** Each player's face-up tableau moves into a framed
-  ledge in the apron just OUTSIDE their own board edge, instead of a shelf inside the board.
-  The inner board shrinks a little so the extended square (inner board + one ledge apron on
-  each side, `APRON_FRAC` = 0.18) still fills the viewport-min square. The ledges live in the
-  rotating board layer, so each player sees their own ledge as a horizontal band in front of
-  them and rivals' ledges around the table — symmetric for every seat, identical for every
-  viewer. This frees the private hand zone and clears the board centre. Seals/Servants on the
-  ledge are public (out of the concealed hand zone), as they should be.
-- **Drag fixed and page-bound.** The drag clamp is now rotation-aware per card (an odd
-  quarter-turn swaps the card's width/height), fixing the bug where the horizontal inset used
-  the card's tall side and cards stuck ~45% short of the left/right edges and corners. It
-  clamps every card body to the extended square `[-APRON_FRAC, 1+APRON_FRAC]`, which equals
-  the centered viewport square — so a card can never leave the visible PAGE on any device or
-  aspect ratio, and can now be placed onto the off-board ledges. Pure, unit-tested
-  (`src/table/playfield.ts`).
-- **Snapping (tam oturma).** Cards magnetically seat into the deck/discard dock and the
-  player's own 4 Seal + 3 Servant ledge slots, with sticky hysteresis: a card clicks in within
-  the snap radius and holds until it is pulled past the looser break radius, so seating is
-  easy and so is pulling back out. Targets are canonical, so each viewer's snap matches their
-  own rotated ledge. Slot outlines show on your own ledge only; rivals' ledges stay clean
-  frames. Pure `snapSeed`, unit-tested.
-- **Rulebook: consistent terms, calmer cursor.** Card-type names (Seal/Spell/Intervention/
-  Servant) now open the same hover/tap info panel as card names and glossary terms, through
-  one source-tagged term map. The hover terms use the normal cursor (not a pointer or a
-  question-mark help cursor) — the panel opens on hover, so the dotted underline alone is the
-  affordance.
+- **Clean table, no dedicated Seal/Servant areas.** The off-board ledges and the on-board
+  tableau shelves were removed, and the board is full-size again (no shrink/apron). Players lay
+  their face-up Seals and Servants by hand anywhere in their own area, matching main's design.
+- **Drag fixed (no more sticking short of the edges).** The drag clamp is now rotation-aware
+  per card (an odd quarter-turn swaps the card's width/height), fixing the bug where the
+  horizontal inset used the card's tall side so cards stuck ~45% short of the left/right edges
+  and corners. An upright card now sits flush to any edge and into a corner; the clamp keeps
+  every card body on the board. Pure, unit-tested (`src/table/playfield.ts`).
+- **Rulebook: consistent, complete hover terms.** Every hover term — a card name, a glossary
+  term, or a card-type name (Seal/Spell/Intervention/Servant) — now reads IDENTICALLY (same
+  weight and quiet dotted underline, no more some-bold/some-italic) and opens the same info
+  panel. Matching is case-insensitive and covers plural forms, so "Seal", "Seals" and the
+  uppercase colour-key "SEAL" are all hover-able, including a leading definition label. The
+  terms use the normal cursor (not a pointer/help cursor) — the panel opens on hover, so the
+  underline alone is the affordance.
 
 ## 0.9.11: Symmetric table, tableau shelves, safer drag, clearer text, robust restore
 

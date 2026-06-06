@@ -16,11 +16,8 @@ export interface DragHooks {
   boardMetrics(): { width: number; height: number; cardW: number; cardH: number };
   /** Returns the cards under the pointer, tight overlap. */
   pickStackUnder(clientX: number, clientY: number): string[];
-  /** Magnetic, STICKY snap: nudge the dragged group's seed (canonical nx, ny) to the nearest
-   *  snap target (the central deck/discard dock or the player's own Seal/Servant ledge slots).
-   *  `snapKey` is the target the drag is currently stuck to (or null); the returned `snapKey`
-   *  carries the new stuck target so the snap holds until the pointer pulls clear (hysteresis). */
-  applySnap(nx: number, ny: number, snapKey: string | null): { nx: number; ny: number; snapKey: string | null };
+  /** Optional magnetic snap: nudge a single canonical (nx, ny) to nearest slot. */
+  applySnap(ownerSeat: number, nx: number, ny: number): { nx: number; ny: number; snapped: boolean };
   onCardMoved(ids: string[]): void;
   /** Pointer released over (x, y): re-arm the hover tooltip without a re-enter.
    *  `pointerType` lets the handler skip the auto-probe on touch (info is explicit
@@ -74,8 +71,6 @@ interface DragSession {
   els: Map<string, HTMLDivElement>;
   dragging: boolean;
   longPressTimer: number;
-  /** The snap target the drag is currently stuck to (sticky hysteresis), or null. */
-  snapKey: string | null;
 }
 
 export class DragController {
@@ -221,7 +216,6 @@ export class DragController {
       relOffsets,
       els,
       dragging: false,
-      snapKey: null,
       longPressTimer: window.setTimeout(() => {
         if (!this.session || this.session.dragging) return;
         if (e.pointerType === "touch") this.hooks.showContextBar(id, e.clientX, e.clientY);
@@ -251,23 +245,21 @@ export class DragController {
     let seedNx = pointerNx + s.anchorDx;
     let seedNy = pointerNy + s.anchorDy;
 
-    // Magnetic sticky snap to the central deck/discard dock and the player's own Seal/Servant
-    // ledge slots, so cards "cuk" into place. Never snap while over a rival's private zone (a
-    // drop there bounces back anyway), and clear the sticky target there so it re-engages fresh.
+    // Optional magnet snap (currently inert: no per-seat slots). Skip while over a rival's
+    // private zone, where a drop bounces back anyway.
     const opponentSeat = this.hooks.pointInOpponentZone(e.clientX, e.clientY);
     if (opponentSeat === null) {
-      const snap = this.hooks.applySnap(seedNx, seedNy, s.snapKey);
+      const inSelf = this.hooks.pointInSelfZone(e.clientX, e.clientY);
+      const ownerSeat = inSelf ? this.hooks.getSelfSeat() : -1;
+      const snap = this.hooks.applySnap(ownerSeat, seedNx, seedNy);
       seedNx = snap.nx;
       seedNy = snap.ny;
-      s.snapKey = snap.snapKey;
-    } else {
-      s.snapKey = null;
     }
 
-    // Keep the whole dragged group's BODIES inside the EXTENDED play square (inner board + the
-    // off-board ledge apron on each side): clamp the seed so every card's full footprint stays
-    // within [-APRON_FRAC, 1+APRON_FRAC]. A card can fill every in-field area (hand zone, dock)
-    // AND reach onto its ledge, but never leaves the visible page. The pile stays rigid.
+    // Keep the whole dragged group's BODIES inside the [0,1] board square: clamp the seed so
+    // every card's full footprint stays on the board. A card never hangs off an edge and is
+    // never lost off-screen, while its body can still fill every in-board area. The pile stays
+    // rigid.
     ({ nx: seedNx, ny: seedNy } = this.clampSeedToBoard(s, seedNx, seedNy, m));
 
     for (const id of s.ids) {
@@ -380,14 +372,11 @@ export class DragController {
   };
 
   /** Clamp the dragged group's seed (canonical) so every card's full BODY stays within the
-   *  EXTENDED play square [-APRON_FRAC, 1+APRON_FRAC]² (the inner board plus a one-ledge apron
-   *  on each side, where the off-board Seal/Servant ledges live). Each card's half-extent on
-   *  each axis comes from its OWN rotation (an odd quarter-turn swaps width/height), so an
-   *  upright card sits flush to any edge and into a corner while a sideways card is still fully
-   *  contained — fixing the old bug where the horizontal inset used the card's tall side and
-   *  cards stuck ~45% short of the left/right edges. The extended square equals the centered
-   *  viewport-min square, so this also keeps every card on the visible PAGE on any device.
-   *  Pure (delegates to clampSeedToField). */
+   *  [0,1] board square. Each card's half-extent on each axis comes from its OWN rotation (an
+   *  odd quarter-turn swaps width/height), so an upright card sits flush to any edge and into a
+   *  corner while a sideways card is still fully contained — fixing the old bug where the
+   *  horizontal inset used the card's tall side and cards stuck ~45% short of the left/right
+   *  edges. Pure (delegates to clampSeedToField). */
   private clampSeedToBoard(
     s: DragSession,
     seedNx: number,

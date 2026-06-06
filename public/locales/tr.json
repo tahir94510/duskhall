@@ -334,18 +334,22 @@
   "categories": {
     "seal": {
       "name": "Mühür",
+      "namePlural": "Mühürler",
       "description": "Masanıza yerleştirilen kalıcı yapı. Pasif güç. Yükselişe giden yol."
     },
     "spell": {
       "name": "Büyü",
+      "namePlural": "Büyüler",
       "description": "1 HP karşılığı elden oynanan tek kullanımlık saldırı. Çözülür, çöpe gider."
     },
     "intervention": {
       "name": "Müdahale",
+      "namePlural": "Müdahaleler",
       "description": "Reaktif kart. HP harcamaz; sıra kimde olursa olsun her an oynanabilir."
     },
     "servant": {
       "name": "Hizmetkâr",
+      "namePlural": "Hizmetkârlar",
       "description": "Masanızdaki canlı kalkan. Rakipler önce Hizmetkârları temizlemeden Mühürlerinizi hedef alamaz."
     }
   },

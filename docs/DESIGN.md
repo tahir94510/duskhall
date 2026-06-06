@@ -41,13 +41,7 @@ Card positions store the card CENTRE as a canonical fraction; the render loop tu
 
 `board.css` paints the two dock markers at these same percentages (`left: 43%` / `57%`, centred with `translate(-50%, -50%)`), and the initial deal pile is anchored to the same numbers, so the markers and the dealt pile can never drift apart.
 
-### Off-board ledges and the extended play square
-
-The canonical `[0, 1]²` is the **inner board** (zones, dock, hand). Each side has an off-board **ledge apron** of depth `APRON_FRAC = 0.18` (`src/table/constants.ts`), so canonical coords run over the **extended square** `[-APRON_FRAC, 1+APRON_FRAC]²`. Each player's Seal/Servant tableau sits in their own edge's apron (`slotsForSeat` in `SlotGrid.ts`: 4 Seal + 3 Servant slots), drawn by `Board.paintLedges`. Because the ledges live in the rotating board layer, every viewer sees their own ledge in front of them and rivals' ledges around the table — symmetric and identical for all (D4 symmetry). Apron cards are public (outside the hand zone), and off-board canonical coords sync untouched (`inputGuard` `COORD_MIN/MAX = -3/4`).
-
-`board.css` sizes the inner board as `--field = --field-cap / 1.36` (`1.36 = 1 + 2*APRON_FRAC`) and `--apron = --field * 0.18`, so the extended square equals the centered viewport-min square. The drag clamp (`clampSeedToField`, `src/table/playfield.ts`) keeps every card body inside the extended square, which therefore keeps every card on the visible PAGE on any device/aspect — rotation-aware (an odd quarter-turn swaps the card's width/height). Sticky magnetic snapping to the dock and a player's own ledge slots lives in `snapSeed` (same file); both helpers are pure and unit-tested (`playfield.test.ts`). Keep the `1.36` divisor and `--apron` in `board.css` in step with `APRON_FRAC`.
-
-Magnet snap is removed; players place cards by hand. The dock slots are visual targets only.
+The table is a clean full-size square: there is no dedicated Seal/Servant area (no shelves or ledges); players lay their face-up tableau out by hand in their own zone. A dragged card (or pile) is clamped so every card's full body stays inside the `[0, 1]` board square (`clampSeedToField`, `src/table/playfield.ts`): the clamp is rotation-aware per card (an odd quarter-turn swaps the card's width/height), so an upright card sits flush to any edge and into a corner while never hanging off the board. Pure and unit-tested (`playfield.test.ts`). Magnet snap is inert; the dock markers are visual targets only.
 
 ## Stack interactions
 
