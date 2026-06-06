@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.9.13: A built-in rulebook guide
+
+An optional, non-enforcing Guide that walks the whole table through a game, one step at
+a time. It never restricts play: cards still move, flip and shuffle freely. The card
+sync, the canonical frame and the balance numbers are unchanged. 214 tests green.
+
+- **A step-by-step Guide.** A new panel narrates the rulebook: setup, the first-player
+  reveal, and each turn's Focus, Action and Closing phases. The text is written for
+  someone who has never played, in both languages. The host opens it from the menu and it
+  appears for the whole table. The state is host-authoritative and validated by a pure,
+  unit-tested reducer, so every device shows the same step and a peer cannot desync it.
+- **The right person advances each step.** During setup the host taps the check and picks
+  the first player. During the turn loop only the player whose turn it is can finish a
+  phase. The host resolves the real seat of any advance request, so the turn order cannot
+  be spoofed.
+- **A collapsible panel, no stray indicator.** The panel's top bar shows whose turn it is
+  and the current phase. Any player can collapse it to that bar and expand it again. The
+  earlier separate corner indicator was removed; its information now lives in the bar.
+- **Host-only table controls.** Opening or closing the Guide, starting or restarting the
+  game, and resetting the deck are host only, so a game is never reset by accident.
+  Starting or restarting gathers and shuffles the deck for a fresh start. Reset deck on
+  its own returns every card to one shuffled pile.
+- **2.5D depth pass (visual only).** Richer layered shadows and a small shadow swell on
+  hover and hold, so cards read as lifting toward the light. Card geometry, the flip and
+  the render loop are untouched, and reduced motion is honoured.
+
 ## 0.9.12: Clean table restored, drag fix, consistent rulebook terms
 
 A correctness and polish pass. The dedicated Seal/Servant areas were removed and the table

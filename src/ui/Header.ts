@@ -1,4 +1,4 @@
-import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EYE, ICON_EXIT, ICON_FEEDBACK, ICON_INFO, ICON_SPARK } from "./icons.js";
+import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EYE, ICON_EXIT, ICON_FEEDBACK, ICON_INFO, ICON_SPARK, ICON_GUIDE } from "./icons.js";
 import { t } from "../i18n/index.js";
 import { inviteUrl } from "../net/room.js";
 import { flashConfirm } from "./feedback.js";
@@ -11,6 +11,9 @@ export interface HeaderHooks {
   onLegal(): void;
   onReset(): void;
   onResetDeck(): void;
+  /** Host-only: open the rulebook Guide panel for the table (closing is done from
+   *  the panel itself). */
+  onOpenGuide(): void;
   onSettings(): void;
   onShortcuts(): void;
   /** Open the "What's new" / updates panel (and clear the New badge). */
@@ -41,6 +44,7 @@ export class Header {
   private timerHandle = 0;
   private menuOpen = false;
   private spectator = false;
+  private host = false;
 
   constructor(private hooks: HeaderHooks) {
     this.el = document.createElement("header");
@@ -108,6 +112,10 @@ export class Header {
           <span class="header__menu-label" data-i18n="ui.feedback">${esc(t("ui.feedback"))}</span>
         </button>
         <div class="header__menu-divider" data-role="play-divider"></div>
+        <button type="button" class="header__menu-row header__menu-row--accent" data-action="guide" role="menuitem" data-role="guide">
+          <span class="header__menu-icon">${ICON_GUIDE}</span>
+          <span class="header__menu-label" data-i18n="ui.guide">${esc(t("ui.guide"))}</span>
+        </button>
         <button type="button" class="header__menu-row" data-action="reset-deck" role="menuitem" data-role="reset-deck">
           <span class="header__menu-icon">${ICON_RESET_DECK}</span>
           <span class="header__menu-label" data-i18n="ui.resetDeck">${esc(t("ui.resetDeck"))}</span>
@@ -172,6 +180,7 @@ export class Header {
     this.menu.querySelector<HTMLButtonElement>('[data-action="shortcuts"]')?.addEventListener("click", wrap(this.hooks.onShortcuts));
     this.menu.querySelector<HTMLButtonElement>('[data-action="updates"]')?.addEventListener("click", wrap(this.hooks.onUpdates));
     this.menu.querySelector<HTMLButtonElement>('[data-action="legal"]')?.addEventListener("click", wrap(this.hooks.onLegal));
+    this.menu.querySelector<HTMLButtonElement>('[data-action="guide"]')?.addEventListener("click", wrap(this.hooks.onOpenGuide));
     this.menu.querySelector<HTMLButtonElement>('[data-action="reset-deck"]')?.addEventListener("click", wrap(this.hooks.onResetDeck));
     this.menu.querySelector<HTMLButtonElement>('[data-action="reset"]')?.addEventListener("click", wrap(this.hooks.onReset));
     // Connection row doubles as the "run the self-test" button. It does NOT close
@@ -302,17 +311,36 @@ export class Header {
     this.spectatorRow.hidden = !on && this.spectatorVal.textContent === "0";
   }
 
-  /** Reflect host status: only the host may reset the shared deck, so that row is
-   *  hidden for non-hosts (everyone can still leave the room). */
-  // Reset deck is shown to every SEATED player (it is collaborative, like shuffle;
-  // the confirm dialog is the safety) and hidden only from spectators, who have no
-  // deck to reset. Exit room is likewise shown to every seated player. (Reset deck
-  // used to be host-only, so non-host players saw a dead button — fixed.)
+  /** Reflect host status. The shared "table master" controls — Start/Restart the
+   *  walkthrough and Reset the deck — are HOST-ONLY, so they appear for the host alone.
+   *  Non-hosts simply don't see them (no dead buttons). */
+  setHostMode(on: boolean): void {
+    this.host = on;
+    this.el.classList.toggle("is-host", on);
+    this.applyPlayControls();
+  }
+
+  /** Reflect whether the guide panel is open: the host's "Open guide" row is disabled
+   *  while it is open (the panel is closed from its own × button), and active again
+   *  once it closes. The row never disappears, it only greys out. */
+  setGuideOpen(open: boolean): void {
+    const guide = this.menu.querySelector<HTMLButtonElement>('[data-role="guide"]');
+    if (!guide) return;
+    guide.disabled = open;
+    guide.setAttribute("aria-disabled", open ? "true" : "false");
+  }
+
+  // Open guide, Reset deck are host-only (and never shown to a spectator). Exit room
+  // stays available to every seated player. The play divider shows whenever any control
+  // below it is visible.
   private applyPlayControls(): void {
+    const guide = this.menu.querySelector<HTMLElement>('[data-role="guide"]');
     const resetDeck = this.menu.querySelector<HTMLElement>('[data-role="reset-deck"]');
     const resetRoom = this.menu.querySelector<HTMLElement>('[data-role="reset-room"]');
     const divider = this.menu.querySelector<HTMLElement>('[data-role="play-divider"]');
-    if (resetDeck) resetDeck.hidden = this.spectator;
+    const hostOnly = this.host && !this.spectator;
+    if (guide) guide.hidden = !hostOnly;
+    if (resetDeck) resetDeck.hidden = !hostOnly;
     if (resetRoom) resetRoom.hidden = this.spectator;
     if (divider) divider.hidden = this.spectator;
   }

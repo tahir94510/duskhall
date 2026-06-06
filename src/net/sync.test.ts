@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { safeNumber, safeStamp, safeInt, withinByteCap } from "../security/inputGuard.js";
 import { isNewerWrite } from "./lww.js";
-import { classifyKey, maskHost, sanitizeAnim, sanitizeRemoved, clampCardTs } from "./realtime.js";
+import { classifyKey, maskHost, sanitizeAnim, sanitizeRemoved, clampCardTs, sanitizeGuide } from "./realtime.js";
 
 // A minimal unsigned JWT with a given role claim, for classifyKey tests.
 function fakeJwt(role: string): string {
@@ -222,5 +222,33 @@ describe("sanitizeRemoved: validate the authoritative removed-players list", () 
     expect(sanitizeRemoved(null)).toEqual([]);
     expect(sanitizeRemoved("nope")).toEqual([]);
     expect(sanitizeRemoved(undefined)).toEqual([]);
+  });
+});
+
+describe("sanitizeGuide: validate the rulebook-walkthrough sync off the wire", () => {
+  it("accepts a well-formed host state, clamping firstSeat into [-1,3]", () => {
+    const g = sanitizeGuide({ kind: "state", open: true, started: true, firstSeat: 2, progress: 5, v: 3, by: "host" });
+    expect(g).toEqual({ kind: "state", open: true, started: true, firstSeat: 2, progress: 5, v: 3, by: "host" });
+    const c = sanitizeGuide({ kind: "state", open: true, started: true, firstSeat: 99, progress: 0, v: 1, by: "h" });
+    if (c && c.kind === "state") expect(c.firstSeat).toBe(3);
+  });
+  it("coerces missing/odd flags and keeps progress/version at full magnitude", () => {
+    const g = sanitizeGuide({ kind: "state", started: 1, firstSeat: 0, progress: 99999, v: 4242, by: "h" });
+    expect(g).not.toBeNull();
+    if (g && g.kind === "state") {
+      expect(g.open).toBe(false);   // missing -> false
+      expect(g.started).toBe(false); // non-boolean -> false
+      expect(g.progress).toBe(99999);
+      expect(g.v).toBe(4242);
+    }
+  });
+  it("accepts the advance intent and rejects anything else", () => {
+    expect(sanitizeGuide({ kind: "intent", action: "advance", by: "p" }))
+      .toEqual({ kind: "intent", action: "advance", by: "p" });
+    expect(sanitizeGuide({ kind: "intent", action: "ready", by: "p" })).toBe(null);
+    expect(sanitizeGuide({ kind: "intent", action: "explode", by: "p" })).toBe(null);
+    expect(sanitizeGuide({ kind: "nope" })).toBe(null);
+    expect(sanitizeGuide(null)).toBe(null);
+    expect(sanitizeGuide("state")).toBe(null);
   });
 });

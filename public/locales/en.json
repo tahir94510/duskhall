@@ -42,7 +42,8 @@
     "connection": "Connection",
     "connOnline": "Online",
     "connConnecting": "Connecting...",
-    "connOffline": "Offline"
+    "connOffline": "Offline",
+    "guide": "Guide"
   },
   "diag": {
     "title": "Connection self-test",
@@ -95,7 +96,7 @@
     },
     "tableau": {
       "term": "Tableau",
-      "def": "Your face-up zone holding your Seals and Servants — at most 4 Seals and 3 Servants. Seal and Servant effects work only here, never from the hand."
+      "def": "Your face-up zone holding your Seals and Servants, at most 4 Seals and 3 Servants. Seal and Servant effects work only here, never from the hand."
     },
     "deck": {
       "term": "Deck",
@@ -127,7 +128,7 @@
     },
     "cleanse": {
       "term": "Cleanse",
-      "def": "An Action (1 HP): discard 1 card from your hand, then draw 1 — a swap that keeps your hand the same size."
+      "def": "An Action (1 HP): discard 1 card from your hand, then draw 1. This swap keeps your hand the same size."
     },
     "hp": {
       "term": "HP",
@@ -139,7 +140,7 @@
     },
     "untargetable": {
       "term": "Untargetable",
-      "def": "Immune to enemy actions. Untargetability is layered — each independent protective layer must be removed on its own before the card beneath it can be targeted."
+      "def": "Immune to enemy actions. Untargetability is layered: each independent protective layer must be removed on its own before the card beneath it can be targeted."
     }
   },
   "kick": {
@@ -233,6 +234,17 @@
     "badge": "New",
     "empty": "No updates yet.",
     "entries": [
+      {
+        "v": "2026-06-06",
+        "date": "June 6, 2026",
+        "title": "A built-in guide for new players",
+        "items": [
+          "There is now an optional Guide that walks the whole table through a game, one step at a time: setup, who goes first, and each player's turn. It only suggests what to do. You are still free to move, flip and shuffle cards however you like.",
+          "The host opens the Guide from the menu and it appears for everyone. The host runs the setup steps and starts or restarts the game from inside the panel. During play, the player whose turn it is taps the check to finish each phase.",
+          "The panel shows whose turn it is and the current phase in its top bar. You can collapse it to that bar to save space and expand it again at any time.",
+          "Reset deck and the Guide controls are now host only, so a game is never reset by accident."
+        ]
+      },
       {
         "v": "2026-06-05",
         "date": "June 5, 2026",
@@ -338,7 +350,8 @@
         "body": [
           "Vaerum gives you and your friends a shared table. You deal, move, flip, gather, shuffle and rotate the cards together in real time. It never enforces the rules, so you play by the rulebook yourselves, just as you would in person.",
           "Each player has a private area along their own edge of the table. Any card you place in your area is hidden from the others, who see only a blurred card back. Drag a card out of your area to reveal it to everyone, and back in to hide it again. A card switches between hidden and visible as it crosses the edge of your area, and it looks the same to every player on any screen.",
-          "The basics: drag a card to move it, or hold Ctrl while dragging to move a whole stack. Scroll over a card to flip it, or right-click (Ctrl-scroll) to flip a whole pile. Press G to gather a loose pile into a tidy stack, M to shuffle it, and Shift-scroll to turn it sideways. On a phone, press and hold a card to open its quick actions. You can find the full list under Shortcuts in the menu."
+          "The basics: drag a card to move it, or hold Ctrl while dragging to move a whole stack. Scroll over a card to flip it, or right-click (Ctrl-scroll) to flip a whole pile. Press G to gather a loose pile into a tidy stack, M to shuffle it, and Shift-scroll to turn it sideways. On a phone, press and hold a card to open its quick actions. You can find the full list under Shortcuts in the menu.",
+          "The menu also has two host controls. Open guide shows the rulebook walkthrough to the whole table: it explains setup, who goes first, and each player's turn, and the player whose turn it is taps the check to move the step on. The host runs the setup steps and can Start or Restart the game from inside the panel, which gathers and shuffles the deck for a fresh start. Reset deck simply returns every card to one shuffled pile. The guide only suggests. It never restricts your play."
         ]
       },
       {
@@ -500,7 +513,7 @@
   "rulesDoc": {
     "title": "Vaerum: Heirs of the Ether",
     "subtitle": "The Complete Rulebook",
-    "tldr": "2 to 4 players. 30 to 60 minutes. Ages 14+.",
+    "tldr": "2 to 4 players. 30 to 60 minutes. Ages 14+. New here? Open the Guide from the menu and it walks the whole table through a game, step by step.",
     "intro": "At the centre of all things lies the Ether, a sourceless force, fractured long ago. Its shards have changed hands through silent treaties, whispered threats, and quiet betrayals. You sit at the table now: a visionary, a schemer, one of the few who can still bend the Ether to a will. There is no friendship here. There is no mercy. There is no luck. Only manipulation, strategy, and the unblinking war for power.",
     "sections": [
       {
@@ -699,5 +712,64 @@
     "title": "Reset deck?",
     "body": "Every card on the table is gathered, shuffled face-down and returned to the deck. This affects all players.",
     "confirm": "Reset deck"
+  },
+  "startGameConfirm": {
+    "title": "Begin the adventure?",
+    "body": "The deck is gathered, shuffled face-down, and the rulebook guide starts from the beginning. This affects all players.",
+    "confirm": "Start"
+  },
+  "restartGameConfirm": {
+    "title": "Restart the game?",
+    "body": "The deck is gathered and reshuffled, and the rulebook guide restarts from the first step. This affects all players.",
+    "confirm": "Restart"
+  },
+  "guide": {
+    "title": "Guide",
+    "close": "Close guide",
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "confirm": "Mark this step done",
+    "hostConfirms": "The host confirms this step.",
+    "waitYourTurn": "Wait for your turn.",
+    "yourTurn": "It is your turn. Tap the check when you are done.",
+    "aPlayer": "a player",
+    "youTag": "you",
+    "introBody": "This guide walks the whole table through a game, one step at a time. It only suggests what to do next. You stay free to move, flip and shuffle the cards however you like.",
+    "introWaiting": "Waiting for the host to start the game.",
+    "start": "Start",
+    "restart": "Restart",
+    "spectatorNote": "You are watching this game.",
+    "pickWait": "The host is choosing the first player.",
+    "turnHeading": "{name}'s turn",
+    "roundLabel": "Round {n}.",
+    "firstChosen": "{name} goes first.",
+    "steps": {
+      "shuffle": {
+        "title": "Setup",
+        "body": "Shuffle the deck face down in the centre. Deal 5 cards to each player to hold hidden, and leave the rest as the draw pile. The host taps the check once everyone is ready."
+      },
+      "reveal": {
+        "title": "Who goes first",
+        "body": "Each player reveals the top card of the deck. The highest type goes first, in this order: Servant, then Spell, then Seal, then Intervention. If two players tie, only they reveal again. The host taps the check when this is done."
+      },
+      "chooseFirst": {
+        "title": "First player",
+        "body": "The host picks the player who revealed the highest card. Play then continues clockwise."
+      }
+    },
+    "phase": {
+      "focus": {
+        "title": "Focus",
+        "body": "Draw 2 cards from the deck. Draw more if you have Time Rift seals in play. Tap the check when you have drawn."
+      },
+      "action": {
+        "title": "Action",
+        "body": "You have 2 action points. Spend each one on a single action: Create (play a Spell, Seal or Servant), Study (draw 1 card), or Cleanse (discard 1 card, then draw 1). Interventions are free and can be played at any time. Tap the check when you are done."
+      },
+      "closing": {
+        "title": "Closing",
+        "body": "Trigger your active Seal effects, then discard down to 7 cards in hand. If you have 3 or more Seals, you may declare Ascension. Tap the check to pass the turn to the next player."
+      }
+    }
   }
 }

@@ -1,0 +1,174 @@
+/* ============================================================================
+   Rulebook Guide: a fixed, collapsible panel anchored beside the menu button. It
+   is purely informational and never gates play. The minimized form is just the top
+   bar (status, confirm tick, resize and close); maximizing drops the body below it.
+   Styling tracks the monochrome ivory-on-ink palette and frosted surfaces.
+   ========================================================================== */
+
+.guide {
+  position: fixed;
+  top: max(env(safe-area-inset-top), 12px);
+  /* Sit just left of the header menu button (36px button + gutter + gap). */
+  right: calc(max(env(safe-area-inset-right), 14px) + 44px);
+  width: min(330px, calc(100vw - 24px));
+  z-index: 940; /* above board and cursors; below modals (1000) */
+  display: flex;
+  flex-direction: column;
+  background: rgba(12, 12, 12, 0.93);
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  box-shadow: var(--shadow-panel);
+  color: var(--ivory-dim);
+  font-family: var(--font-body);
+  overflow: hidden;
+  background-image: linear-gradient(180deg, rgba(243, 239, 229, 0.05), rgba(243, 239, 229, 0) 64px);
+}
+.guide[hidden] { display: none; }
+
+.guide__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 12px;
+  border-bottom: 1px solid var(--line);
+  min-height: 44px;
+}
+.guide.is-min .guide__bar { border-bottom: none; }
+
+.guide__status {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.guide__bar-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ivory);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.guide__bar-phase {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(243, 239, 229, 0.08);
+  border: 1px solid var(--line-2);
+  color: var(--ivory-dim);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.guide__controls { display: flex; align-items: center; gap: 6px; flex: none; }
+.guide__btn {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  background: rgba(22, 22, 22, 0.6);
+  color: var(--ivory-dim);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.guide__btn svg { width: 17px; height: 17px; }
+.guide__btn:hover { color: var(--ivory); border-color: var(--line-3); background: rgba(30, 30, 30, 0.8); }
+.guide__btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.guide__btn:disabled:hover { color: var(--ivory-dim); border-color: var(--line-2); background: rgba(22, 22, 22, 0.6); }
+.guide__close { font-size: 18px; line-height: 1; }
+/* The confirm tick, when it is this player's to press, reads as the primary action. */
+.guide__tick:not(:disabled) {
+  background: var(--ivory);
+  color: var(--ink);
+  border-color: var(--ivory);
+}
+.guide__tick:not(:disabled):hover { background: #fff; border-color: #fff; }
+
+.guide__body {
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  max-height: min(46vh, 360px);
+  overflow-y: auto;
+}
+.guide__body[hidden] { display: none; }
+.guide__lead { margin: 0 0 10px; }
+.guide__step-body { margin: 0; }
+.guide__hint { margin: 8px 0 0; color: var(--ivory); font-size: 12px; }
+.guide__muted { margin: 8px 0 0; color: var(--ivory-mute); font-size: 12px; }
+
+.guide__foot-row { margin-top: 12px; display: flex; gap: 8px; }
+
+.guide__primary {
+  margin-top: 12px;
+  height: 34px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--ivory);
+  background: var(--ivory);
+  color: var(--ink);
+  cursor: pointer;
+}
+.guide__primary:hover { background: #fff; border-color: #fff; }
+
+.guide__restart {
+  height: 30px;
+  padding: 0 14px;
+  font-size: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  background: rgba(22, 22, 22, 0.6);
+  color: var(--ivory-dim);
+  cursor: pointer;
+}
+.guide__restart:hover { color: var(--ivory); border-color: var(--line-3); }
+
+/* chooseFirst: a tappable chip per seated player, tinted with their seat accent. */
+.guide__picks { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+.guide__pick {
+  flex: 1 1 auto;
+  min-width: 92px;
+  height: 34px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  border-left: 3px solid var(--seat, var(--ivory));
+  background: rgba(22, 22, 22, 0.6);
+  color: var(--ivory);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+}
+.guide__pick:hover { background: rgba(32, 32, 32, 0.85); }
+.guide__pick em { font-style: normal; color: var(--ivory-mute); font-weight: 400; font-size: 11px; }
+
+/* The host-only Open guide row gets a quiet ivory accent so it reads as the primary
+   play control. When the panel is open the row is disabled (greyed) by the header. */
+.header__menu-row--accent .header__menu-label { color: var(--ivory); font-weight: 600; }
+.header__menu-row--accent .header__menu-icon { color: var(--ivory); }
+.header__menu-row--accent:disabled,
+.header__menu-row--accent[disabled] { opacity: 0.4; cursor: not-allowed; }
+.header__menu-row--accent:disabled .header__menu-label,
+.header__menu-row--accent[disabled] .header__menu-label { color: var(--ivory-mute); }
+
+/* On phones, span the top of the screen rather than tuck beside the menu button. */
+@media (max-width: 520px) {
+  .guide {
+    left: 8px;
+    right: 8px;
+    width: auto;
+    top: max(env(safe-area-inset-top), 8px);
+  }
+  .guide__body { max-height: 42vh; }
+}

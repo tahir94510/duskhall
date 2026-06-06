@@ -27,7 +27,11 @@
   inset: 0;
   border-radius: inherit;
   box-shadow: var(--shadow-card);
-  transition: box-shadow var(--dur) var(--ease);
+  /* Transform rides along so a hovered/held card's shadow can swell slightly,
+     reading as the card floating a touch higher (2.5D lift). The underlay is a
+     sibling of the 3D inner with no inline transform, so this never fights the
+     render loop or the flip. */
+  transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
   pointer-events: none;
   z-index: -1;
 }
@@ -73,7 +77,19 @@
   }
   .card:not(.is-concealed):not(.is-held):not(.is-animating):hover::before {
     box-shadow: var(--shadow-card-raised);
+    /* Shadow swells a hair and softens downward, so the card reads as lifted toward
+       the light directly above — depth from light + cast only, geometry untouched. */
+    transform: scale(1.015) translateY(1px);
   }
+}
+
+/* The lifted top card of a held pile floats highest: its cast shadow grows the most. */
+.card.is-held.is-held-lead::before { transform: scale(1.02) translateY(2px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .card::before,
+  .card:hover::before,
+  .card.is-held.is-held-lead::before { transform: none; }
 }
 
 /* During a STACK flip, only the card that ends up on top stays visible and turns;
