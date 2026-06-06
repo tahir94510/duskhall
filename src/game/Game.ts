@@ -279,6 +279,7 @@ export class Game {
       onReset: () => { if (this.spectator) return; void this.audio.play("ui-open"); this.handleReset(); },
       onResetDeck: () => { if (!this.isHost()) return; this.confirmResetDeck(); },
       onOpenGuide: () => { if (!this.isHost()) return; void this.audio.play("ui-open"); this.openGuide(); },
+      onRestartGuide: () => { if (!this.isHost()) return; this.confirmRestartGuide(); },
       onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio, () => this.onLocale()); },
       onShortcuts: () => { void this.audio.play("ui-open"); openShortcutsModal(this.modal); },
       onUpdates: () => { void this.audio.play("ui-open"); this.markUpdatesSeen(); openUpdatesModal(this.modal); },
@@ -294,7 +295,7 @@ export class Game {
     this.guidePanel = new GuidePanel({
       onAdvance: () => this.onGuideAdvance(),
       onChooseFirst: (seat) => this.onGuideChooseFirst(seat),
-      onStartRestart: () => { if (this.isHost()) this.confirmStartGuide(); },
+      onStartRestart: () => { if (this.isHost()) this.startGuideFlow(); },
       onClose: () => { if (this.isHost()) this.closeGuide(); }
     });
     document.body.appendChild(this.guidePanel.el);
@@ -1378,6 +1379,7 @@ export class Game {
     if (!this.guidePanel) return;
     this.guidePanel.update(this.buildGuideVM());
     this.header.setGuideOpen(this.guide.open);
+    this.header.setGuideStarted(this.guide.started);
   }
 
   /** Adopt a new guide state locally; if we're the host, broadcast it as authoritative. */
@@ -1474,23 +1476,28 @@ export class Game {
     void this.audio.play("ui-open");
   }
 
-  /** Host: confirm starting (or restarting) the walkthrough. On confirm the deck is
-   *  gathered and shuffled and the guide resets to its first step. The card freedom is
-   *  untouched: players could already have been playing freely before this. */
-  private confirmStartGuide(): void {
-    if (!this.isHost()) return;
-    const restarting = this.guide.started;
-    const key = restarting ? "restartGameConfirm" : "startGameConfirm";
+  /** Host: start the walkthrough from the intro. Begins the shared narration only — it
+   *  never gathers or reshuffles the cards (the intro text suggests Reset deck for that),
+   *  so there is nothing destructive to confirm. */
+  private startGuideFlow(): void {
+    if (!this.isHost() || this.guide.started) return;
+    void this.audio.play("ui-open");
+    this.applyGuideLocal(startGuide(this.guide), true);
+  }
+
+  /** Host: restart the walkthrough from its first step (from the header). Asks for
+   *  confirmation and resets ONLY the Guide — the cards on the table are left exactly
+   *  where they are. */
+  private confirmRestartGuide(): void {
+    if (!this.isHost() || !this.guide.started) return;
     void this.audio.play("ui-open");
     openConfirm(this.modal, {
-      title: t(`${key}.title`),
-      body: t(`${key}.body`),
-      confirmLabel: t(`${key}.confirm`),
-      danger: restarting
+      title: t("restartGameConfirm.title"),
+      body: t("restartGameConfirm.body"),
+      confirmLabel: t("restartGameConfirm.confirm"),
+      danger: true
     }, () => {
       void this.audio.play("ui-close");
-      // Fresh shuffle + gather (reuses the deck reset), then (re)start the walkthrough.
-      this.resetDeck();
       this.applyGuideLocal(startGuide(this.guide), true);
     });
   }
@@ -2057,11 +2064,11 @@ export class Game {
     this.scheduleFlush();
     // Carry a shuffle hint on the snapshot so peers riffle the regathered pile in
     // step with us (the cards still converge wholesale from the snapshot — the hint
-    // is purely cosmetic). Then play the same gather-settle-then-riffle here.
+    // is purely cosmetic). Then play the same gather-settle-then-riffle here, with the
+    // shuffle sound timed to the riffle (see riffleDeckAfterGather).
     const deckIds = order.map((o) => o.instanceId);
     this.sendSnapshot({ kind: "shuffle", ids: deckIds });
-    this.riffleDeckAfterGather(deckIds);
-    void this.audio.play("shuffle");
+    this.riffleDeckAfterGather(deckIds, true);
     toast(t("ui.deckReset"));
   }
 
@@ -2069,12 +2076,14 @@ export class Game {
   // snapshot's cosmetic shuffle hint). The cards first SLIDE to the deck slot under
   // the normal .card transform transition (scattered → gathered); once that settle
   // window has passed we riffle the squared pile in place, so a reset reads as a
-  // real gather-and-shuffle rather than an instant snap. Skipped under reduced
-  // motion (MOTION === 0), where the state simply applies instantly.
-  private riffleDeckAfterGather(ids: string[]): void {
-    if (!MOTION) return;
+  // real gather-and-shuffle rather than an instant snap. `sound` plays the shuffle
+  // cue exactly as the riffle begins (the actor only — peers replay the visual
+  // silently, like every other remote gesture), so the audio never leads the motion.
+  // Skipped under reduced motion (MOTION === 0), where the state applies instantly.
+  private riffleDeckAfterGather(ids: string[], sound = false): void {
+    if (!MOTION) { if (sound) void this.audio.play("shuffle"); return; }
     const present = ids.filter((id) => this.cardEls.has(id) && this.state.cards.has(id));
-    if (!present.length) return;
+    if (!present.length) { if (sound) void this.audio.play("shuffle"); return; }
     window.setTimeout(() => {
       // Re-confirm the cards are still on the table and idle (a fresh deal / hop may
       // have wiped them, or a drag may have grabbed one) before wobbling them. Never
@@ -2084,6 +2093,7 @@ export class Game {
       if (!live.length) return;
       this.elevateDuringAnim(live, SHUFFLE_ANIM_MS);
       this.applyShuffleJitter(live);
+      if (sound) void this.audio.play("shuffle");
     }, STACK_TIDY_MS);
   }
 
