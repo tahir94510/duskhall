@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.9.16: Drop the legacy "kabal" namespace
+
+Housekeeping: the project was renamed KABAL → Vaerum long ago, but the old `kabal`
+identifier lingered internally. This sweeps it out so the whole codebase speaks one name.
+No user-facing behaviour changes. 215 tests green.
+
+- **Storage, channels and DOM all use `vaerum` now.** Every `localStorage`/`sessionStorage`
+  key (`vaerum:lang`, `vaerum:vol:*`, `vaerum:ident:*`, `vaerum:snap:*`, …), the realtime
+  channel (`vaerum:<room>`), the same-device bus (`vaerum-local:<room>`), the Supabase auth
+  storage keys, and the splash element (`#vaerum-loader`) were renamed from `kabal*`.
+- **Old keys are purged on boot.** A one-time cleanup removes any leftover `kabal:*` entries
+  from a pre-rename visit so nothing lingers in browser storage.
+- **Licence and config use the canonical name.** `LICENSE` and the local-config example now
+  read "Vaerum: Heirs of the Ether"; the design doc's dock coordinates were corrected to the
+  current `DECK_NX = 0.40` / `DISCARD_NX = 0.60`.
+
+Note: because the storage keys and the realtime channel name changed, this update resets
+per-device preferences once (language, volume, name) and only syncs between clients once both
+are on this version — expected for a one-time rename.
+
 ## 0.9.15: Layering, loader and responsive correctness
 
 A correctness pass over the table's stacking order, the host-only UI, asset loading and the

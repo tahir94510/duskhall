@@ -1,6 +1,6 @@
 // A tiny, opt-in diagnostics overlay so a player can SEE realtime working without
 // a second device. Enable with `?debug=1` in the URL or localStorage
-// `kabal:debug = "1"`. It shows the live connection state and counters that tick
+// `vaerum:debug = "1"`. It shows the live connection state and counters that tick
 // up as packets flow: when another player acts, "in" climbs and "last in" resets
 // to ~0s — concrete proof that live sync is active. Zero cost when disabled.
 export class DebugHud {
@@ -19,7 +19,7 @@ export class DebugHud {
   static enabled(): boolean {
     try {
       if (new URLSearchParams(location.search).get("debug") === "1") return true;
-      return localStorage.getItem("kabal:debug") === "1";
+      return localStorage.getItem("vaerum:debug") === "1";
     } catch {
       return false;
     }

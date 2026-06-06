@@ -36,15 +36,15 @@ export const BALANCED_MUSIC = MUSIC_DEFAULT;
 export const BALANCED_SFX = SFX_DEFAULT;
 export const BALANCED_MASTER = MASTER_DEFAULT;
 
-const LS_SFX = "kabal:vol:sfx";
-const LS_MUSIC = "kabal:vol:music";
-const LS_MASTER = "kabal:vol:master";
-const LS_MUTED = "kabal:audio:muted";
+const LS_SFX = "vaerum:vol:sfx";
+const LS_MUSIC = "vaerum:vol:music";
+const LS_MASTER = "vaerum:vol:master";
+const LS_MUTED = "vaerum:audio:muted";
 // Music continuity across reloads: which track, how far in, and the remaining
 // shuffle bag so the no-repeat rotation survives a refresh.
-const LS_MUSIC_IDX = "kabal:music:idx";
-const LS_MUSIC_POS = "kabal:music:pos";
-const LS_MUSIC_BAG = "kabal:music:bag";
+const LS_MUSIC_IDX = "vaerum:music:idx";
+const LS_MUSIC_POS = "vaerum:music:pos";
+const LS_MUSIC_BAG = "vaerum:music:bag";
 
 // Ducking: a *gentle, smart* dip so the music breathes under prominent effects
 // without ever pumping. Only the few weighty effects duck; light UI ticks and

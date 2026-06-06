@@ -41,7 +41,7 @@ CHANGELOG, and every file under `docs/`.
   a key, add it to both files in the same shape, with a real translation.
 - Static pages that load before the bundle have their own inline localizer that follows
   the same locale priority as `detectLocale` (the `?lang=` query, then
-  `localStorage["kabal:lang"]`, then the browser language). When you add or change static
+  `localStorage["vaerum:lang"]`, then the browser language). When you add or change static
   user text, update these too:
   - `index.html` (tab title and the boot failure card)
   - `public/404.html` (the not found card)
@@ -79,7 +79,7 @@ Defined in `public/locales/*.json` under `updates.entries`, an array of:
 - `v` is the internal version id. It is never shown to players, but it must be UNIQUE,
   increasing, and IDENTICAL across every locale for the same entry. Use the release date
   in ISO form, `yyyy-mm-dd`. If you ship twice in one day, add a suffix: `2026-06-03.2`.
-  The "New" badge compares `entries[0].v` to `localStorage["kabal:seen-updates"]` (see
+  The "New" badge compares `entries[0].v` to `localStorage["vaerum:seen-updates"]` (see
   `latestUpdateVersion()` in `src/ui/UpdatesModal.ts` and the wiring in `src/game/Game.ts`),
   so a fresh `v` lights the badge for everyone and it clears once they open the panel.
 - `date` is the human label players see. Use a SPECIFIC full date (day, month, year), not

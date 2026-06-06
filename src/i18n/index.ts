@@ -1,6 +1,6 @@
 export type Locale = "en" | "tr";
 const SUPPORTED: Locale[] = ["en", "tr"];
-const STORAGE_KEY = "kabal:lang";
+const STORAGE_KEY = "vaerum:lang";
 
 export type LocaleData = Record<string, unknown>;
 

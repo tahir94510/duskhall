@@ -89,16 +89,16 @@ const STACK_TIDY_MS = 200 * MOTION;       // gather-into-one-pile phase
 // coordinate clamp (COORD_MIN = -3) unchanged, so a peer reliably hides the ghost.
 // -2 satisfies both without depending on the old -10→-3 clamp coincidence.
 const CURSOR_OFFBOARD = -2;
-const SS_SNAPSHOT_PREFIX = "kabal:snap:";
-const SS_SEAT_PREFIX = "kabal:seat:";
-const SS_CLIENT_ID = "kabal:cid";
-const LIVE_CID_PREFIX = "kabal:livecid:";
+const SS_SNAPSHOT_PREFIX = "vaerum:snap:";
+const SS_SEAT_PREFIX = "vaerum:seat:";
+const SS_CLIENT_ID = "vaerum:cid";
+const LIVE_CID_PREFIX = "vaerum:livecid:";
 // Room-scoped identity (id + name + seat) in localStorage. Unlike the
 // sessionStorage seat/cid (which only survive a same-tab reload), this lets a
 // player who fully CLOSED the browser, lost the network, or otherwise dropped
 // return to the SAME room with the same id and name and reclaim their "away"
 // seat — exactly the persistence the table promises. Kept fresh for 24h.
-const LS_IDENT_PREFIX = "kabal:ident:";
+const LS_IDENT_PREFIX = "vaerum:ident:";
 const IDENT_TTL_MS = 24 * 60 * 60 * 1000;
 const SNAPSHOT_TTL_MS = 12 * 60 * 60 * 1000; // a saved board restores only within 12h
 // Returning to the tab after this long may mean the browser evicted decoded art / paused
@@ -110,15 +110,15 @@ const TAB_AWAY_RELOAD_MS = 20000;
 // the About panel auto-shows exactly once for a brand-new visitor and never again.
 // Not room-scoped and never swept by pruneStaleStorage / clearRoomStorage (it matches
 // none of their prefixes), so it persists across rooms, refreshes, leaves and kicks.
-const LS_SEEN_ABOUT = "kabal:seen-about";
+const LS_SEEN_ABOUT = "vaerum:seen-about";
 // Per-device record of the newest "What's new" version this browser has opened. The
 // Updates row shows a "New" badge while this differs from the latest entry; opening the
 // panel writes the latest here and clears the badge until the next update ships.
-const LS_SEEN_UPDATES = "kabal:seen-updates";
+const LS_SEEN_UPDATES = "vaerum:seen-updates";
 // Per-ROOM record of whether the host left the rulebook Guide panel open. A brand-new
 // room (no record) opens the Guide by default so newcomers always meet it; once the
 // host opens or closes it, that choice is remembered and restored across a refresh.
-const LS_GUIDE_OPEN_PREFIX = "kabal:guide-open:";
+const LS_GUIDE_OPEN_PREFIX = "vaerum:guide-open:";
 
 // `joinedAt` is the player's PERSISTED seniority in this room (their original join
 // time). It survives a refresh/reconnect so the host keeps host and seating order
@@ -319,7 +319,9 @@ export class Game {
     if (!this.room) return;
     this.header.setRoom(this.room);
     this.installZoneActions();
-    // Sweep abandoned/expired kabal:* room data so storage never piles up.
+    // Remove any leftover keys from the old `kabal:` namespace (pre-Vaerum rename),
+    // then sweep abandoned/expired vaerum:* room data so storage never piles up.
+    this.purgeLegacyStorage();
     this.pruneStaleStorage();
     // Recover a persisted identity for this room first: a player who fully closed
     // the browser (or dropped) returns with the SAME id and name and reclaims the
@@ -1311,7 +1313,24 @@ export class Game {
     // live as we move to a fresh room, so it is intentionally left alone here.
   }
 
-  // On boot, sweep expired/abandoned room data so kabal:* keys never pile up: a
+  // One-time migration cleanup: the project was renamed KABAL → Vaerum, and every
+  // storage key moved from the legacy `kabal:` namespace to `vaerum:`. Old `kabal:*`
+  // entries would otherwise linger forever (the sweeper below only knows the new
+  // prefix), so purge any that remain from a pre-rename visit. Pure best-effort.
+  private purgeLegacyStorage(): void {
+    for (const store of [localStorage, sessionStorage]) {
+      try {
+        const dead: string[] = [];
+        for (let i = 0; i < store.length; i++) {
+          const key = store.key(i);
+          if (key && key.startsWith("kabal")) dead.push(key);
+        }
+        for (const k of dead) { try { store.removeItem(k); } catch {} }
+      } catch {}
+    }
+  }
+
+  // On boot, sweep expired/abandoned room data so vaerum:* keys never pile up: a
   // stale identity past its TTL, and a livecid heartbeat that hasn't beaten in a
   // while (its tab is long gone).
   private pruneStaleStorage(): void {
