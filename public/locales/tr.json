@@ -72,8 +72,23 @@
     "deck": "Deste",
     "open": "Açık",
     "discard": "Çöplük",
+    "tableau": "Mühürler · Hizmetkârlar",
     "youSuffix": " (sen)",
     "droppedSuffix": " (uzakta)"
+  },
+  "glossary": {
+    "etherResonance": {
+      "term": "Eter Dalgalanması",
+      "def": "Çekme destesi tükendiğinde oyun durur ve Çöplük karıştırılarak yeni deste olur (döngü başına bir kez). Ardından her oyuncu bir kart feda eder: masasından seçtiği bir Mühür ya da Hizmetkâr; yalnızca masası tamamen boşsa elinden rastgele bir kart. Hem deste hem Çöplük boşsa hiçbir şey olmaz."
+    },
+    "ascension": {
+      "term": "Yükseliş",
+      "def": "Kapanış aşamanızın sonunda masanızda en az 3 Mühür varsa Yükseliş ilan edebilirsiniz (geri alınamaz). Sonra her rakip bir tam tur (Yargılama) boyunca Mühürlerinizi yok etmeye, çalmaya ya da etkisiz kılmaya çalışır. Sıra size döndüğünde, Odaklanma'dan önce hâlâ en az 3 Mührünüz duruyorsa oyunu kazanırsınız."
+    },
+    "servantShield": {
+      "term": "Hizmetkâr Kalkanı",
+      "def": "Bir oyuncunun masasında en az bir Hizmetkâr olduğu sürece rakipler o oyuncunun Mühürlerini hiçbir şekilde hedefleyemez. Önce tüm Hizmetkârlar yok edilmelidir; Rünik Bekçi gibi hedeflenebilir olanlar bile, ancak ondan sonra Mühürlere ulaşılabilir."
+    }
   },
   "kick": {
     "title": "Oyuncuyu çıkar",
@@ -182,7 +197,7 @@
         "date": "4 Haziran 2026",
         "title": "Deste sıfırlama herkeste çalışıyor",
         "items": [
-          "Deste sıfırlama artık yalnızca oda sahibinde değil, masadaki her oyuncuda çalışıyor. Tıklayınca bir onay penceresi açılıyor; onayladığınızda tüm kartlar toplanıp ortada kapalı, yeniden karılmış bir desteye — yani oyunun başındaki kuruluma — herkes için dönüyor. Önceden bunu sadece oda sahibi yapabiliyordu ve diğer herkeste buton hiçbir şey yapmıyordu.",
+          "Deste sıfırlama artık yalnızca oda sahibinde değil, masadaki her oyuncuda çalışıyor. Tıklayınca bir onay penceresi açılıyor; onayladığınızda tüm kartlar toplanıp ortada kapalı, yeniden karılmış bir desteye (yani oyunun başındaki kuruluma) herkes için dönüyor. Önceden bunu sadece oda sahibi yapabiliyordu ve diğer herkeste buton hiçbir şey yapmıyordu.",
           "Bir desteyi (deste dahil) topladığınızda, karıştırdığınızda ya da çevirdiğinizde artık yeniden SİZİN kendi bakışınıza göre düzleşiyor; masanın geri kalanıyla aynı. Düzelttiğiniz deste size düz görünür; diğer koltuklar onu kendi açılarında görür."
         ]
       },
@@ -319,18 +334,22 @@
   "categories": {
     "seal": {
       "name": "Mühür",
+      "namePlural": "Mühürler",
       "description": "Masanıza yerleştirilen kalıcı yapı. Pasif güç. Yükselişe giden yol."
     },
     "spell": {
       "name": "Büyü",
+      "namePlural": "Büyüler",
       "description": "1 HP karşılığı elden oynanan tek kullanımlık saldırı. Çözülür, çöpe gider."
     },
     "intervention": {
       "name": "Müdahale",
+      "namePlural": "Müdahaleler",
       "description": "Reaktif kart. HP harcamaz; sıra kimde olursa olsun her an oynanabilir."
     },
     "servant": {
       "name": "Hizmetkâr",
+      "namePlural": "Hizmetkârlar",
       "description": "Masanızdaki canlı kalkan. Rakipler önce Hizmetkârları temizlemeden Mühürlerinizi hedef alamaz."
     }
   },
@@ -356,7 +375,7 @@
     "necromancersEye": {
       "name": "Ölüçağıranın Gözü",
       "type": "Mühür",
-      "effect": "Kapanış aşamanızın başında, el limiti kontrolünden ÖNCE, Çöplüğün en üstündeki 1 kartı elinize ALMAK ZORUNDASINIZ. Her ek kopya 1 kart daha ekler. Çöplük boşsa efekt boşa düşer. Yerleştirildiği turun Kapanış'ında zaten devreye girer. Bu şekilde aldığınız kart elinize sayılır, yani eli 7'nin üstüne çıkarırsa onu ya da başka bir kartı aynı Kapanış'ta atabilirsiniz.",
+      "effect": "Kapanış aşamanızın başında, el sınırı kontrolünden önce, Çöplüğün en üstündeki kartı elinize alırsınız (her ek kopya bir kart daha alır). Bu, sınır kontrolünden önce gerçekleştiği için eliniz 7'yi aşarsa her zamanki gibi 7'ye inersiniz ve az önce aldığınız kartı atabilirsiniz; yani bu kart, tutmak istediğiniz bir kartı feda etmenize asla yol açmaz. Çöplük boşsa hiçbir şey olmaz. Konulduğu turda da işler.",
       "flavor": "Ölüler hesaplarını sabırlı defterlerde tutar."
     },
     "etherStrike": {
@@ -368,7 +387,7 @@
     "shadowTheft": {
       "name": "Gölge Hırsızlığı",
       "type": "Büyü",
-      "effect": "1 HP harcayın. Seçtiğiniz bir rakibin elindeki kartları ters çevirin; rastgele 1 kartı kendi elinize alın. Hedefin eli boşsa veya Hiçlik Örtüsü ile korunuyorsa büyü oynanamaz.",
+      "effect": "1 HP harcayın. Bir rakip seçin. Eli, kimse göremeyecek şekilde kapalı olarak karıştırılır; içinden rastgele 1 kart elinize geçer, hangisi olduğunu ne siz ne rakip seçer. Rakibin eli boşsa ya da Hiçlik Örtüsü ile korunuyorsa büyü oynanamaz ve HP harcanmaz.",
       "flavor": "Her sırrın kaldırabileceğin bir ağırlığı vardır."
     },
     "ancientSight": {
@@ -380,7 +399,7 @@
     "mindParasite": {
       "name": "Zihin Paraziti",
       "type": "Büyü",
-      "effect": "1 HP harcayın. Bir rakibin masasındaki 1 Hizmetkârı çalıp kendi masanıza taşıyın. Çalınan Hizmetkâr sizin 3 Hizmetkâr limitinize dahildir. Masanızda 3 Hizmetkâr varsa veya hedefin Hizmetkârı yoksa büyü oynanamaz; HP harcanmaz. Tüm sürekli efektler yeni sahibe geçer.",
+      "effect": "1 HP harcayın. Bir rakibin masasındaki 1 Hizmetkârı ele geçirip kendi masanıza taşıyın. Sizin 3 Hizmetkâr sınırınıza dahil olur ve tüm sürekli etkileri artık sizin kontrolünüzde sürer. Ele geçirmek yok etmek değildir; bu yüzden bir Buzul Ucube'yi çalmak onun tur atlatma cezasını tetiklemez. Masanızda zaten 3 Hizmetkâr varsa ya da hedefin Hizmetkârı yoksa büyü oynanamaz ve HP harcanmaz.",
       "flavor": "Sadakat bir kapıdır; anahtar sende."
     },
     "twistOfFate": {
@@ -416,7 +435,7 @@
     "glacialAberration": {
       "name": "Buzul Ucube",
       "type": "Hizmetkâr",
-      "effect": "Bu Hizmetkâr yok edildiğinde, onu yok eden oyuncunun bir sonraki turu tamamen atlanır (Odaklanma, Aksiyon ve Kapanış). Atlanan turda Müdahaleler hâlâ oynanabilir. Ceza, dolaylı yok etmelerde de uygulanır (Gölge Katili giriş efekti, Karmik Yansıma yönlendirmesi vb.).",
+      "effect": "Bu Hizmetkâr yok edildiğinde, onu yok eden oyuncunun bir sonraki turu tamamen atlanır (Odaklanma, Aksiyon ve Kapanış); o atlanan turda Müdahaleler yine de oynanabilir. Ceza, yok etme dolaylı olduğunda da uygulanır; örneğin bir Gölge Katili'nin giriş etkisi ya da bir Karmik Yansıma yönlendirmesi. Yalnızca yok edilmesi bunu tetikler: bu Hizmetkârın çalınması (örneğin Zihin Paraziti ile) tetiklemez.",
       "flavor": "Kendi zamanını tutan bir kış."
     },
     "shadowSlayer": {
@@ -481,7 +500,7 @@
           "AŞAMA 2, AKSİYON: Bu turda 2 HP'niz var (Kızıl Monolit ile 3 ila 5; max 5). HP'leri aşağıdaki eylemler için, istediğiniz kombinasyonda harcayın. Kalan HP yanar; bir sonraki tura aktarılamaz.",
           "OLUŞTUR (1 HP): elden 1 Büyü oynayın, ya da masanıza 1 Mühür veya 1 Hizmetkâr yerleştirin.",
           "ARAŞTIR (1 HP): desteden 1 ekstra kart çekin.",
-          "ARINDIR (1 HP): elinizden 1 kart atın, ardından 1 kart çekin. Arındır ile çekilen kart aynı turda başka bir Arındır ile atılamaz.",
+          "ARINDIR (1 HP): elinizden 1 kart atın, ardından 1 kart çekin. Arındır ile çekilen kart aynı turda başka bir Arındır ile atılamaz. Arındır elinizin boyutunu değiştirmez (takas), Araştır ise eli bir kart büyütür; eliniz doluyken ya da kullanamayacağınız bir kartı döndürmek için Arındır'ı, yalnızca daha çok kart istediğinizde Araştır'ı seçin.",
           "AŞAMA 3, KAPANIŞ: Önce aktif tüm Mühür efektleri devreye girer (Ölüçağıranın Gözü kartını şimdi alır). Sonra el limiti kontrol edilir ve 7'ye iner. Ölüçağıranın Gözü'nün yeni aldığı kart da bu limite dahildir ve atılacak kart o olabilir. Kapanış tamamlandıktan sonra masanızda en az 3 Mühür varsa Yükseliş ilan edebilirsiniz (bkz. bölüm 10)."
         ]
       },
@@ -560,12 +579,12 @@
           "Zaman Çatlağı: Odaklanma'da 2 yerine 3 kart çekersin. Her ek kopya +1 (en çok 4 kopya, 6 kart). Konulduğu turun ERTESİ tur etkinleşir.",
           "Hiçlik Örtüsü: Diğer Mühürlerin ve elin düşman büyüleri/efektleri tarafından hedeflenemez. Örtü'nün kendisi her zaman hedeflenebilir. Konulduğu anda etkin. Birden fazla kopya birikmez.",
           "Kızıl Monolit: Aksiyon'da 2 yerine 3 HP kullanırsın. Her ek kopya +1 HP (en fazla 5). Konulduğu turun ERTESİ tur etkinleşir.",
-          "Ölüçağıranın Gözü: Kapanış'ın başında, el limiti kontrolünden ÖNCE, Çöplüğün en üst kartını eline almak ZORUNDASIN. Her ek kopya bir kart daha alır. Çöplük boşsa boşa düşer. Konulduğu turda çalışır. Alınan kart artık sıradan bir el kartıdır; eli 7'yi aşarsa aynı Kapanış'ta atılabilir.",
+          "Ölüçağıranın Gözü: Kapanış'ın başında, el sınırı kontrolünden önce, Çöplüğün en üst kartını elinize alırsınız (her ek kopya bir kart daha alır). Sınır kontrolünden önce gerçekleştiği için eliniz 7'yi aşarsa her zamanki gibi 7'ye inersiniz ve az önce aldığınız kartı atabilirsiniz; yani tutmak istediğiniz bir kartı feda etmenize asla yol açmaz. Çöplük boşsa hiçbir şey olmaz. Konulduğu turda işler.",
           "BÜYÜLER (24 toplam):",
           "Eterik Çarpma: 1 HP. Bir rakibin masasındaki 1 kartı yok et. Hizmetkâr Kalkanı uygulanır.",
-          "Gölge Hırsızlığı: 1 HP. Rakibinin eli kapatılır; rastgele 1 kart eline çekilir. Hiçlik Örtüsü engeller.",
+          "Gölge Hırsızlığı: 1 HP. Rakibin eli kimse göremeyecek şekilde kapalı karıştırılır ve içinden rastgele 1 kart elinize geçer; hangisi olduğunu kimse seçmez. Hiçlik Örtüsü engeller.",
           "Kadim Görü: 1 HP. Desteden 3 kart çek. Yalnızca kendine oynanır; hiçbir rakibi hedeflemez.",
-          "Zihin Paraziti: 1 HP. Bir rakibin Hizmetkâr'ını kendi masanıza alın. 3-Hizmetkâr limitiniz uygulanır.",
+          "Zihin Paraziti: 1 HP. Bir rakibin Hizmetkârını ele geçirip kendi masanıza alırsınız; etkilerini korur ve 3 Hizmetkâr sınırınıza dahil olur. Ele geçirmek yok etmek değildir; çalınan bir Buzul Ucube tur atlatma cezasını tetiklemez.",
           "Kaderin Cilvesi: 1 HP. Kendi elindeki tüm kartları seçilen bir rakibin elindeki tüm kartlarla takas et. Hiçlik Örtüsü engeller.",
           "MÜDAHALELER (16 toplam):",
           "Sustur!: 0 HP. Taze atılmış bir Büyü veya Müdahaleyi iptal et. İptal edilen kart ve Sustur! Çöplüğe gider. Evrensel hedef.",
@@ -573,7 +592,7 @@
           "Kan Kefareti: 0 HP. Bencil. Yalnızca size ait bir Mühür yok edilecekken oynanır; elinizden 2 rastgele kart atıp Mührü kurtarırsınız. Kartları kimse seçmez; rastgele giderler (masa seçer).",
           "HİZMETKÂRLAR (16 toplam):",
           "Rünik Bekçi: Masandayken TÜM Mühürlerin hedeflenemez olur. Hizmetkâr Kalkanı geçerli; rakipler önce tüm Hizmetkârları temizlemelidir.",
-          "Buzul Ucube: Yok edildiğinde, onu yok eden oyuncu sonraki tüm turunu atlar (Odaklanma, Aksiyon, Kapanış). Atlanan turda Müdahaleler oynanabilir.",
+          "Buzul Ucube: Yok edildiğinde, onu yok eden oyuncu sonraki tüm turunu atlar (Odaklanma, Aksiyon, Kapanış); atlanan turda Müdahaleler yine oynanabilir. Yalnızca yok edilmesi bunu tetikler, çalınması (örneğin Zihin Paraziti ile) tetiklemez.",
           "Gölge Katili: Girişte, bir rakibin Hizmetkâr'ı varsa BİRİNİ yok etmek ZORUNDASIN. Bu yolla Buzul Ucube yok edilirse cezayı SEN ödersin."
         ]
       },
@@ -592,7 +611,8 @@
           "S. Karmik Yansıma saldırıyı geri döndürdüğünde saldırganın Hizmetkâr Kalkanı uygulanır mı? C. Evet. Geri dönen saldırı saldırganın Hizmetkâr Kalkanı'na tabidir; Mühürlerine ulaşmadan önce Hizmetkârlarını temizlemek zorundadır.",
           "S. Kan Kefareti için elimde kaç kart olmalı? C. En az 2. Daha azıyla oynanamaz.",
           "S. Kan Kefareti'nin attığı 2 kartı kim seçer? C. Kimse. Kartlar elinden rastgele çıkar, bu yüzden bedeli ödemek her zaman bir risktir.",
-          "S. Zihin Paraziti'ni masamda 3 Hizmetkâr varken oynayabilir miyim? C. Hayır. Çalınan Hizmetkâr limitinizi doldurur; oynanamaz, HP harcanmaz.",
+          "S. Zihin Paraziti'ni masamda 3 Hizmetkâr varken oynayabilir miyim? C. Hayır. Ele geçirilen Hizmetkâr sınırınızı doldurur; oynanamaz, HP harcanmaz.",
+          "S. Zihin Paraziti ile bir Buzul Ucube'yi ele geçirirsem tur atlar mıyım? C. Hayır. Ele geçirmek yok etmek değildir; tur atlatma cezası tetiklenmez, yalnız Buzul Ucube yok edildiğinde işler.",
           "S. Gölge Hırsızlığı Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. El koruma altındadır.",
           "S. Kaderin Cilvesi Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. Hedef oyuncunun eli koruma altında.",
           "S. Buzul Ucube ile turu atlanan oyuncu Müdahale oynayabilir mi? C. Evet. Müdahaleler tepkiseldir; sıra düzeninden bağımsızdır.",

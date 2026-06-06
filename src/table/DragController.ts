@@ -1,4 +1,5 @@
 import type { BoardState } from "./types.js";
+import type { ClampCard } from "./playfield.js";
 
 export interface DragHooks {
   /** False for spectators (room full), blocks all card manipulation. */
@@ -17,6 +18,10 @@ export interface DragHooks {
   pickStackUnder(clientX: number, clientY: number): string[];
   /** Optional magnetic snap: nudge a single canonical (nx, ny) to nearest slot. */
   applySnap(ownerSeat: number, nx: number, ny: number): { nx: number; ny: number; snapped: boolean };
+  /** Clamp the dragged group's seed so every card stays on the PAGE (not just the board): a card
+   *  can be dragged into the off-board margin but never off-screen. `cards` are the group's
+   *  canonical offsets + rotations from the seed. */
+  clampSeed(nx: number, ny: number, cards: ClampCard[]): { nx: number; ny: number };
   onCardMoved(ids: string[]): void;
   /** Pointer released over (x, y): re-arm the hover tooltip without a re-enter.
    *  `pointerType` lets the handler skip the auto-probe on touch (info is explicit
@@ -244,8 +249,8 @@ export class DragController {
     let seedNx = pointerNx + s.anchorDx;
     let seedNy = pointerNy + s.anchorDy;
 
-    // Magnet snap. Run for self-zone (per-seat slots, currently empty) AND for
-    // the central dock so cards "cuk" into the Deck / Discard piles.
+    // Optional magnet snap (currently inert: no per-seat slots). Skip while over a rival's
+    // private zone, where a drop bounces back anyway.
     const opponentSeat = this.hooks.pointInOpponentZone(e.clientX, e.clientY);
     if (opponentSeat === null) {
       const inSelf = this.hooks.pointInSelfZone(e.clientX, e.clientY);
@@ -254,6 +259,15 @@ export class DragController {
       seedNx = snap.nx;
       seedNy = snap.ny;
     }
+
+    // Keep the whole dragged group on the PAGE (not just the board): a card can be dragged off
+    // the board into the surrounding margin, but never off-screen. The pile stays rigid.
+    const clampCards: ClampCard[] = [];
+    for (const [id, rel] of s.relOffsets) {
+      const c = this.state.cards.get(id);
+      clampCards.push({ dx: rel.dx, dy: rel.dy, rot: c ? c.rot : 0 });
+    }
+    ({ nx: seedNx, ny: seedNy } = this.hooks.clampSeed(seedNx, seedNy, clampCards));
 
     for (const id of s.ids) {
       const rel = s.relOffsets.get(id);

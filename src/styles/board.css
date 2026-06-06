@@ -48,18 +48,22 @@
      private zone spans its WHOLE edge (full row/column) and is clipped to a trapezoid in
      zones.css, so every seat's hand area is nearly the full edge wide while the four trapezoids
      meet along the diagonals (no overlap) and the centre 0.44 x 0.44 cell stays free for the
-     deck/discard. 28% deep matches the canonical ZONE_DEPTH (SlotGrid.ts) so the drawn panel
-     and the private area line up exactly. One depth on every breakpoint keeps the proportion
+     deck/discard. 28% deep matches the canonical ZONE_DEPTH (SlotGrid.ts) so the drawn panel and
+     the private area line up exactly. One depth on every breakpoint keeps the proportion
      identical across devices. Rows == cols so the board stays square-symmetric for the 90° seat
-     rotation, and the four trapezoids stay congruent so every seat's area is the same size.
-     Keep these tracks in lockstep with the SlotGrid ZONE_DEPTH and the zones.css clip-paths. */
+     rotation, and the four trapezoids stay congruent so every seat's area is the same size. Keep
+     these tracks in lockstep with the SlotGrid ZONE_DEPTH and the zones.css clip-paths. */
   --grid-cols: minmax(68px, 28%) 1fr minmax(68px, 28%);
   --grid-rows: minmax(68px, 28%) 1fr minmax(68px, 28%);
   --grid-gap: clamp(6px, 1.4vmin, 16px);
   grid-template-columns: var(--grid-cols);
   grid-template-rows: var(--grid-rows);
   gap: var(--grid-gap);
-  padding: clamp(6px, 1.4vmin, 16px);
+  /* No outer padding: --field already subtracts the safe-area insets, so the square
+     field is inset from the screen edges. Extra padding here only shrank the play area
+     and made the hand zones feel cramped against the edge. The inter-track gap below
+     keeps the zones off the deck/discard centre. */
+  padding: 0;
 }
 
 .board {
@@ -272,13 +276,11 @@ body:not(.is-ready) .board__perspective { transition: none; }
     linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.02) 24%, rgba(0, 0, 0, 0.02) 76%, rgba(0, 0, 0, 0.10) 100%);
 }
 
-/* Ornamental field frame: a quiet ivory hairline and a soft cast tracing exactly where the
-   square play field meets the side gutters. On a wide monitor / TV the gutters then read as
-   a deliberate framed border around a lit table, not empty dead space; on a phone (where the
-   field fills the width) it simply hugs the edge, harmless and faint. Centred and sized to
-   the SAME square as the play field (the .table --field expression, recomputed here since the
-   scrim is a sibling of .table), sitting above the felt background but below the table and
-   inert to pointer events, so it never touches gameplay, layout or the coordinate system. */
+/* Ornamental field frame: ONE quiet ivory hairline tracing exactly where the square play
+   field meets the gutters, so the play area reads as a single deliberate edge (no second,
+   offset frame layer). Centred and sized to the SAME square as the play field (the .table
+   --field expression, recomputed here since the scrim is a sibling of .table), above the felt
+   but below the table and inert to pointer events, so it never touches gameplay or layout. */
 .app-scrim::before {
   content: "";
   position: absolute;
@@ -295,40 +297,15 @@ body:not(.is-ready) .board__perspective { transition: none; }
   border-radius: 22px;
   box-shadow:
     0 0 0 1px var(--gilt-soft),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.22),
-    0 16px 50px rgba(0, 0, 0, 0.3);
+    0 14px 44px rgba(0, 0, 0, 0.26);
   pointer-events: none;
 }
 
-/* Brand-cohesive corner accents: four small Vaerum rhombus marks at the field corners,
-   ivory at low opacity, echoing the deck back and logo. Only meaningful (and only shown)
-   on wide screens where the framed gutters appear, so a phone stays clean. */
-@media (min-aspect-ratio: 5 / 4) {
-  .app-scrim::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    --frame-field: min(
-      calc(100vw - max(env(safe-area-inset-left), 12px) - max(env(safe-area-inset-right), 12px)),
-      calc(100dvh - max(env(safe-area-inset-top), 12px) - max(env(safe-area-inset-bottom), 12px)),
-      1400px
-    );
-    width: calc(var(--frame-field) + 64px);
-    height: calc(var(--frame-field) + 64px);
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    background-image:
-      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 64'><g fill='none' stroke='%23f3efe5' stroke-linecap='round' stroke-linejoin='round'><path d='M24 6 L38 32 L24 58 L10 32 Z' stroke-width='2'/><path d='M24 6 L24 58' stroke-width='1.4'/></g></svg>"),
-      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 64'><g fill='none' stroke='%23f3efe5' stroke-linecap='round' stroke-linejoin='round'><path d='M24 6 L38 32 L24 58 L10 32 Z' stroke-width='2'/><path d='M24 6 L24 58' stroke-width='1.4'/></g></svg>"),
-      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 64'><g fill='none' stroke='%23f3efe5' stroke-linecap='round' stroke-linejoin='round'><path d='M24 6 L38 32 L24 58 L10 32 Z' stroke-width='2'/><path d='M24 6 L24 58' stroke-width='1.4'/></g></svg>"),
-      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 64'><g fill='none' stroke='%23f3efe5' stroke-linecap='round' stroke-linejoin='round'><path d='M24 6 L38 32 L24 58 L10 32 Z' stroke-width='2'/><path d='M24 6 L24 58' stroke-width='1.4'/></g></svg>");
-    background-repeat: no-repeat;
-    background-size: 13px 17px;
-    background-position: top left, top right, bottom left, bottom right;
-    opacity: 0.16;
-  }
-}
+/* When the player supplies a background image (it carries its own framing/art), drop our
+   ornamental ring so the two don't stack into a double frame around the table. The frame is
+   shown only on the built-in gradient backdrop, where it gives the gutters a single edge.
+   .app-bg gets .is-loaded when Background.ts paints an image, and .app-scrim is its sibling. */
+.app-bg.is-loaded ~ .app-scrim::before { display: none; }
 
 .board__layer {
   position: absolute;
@@ -427,12 +404,13 @@ body:not(.is-ready) .board__perspective { transition: none; }
 }
 body:not(.is-ready) .dock__label { transition: none; }
 
-/* The marker CENTRES sit at DECK_NX / DISCARD_NX (constants.ts: 0.40 / 0.60) of
+/* The marker CENTRES sit at DECK_NX / DISCARD_NX (constants.ts: 0.43 / 0.57) of
    the board, so a dealt pile (stored at those same centre fractions) lands dead
-   centre on its marker on every device. Keep these percentages in sync with
-   constants.ts. translate(-50%, -50%) centres the box on the point. */
-.dock__slot--deck { left: 40%; transform: translate(-50%, -50%); }
-.dock__slot--discard { left: 60%; transform: translate(-50%, -50%); }
+   centre on its marker on every device. The two piles sit as a tidy pair just off
+   centre. Keep these percentages in sync with constants.ts. translate(-50%, -50%)
+   centres the box on the point. */
+.dock__slot--deck { left: 43%; transform: translate(-50%, -50%); }
+.dock__slot--discard { left: 57%; transform: translate(-50%, -50%); }
 
 .dock__slot.is-hot {
   border-color: rgba(243, 239, 229, 0.62);

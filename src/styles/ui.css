@@ -356,6 +356,10 @@
   transition: opacity var(--dur-fast) var(--ease);
   box-shadow: var(--shadow-panel);
 }
+
+/* When opened from the rulebook (a clicked card name), the panel must sit ABOVE the modal
+   it is layered over, not behind it. */
+.tooltip.is-elevated { z-index: var(--z-toast); }
 .tooltip.is-visible { opacity: 1; }
 
 /* The darkening scrim over the art. Absolutely positioned at inset:0, it fills

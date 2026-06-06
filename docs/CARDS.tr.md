@@ -46,11 +46,11 @@ aşamaz. Yerleştirildiği turda değil, bir sonraki turdan itibaren aktif olur.
 *Her şey yıkıldığında hâlâ ayakta duran.*
 
 ### Ölüçağıranın Gözü (Mühür, 4 kopya)
-Kapanış aşamanızın başında, el limiti kontrolünden ÖNCE, Çöplüğün en üstündeki 1 kartı
-elinize ALMAK ZORUNDASINIZ. Her ek kopya 1 kart daha ekler. Çöplük boşsa efekt boşa
-düşer. Yerleştirildiği turun Kapanış'ında zaten devreye girer. Bu şekilde aldığınız kart
-elinize sayılır, yani eli 7'nin üstüne çıkarırsa onu ya da başka bir kartı aynı Kapanış'ta
-atabilirsiniz.
+Kapanış aşamanızın başında, el sınırı kontrolünden önce, Çöplüğün en üstündeki kartı
+elinize alırsınız (her ek kopya bir kart daha alır). Bu, sınır kontrolünden önce
+gerçekleştiği için eliniz 7'yi aşarsa her zamanki gibi 7'ye inersiniz ve az önce aldığınız
+kartı atabilirsiniz; yani bu kart, tutmak istediğiniz bir kartı feda etmenize asla yol
+açmaz. Çöplük boşsa hiçbir şey olmaz. Konulduğu turda da işler.
 
 *Ölüler hesaplarını sabırlı defterlerde tutar.*
 
@@ -66,8 +66,9 @@ hedef hedef alınamaz ise büyü oynanamaz; HP harcanmaz.
 *Görünenle mühürlenen arasındaki temiz bir kesik.*
 
 ### Gölge Hırsızlığı (Büyü, 6 kopya)
-1 HP harcayın. Seçtiğiniz bir rakibin elindeki kartları ters çevirin; rastgele 1 kartı
-kendi elinize alın. Hedefin eli boşsa veya Hiçlik Örtüsü ile korunuyorsa büyü oynanamaz.
+1 HP harcayın. Bir rakip seçin. Eli, kimse göremeyecek şekilde kapalı olarak karıştırılır;
+içinden rastgele 1 kart elinize geçer, hangisi olduğunu ne siz ne rakip seçer. Rakibin eli
+boşsa ya da Hiçlik Örtüsü ile korunuyorsa büyü oynanamaz ve HP harcanmaz.
 
 *Her sırrın kaldırabileceğin bir ağırlığı vardır.*
 
@@ -79,9 +80,11 @@ desteden tamamlanır.
 *Asla kırpılmayan gözü aç.*
 
 ### Zihin Paraziti (Büyü, 4 kopya)
-1 HP harcayın. Bir rakibin masasındaki 1 Hizmetkârı çalıp kendi masanıza taşıyın. Çalınan
-Hizmetkâr sizin 3 Hizmetkâr limitinize dahildir. Masanızda 3 Hizmetkâr varsa veya hedefin
-Hizmetkârı yoksa büyü oynanamaz; HP harcanmaz. Tüm sürekli efektler yeni sahibe geçer.
+1 HP harcayın. Bir rakibin masasındaki 1 Hizmetkârı ele geçirip kendi masanıza taşıyın.
+Sizin 3 Hizmetkâr sınırınıza dahil olur ve tüm sürekli etkileri artık sizin kontrolünüzde
+sürer. Ele geçirmek yok etmek değildir; bu yüzden bir Buzul Ucube'yi çalmak onun tur
+atlatma cezasını tetiklemez. Masanızda zaten 3 Hizmetkâr varsa ya da hedefin Hizmetkârı
+yoksa büyü oynanamaz ve HP harcanmaz.
 
 *Sadakat bir kapıdır; anahtar sende.*
 
@@ -133,8 +136,10 @@ kendisi her zaman hedeflenebilir. Normal Hizmetkâr olarak Kalkan Kuralı'na tab
 
 ### Buzul Ucube (Hizmetkâr, 4 kopya)
 Bu Hizmetkâr yok edildiğinde, onu yok eden oyuncunun bir sonraki turu tamamen atlanır
-(Odaklanma, Aksiyon ve Kapanış). Atlanan turda Müdahaleler hâlâ oynanabilir. Ceza, dolaylı
-yok etmelerde de uygulanır (Gölge Katili giriş efekti, Karmik Yansıma yönlendirmesi vb.).
+(Odaklanma, Aksiyon ve Kapanış); o atlanan turda Müdahaleler yine de oynanabilir. Ceza,
+yok etme dolaylı olduğunda da uygulanır; örneğin bir Gölge Katili'nin giriş etkisi ya da
+bir Karmik Yansıma yönlendirmesi. Yalnızca yok edilmesi bunu tetikler: bu Hizmetkârın
+çalınması (örneğin Zihin Paraziti ile) tetiklemez.
 
 *Kendi zamanını tutan bir kış.*
 

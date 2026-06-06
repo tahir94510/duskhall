@@ -83,11 +83,15 @@ function nearestSeat(nx: number, ny: number): Seat {
   return best;
 }
 
-// The seat whose trapezoid contains the point, or null if it is in the public centre. Used
-// for live drag-drop ownership (via Game.pointInZone -> screenToCanonical) and the point test.
+// The seat whose trapezoid contains the point, or null if it is in the public centre (or in the
+// off-board margin). Used for live drag-drop ownership (via Game.pointInZone -> screenToCanonical)
+// and the point test. The band is the ON-BOARD strip 0 <= edgeDist < ZONE_DEPTH: a point OUTSIDE
+// the board (edgeDist < 0, i.e. dragged into the page margin past an edge) is NOT a private zone,
+// so cards can be placed in the off-table margins freely (only the page limits the drag).
 export function seatForCanonicalPoint(nx: number, ny: number): Seat | null {
   const s = nearestSeat(nx, ny);
-  return edgeDist(s, nx, ny) < ZONE_DEPTH ? s : null;
+  const d = edgeDist(s, nx, ny);
+  return d >= 0 && d < ZONE_DEPTH ? s : null;
 }
 
 // Is a canonical [0,1] point inside a seat's trapezoid? Canonical (board-shared) space, so it

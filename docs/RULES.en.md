@@ -71,7 +71,7 @@ CREATE (1 HP): cast 1 Spell from hand, or place 1 Seal or 1 Servant onto your ta
 
 STUDY (1 HP): draw 1 extra card from the deck.
 
-CLEANSE (1 HP): discard 1 card from your hand, then draw 1 card. The card drawn by Cleanse cannot be discarded by another Cleanse in the same turn.
+CLEANSE (1 HP): discard 1 card from your hand, then draw 1 card. The card drawn by Cleanse cannot be discarded by another Cleanse in the same turn. Cleanse keeps your hand the same size (a swap), while Study grows it by one; reach for Cleanse when your hand is full or to cycle out a card you cannot use, and for Study when you simply want more cards.
 
 PHASE 3, CLOSING: First, every active Seal trigger fires (Necromancer's Eye takes its card from the Discard now). Then check the hand limit and discard down to 7 if needed. A card just taken by Necromancer's Eye counts toward the limit, and it can be the one you discard. After Closing is complete, if you have at least 3 Seals on your tableau you MAY declare Ascension (see section 10).
 
@@ -186,6 +186,8 @@ Q. Blood Atonement needs how many cards in hand? A. At least 2. With fewer, it c
 Q. Who picks the 2 cards Blood Atonement discards? A. Nobody. They leave your hand at random, so paying the cost is always a gamble.
 
 Q. Mind Parasite when your tableau already has 3 Servants? A. Cannot be cast; no HP spent.
+
+Q. If I take a Glacial Aberration with Mind Parasite, do I skip a turn? A. No. Taking control is not destroying, so its skip-a-turn penalty does not trigger; it only fires when the Aberration is destroyed.
 
 Q. Shadow Theft against a hand protected by Veil of Void? A. Not legal; cannot be cast.
 

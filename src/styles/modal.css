@@ -278,6 +278,30 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
 .rules strong { font-weight: 600; color: var(--ivory); }
 .rules em { font-style: italic; color: var(--ivory-dim); }
 
+/* EVERY hover term in the rulebook — a card name, a glossary term, or a card-type name — reads
+   IDENTICALLY: same weight, colour and quiet dotted underline that brightens on hover, so the
+   text never looks inconsistent (some bold, some italic) and players learn that any underlined
+   term opens its info panel. The cursor stays normal (like a card on the table): the panel opens
+   on hover, so the text should not pretend to be a navigational link — the underline is the
+   affordance. */
+.rules .card-link,
+.rules .term-link {
+  font: inherit;
+  font-weight: 600;
+  font-style: normal;
+  color: var(--ivory);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: default;
+  border-bottom: 1px dotted var(--line-3);
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.rules .card-link:hover,
+.rules .card-link:focus-visible,
+.rules .term-link:hover,
+.rules .term-link:focus-visible { color: #fff; border-bottom-color: var(--ivory-dim); outline: none; }
+
 .rules .qa {
   display: grid;
   grid-template-columns: 14px 1fr;

@@ -1,48 +1,76 @@
 # Changelog
 
-## 0.9.11: Symmetric wide-hand table, even lighting, pointer-lift depth, framed gutters
+## 0.9.12: Clean table restored, drag fix, consistent rulebook terms
 
-A presentation pass to make the table read like a premium, Steam-quality card game
-rather than a flat web page: a balanced symmetric layout with generous hand areas, even
-lighting, and a tactile pointer feel. The zone change touches one canonical rule and its
-CSS in lockstep; no change to sync, the coordinate frame, or stack detection (card
-positions stay device independent and identical for every player). 177 tests green.
+A correctness and polish pass. The dedicated Seal/Servant areas were removed and the table
+returned to main's clean, full-size symmetric design; the drag bug is fixed; and the rulebook
+hover terms are made consistent and complete. Card positions stay device independent and
+identical for every player; the shared canonical frame, sync and balance numbers are
+unchanged. 185 tests green.
 
-- **Symmetric trapezoid hand areas, replacing the pinwheel.** The 0.9.10 pinwheel (each
-  zone grabbing one board corner) read lopsided, and a plain centered strip felt cramped.
-  Each private zone is now a full-width edge band, 28% deep, clipped to a trapezoid: it
-  spans nearly the whole board edge (wide, easy to read your whole hand) and tapers to the
-  inner 0.44, so the four trapezoids meet along the board diagonals with no overlap and the
-  centre `0.44 x 0.44` stays free for the deck/discard. The four are exactly congruent (each
-  the next rotated 90deg, area `0.2016`, about 64% more than a centre strip and as large as
-  the old pinwheel) with full square symmetry, so after each client rotates its own seat to
-  the bottom every player sees an identical hand area. Ownership now resolves by the nearest
-  board edge to the card centre (the diagonal corner split) in the shared canonical frame:
-  `cardZoneOverlap` and `pointInZoneCanonical` (`src/table/SlotGrid.ts`) and the CSS
-  clip-paths (`zones.css`) use the same rule, and `Game.pointInZone` resolves live drags
-  through it too (instead of an axis-aligned zone box, which would be ambiguous on the
-  trapezoids), so drag-drop, concealment and cursors agree for every seat on every device.
-  The deck/discard dock is provably clear of every zone.
-- **Even table lighting.** Removed the bright-centre / dark-edge hotspot: the felt now uses
-  a single gentle, shallow vignette so the table reads as uniformly lit, and the wide-screen
-  field frame casts a softer shadow.
-- **Your hand tray reads clearly; the table stays open.** Your own zone is a clearly defined,
-  lit frosted tray (so "this is your area" is obvious and you read your whole hand at a
-  glance), while opponent and empty zones sit very quietly. That keeps the four diagonal
-  trapezoid seams from reading as a dark "box", so the play surface stays open and premium.
-  An occupied opponent's tray still picks up its seat accent so you can see where they are.
-- **Pointer-lift depth (2.5D feel).** A hovered card raises off the felt: its flat shadow
-  underlay swells to a mid raised cast and the card brightens slightly. Built only from
-  shadow and light on the card's `::before` underlay, so it never fights the render loop's
-  card transform or the flip, keeping drag and the coordinate system untouched. Gated to
-  hover-capable pointers (no stuck state on touch) and skipped for concealed, held and
-  animating cards. Honors reduced motion.
-- **Framed wide-screen gutters.** On a wide monitor or TV the centered square field used
-  to leave bare side margins. The field boundary now carries a quiet ivory hairline and a
-  soft cast, with four faint Vaerum rhombus corner marks on wide aspect ratios, so the
-  gutters read as a deliberate frame around a lit table. A fixed overlay on the existing
-  scrim layer: above the felt, below the table, inert to pointer events, with no DOM,
-  layout or coordinate impact.
+- **Clean table, main's proportions.** The off-board ledges and the on-board tableau shelves
+  were removed and the board is full-size again, with main's hidden-zone depth (`ZONE_DEPTH`
+  0.28, a 0.44 public centre) and card sizing restored. Players lay their face-up Seals and
+  Servants by hand anywhere in their own area.
+- **Drag is page-bound, not board-bound.** A card can now be dragged off the board into the
+  surrounding margin — only the PAGE limits it; it can never go off-screen. The clamp runs in
+  screen pixels (`clampSeedToPage`, `src/table/playfield.ts`), so it is exact for every device,
+  aspect ratio and seat rotation, and the off-board margins are public (droppable). This also
+  fixes the old bug where cards stuck short of the edges/corners.
+- **Rulebook: consistent, complete hover terms.** Every hover term — a card name, a glossary
+  term, or a card-type name (Seal/Spell/Intervention/Servant) — now reads IDENTICALLY (same
+  weight and quiet dotted underline, no more some-bold/some-italic) and opens the same info
+  panel. Matching is case-insensitive and covers plural forms, so "Seal", "Seals" and the
+  uppercase colour-key "SEAL" are all hover-able, including a leading definition label. The
+  terms use the normal cursor (not a pointer/help cursor) — the panel opens on hover, so the
+  underline alone is the affordance.
+
+## 0.9.11: Symmetric table, tableau shelves, safer drag, clearer text, robust restore
+
+A large presentation, interaction and content pass so the table reads like a premium,
+Steam-quality card game and plays cleanly on every device. Card positions stay device
+independent and identical for every player; sync, the square coordinate frame and the
+balance numbers are unchanged. 177 tests green throughout.
+
+- **Symmetric trapezoid hand areas, replacing the pinwheel.** Each private hand zone is a
+  full-width edge band clipped to a trapezoid: wide at the board edge (easy to read your
+  whole hand), tapering inward, so the four meet along the board diagonals with no overlap.
+  They are exactly congruent (each the next rotated 90deg) with full square symmetry, so
+  after each client rotates its seat to the bottom every player sees an identical area.
+  Ownership resolves by the nearest board edge to the card centre in the shared canonical
+  frame (`cardZoneOverlap`, `pointInZoneCanonical` in `src/table/SlotGrid.ts`); the CSS
+  clip-paths and `Game.pointInZone` use the same rule, so drag-drop, concealment and cursors
+  agree for every seat. The hand depth is 18% of the board, leaving room for a tableau shelf
+  in front of every seat that clears the deck/discard on each edge.
+- **Per-seat tableau shelves.** A single framed slot, drawn exactly like the deck/discard dock
+  (one card tall) but 3.5 card-widths wide (half a 7-card row, since Seals and Servants are
+  laid out overlapping like a fanned row), sits in front of each player. Congruent across
+  seats, clear of the deck/discard, and shown only when a seat is occupied (like the hidden
+  zones); only your own shelf shows its "Seals / Servants" label.
+- **Safer dragging and privacy.** A dragged card (or pile) is clamped so its whole body stays
+  inside the square field: it never hangs half off the top/bottom of the page and is never
+  lost off-screen, while its body can still fill every in-field area. Concealment is sticky: a
+  card hides the instant any part enters a zone and reveals only once it has fully cleared it,
+  so you can arrange cards in your own hidden area without ever flashing one to the table.
+- **Under-glass own cards + even lighting.** A card resting in your own hand area gains a
+  thin glass sheen (no blur, stays sharp). The felt uses one gentle, even vignette (no
+  bright-centre / dark-edge hotspot), and the redundant board edge padding was removed.
+- **Single field frame.** The wide-screen frame is one quiet edge, and it steps aside
+  entirely when you supply a background image (which carries its own framing), so the table
+  never shows a doubled border. The built-in gradient backdrop still gets the single edge.
+- **Pointer-lift depth (2.5D feel).** A hovered card raises off the felt via shadow and
+  light on its `::before` underlay only, so it never fights the render transform, flip or
+  coordinates. Gated to hover pointers; honors reduced motion.
+- **Clearer card and rulebook text, both languages.** Reworded the confusing cards in
+  EN and TR across every copy: Necromancer's Eye (a free benefit, not a "must" trap), Shadow
+  Theft (the rival's hand is shuffled face-down and one card taken at random), and the
+  steal-is-not-destroy interaction of Mind Parasite and Glacial Aberration; plus when to use
+  Study vs Cleanse. In the rulebook, card names and key terms (Ether Resonance, Ascension,
+  Servant Shield) open an info panel on hover or tap, the same panel you get from a card on
+  the table, so you can check any reference without leaving the page.
+- **Robust tab restore.** Returning to a tab the browser froze into the back/forward cache
+  now reloads cleanly, replaying the first-load flow (splash, reconnect, then the loader
+  clears once everything is synced) instead of resuming on a dead socket.
 
 ## 0.9.10: Bigger, consistent cards; deeper, equal private zones; polish
 

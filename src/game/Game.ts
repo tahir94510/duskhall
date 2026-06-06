@@ -39,7 +39,8 @@ import {
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
-import { cardZoneOwner, pointInZoneCanonical, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
+import { cardZoneOverlap, pointInZoneCanonical, ZONE_PRIVACY_FRAC, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
+import { clampSeedToPage, type ClampCard } from "../table/playfield.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry } from "../net/realtime.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
@@ -250,7 +251,7 @@ export class Game {
       stackFor: (id) => findConnectedStack(this.state, this.boardSize, id, this.cardMetrics())
     });
     this.header = new Header({
-      onRules: () => { void this.audio.play("ui-open"); openRulesModal(this.modal); },
+      onRules: () => { void this.audio.play("ui-open"); openRulesModal(this.modal, this.tooltip); },
       onSupport: () => { void this.audio.play("ui-open"); openSupportModal(this.modal, { patreonUrl: this.config.patreonUrl, buyMeACoffeeUrl: this.config.buyMeACoffeeUrl, supportUrl: this.config.supportUrl }); },
       onFeedback: () => { void this.audio.play("ui-open"); openFeedbackModal(this.modal, this.config.issuesUrl, this.config.feedbackUrl); },
       onLegal: () => { void this.audio.play("ui-open"); openLegalModal(this.modal); },
@@ -568,9 +569,21 @@ export class Game {
         if (!top) return [];
         return findStackOverlapping(this.state, this.boardSize, top.id, this.cardMetrics());
       },
-      // v3.7: snap-to-slot is removed. The user places cards by hand and the
-      // dock + per-seat slots are pure visual scaffolding.
+      // Snap-to-slot is inert: there are no per-seat slots, so the table places cards by hand.
       applySnap: (_ownerSeat, nx, ny) => ({ nx, ny, snapped: false }),
+      // Keep a dragged card on the PAGE, not just the board: it may be dragged into the off-board
+      // margin but never off-screen. Clamp runs in screen space (exact for every device/seat).
+      clampSeed: (nx, ny, cards: ClampCard[]) => {
+        const { w, h } = this.cardMetrics();
+        const M = 4; // keep a sliver on-screen at the very edge
+        const bounds = {
+          minX: M,
+          minY: M,
+          maxX: Math.max(M, window.innerWidth - M),
+          maxY: Math.max(M, window.innerHeight - M)
+        };
+        return clampSeedToPage(nx, ny, cards, this.boardBox(), this.self.seat as Seat, w, h, bounds);
+      },
       onCardMoved: (ids) => {
         for (const id of ids) this.dirtyIds.add(id);
         this.scheduleFlush();
@@ -738,11 +751,32 @@ export class Game {
   // almost fully out. Because the threshold is low, it hides eagerly and reveals only
   // near the edge, so a card never flashes to the table. Used for both concealment and
   // the "can't touch a rival's card" rule.
+  // Hysteresis memory: the seat a card is currently "held private" by. Lets the
+  // conceal/own decision be EAGER on entry but STICKY on exit, so a card a player nudges
+  // around inside their own area never flashes to the table, and only becomes public once
+  // it has FULLY cleared the zone band. Keyed by card id; entries drop when a card leaves
+  // every zone. Device-independent (canonical), so every viewer agrees.
+  private zoneOwnerHold = new Map<string, number>();
+
   private cardZoneOwnerOf(c: CardState): number | null {
     // Use the SHARED canonical card size, not this device's measured pixels, so the
     // conceal/reveal decision is byte-identical on every screen and for every player
     // (a card dragged out reveals everywhere at once; nudged in, hides everywhere).
-    return cardZoneOwner(c.x, c.y, c.rot, CARD_CANON_W, CARD_CANON_H);
+    const o = cardZoneOverlap(c.x, c.y, c.rot, CARD_CANON_W, CARD_CANON_H);
+    // No footprint overlap with any zone band at all -> fully out -> public. Drop the hold.
+    if (!o) {
+      if (this.zoneOwnerHold.has(c.id)) this.zoneOwnerHold.delete(c.id);
+      return null;
+    }
+    // Already held private (sticky), OR a fresh, meaningful entry (eager): the card belongs
+    // to the zone its body now sits in. Refresh the hold to the current nearest seat so a
+    // card slid along a shared corner follows to the adjacent owner.
+    if (this.zoneOwnerHold.has(c.id) || o.frac > ZONE_PRIVACY_FRAC) {
+      this.zoneOwnerHold.set(c.id, o.seat);
+      return o.seat;
+    }
+    // Touching a band but below the eager threshold and not yet held: still public.
+    return null;
   }
 
   // Is this card in a rival's private area whose seat is still held? Decided by the
@@ -754,6 +788,15 @@ export class Game {
     const c = this.state.cards.get(id);
     if (!c) return false;
     return cardIsRivalOwned(this.occupancy(), this.cardZoneOwnerOf(c), this.self.seat, this.spectator);
+  }
+
+  // Is this card resting in the LOCAL player's own hand area? Used purely for the
+  // "under glass" sheen, so it never affects a spectator (no own seat) or a rival's card.
+  private isOwnZoneCard(id: string): boolean {
+    if (this.spectator || this.self.seat < 0) return false;
+    const c = this.state.cards.get(id);
+    if (!c) return false;
+    return this.cardZoneOwnerOf(c) === this.self.seat;
   }
 
   // Claim a card for our seat when we interact with it AND it is sitting in our
@@ -990,6 +1033,17 @@ export class Game {
       // is monotonic and harmless when no tombstone exists.
       this.selfConnAt = Date.now();
       this.bus.updateMe(this.presencePayload());
+    });
+
+    // Back/forward cache (bfcache) restore: the browser resumes a FROZEN page (sometimes
+    // after discarding it to save memory). The realtime socket is dead and the board may be
+    // stale, yet no loader is showing. The cleanest, bug-free recovery is a full reload, which
+    // replays the exact first-load flow — the inline splash paints instantly, boot() reconnects
+    // and restores the room/snapshot, and hideLoader() runs only once everything is synced.
+    // `event.persisted` is true ONLY on a bfcache restore, never on a normal load, so this can
+    // never loop. (A normal tab discard already triggers a real reload, which is handled too.)
+    window.addEventListener("pageshow", (e) => {
+      if ((e as PageTransitionEvent).persisted) window.location.reload();
     });
   }
 
@@ -2389,8 +2443,12 @@ export class Game {
     // authoritative `removed[]` reconcile.
     if (!k.by || !this.hostOrRecent(k.by)) return;
     if (k.target === this.self.id) {
-      // We were kicked: wipe ALL our data for this room so we return as a brand-new
-      // presence (and can't reclaim the seat), then move to a fresh empty room.
+      // We were kicked: clear the old table's peer cursors at once so no rival lingers
+      // on screen during the room switch, wipe ALL our data for this room so we return as
+      // a brand-new presence (and can't reclaim the seat), then move to a fresh empty room.
+      // joinRoom() raises the loader synchronously, so the old table is covered immediately.
+      for (const el of this.cursorEls.values()) el.remove();
+      this.cursorEls.clear();
       this.clearRoomStorage(this.room);
       void this.joinRoom(newRoom()).then(() => toast(t("kick.kicked")));
       return;
@@ -2817,6 +2875,11 @@ export class Game {
       // flip mid-rotation; the very next frame after the turn settles writes the
       // correct class.
       if (!busy) el.classList.toggle("is-concealed", this.isRivalOwnedCard(c.id));
+      // A card resting in YOUR OWN hand area reads as sitting under a thin glass surface
+      // (a sheen on the card, no blur, so you still read it perfectly). Cleared while held
+      // or animating so a lifted card is clean.
+      if (!busy) el.classList.toggle("is-own-zone", this.isOwnZoneCard(c.id));
+      else el.classList.remove("is-own-zone");
       // Busy indicator while a peer is holding this card. Skip while WE are dragging
       // or animating it (busy): a stale peer lock would otherwise paint the dashed
       // "locked" outline on top of our own grab/flip. The settle frame restores it.
