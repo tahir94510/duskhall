@@ -18,7 +18,9 @@
   flex-direction: column;
   background: rgba(12, 12, 12, 0.93);
   border: 1px solid var(--line-2);
-  border-radius: 14px;
+  /* Match the header menu's radius so the panel and the three-dot popover beside it
+     read as one family. */
+  border-radius: 12px;
   backdrop-filter: blur(16px) saturate(120%);
   -webkit-backdrop-filter: blur(16px) saturate(120%);
   box-shadow: var(--shadow-panel);
@@ -32,10 +34,12 @@
 .guide__bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 8px 8px 12px;
+  gap: 6px;
+  /* Tuned so the bar (and thus the whole panel when minimized) stands the same
+     height as the 36px header buttons it sits beside: 4 + 28 + 4 = 36. */
+  padding: 4px 6px 4px 12px;
   border-bottom: 1px solid var(--line);
-  min-height: 44px;
+  min-height: 36px;
 }
 .guide.is-min .guide__bar { border-bottom: none; }
 
@@ -68,10 +72,10 @@
   white-space: nowrap;
 }
 
-.guide__controls { display: flex; align-items: center; gap: 6px; flex: none; }
+.guide__controls { display: flex; align-items: center; gap: 5px; flex: none; }
 .guide__btn {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   display: grid;
   place-items: center;
   border-radius: 8px;
@@ -81,7 +85,7 @@
   cursor: pointer;
   transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
-.guide__btn svg { width: 17px; height: 17px; }
+.guide__btn svg { width: 16px; height: 16px; }
 .guide__btn:hover { color: var(--ivory); border-color: var(--line-3); background: rgba(30, 30, 30, 0.8); }
 .guide__btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .guide__btn:disabled:hover { color: var(--ivory-dim); border-color: var(--line-2); background: rgba(22, 22, 22, 0.6); }

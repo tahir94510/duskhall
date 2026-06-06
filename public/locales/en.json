@@ -43,8 +43,7 @@
     "connOnline": "Online",
     "connConnecting": "Connecting...",
     "connOffline": "Offline",
-    "guide": "Guide",
-    "restartGuide": "Restart guide"
+    "guide": "Guide"
   },
   "diag": {
     "title": "Connection self-test",
@@ -242,9 +241,9 @@
         "items": [
           "The Guide now shows exactly the right controls at each step: the confirm check no longer appears while you are choosing who goes first, and the close button is the host's alone. Host-only and spectator-only menu items no longer leak to the wrong players.",
           "The three-dot menu now opens above the Guide panel instead of behind it, and the Guide opens by default in a new room while remembering whether you last left it open or closed.",
-          "Start now simply begins the guide and leaves your cards exactly as they are (the intro suggests Reset deck first if you want a fresh shuffle). Restart moved to a host-only button in the menu: it asks to confirm and resets only the guide, never the cards.",
-          "Minimize is now a turn-loop control: the guide stays fully visible through setup, and the minimize button becomes active once the turns begin.",
-          "Reset deck gathers every card and riffles the squared pile for everyone, with the shuffle sound timed to the riffle, instead of snapping the cards into place."
+          "Start now simply begins the guide and leaves your cards exactly as they are (the intro suggests Reset deck first if you want a fresh shuffle). Restart is now a host-only button in the guide's own bar: it asks to confirm and resets only the guide, never the cards.",
+          "Minimize is now a turn-loop control for everyone: the guide stays fully visible through setup, and each player's minimize button becomes active once the turns begin. The bar also matches the height of the buttons beside it.",
+          "Reset deck gathers every card and riffles the squared pile for everyone, with the cues timed to the motion and no wait at all when the deck is already squared, instead of snapping the cards into place."
         ]
       },
       {

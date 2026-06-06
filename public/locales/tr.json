@@ -43,8 +43,7 @@
     "connOnline": "Çevrimiçi",
     "connConnecting": "Bağlanıyor...",
     "connOffline": "Çevrimdışı",
-    "guide": "Rehber",
-    "restartGuide": "Rehberi yeniden başlat"
+    "guide": "Rehber"
   },
   "diag": {
     "title": "Bağlantı sınaması",
@@ -242,9 +241,9 @@
         "items": [
           "Rehber artık her adımda tam olarak doğru düğmeleri gösteriyor: ilk oyuncuyu seçerken onay tiki görünmüyor ve kapatma düğmesi yalnızca ev sahibine ait. Yalnızca ev sahibine ya da yalnızca izleyiciye özel menü öğeleri artık yanlış oyunculara sızmıyor.",
           "Üç nokta menüsü artık rehber panelinin arkasında değil önünde açılıyor; rehber yeni bir odada varsayılan olarak açılır ve onu en son açık mı kapalı mı bıraktığınızı hatırlar.",
-          "Başlat artık yalnızca rehberi başlatır ve kartlarınızı olduğu gibi bırakır (yeni bir karıştırma isterseniz giriş metni önce Desteyi sıfırla'yı önerir). Yeniden başlat menüde yalnızca ev sahibine özel bir düğmeye taşındı: onay ister ve yalnızca rehberi sıfırlar, kartları asla.",
-          "Küçültme artık bir tur aşaması özelliği: rehber kurulum boyunca tam olarak görünür kalır, küçültme düğmesi turlar başlayınca etkinleşir.",
-          "Desteyi sıfırla tüm kartları toplayıp düzleşen desteyi herkes için karıştırıyor; karıştırma sesi de titreşime göre zamanlanıyor, kartları karıştırmadan yerine oturtmak yerine."
+          "Başlat artık yalnızca rehberi başlatır ve kartlarınızı olduğu gibi bırakır (yeni bir karıştırma isterseniz giriş metni önce Desteyi sıfırla'yı önerir). Yeniden başlat artık rehberin kendi çubuğunda, yalnızca ev sahibine özel bir düğme: onay ister ve yalnızca rehberi sıfırlar, kartları asla.",
+          "Küçültme artık herkes için bir tur aşaması özelliği: rehber kurulum boyunca tam olarak görünür kalır, her oyuncunun küçültme düğmesi turlar başlayınca etkinleşir. Çubuk ayrıca yanındaki düğmelerle aynı yükseklikte.",
+          "Desteyi sıfırla tüm kartları toplayıp düzleşen desteyi herkes için karıştırıyor; sesler harekete göre zamanlanıyor ve deste zaten düzgünse hiç beklenmiyor, kartları karıştırmadan yerine oturtmak yerine."
         ]
       },
       {
