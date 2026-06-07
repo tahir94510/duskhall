@@ -121,3 +121,16 @@
   -webkit-mask-image: linear-gradient(to left, #000 0%, #000 56%, transparent 100%);
   mask-image: linear-gradient(to left, #000 0%, #000 56%, transparent 100%);
 }
+
+/* YOUR OWN tray gets a CLEARLY readable boundary: the inner ("door") edge no longer fades to
+   nothing (so you can see where your area ends) and carries a soft top catch-light right at the
+   door. Rivals' trays still dissolve toward the centre — you don't need to read their edge — but
+   your own area is unambiguous, top included. Overrides the shared bottom mask + rim above. */
+.zone--self {
+  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 66%, rgba(0, 0, 0, 0.55) 100%);
+  mask-image: linear-gradient(to top, #000 0%, #000 66%, rgba(0, 0, 0, 0.55) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(243, 239, 229, 0.16),    /* inner door edge catch-light (clipped to the door) */
+    inset 0 -1px 0 rgba(243, 239, 229, 0.12),   /* outer board edge */
+    inset 0 -10px 20px rgba(0, 0, 0, 0.10);
+}
