@@ -301,18 +301,27 @@ body:not(.is-ready) .board__perspective { transition: none; }
   width: var(--frame-field);
   height: var(--frame-field);
   transform: translate(-50%, -50%);
-  border-radius: 22px;
+  /* Softly rounded ("a little oval") corners so the whole play field reads as one deliberate,
+     premium table rather than a hard square. Scales gently with the field. */
+  border-radius: clamp(20px, calc(var(--frame-field) * 0.035), 40px);
   box-shadow:
-    0 0 0 1px var(--gilt-soft),
-    0 14px 44px rgba(0, 0, 0, 0.26);
+    /* a crisp ivory hairline, a dark inner edge for stock depth, a top catch-light, and a soft
+       drop so the table is clearly seated on the felt — a quality, rounded boundary. */
+    0 0 0 1px rgba(243, 239, 229, 0.08),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(243, 239, 229, 0.05),
+    0 26px 64px rgba(0, 0, 0, 0.42);
   pointer-events: none;
 }
 
-/* When the player supplies a background image (it carries its own framing/art), drop our
-   ornamental ring so the two don't stack into a double frame around the table. The frame is
-   shown only on the built-in gradient backdrop, where it gives the gutters a single edge.
-   .app-bg gets .is-loaded when Background.ts paints an image, and .app-scrim is its sibling. */
-.app-bg.is-loaded ~ .app-scrim::before { display: none; }
+/* When the player supplies a background image (it carries its own framing/art), keep a QUIET
+   rounded edge — not a full hide — so the table always reads as a rounded surface while never
+   fighting the art's own framing. */
+.app-bg.is-loaded ~ .app-scrim::before {
+  box-shadow:
+    0 0 0 1px rgba(243, 239, 229, 0.05),
+    0 20px 52px rgba(0, 0, 0, 0.36);
+}
 
 .board__layer {
   position: absolute;
