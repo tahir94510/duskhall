@@ -70,6 +70,9 @@ export class Tooltip {
     if (cardEl.classList.contains("is-concealed")) return null;
     // Never show while a card is in hand (being dragged/held).
     if (cardEl.classList.contains("is-held")) return null;
+    // Never show mid-animation: the render loop skips toggling is-concealed while a card animates,
+    // so a rival's card can briefly read face-up-but-not-concealed during its flip — gate it out.
+    if (cardEl.classList.contains("is-animating")) return null;
     const defId = cardEl.dataset.def;
     if (!defId) return null;
     return { defId, cardEl };
@@ -169,6 +172,7 @@ export class Tooltip {
     // concealed or was picked up during the hover delay.
     if (!data.cardEl.classList.contains("is-faceup")) return;
     if (data.cardEl.classList.contains("is-concealed") || data.cardEl.classList.contains("is-held")) return;
+    if (data.cardEl.classList.contains("is-animating")) return;
     if (!this.renderDef(data.defId)) return;
     this.active = data;
     this.position();

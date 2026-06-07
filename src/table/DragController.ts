@@ -85,6 +85,9 @@ interface DragSession {
 
 export class DragController {
   private session: DragSession | null = null;
+  // Pending snap-back outline timers, keyed by card id, so a re-grab within the 260ms window
+  // clears the stale timer instead of letting it strip the class off the new gesture's state.
+  private snapTimers = new Map<string, number>();
 
   constructor(
     private readonly host: HTMLElement,
@@ -103,6 +106,11 @@ export class DragController {
     window.addEventListener("pointermove", this.onPointerMove, { passive: false });
     window.addEventListener("pointerup", this.onPointerUp, { passive: false });
     window.addEventListener("pointercancel", this.onPointerUp, { passive: false });
+    // Backstop: a captured pointer that is lost for ANY reason (released outside the window, the
+    // element removed, an OS gesture stealing it) fires lostpointercapture. Routing it through
+    // onPointerUp guarantees the drag session always tears down, so a missed pointerup can never
+    // leave the whole table stuck (no card grabbable) with a card frozen in the held band.
+    window.addEventListener("lostpointercapture", this.onPointerUp, { passive: false });
     this.host.addEventListener("contextmenu", this.onContextMenu);
     this.host.addEventListener("dragstart", this.onDragStart);
   }
@@ -160,7 +168,11 @@ export class DragController {
     // could land after "place" and sound inverted).
     this.hooks.playSfx("pickup");
 
-    const ids = e.ctrlKey || e.metaKey ? this.hooks.pickStackUnder(e.clientX, e.clientY) : [id];
+    // Ctrl/Cmd grabs the whole overlapping stack — but only the cards we may actually move. A
+    // rival-owned or peer-held card piled under the seed must be left behind (the seed already
+    // passed these guards above); otherwise a Ctrl-drag would tug cards it has no business moving.
+    const picked = e.ctrlKey || e.metaKey ? this.hooks.pickStackUnder(e.clientX, e.clientY) : [id];
+    const ids = picked.filter((cid) => !this.hooks.isRivalOwned(cid) && !this.hooks.isLocked(cid));
     if (ids.length === 0) return;
 
     const seed = this.state.cards.get(ids[0]!);
@@ -207,6 +219,10 @@ export class DragController {
         els.set(c.id, el);
         el.style.zIndex = String(HELD_Z_BASE + (c.z - minZ));
         el.classList.add("is-held");
+        // Re-grabbing a card clears any in-flight snap-back outline + its timer.
+        const st = this.snapTimers.get(c.id);
+        if (st !== undefined) { window.clearTimeout(st); this.snapTimers.delete(c.id); }
+        el.classList.remove("is-snapback");
       }
     }
     // Only the TOP card of a lifted pile carries the big drop shadow; the cards
@@ -234,6 +250,9 @@ export class DragController {
     // Claim the ephemeral lock for everything we just grabbed so peers can't
     // tug the same cards; released on pointer up / cancel.
     this.hooks.beginHold(ids);
+    // Capture the pointer so move/up keep firing even when the cursor leaves the window — the card
+    // then keeps sliding along a clamped edge instead of freezing, and the up is never missed.
+    try { cardEl.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
     // pickup sound fires only once drag actually starts (see onPointerMove)
   };
 
@@ -375,8 +394,13 @@ export class DragController {
       // dropped card still sits in the held band.
       el.style.zIndex = String(c.z);
       if (didSnapBack) {
+        const prev = this.snapTimers.get(id);
+        if (prev !== undefined) window.clearTimeout(prev);
         el.classList.add("is-snapback");
-        window.setTimeout(() => el.classList.remove("is-snapback"), 260);
+        this.snapTimers.set(id, window.setTimeout(() => {
+          el.classList.remove("is-snapback");
+          this.snapTimers.delete(id);
+        }, 260));
       }
     }
 
@@ -401,6 +425,9 @@ export class DragController {
     window.removeEventListener("pointermove", this.onPointerMove);
     window.removeEventListener("pointerup", this.onPointerUp);
     window.removeEventListener("pointercancel", this.onPointerUp);
+    window.removeEventListener("lostpointercapture", this.onPointerUp);
+    for (const t of this.snapTimers.values()) window.clearTimeout(t);
+    this.snapTimers.clear();
     this.host.removeEventListener("contextmenu", this.onContextMenu);
     this.host.removeEventListener("dragstart", this.onDragStart);
   }

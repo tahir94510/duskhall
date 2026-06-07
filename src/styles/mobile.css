@@ -71,7 +71,10 @@
     /* Cards scale with the square field, so the dock fits the centre row at any
        aspect ratio and never spills into the strips. --field is .table-scoped, so
        redefine --card-h here too (the :root calc can't see --field). */
-    --card-w: clamp(44px, calc(var(--field) * 0.14), 120px);
+    /* Same 0.125 fraction as desktop (board.css) and the canonical privacy/zone size
+       (CARD_CANON_W in SlotGrid.ts), so the VISIBLE card matches the privacy/boundary math
+       on every device. Only the px floor differs for small phones. */
+    --card-w: clamp(44px, calc(var(--field) * 0.125), 120px);
     --card-h: calc(var(--card-w) * 1.45);
   }
   .header__menu { min-width: 200px; max-width: calc(100vw - 28px); }
@@ -111,7 +114,7 @@
     --grid-cols: minmax(54px, 28%) 1fr minmax(54px, 28%);
     --grid-rows: minmax(54px, 28%) 1fr minmax(54px, 28%);
     --grid-gap: 6px;
-    --card-w: clamp(42px, calc(var(--field) * 0.145), 100px);
+    --card-w: clamp(42px, calc(var(--field) * 0.125), 100px);
     --card-h: calc(var(--card-w) * 1.45);
     padding: max(env(safe-area-inset-top), 8px) 8px max(env(safe-area-inset-bottom), 8px) 8px;
   }
@@ -156,7 +159,7 @@
   /* Keep the dock slots from crowding on the tiniest phones — still field-tied
      and .table-scoped so it matches the larger-mobile rule (and --card-h follows). */
   .table {
-    --card-w: clamp(34px, calc(var(--field) * 0.14), 82px);
+    --card-w: clamp(34px, calc(var(--field) * 0.125), 82px);
     --card-h: calc(var(--card-w) * 1.45);
   }
 }
