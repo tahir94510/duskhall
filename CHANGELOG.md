@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.9.18: Spatial sound, corner privacy & clean host exit
+
+A multiplayer-feel pass: interaction sounds are now consistently spatial, the hidden-zone
+boundary is stable at the corners, and leaving a room reads correctly for everyone at once.
+The card sync, canonical frame and balance numbers are unchanged. 219 tests green.
+
+- **Every table action sounds, consistently.** Public (shared-table) pickups, drops, gathers,
+  shuffles and flips now play their sound on every player's screen, while anything you do inside
+  your OWN hidden area is heard only by you and stays silent for everyone else. You also hear
+  your own shuffle in your hand now (it used to be muted for you). One rule for all interactions:
+  your private actions are yours; the table is shared.
+- **No more corner flicker / early reveal.** A card near the diagonal where two hidden areas meet
+  no longer flashes between concealed and revealed, and no longer reveals "diagonally" while it is
+  still well inside a corner. A finer footprint sample plus a deterministic corner dead-band (a
+  near-tied straddle is pinned to one owner, identically on every client) make the conceal/reveal
+  boundary a single clean crossing. A card crossing toward a neighbour's area always renders above
+  it and can never be dropped inside it.
+- **Leaving is instant for everyone.** When a player (host included) deliberately leaves or hops
+  rooms, the departure now reaches the other players reliably — the "left" message is flushed
+  before the socket closes — so they see the seat free up at once instead of the leaver lingering
+  as "away". When the host leaves, the new host immediately re-broadcasts the authoritative board
+  and roster, so nobody is briefly shown "away" during the handover. A genuine drop (closed tab /
+  lost network) still correctly reads as a reconnectable "away" seat.
+
 ## 0.9.17: Privacy, presence, connection & polish
 
 A correctness, security and polish pass. The card sync, canonical frame and balance numbers

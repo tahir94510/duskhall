@@ -47,6 +47,10 @@ export interface DragHooks {
   hideContextBar(): void;
   emitCursor(x: number, y: number): void;
   playSfx(name: string): void;
+  /** Like playSfx, but for a PUBLIC card interaction (pickup / place): plays locally
+   *  for the actor AND broadcasts the sound to peers when the seed card is on the
+   *  shared table (a hidden-zone action stays silent for everyone else). */
+  emitSfx(name: string, seedId: string): void;
 }
 
 const DRAG_THRESHOLD = 4;
@@ -160,7 +164,7 @@ export class DragController {
     // Grab sound fires NOW, on press, so it always precedes the place/snap sound
     // even on a very fast tap-release (it used to fire on the first move, which
     // could land after "place" and sound inverted).
-    this.hooks.playSfx("pickup");
+    this.hooks.emitSfx("pickup", id);
 
     // Ctrl/Cmd grabs the whole overlapping stack — but only the cards we may actually move. A
     // rival-owned or peer-held card piled under the seed must be left behind (the seed already
@@ -399,7 +403,7 @@ export class DragController {
     // the crisp "place" tap. Sound variety so dropping a deck feels different from
     // dropping one card.
     if (didSnapBack) this.hooks.playSfx("snap");
-    else if (didPlace) this.hooks.playSfx(s.ids.length > 1 ? "place-stack" : "place");
+    else if (didPlace) this.hooks.emitSfx(s.ids.length > 1 ? "place-stack" : "place", s.ids[0]!);
     // Re-arm the hover tooltip at the drop point so a face-up card shows its info
     // immediately, without the pointer having to leave and re-enter.
     this.hooks.onReleased(e.clientX, e.clientY, e.pointerType);
