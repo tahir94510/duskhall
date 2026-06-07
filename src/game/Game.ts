@@ -2680,6 +2680,9 @@ export class Game {
     // later is a fine trade for never showing a false "everyone is away".
     this.manageAwayTimers();
     this.refreshZones();
+    // The seat set changed, so the guide's first-player picker must update at once (the
+    // leaver/kicked player drops out of the list immediately, not on the next presence sync).
+    this.refreshGuide();
     if (released) this.scheduleFlush();
     this.requestRender();
   }
@@ -2724,7 +2727,7 @@ export class Game {
         changed = true;
       }
     }
-    if (changed) { this.manageAwayTimers(); this.refreshZones(); }
+    if (changed) { this.manageAwayTimers(); this.refreshZones(); this.refreshGuide(); }
   }
 
   private bindRealtimeEvents(): void {
@@ -2797,10 +2800,12 @@ export class Game {
   private respondToHello(askerId: string): void {
     if (this.spectator) return;
     // The HOST re-broadcasts the authoritative guide state immediately on any sync request,
-    // so a joiner sees a running walkthrough at once instead of waiting up to the ~2s
-    // reconcile. Guide state is host-authoritative, so this is gated on isHost (independent
-    // of the snapshot responder, which is the lowest-seat player to dedupe board snapshots).
-    if (this.isHost() && (this.guide.open || this.guide.started)) this.broadcastGuideState();
+    // so a joiner converges to the EXACT current state (open/closed, step, first player) at
+    // once instead of waiting up to the ~2s reconcile. Sent BEFORE the snapshot below, and the
+    // snapshot is what lifts the joiner's loader, so the guide settles behind the veil with no
+    // visible jump. Sent unconditionally (even a closed guide) so a joiner whose cached guide
+    // the host has since CLOSED still converges (the periodic reconcile skips a closed guide).
+    if (this.isHost()) this.broadcastGuideState();
     const otherSeats = Array.from(this.players.values())
       .filter((p) => p.id !== askerId && p.seat >= 0)
       .map((p) => p.seat);
