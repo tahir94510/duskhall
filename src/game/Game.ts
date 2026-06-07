@@ -736,7 +736,7 @@ export class Game {
         if (this.modal.isOpen()) {
           if (!this.cursorHiddenSent) {
             this.cursorHiddenSent = true;
-            this.bus.sendCursor({ id: this.self.id, x: CURSOR_OFFBOARD, y: CURSOR_OFFBOARD, seat: this.self.seat });
+            this.bus.sendCursor({ id: this.self.id, x: CURSOR_OFFBOARD, y: CURSOR_OFFBOARD, seat: this.claimSeat });
           }
           return;
         }
@@ -746,7 +746,7 @@ export class Game {
         if (this.pointInZone(this.self.seat, x, y)) {
           if (!this.cursorHiddenSent) {
             this.cursorHiddenSent = true;
-            this.bus.sendCursor({ id: this.self.id, x: CURSOR_OFFBOARD, y: CURSOR_OFFBOARD, seat: this.self.seat });
+            this.bus.sendCursor({ id: this.self.id, x: CURSOR_OFFBOARD, y: CURSOR_OFFBOARD, seat: this.claimSeat });
           }
           return;
         }
@@ -754,7 +754,7 @@ export class Game {
         // Broadcast canonical (perspective-independent) coords so peers can
         // re-project the cursor into their own rotated view.
         const { nx, ny } = this.screenToCanonical(x, y);
-        this.bus.sendCursor({ id: this.self.id, x: nx, y: ny, seat: this.self.seat });
+        this.bus.sendCursor({ id: this.self.id, x: nx, y: ny, seat: this.claimSeat });
       },
       playSfx: (name) => { void this.audio.play(name as SfxName); }
     };
@@ -1876,6 +1876,9 @@ export class Game {
     const c = this.state.cards.get(id);
     if (!c) return;
     if (this.isRivalOwnedCard(id) || this.isLockedByOther(id)) return;
+    // Reject a repeat flip while this card is still mid-turn, like every other stack action — a
+    // fast double scroll/tap otherwise double-toggled the face and double-bumped z, desyncing peers.
+    if (this.anyAnimating([id])) return;
     c.faceUp = !c.faceUp;
     // Interacting with a card in our own zone claims it (same as a drag-in).
     this.claimIfInOwnZone(id);
@@ -2355,7 +2358,10 @@ export class Game {
       rot: c.rot,
       faceUp: c.faceUp,
       ownerSeat: c.ownerSeat,
-      ts: c.ts
+      ts: c.ts,
+      // Carry each card's TRUE last writer so a host reconcile (re-sends every card) keeps the
+      // real author for the LWW tiebreak, instead of overwriting it with the host's id.
+      by: c.by
     };
   }
 
@@ -2582,7 +2588,11 @@ export class Game {
       // reconnecting peer never leaves a stale duplicate (e.g. two "P2").
       // (presentIds was computed above for seat reservation.)
       for (const [id, el] of this.cursorEls) {
-        if (!presentIds.has(id)) {
+        // Remove a ghost when the peer is gone OR has become a spectator (seat < 0): a spectator
+        // stops sending cursor frames, so without this their last ghost would freeze on the board
+        // forever (it is still "present", just seatless).
+        const seatNow = this.players.get(id)?.seat ?? -1;
+        if (!presentIds.has(id) || seatNow < 0) {
           el.remove();
           this.cursorEls.delete(id);
         }
@@ -3117,11 +3127,14 @@ export class Game {
       if (!c) continue;
       // Never let a remote/stale packet disturb a card we are actively holding.
       if (this.myHeldIds.includes(upd.id)) continue;
+      // The card's true author: per-card `by` when present, else the patch-level writer
+      // (back-compat with peers that don't send per-card `by`).
+      const by = upd.by ?? writer;
       if (!isSnapshot) {
         // Skew-proof LWW (shared, unit-tested rule): newer ts wins; equal ts broken
         // by writer id. Advancing our clock past everything we see lets our next
         // edit win in turn.
-        if (!isNewerWrite(upd.ts, writer, c.ts, c.by)) continue;
+        if (!isNewerWrite(upd.ts, by, c.ts, c.by)) continue;
       }
       c.x = upd.x;
       c.y = upd.y;
@@ -3130,7 +3143,7 @@ export class Game {
       c.faceUp = upd.faceUp;
       c.ownerSeat = upd.ownerSeat;
       c.ts = upd.ts;
-      c.by = writer;
+      c.by = by;
       if (upd.ts > this.clock) this.clock = upd.ts;
       if (c.z > this.state.topZ) this.state.topZ = c.z;
     }

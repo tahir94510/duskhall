@@ -316,8 +316,10 @@
 }
 .cursor-ghost__label {
   position: absolute;
-  top: 14px;
-  left: 12px;
+  /* Sit snug to the 12px dot (centred on the origin): just past its lower-right edge, so the
+     name reads as attached to the cursor rather than floating away from it. */
+  top: 9px;
+  left: 7px;
   background: rgba(0, 0, 0, 0.8);
   border: 1px solid var(--cursor-color, var(--ivory));
   color: var(--cursor-color, var(--ivory));

@@ -68,46 +68,59 @@ export function clampSeedToPage(
 /** A canonical seed position (the dragged group's reference point). */
 export interface SeedPos { nx: number; ny: number; }
 
-// Is a single card's footprint OUTSIDE the seat's own trapezoid, i.e. has it crossed one of
-// the three solid walls (the outer board edge or either diagonal leg)? The card is taken as an
-// axis-aligned box in the seat's (depth, lateral) frame (true since the board is square), so its
-// nearest corner must clear each wall by the half-extents. The DOOR (depth past ZONE_DEPTH,
-// toward the centre) is never a wall, so a card heading into the public centre is always free.
-function cardOutsideOwnZone(
-  cx: number, cy: number, rot: number, seat: Seat, cardWFrac: number, cardHFrac: number
-): boolean {
-  const { d, u } = seatDepthLateral(seat, cx, cy);
-  // Canonical footprint swaps on an odd card quarter-turn, exactly like cardZoneOverlap.
-  const quarter = ((Math.round(rot) % 2) + 2) % 2;
-  const wx = quarter === 1 ? cardHFrac : cardWFrac; // extent along canonical X
-  const wy = quarter === 1 ? cardWFrac : cardHFrac; // extent along canonical Y
-  const depthIsY = seatDepthIsY(seat);
-  const hd = (depthIsY ? wy : wx) / 2; // half-extent along the depth axis
-  const hu = (depthIsY ? wx : wy) / 2; // half-extent along the lateral axis
-  // Outer wall: the card's near edge cannot pass the board edge (d = 0).
-  if (d < hd) return true;
-  // Diagonal legs exist only within the band [0, ZONE_DEPTH]; past the door it is open.
-  if (d <= ZONE_DEPTH) {
-    const inset = hu + hd; // nearest box corner to a 45° leg
-    if (u - d < inset) return true;       // left leg (u = d)
-    if (1 - d - u < inset) return true;   // right leg (u = 1 - d)
+// A dragged card reduced to the seat's (depth, lateral) frame: its offset from the seed and the
+// half-extents that set how far its BODY must clear each wall. Built once per drag-move.
+interface ZoneCard { od: number; ou: number; hd: number; inset: number; }
+
+// Map a canonical offset (dx, dy) from the seed into the seat's (depth, lateral) axes. Mirrors
+// seatDepthLateral's per-seat axis/sign choice (SlotGrid.ts) so card and seed share one frame.
+function offsetToDepthLateral(seat: Seat, dx: number, dy: number): { od: number; ou: number } {
+  switch (seat) {
+    case 0: return { od: -dy, ou: dx };
+    case 1: return { od: dy, ou: dx };
+    case 2: return { od: dx, ou: dy };
+    case 3: return { od: -dx, ou: dy };
   }
-  return false;
+}
+
+// Inverse of seatDepthLateral for the SEED point: (depth, lateral) -> canonical (nx, ny).
+function depthLateralToSeed(seat: Seat, d: number, u: number): { nx: number; ny: number } {
+  switch (seat) {
+    case 0: return { nx: u, ny: 1 - d };
+    case 1: return { nx: u, ny: d };
+    case 2: return { nx: d, ny: u };
+    case 3: return { nx: 1 - d, ny: u };
+  }
+}
+
+function zoneCardsOf(cards: ClampCard[], seat: Seat, cardWFrac: number, cardHFrac: number): ZoneCard[] {
+  const depthIsY = seatDepthIsY(seat);
+  return cards.map((c) => {
+    const { od, ou } = offsetToDepthLateral(seat, c.dx, c.dy);
+    const quarter = ((Math.round(c.rot) % 2) + 2) % 2; // an odd turn swaps the footprint
+    const wx = quarter === 1 ? cardHFrac : cardWFrac;
+    const wy = quarter === 1 ? cardWFrac : cardHFrac;
+    const hd = (depthIsY ? wy : wx) / 2; // half-extent along the depth axis
+    const hu = (depthIsY ? wx : wy) / 2; // half-extent along the lateral axis
+    return { od, ou, hd, inset: hd + hu };
+  });
 }
 
 /**
- * Confine the dragged group to the local player's OWN private zone as a one-way pocket: the
- * three solid walls (outer board edge + the two diagonal legs) may be crossed INWARD from
- * anywhere, but never OUTWARD — the only way out is the front door (the inner edge toward the
- * table centre). Pure, canonical, footprint-based (the card BODY stops at the frame), and applied
- * to the whole group as a rigid block (the tightest card binds, like clampSeedToPage).
+ * Confine the dragged group to the local player's OWN private zone as a one-way pocket whose only
+ * opening is the FRONT DOOR (the inner edge toward the table centre). It must feel FRICTIONLESS:
+ * a card that hits the outer edge or a diagonal leg keeps moving — it SLIDES along the wall/corner
+ * (never locks), and the only way out is the door (so a card can never teleport out a side).
  *
- * Implementation: a group position is "outside" if ANY card's footprint has crossed a wall. If
- * the new seed is inside (or heading into the centre) it passes unchanged, so a card can be
- * pushed in from any side. If it would cross a wall outward (prev inside, next outside) we
- * binary-search the furthest still-inside point on the prev→next segment and stop there. If the
- * group is already outside it is never trapped (it can keep leaving / re-enter freely). For a
- * spectator (no seat) it is a no-op.
+ * How: the pocket is the convex trapezoid (outer edge, door "ceiling" at ZONE_DEPTH, two 45° legs).
+ *  - The constraint only applies once the whole group is FULLY inside (`inPocket(prev)`); while a
+ *    card is entering, in the centre, over a rival, or in the page margin it moves completely freely
+ *    ("not counted inside until fully in").
+ *  - If the destination leaves cleanly through the door (`exitsThroughDoor`) it passes unchanged.
+ *  - Otherwise the destination is PROJECTED onto the trapezoid (closest feasible point), which keeps
+ *    the tangential component → the card slides along the wall instead of freezing, and the door
+ *    ceiling keeps a non-door move inside, so a diagonal exit is impossible.
+ * Pure, canonical, footprint-based, group-aware (every card's body is kept inside). Spectator: no-op.
  */
 export function clampSeedToOwnZone(
   prev: SeedPos,
@@ -118,39 +131,54 @@ export function clampSeedToOwnZone(
   cardHFrac: number
 ): { nx: number; ny: number } {
   if (seat < 0) return { nx: next.nx, ny: next.ny };
-  const arr = Array.from(cards);
-  const forbidden = (sx: number, sy: number): boolean => {
-    for (const c of arr) {
-      if (cardOutsideOwnZone(sx + c.dx, sy + c.dy, c.rot, seat, cardWFrac, cardHFrac)) return true;
-    }
-    return false;
-  };
-  // Is the WHOLE group resting INSIDE the pocket right now — in the band (every card on the pocket
-  // side of the door) and past none of the walls? ONLY then do the pocket walls apply. A card in
-  // the open centre, over a rival's area, out in the page margin, or entering from outside is
-  // completely unconstrained. (The earlier version keyed off "not forbidden", which treats the open
-  // centre as inside — so a card entering from the front-sides or dragged across a rival's zone got
-  // snagged on the diagonal wall and froze. That was the reported regression.)
-  const inPocket = (sx: number, sy: number): boolean => {
-    for (const c of arr) {
-      const { d } = seatDepthLateral(seat, sx + c.dx, sy + c.dy);
-      if (d > ZONE_DEPTH) return false; // past the door, into the public centre
-      if (cardOutsideOwnZone(sx + c.dx, sy + c.dy, c.rot, seat, cardWFrac, cardHFrac)) return false;
+  const zc = zoneCardsOf(Array.from(cards), seat, cardWFrac, cardHFrac);
+
+  // Whole group resting FULLY inside the pocket: every card in the band [hd, ZONE_DEPTH] and within
+  // both diagonal legs. Only then do the walls apply.
+  const inPocket = (d: number, u: number): boolean => {
+    for (const c of zc) {
+      const cd = d + c.od;
+      if (cd < c.hd || cd > ZONE_DEPTH) return false;
+      const cu = u + c.ou;
+      if (cu - cd < c.inset) return false;
+      if (cu + cd > 1 - c.inset) return false;
     }
     return true;
   };
-  // Not in our pocket -> never constrained: move (and enter from any side) freely.
-  if (!inPocket(prev.nx, prev.ny)) return { nx: next.nx, ny: next.ny };
-  // In the pocket: free to stay inside or leave through the front door (the centre); only blocked
-  // from crossing the outer board edge or a diagonal leg outward.
-  if (!forbidden(next.nx, next.ny)) return { nx: next.nx, ny: next.ny };
-  // Crossing a wall outward: stop at the furthest point that keeps every card inside.
-  let lo = 0, hi = 1;
-  for (let i = 0; i < 22; i++) {
-    const mid = (lo + hi) / 2;
-    const mx = prev.nx + (next.nx - prev.nx) * mid;
-    const my = prev.ny + (next.ny - prev.ny) * mid;
-    if (forbidden(mx, my)) hi = mid; else lo = mid;
-  }
-  return { nx: prev.nx + (next.nx - prev.nx) * lo, ny: prev.ny + (next.ny - prev.ny) * lo };
+  // Leaving through the FRONT DOOR: every card past the inner edge AND within the door's lateral
+  // opening (the funnel width at the door). The ONLY exit — a destination aimed past a side/outer
+  // wall fails this and is clamped (slid) instead, so a card can never slip/teleport out a diagonal.
+  const exitsThroughDoor = (d: number, u: number): boolean => {
+    for (const c of zc) {
+      if (d + c.od <= ZONE_DEPTH) return false;
+      const cu = u + c.ou;
+      if (cu < ZONE_DEPTH + c.inset || cu > 1 - ZONE_DEPTH - c.inset) return false;
+    }
+    return true;
+  };
+  // Project a point onto the convex pocket (outer edge, door ceiling, two legs) by cycling the
+  // half-plane projections. The closest feasible point preserves tangential motion, so the card
+  // SLIDES along a wall/corner rather than locking.
+  const project = (d0: number, u0: number): { d: number; u: number } => {
+    let d = d0, u = u0;
+    for (let i = 0; i < 8; i++) {
+      for (const c of zc) {
+        let cd = d + c.od;
+        if (cd < c.hd) { d = c.hd - c.od; cd = c.hd; }                   // outer board edge
+        if (cd > ZONE_DEPTH) { d = ZONE_DEPTH - c.od; cd = ZONE_DEPTH; } // door ceiling
+        const a = (u + c.ou) - cd;                                       // left leg: u - d >= inset
+        if (a < c.inset) { const t = (c.inset - a) / 2; d -= t; u += t; }
+        const b = (u + c.ou) + (d + c.od);                              // right leg: u + d <= 1 - inset
+        if (b > 1 - c.inset) { const t = (b - (1 - c.inset)) / 2; d -= t; u -= t; }
+      }
+    }
+    return { d, u };
+  };
+
+  const p = seatDepthLateral(seat, prev.nx, prev.ny);
+  if (!inPocket(p.d, p.u)) return { nx: next.nx, ny: next.ny };       // outside / entering -> free
+  const n = seatDepthLateral(seat, next.nx, next.ny);
+  if (exitsThroughDoor(n.d, n.u)) return { nx: next.nx, ny: next.ny }; // leaving via the door -> free
+  const { d, u } = project(n.d, n.u);
+  return depthLateralToSeed(seat, d, u);
 }

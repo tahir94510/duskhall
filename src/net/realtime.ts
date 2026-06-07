@@ -38,6 +38,12 @@ export interface PatchCard {
   ownerSeat: number | null;
   /** Last-write-wins stamp (wall-clock ms), receivers reject stale updates. */
   ts: number;
+  /** The id of the client that last wrote THIS card — the LWW tiebreak on an equal `ts`. Carried
+   *  per card so a host reconcile (which re-sends every card) preserves each card's true author
+   *  instead of stamping them all with the host's id, which corrupted the tiebreak and could make
+   *  two devices silently diverge. Optional for back-compat: a packet without it falls back to the
+   *  patch-level writer (CardPatch.by). */
+  by?: string;
 }
 
 /** A persistent seat ownership: which stable client id holds a seat. Taught to

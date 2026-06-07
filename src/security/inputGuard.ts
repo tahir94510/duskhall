@@ -68,7 +68,10 @@ export function withinByteCap(payload: unknown): boolean {
     // bytes). Fast path: if even the unit count is over, it is certainly over. Else
     // measure true bytes so a payload of multibyte names/emoji can't slip past the cap.
     if (s.length > MAX_BYTES) return false;
-    const bytes = byteCounter ? byteCounter.encode(s).length : s.length;
+    // True UTF-8 byte length when TextEncoder exists. In the rare fallback (no TextEncoder),
+    // assume the worst case of 4 bytes per UTF-16 code unit so a multibyte payload can never
+    // slip past the cap and get silently dropped on the wire.
+    const bytes = byteCounter ? byteCounter.encode(s).length : s.length * 4;
     return bytes <= MAX_BYTES;
   } catch {
     return false;

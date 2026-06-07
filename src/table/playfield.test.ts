@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { clampSeedToPage, clampSeedToOwnZone, type ClampCard, type PageBounds } from "./playfield.js";
-import { seatDepthLateral } from "./SlotGrid.js";
+import { seatDepthLateral, ZONE_DEPTH } from "./SlotGrid.js";
 import type { BoardBox, Seat } from "./rotation.js";
 
 // An 800x800 board centred at (500, 400) in a 1000x800 viewport. For seat 0 (no rotation):
@@ -74,63 +74,69 @@ describe("clampSeedToPage", () => {
   });
 });
 
-describe("clampSeedToOwnZone (one-way private pocket)", () => {
+describe("clampSeedToOwnZone (sliding one-way pocket)", () => {
   // Canonical card footprint fractions (board is square). For seat 0/1 the depth axis is Y, so
   // hd = cardHFrac/2 = 0.09 and hu = cardWFrac/2 = 0.0625; inset (diagonal leg) = hd + hu = 0.1525.
   const cw = 0.125;
   const ch = 0.18;
+  const hd = ch / 2; // 0.09
   const inset = ch / 2 + cw / 2; // 0.1525
   const one = (rot = 0): ClampCard[] => [{ dx: 0, dy: 0, rot }];
+  const eps = 0.012;
 
-  it("stops a card at the diagonal leg when shoved sideways inside the zone (seat 0)", () => {
-    // prev inside: d=0.2 (ny=0.8), u=0.5 (nx=0.5). Drag hard left toward the left leg (u=d).
+  it("SLIDES along the left leg without crossing it or locking (seat 0)", () => {
+    // prev inside (d=0.2, u=0.5). Drag hard left/down into the left leg.
     const r = clampSeedToOwnZone({ nx: 0.5, ny: 0.8 }, { nx: 0.1, ny: 0.8 }, one(), 0, cw, ch);
-    // Stops where u - d = inset, i.e. nx = d + inset = 0.2 + 0.1525.
-    expect(r.nx).toBeCloseTo(0.2 + inset, 4);
-    expect(r.ny).toBeCloseTo(0.8, 6);
+    const { d, u } = seatDepthLateral(0, r.nx, r.ny);
+    expect(u - d).toBeGreaterThanOrEqual(inset - eps); // never crossed the wall
+    expect(d).toBeGreaterThanOrEqual(hd - eps);          // never crossed the outer edge
+    expect(d).toBeLessThanOrEqual(ZONE_DEPTH + eps);     // still in the pocket
+    expect(r.nx).toBeLessThan(0.5 - 0.02);               // it MOVED (did not lock at prev)
   });
 
-  it("stops a card at the outer board edge when shoved out the bottom (seat 0)", () => {
-    // prev inside: d=0.2 (ny=0.8). Drag down toward the outer edge (ny->1, d->0).
+  it("stops at the outer board edge but keeps sliding laterally (seat 0)", () => {
     const r = clampSeedToOwnZone({ nx: 0.5, ny: 0.8 }, { nx: 0.5, ny: 0.99 }, one(), 0, cw, ch);
-    // Stops where d = hd = 0.09, i.e. ny = 1 - 0.09 = 0.91.
-    expect(r.ny).toBeCloseTo(1 - ch / 2, 4);
-    expect(r.nx).toBeCloseTo(0.5, 6);
+    const { d } = seatDepthLateral(0, r.nx, r.ny);
+    expect(d).toBeCloseTo(hd, 2); // pinned at the card's near edge
+    expect(r.nx).toBeCloseTo(0.5, 2);
   });
 
-  it("lets a card leave freely through the front door (toward the centre)", () => {
-    // prev inside (d=0.2); drag up past the door (d=0.5 > ZONE_DEPTH) — no wall there.
+  it("leaves freely through the front door (centred, within the opening)", () => {
     const r = clampSeedToOwnZone({ nx: 0.5, ny: 0.8 }, { nx: 0.5, ny: 0.5 }, one(), 0, cw, ch);
     expect(r.nx).toBeCloseTo(0.5, 9);
     expect(r.ny).toBeCloseTo(0.5, 9);
   });
 
+  it("does NOT teleport out a diagonal past the door (must funnel to the door)", () => {
+    // next is past the door (d>ZONE_DEPTH) but laterally outside the opening -> must be clamped
+    // back into the pocket, never returned as-is.
+    const r = clampSeedToOwnZone({ nx: 0.5, ny: 0.8 }, { nx: 0.1, ny: 0.5 }, one(), 0, cw, ch);
+    const { d, u } = seatDepthLateral(0, r.nx, r.ny);
+    expect(d).toBeLessThanOrEqual(ZONE_DEPTH + eps);  // did not escape to the centre
+    expect(u - d).toBeGreaterThanOrEqual(inset - eps); // did not cross the left leg
+  });
+
   it("lets a card enter from the side (outside -> inside is never blocked)", () => {
-    // prev OUTSIDE the left leg (u<d), next well inside — entry passes through unchanged.
     const r = clampSeedToOwnZone({ nx: 0.1, ny: 0.8 }, { nx: 0.5, ny: 0.8 }, one(), 0, cw, ch);
     expect(r.nx).toBeCloseTo(0.5, 9);
     expect(r.ny).toBeCloseTo(0.8, 9);
   });
 
-  it("moves a multi-card group as a block — the tightest card binds the diagonal", () => {
-    // Seed plus a card 0.2 to its left; both start inside, dragged left until the LEFT card's
-    // footprint corner meets the left leg. That card must satisfy u - d >= inset.
+  it("group: the LEFT card's body never crosses the leg, and the group still moves", () => {
     const cards: ClampCard[] = [{ dx: 0, dy: 0, rot: 0 }, { dx: -0.2, dy: 0, rot: 0 }];
     const r = clampSeedToOwnZone({ nx: 0.6, ny: 0.8 }, { nx: 0.4, ny: 0.8 }, cards, 0, cw, ch);
-    // Left card nx >= 0.2 + inset -> seed nx >= 0.2 + inset + 0.2.
-    expect(r.nx).toBeCloseTo(0.2 + inset + 0.2, 4);
+    const left = seatDepthLateral(0, r.nx - 0.2, r.ny); // the trailing (left) card
+    expect(left.u - left.d).toBeGreaterThanOrEqual(inset - eps);
+    expect(r.nx).toBeLessThan(0.6 - 0.01); // moved
   });
 
   it("does NOT snag a card dragged through the open centre across a rival corner (regression)", () => {
-    // prev in the public centre (past the door, d=0.4); next over the bottom-left corner which is
-    // 'forbidden' for seat 0's pocket but is public/rival space the card is just passing across.
     const r = clampSeedToOwnZone({ nx: 0.3, ny: 0.6 }, { nx: 0.1, ny: 0.85 }, one(), 0, cw, ch);
     expect(r.nx).toBeCloseTo(0.1, 9);
     expect(r.ny).toBeCloseTo(0.85, 9);
   });
 
   it("lets a card enter from the front-side without freezing (regression)", () => {
-    // prev in the centre near the door (d=0.35), next pushed into the pocket near the left leg.
     const r = clampSeedToOwnZone({ nx: 0.3, ny: 0.65 }, { nx: 0.25, ny: 0.85 }, one(), 0, cw, ch);
     expect(r.nx).toBeCloseTo(0.25, 9);
     expect(r.ny).toBeCloseTo(0.85, 9);
@@ -144,13 +150,12 @@ describe("clampSeedToOwnZone (one-way private pocket)", () => {
 
   it("confines symmetrically for all four seats (outward push stops at the board edge)", () => {
     for (const seat of [0, 1, 2, 3] as Seat[]) {
-      // Build an inside point at depth 0.2, lateral 0.5, then push it toward the edge (depth->0).
       const inside = depthLateralToCanon(seat, 0.2, 0.5);
       const out = depthLateralToCanon(seat, 0.005, 0.5);
       const r = clampSeedToOwnZone(inside, out, one(), seat, cw, ch);
       const { d } = seatDepthLateral(seat, r.nx, r.ny);
-      const hd = seat === 0 || seat === 1 ? ch / 2 : cw / 2;
-      expect(d).toBeCloseTo(hd, 4); // stopped exactly at the card's near edge
+      const seatHd = seat === 0 || seat === 1 ? ch / 2 : cw / 2;
+      expect(d).toBeCloseTo(seatHd, 2);
     }
   });
 });

@@ -36,6 +36,14 @@ export function buildTable(host: HTMLElement): BoardRefs {
   host.appendChild(root);
 
   const zones: HTMLDivElement[] = [];
+  // The four hand trays live in their OWN grid layer (mirroring the table's tracks) so its 4
+  // outer corners can be rounded together (zones.css .zones clip-path) — giving the table four
+  // soft edges. Cards live in .board (a separate layer) and may overflow into the page margin,
+  // so they are NEVER clipped by this rounding.
+  const zoneLayer = document.createElement("div");
+  zoneLayer.className = "zones";
+  zoneLayer.dataset.role = "zones";
+  root.appendChild(zoneLayer);
   // Fixed physical order: [bottom, top, left, right]. Each div is bound to an
   // absolute seat per-viewer at runtime (see Game.refreshZones), so the local
   // player always reads their own area at the bottom.
@@ -50,7 +58,7 @@ export function buildTable(host: HTMLElement): BoardRefs {
     z.className = `${seats[i]!.cls} zone--empty`;
     // The name / status light / kick now live in the separate non-rotating label
     // layer (built below), so the zone div is just the frosted panel.
-    root.appendChild(z);
+    zoneLayer.appendChild(z);
     zones.push(z);
   }
 

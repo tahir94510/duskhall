@@ -10,6 +10,9 @@
   user-select: none;
   -webkit-user-drag: none;
   outline: none;
+  /* Concealment blur as a card-relative value, computed ONCE here instead of recalculating the
+     clamp every time .is-concealed toggles (e.g. as a card crosses a zone edge mid-drag). */
+  --card-blur: clamp(1.8px, calc(var(--card-w) * 0.024), 4.6px);
   z-index: var(--z-card);
   /* Smooth programmatic moves (gather settle, remote sync, flip). Held cards
      opt out below so dragging stays 1:1 with the pointer. */
@@ -43,7 +46,9 @@
   /* z-index is set inline to the elevated --z-anim band (see DragController) so
      a held card floats over zones/opponent cards yet stays below peer cursors. */
   z-index: var(--z-anim);
-  filter: brightness(1.03);
+  /* A grabbed card reads as LIFTED and bright — at least as bright as hover (1.05), never dimmer,
+     so picking a card up never looks like it dims. */
+  filter: brightness(1.06);
   transition: filter var(--dur) var(--ease);
 }
 /* Held cards keep the LIGHT resting shadow so a lifted deck doesn't stack dozens
@@ -251,7 +256,9 @@
    to its un-flipped pose makes the physical back face the camera; the front,
    rotated 180deg, is hidden by backface-visibility. The owner is never concealed
    from themselves, so they read their own card normally. */
-.card.is-concealed { cursor: default; }
+/* A rival's private card: it is silently un-grabbable, so the cursor says so (not the plain
+   arrow, which read as empty table). Never applies to your own cards — you never see them concealed. */
+.card.is-concealed { cursor: not-allowed; }
 /* Force the back to face the camera — but NOT while a flip is mid-animation, so a
    concealment toggle that lands during a turn can't yank the card back to 0deg and
    make it blink. A concealed card can only be flipped by its owner (who never sees
@@ -262,7 +269,7 @@
   /* Blur scales with the card so a rival's hidden card reads as equally concealed
      at every size — a fixed 2.2px barely softens a big TV card yet over-blurs a
      tiny phone card. Tied to --card-w (≈2.2px at a ~100px card) and clamped. */
-  filter: blur(clamp(1.8px, calc(var(--card-w) * 0.024), 4.6px)) saturate(0.85) brightness(0.96);
+  filter: blur(var(--card-blur)) saturate(0.85) brightness(0.96);
 }
 .card.is-concealed:not(.is-animating):not(.is-flip-quiet) .card__face--front { visibility: hidden; }
 
