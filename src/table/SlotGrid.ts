@@ -130,10 +130,13 @@ export const CARD_CANON_W = 0.125;
 export const CARD_CANON_H = 0.181;
 
 // When the top two trapezoids hold shares this close, the card is straddling their shared
-// diagonal and ownership is a near-tie. Pin it to the lower seat index across this band rather
-// than let the winner flip on sub-percent jitter (the corner conceal/reveal FLICKER). Sized to
-// span the jitter band around a 50/50 corner without misclaiming a card that clearly dominates.
-export const OWNER_TIE_MARGIN = 0.15;
+// diagonal and ownership is a near-tie. Pin it to the lower seat index across this narrow band
+// rather than let the winner flip on sub-percent sampling jitter (the corner conceal/reveal
+// FLICKER). Kept SMALL on purpose: it only needs to span the jitter right at the 50/50 line.
+// A wider band would pull a card that clearly sits in one seat's own corner (e.g. 55/45) over to
+// the lower-indexed neighbour — concealing/snapping-back a strip of that player's own area — so
+// the band is just a hair around the exact diagonal where ownership is genuinely ambiguous.
+export const OWNER_TIE_MARGIN = 0.06;
 
 // The seat that owns the card, or null if it is effectively public. Two refinements keep this
 // stable and corner-correct, while staying PURE and position-only (every client computes the
