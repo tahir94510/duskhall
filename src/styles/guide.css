@@ -126,6 +126,7 @@
   background: var(--ivory);
   color: var(--ink);
   cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 }
 .guide__primary:hover { background: #fff; border-color: #fff; }
 
