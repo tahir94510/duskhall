@@ -1,5 +1,50 @@
 # Changelog
 
+## 0.9.17: Privacy, presence, connection & polish
+
+A correctness, security and polish pass. The card sync, canonical frame and balance numbers
+are unchanged. 215 tests green.
+
+- **Hidden hands never leak (security).** A rival's face-up cards in their private area could
+  briefly show through the loading veil before the roster resolved. Now any owned card stays a
+  blurred back until the table knows the seating, so a private hand is never revealed — not even
+  for a frame during load.
+- **No more automatic kicks.** A player who drops keeps their seat reserved indefinitely; it is
+  freed only by leaving or a host kick. If the host drops, hosting passes to a present player at
+  once and returns to the original host when they come back (a host who *exits* hands off for good).
+- **Truthful connection status.** It no longer reads "connecting" while effectively offline, and a
+  short notice appears when live sync drops or returns.
+- **Guide fixes.** The first-player list always includes every seated player, even one who just
+  stepped away or rejoined; a joiner sees a running walkthrough immediately; the "you" tag reads
+  in parentheses.
+- **You hear the table now.** Other players' public flips and shuffles play their sound on your
+  screen too (hidden-hand moves stay silent and private).
+- **Visual & content polish.** A dragged card lines up cleanly with its lift shadow (no gap), and
+  a card moved within your own hand no longer spills a shadow across the tray; the guide's buttons
+  are frameless and centred; muted text is more readable; the name pool is larger; the music
+  reshuffles fresh each room; and a brief loader covers a language change.
+
+
+## 0.9.16: Drop the legacy "kabal" namespace
+
+Housekeeping: the project was renamed KABAL → Vaerum long ago, but the old `kabal`
+identifier lingered internally. This sweeps it out so the whole codebase speaks one name.
+No user-facing behaviour changes. 215 tests green.
+
+- **Storage, channels and DOM all use `vaerum` now.** Every `localStorage`/`sessionStorage`
+  key (`vaerum:lang`, `vaerum:vol:*`, `vaerum:ident:*`, `vaerum:snap:*`, …), the realtime
+  channel (`vaerum:<room>`), the same-device bus (`vaerum-local:<room>`), the Supabase auth
+  storage keys, and the splash element (`#vaerum-loader`) were renamed from `kabal*`.
+- **Old keys are purged on boot.** A one-time cleanup removes any leftover `kabal:*` entries
+  from a pre-rename visit so nothing lingers in browser storage.
+- **Licence and config use the canonical name.** `LICENSE` and the local-config example now
+  read "Vaerum: Heirs of the Ether"; the design doc's dock coordinates were corrected to the
+  current `DECK_NX = 0.40` / `DISCARD_NX = 0.60`.
+
+Note: because the storage keys and the realtime channel name changed, this update resets
+per-device preferences once (language, volume, name) and only syncs between clients once both
+are on this version — expected for a one-time rename.
+
 ## 0.9.15: Layering, loader and responsive correctness
 
 A correctness pass over the table's stacking order, the host-only UI, asset loading and the

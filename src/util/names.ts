@@ -18,16 +18,30 @@ const NAMES = [
   "Ravel", "Quench", "Sever", "Wane", "Wax", "Cleft", "Rift", "Spire",
   "Vault", "Warden", "Herald", "Cantor", "Augur", "Scribe", "Mason", "Marrow",
   "Lichen", "Bramble", "Cobweb", "Ashen", "Sallow", "Wither", "Gilt", "Sojourn",
+  // More ether / arcana / relic / nature, same calm monochrome tone
+  "Aegis", "Augury", "Beacon", "Censer", "Chalice", "Coil", "Covenant", "Crucible",
+  "Dirge", "Ebon", "Effigy", "Filament", "Flint", "Gossamer", "Grimoire", "Hallow",
+  "Harrow", "Henge", "Inkwell", "Kestrel", "Lattice", "Lodestar", "Loom", "Mantle",
+  "Mire", "Moor", "Myrrh", "Nadir", "Nebula", "Nettle", "Obol", "Oracle",
+  "Pendant", "Plume", "Quartz", "Quire", "Raven", "Rime", "Sanctum", "Scarab",
+  "Sconce", "Seraph", "Slate", "Sleet", "Solstice", "Spindle", "Talisman", "Tallow",
+  "Tarn", "Tessera", "Thistle", "Threnody", "Tincture", "Trinket", "Vigil", "Votive",
+  "Welkin", "Whetstone", "Willow", "Wyrm", "Zephyr", "Halcyon", "Marigold", "Nightjar",
   // Türkçe-temalı mistik kelimeler (mevcut tonla uyumlu)
   "Vârem", "Tılsım", "Rûn", "Eter", "Mühür", "Gölge", "Sır", "Yâd",
   "Tören", "Ayaz", "Köz", "Sis", "Düş", "Fal", "Naz", "Tan",
-  "Yek", "Zühre", "Çağ", "Mavera", "Hece", "Kül", "Mum", "Ulak"
+  "Yek", "Zühre", "Çağ", "Mavera", "Hece", "Kül", "Mum", "Ulak",
+  "Efsun", "Muska", "Yıldız", "Şafak", "Alaca", "Yakamoz", "Hülya", "Rüya",
+  "Efsane", "Masal", "Gizem", "Sırdaş", "Yâdigâr", "Tütsü", "Pusula", "Fanus",
+  "Kandil", "Ozan", "Kâhin", "Yelda", "Alev", "Duman", "Zümrüt", "Mehtap",
+  "Sema", "Tomar", "Fısıltı", "Çağrı", "Hayalet", "Nilüfer", "Gümüş", "Tunç",
+  "Mercan", "Yakut", "Lacivert", "Simya", "Pervane", "Şule", "Niyaz", "Bârika"
 ];
 
 // Build a de-duplicated, order-stable pool (some thematic words repeat above).
 const POOL: string[] = Array.from(new Set(NAMES));
 
-const LS_NAME = "kabal:player-name";
+const LS_NAME = "vaerum:player-name";
 
 export function pickName(): string {
   const idx = Math.floor(Math.random() * POOL.length);

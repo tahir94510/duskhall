@@ -83,8 +83,18 @@
   }
 }
 
-/* The lifted top card of a held pile floats highest: its cast shadow grows the most. */
-.card.is-held.is-held-lead::before { transform: scale(1.02) translateY(2px); }
+/* The lifted top card of a held pile floats highest via its heavy cast shadow alone. The
+   underlay stays EXACTLY aligned to the card (no scale/translate): the old scale(1.02)
+   translateY(2px) pushed the shadow box a hair above-and-below the card, leaving a faint
+   sliver above the card's top edge that read as a gap between the card and its 2.5D shadow.
+   Keeping the underlay at inset:0 lets --shadow-card-held cast cleanly downward with no
+   misalignment, so a dragged card and its shadow are pixel-aligned. */
+.card.is-held.is-held-lead::before { transform: none; }
+/* A card held/dragged WITHIN its owner's own private zone keeps a CONTAINED lift (the medium
+   raised shadow) instead of the big table halo, so moving a card inside your hand area never
+   spills a shadow smear across the frosted tray and out past the zone — the "in-motion" effect
+   stays on the card. On the public table the full lift still applies. */
+.card.is-held.is-held-lead.is-own-zone::before { box-shadow: var(--shadow-card-raised); }
 
 @media (prefers-reduced-motion: reduce) {
   .card::before,

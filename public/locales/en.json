@@ -43,6 +43,8 @@
     "connOnline": "Online",
     "connConnecting": "Connecting...",
     "connOffline": "Offline",
+    "connLost": "Connection lost — reconnecting…",
+    "connRestored": "Reconnected.",
     "guide": "Guide"
   },
   "diag": {
@@ -235,27 +237,35 @@
     "empty": "No updates yet.",
     "entries": [
       {
+        "v": "2026-06-07",
+        "date": "June 7, 2026",
+        "title": "Privacy, presence and a more alive table",
+        "items": [
+          "Your hand stays private: an opponent's cards are never shown, not even for a moment while the table is loading.",
+          "Players who drop are no longer kicked automatically — their seat is kept until they leave or the host removes them. If the host drops, hosting passes to someone present and returns to them when they come back.",
+          "Clearer connection status, with a brief note when live sync drops or comes back.",
+          "You now hear other players' flips and shuffles, not just see them — so the table feels alive. Moves inside a hidden hand stay private and silent.",
+          "Polish: a dragged card sits cleanly on its shadow, the first-player list always shows everyone seated, text is easier to read, there are more player names, and the music reshuffles fresh in each room."
+        ]
+      },
+      {
         "v": "2026-06-06.2",
         "date": "June 6, 2026",
-        "title": "Cleaner layering, loading and layout",
+        "title": "A smoother, clearer table",
         "items": [
-          "Player names and the green status light are always crisp above the frosted hand trays now, a card you drag past someone else's area stays on top of it instead of sliding underneath, and a rival's hand shows a single soft blur (the old double blur is gone). Your privacy is unchanged.",
-          "Controls that belong to the host (or that you don't have) no longer flash for a moment when you open the table — the game waits until it knows the real seating before showing them.",
-          "The table now appears fully drawn instead of popping its card art in. If you leave the tab for a while and come back, a brief loading only appears when the art actually needs to reload; a quick switch comes back instantly.",
-          "The deck and the discard pile no longer touch on phones, and on small screens the guide drops below the top bar so it no longer overlaps the logo or the menu button.",
-          "Small fixes: the Start button's spacing is tidy, the Gather button greys out when a pile is already gathered, and the 'who goes first' line shows only on the first round."
+          "Player names and the green status light always stay clear above the hand areas, and a card you move past another player's area now stays on top of it.",
+          "The table appears fully drawn instead of popping its card art in. If you come back to the tab after a while, you'll see a brief loading only when something needs to reload.",
+          "Better fit on phones: the deck and discard piles no longer overlap, and the guide no longer covers the logo or the menu button.",
+          "Turning a pile over no longer rotates it upright on its own — it just turns over, the same as a single card. To square a pile up, use Gather."
         ]
       },
       {
         "v": "2026-06-06.1",
         "date": "June 6, 2026",
-        "title": "Guide flow and menu fixes",
+        "title": "Guide refinements",
         "items": [
-          "The Guide now shows exactly the right controls at each step: the confirm check no longer appears while you are choosing who goes first, and the close button is the host's alone. Host-only and spectator-only menu items no longer leak to the wrong players.",
-          "The three-dot menu now opens above the Guide panel instead of behind it, and the Guide opens by default in a new room while remembering whether you last left it open or closed.",
-          "Start now simply begins the guide and leaves your cards exactly as they are (the intro suggests Reset deck first if you want a fresh shuffle). Restart is now a host-only button in the guide's own bar: it asks to confirm and resets only the guide, never the cards.",
-          "Minimize is now a turn-loop control for everyone: the guide stays fully visible through setup, and each player's minimize button becomes active once the turns begin. The bar also matches the height of the buttons beside it.",
-          "Reset deck gathers every card and riffles the squared pile for everyone, with the cues timed to the motion and no wait at all when the deck is already squared, instead of snapping the cards into place."
+          "Pressing Start now just begins the guide and leaves your cards exactly as they are. If you want a fresh shuffle first, use Reset deck.",
+          "Restart sits with the guide's own buttons. It resets only the guide, never your cards, and asks you to confirm first."
         ]
       },
       {
@@ -753,7 +763,7 @@
     "waitYourTurn": "Wait for your turn.",
     "yourTurn": "It is your turn. Tap the check when you are done.",
     "aPlayer": "a player",
-    "youTag": "you",
+    "youTag": "(you)",
     "introBody": "This guide walks the whole table through a game, one step at a time. It only suggests what to do next, and never moves your cards. You stay free to move, flip and shuffle them however you like. Tip: use Reset deck from the menu first if you want to begin from a freshly shuffled deck, then press Start.",
     "introWaiting": "Waiting for the host to start the game.",
     "start": "Start",

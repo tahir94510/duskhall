@@ -36,10 +36,10 @@ Card positions are stored in a single canonical normalised frame `[0, 1]²` of t
 
 Card positions store the card CENTRE as a canonical fraction; the render loop turns that centre into the on-screen top-left by subtracting half the measured card size, so a pile sits on its marker identically on every device and never drifts on resize. Dock anchors are fixed CENTRE constants in `src/table/constants.ts`:
 
-- `DECK_NX = 0.43`, `DECK_NY = 0.5`
-- `DISCARD_NX = 0.57`, `DISCARD_NY = 0.5`
+- `DECK_NX = 0.40`, `DECK_NY = 0.5`
+- `DISCARD_NX = 0.60`, `DISCARD_NY = 0.5`
 
-`board.css` paints the two dock markers at these same percentages (`left: 43%` / `57%`, centred with `translate(-50%, -50%)`), and the initial deal pile is anchored to the same numbers, so the markers and the dealt pile can never drift apart.
+`board.css` paints the two dock markers at these same percentages (`left: 40%` / `60%`, centred with `translate(-50%, -50%)`), and the initial deal pile is anchored to the same numbers, so the markers and the dealt pile can never drift apart. Their `0.20` separation clears the widest card fraction at every breakpoint (mobile bumps cards to ~`0.145` of the field), so the deck and discard never touch.
 
 The table is a clean full-size square with main's proportions (private hand bands `ZONE_DEPTH = 0.28` deep, a `0.44 x 0.44` public centre); there is no dedicated Seal/Servant area, so players lay their face-up tableau out by hand in their own zone. A dragged card (or pile) is clamped to the PAGE, not the board (`clampSeedToPage`, `src/table/playfield.ts`): a card may be dragged off the board into the surrounding viewport margin but never off-screen. The clamp runs in screen-pixel space (via `canonicalToScreen`/`screenToCanonical`), so it is exact for every device, aspect ratio and seat rotation, and a card's width/height swap when the card + board rotation lands it sideways. Pure and unit-tested (`playfield.test.ts`). `seatForCanonicalPoint` only counts the ON-board band (`0 <= edgeDist < ZONE_DEPTH`), so the off-board margins are public — cards can be dropped there freely. Magnet snap is inert; the dock markers are visual targets only.
 
@@ -136,7 +136,7 @@ shows through, so there are zero 404s.
 
 ### Loading screen & first-sync gate
 
-`index.html` paints a logo splash (`#kabal-loader`) on the first frame from
+`index.html` paints a logo splash (`#vaerum-loader`) on the first frame from
 inline critical CSS. `Game.mount()` preloads the on-table card art and the
 background, then connects and waits (capped at ~1.8s) for the first sync: our
 seat (so the board is already rotated) and the authoritative snapshot (so cards
@@ -163,7 +163,7 @@ public/audio/
   music/   music tracks (any file name; played in natural-sort order, looped)
 ```
 
-The Vite plugin scans both folders (and, for backwards compatibility, any flat files in `public/audio/`) and writes `manifest.json`. Effects map a sound name to a concrete file path; music is an ordered path list. Anything missing falls back to a procedural Web Audio tone synthesised at runtime, so a fresh checkout shows zero 404s. Volumes live in `localStorage` (`kabal:vol:master|music|sfx`).
+The Vite plugin scans both folders (and, for backwards compatibility, any flat files in `public/audio/`) and writes `manifest.json`. Effects map a sound name to a concrete file path; music is an ordered path list. Anything missing falls back to a procedural Web Audio tone synthesised at runtime, so a fresh checkout shows zero 404s. Volumes live in `localStorage` (`vaerum:vol:master|music|sfx`).
 
 ```json
 {

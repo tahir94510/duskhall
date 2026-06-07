@@ -1,4 +1,5 @@
 import { t } from "../i18n/index.js";
+import { ICON_CLOSE } from "./icons.js";
 import { viewOf, confirmerOf, type GuideState, type GuideView } from "../game/guide.js";
 
 // The Guide is a fixed, collapsible panel that narrates the rulebook flow. It never
@@ -71,7 +72,7 @@ export class GuidePanel {
           <button type="button" class="guide__btn guide__tick" data-action="tick" hidden></button>
           <button type="button" class="guide__btn guide__restart" data-action="restart" hidden></button>
           <button type="button" class="guide__btn guide__resize" data-action="resize" hidden></button>
-          <button type="button" class="guide__btn guide__close" data-action="close" hidden aria-label="${esc(t("guide.close"))}">&times;</button>
+          <button type="button" class="guide__btn guide__close" data-action="close" hidden aria-label="${esc(t("guide.close"))}">${ICON_CLOSE}</button>
         </div>
       </header>
       <div class="guide__body" data-role="body"></div>

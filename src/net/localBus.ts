@@ -62,7 +62,7 @@ export class LocalBus {
     this.room = room;
     this.me = me;
     // One channel per room so two different rooms on the same machine stay apart.
-    this.channel = new BroadcastChannel(`kabal-local:${room}`);
+    this.channel = new BroadcastChannel(`vaerum-local:${room}`);
     this.channel.onmessage = (e: MessageEvent) => this.onMessage(e.data as Envelope);
     this.peers.clear();
     this.touchSelf();

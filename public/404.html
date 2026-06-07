@@ -19,7 +19,7 @@
     </script>
     <script>
       // Localise the page to TR/EN with the SAME priority as i18n.detectLocale
-      // (?lang= -> localStorage "kabal:lang" -> navigator language), before paint.
+      // (?lang= -> localStorage "vaerum:lang" -> navigator language), before paint.
       (function () {
         try {
           var L = {
@@ -28,7 +28,7 @@
           };
           var q = new URLSearchParams(location.search).get("lang");
           var stored = null;
-          try { stored = localStorage.getItem("kabal:lang"); } catch (e) {}
+          try { stored = localStorage.getItem("vaerum:lang"); } catch (e) {}
           var nav = (navigator.language || "en").toLowerCase();
           var loc = (q && L[q]) ? q : (stored && L[stored]) ? stored : nav.indexOf("tr") === 0 ? "tr" : "en";
           var s = L[loc];

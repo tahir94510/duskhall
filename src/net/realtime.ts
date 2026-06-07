@@ -441,10 +441,10 @@ export class RealtimeBus {
     let probeClient: SupabaseClient | null = null;
     try {
       probeClient = createClient(url, key, {
-        auth: { persistSession: false, autoRefreshToken: false, storageKey: "kabal-diag" },
+        auth: { persistSession: false, autoRefreshToken: false, storageKey: "vaerum-diag" },
         realtime: { params: { eventsPerSecond: 1 } }
       });
-      const ch = probeClient.channel(`kabal-diag:${Math.random().toString(36).slice(2, 8)}`);
+      const ch = probeClient.channel(`vaerum-diag:${Math.random().toString(36).slice(2, 8)}`);
       const ok = await new Promise<boolean>((resolve) => {
         let settled = false;
         const done = (v: boolean) => { if (!settled) { settled = true; resolve(v); } };
@@ -515,7 +515,11 @@ export class RealtimeBus {
   private async openChannel(): Promise<void> {
     if (!this.wantConnected || !this.desiredRoom || !this.desiredMe) return;
     if (!this.isAvailable()) { this.setStatus("offline"); return; }
-    this.setStatus("connecting");
+    // Only the VERY FIRST attempt reads as "connecting". Once we've failed/dropped at least
+    // once (reconnectAttempt > 0), we are genuinely offline and stay "offline" through the
+    // retry backoff instead of flapping back to a misleading "connecting" — the status never
+    // claims to be connecting while it is effectively not connected.
+    this.setStatus(this.reconnectAttempt === 0 ? "connecting" : "offline");
     const room = this.desiredRoom;
     const me = this.desiredMe;
     try {
@@ -523,12 +527,12 @@ export class RealtimeBus {
       // "Multiple GoTrueClient instances" warnings.
       if (!this.client) {
         this.client = createClient(this.config.supabaseUrl, this.config.supabaseAnonKey, {
-          auth: { persistSession: false, autoRefreshToken: false, storageKey: "kabal-rt" },
+          auth: { persistSession: false, autoRefreshToken: false, storageKey: "vaerum-rt" },
           realtime: { params: { eventsPerSecond: 60 } }
         });
       }
       this.teardownChannel();
-      const ch = this.client.channel(`kabal:${room}`, {
+      const ch = this.client.channel(`vaerum:${room}`, {
         config: { presence: { key: me.id }, broadcast: { ack: false, self: false } }
       });
       this.channel = ch;
