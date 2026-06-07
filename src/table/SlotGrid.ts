@@ -129,9 +129,36 @@ export const ZONE_PRIVACY_FRAC = 0.1;
 export const CARD_CANON_W = 0.125;
 export const CARD_CANON_H = 0.181;
 
+// When the top two trapezoids hold shares this close, the card is straddling their shared
+// diagonal and ownership is a near-tie. Pin it to the lower seat index across this band rather
+// than let the winner flip on sub-percent jitter (the corner conceal/reveal FLICKER). Sized to
+// span the jitter band around a 50/50 corner without misclaiming a card that clearly dominates.
+export const OWNER_TIE_MARGIN = 0.15;
+
+// The seat that owns the card, or null if it is effectively public. Two refinements keep this
+// stable and corner-correct, while staying PURE and position-only (every client computes the
+// same owner — no path-dependent memory, so a peer who joined mid-drag agrees):
+//   1) Privacy is gated on the TOTAL fraction inside ANY zone (sum across all four trapezoids),
+//      not the single largest — so a card straddling a corner is judged by how much of its body
+//      is in-zone overall, the same boundary as along a flat edge.
+//   2) When the top two trapezoids hold nearly-equal shares (a card on their shared diagonal),
+//      ownership is pinned to the LOWER seat index instead of the raw argmax. The raw argmax
+//      flips between the two seats on tiny position jitter, which — for a viewer who owns one of
+//      them — flickered the card concealed/revealed at the corner. The dead-band makes the
+//      transition a single clean crossing (one seat, then the other), never a rapid flip-flop.
 export function cardZoneOwner(nx: number, ny: number, rot: number, cardWFrac: number, cardHFrac: number): Seat | null {
-  const o = cardZoneOverlap(nx, ny, rot, cardWFrac, cardHFrac);
-  return o && o.frac > ZONE_PRIVACY_FRAC ? o.seat : null;
+  const f = cardZoneFractions(nx, ny, rot, cardWFrac, cardHFrac);
+  // Top two seats by overlap.
+  let s0 = -1, f0 = 0, s1 = -1, f1 = 0;
+  for (const s of [0, 1, 2, 3] as Seat[]) {
+    if (f[s] > f0) { s1 = s0; f1 = f0; s0 = s; f0 = f[s]; }
+    else if (f[s] > f1) { s1 = s; f1 = f[s]; }
+  }
+  const inZone = f[0] + f[1] + f[2] + f[3];
+  if (s0 < 0 || inZone <= ZONE_PRIVACY_FRAC) return null;
+  // Genuine corner straddle (both top zones really overlapped, and near-tied) → lower index.
+  if (s1 >= 0 && f1 > 0 && f0 - f1 < OWNER_TIE_MARGIN) return Math.min(s0, s1) as Seat;
+  return s0 as Seat;
 }
 
 /**
@@ -150,7 +177,11 @@ export function cardZoneFractions(nx: number, ny: number, rot: number, cardWFrac
   const w = quarter === 1 ? cardHFrac : cardWFrac;
   const h = quarter === 1 ? cardWFrac : cardHFrac;
   if (w <= 0 || h <= 0) return out;
-  const N = 5; // 5x5 = 25 samples — fine-grained enough for the privacy threshold, cheap per frame
+  // 9x9 = 81 samples. A finer grid than the old 5x5 keeps the per-zone fractions smooth right
+  // at the corner diagonals, so the owner/conceal boundary is a single clean transition as a
+  // card crosses (no jagged, sample-noise flip-flop that flashed a card revealed/concealed near
+  // a corner). Still trivially cheap: pure arithmetic, a few thousand ops per frame for the deck.
+  const N = 9;
   for (let i = 0; i < N; i++) {
     const sx = nx + ((i + 0.5) / N - 0.5) * w;
     for (let j = 0; j < N; j++) {
@@ -167,8 +198,8 @@ export function cardZoneFractions(nx: number, ny: number, rot: number, cardWFrac
 /**
  * The seat whose TRAPEZOID the card's footprint overlaps MOST, and that overlap as a fraction of
  * the card's area (0..1), or null if the card is in no zone at all (the public centre or off-board).
- * cardZoneOwner gates this at ZONE_PRIVACY_FRAC. (Game.cardZoneOwnerOf adds sticky hysteresis so a
- * card near a diagonal keeps its owner until it is mostly out.)
+ * Reports only the single largest zone; cardZoneOwner is the canonical owner test and gates privacy
+ * on the TOTAL in-zone fraction (so it is corner-correct). This helper is kept for diagnostics/tests.
  */
 export function cardZoneOverlap(nx: number, ny: number, rot: number, cardWFrac: number, cardHFrac: number): { seat: Seat; frac: number } | null {
   const f = cardZoneFractions(nx, ny, rot, cardWFrac, cardHFrac);

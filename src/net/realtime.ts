@@ -137,6 +137,19 @@ export interface KickMsg {
   connAt?: number;
 }
 
+/** A tiny cosmetic sound cue for a PUBLIC (shared-table) interaction — pickup,
+ *  place, place-stack or gather — so peers hear it too. It carries NO state (the
+ *  authoritative move rides on its own patch); it is purely a sound trigger.
+ *  Privacy is decided by the ACTOR: an interaction inside the actor's OWN hidden
+ *  zone is simply never broadcast, so it stays silent for everyone else, while a
+ *  shared-table action is heard by all. (Flip/shuffle convey their sound via the
+ *  PatchAnim hint, gated on the receiver by the rival-owned check.) Old clients
+ *  ignore the unknown message entirely. */
+export interface SfxMsg {
+  kind: string;
+  by: string;
+}
+
 /** Guide (rulebook walkthrough) sync. Two shapes share one channel: the host
  *  broadcasts the authoritative `state`; the player whose turn it is may send an
  *  `advance` intent the host validates. The guide is informational and entirely
@@ -165,7 +178,12 @@ export type GameMsg =
   | { type: "left"; payload: LeftMsg }
   | { type: "kick"; payload: KickMsg }
   | { type: "guide"; payload: GuideWire }
+  | { type: "sfx"; payload: SfxMsg }
   | { type: "hello"; payload: { id: string } };
+
+/** The interaction sounds that may be broadcast to peers (a closed set so a hostile
+ *  peer cannot trigger an arbitrary/UI sound). Flip/shuffle ride the anim hint, not this. */
+const BROADCAST_SFX = new Set(["pickup", "place", "place-stack", "gather"]);
 
 type Listener<T> = (msg: T) => void;
 type Status = "offline" | "connecting" | "online";
@@ -337,7 +355,7 @@ export class RealtimeBus {
 
   // Per-sender receive-rate limiters: a flooding/buggy peer can't pin the CPU
   // because excess messages from a single id are dropped before dispatch.
-  private recvBuckets = new Map<string, { patch: TokenBucket; cursor: TokenBucket; hello: TokenBucket; guide: TokenBucket }>();
+  private recvBuckets = new Map<string, { patch: TokenBucket; cursor: TokenBucket; hello: TokenBucket; guide: TokenBucket; sfx: TokenBucket }>();
 
   // Same-device fallback transport (BroadcastChannel). It runs ALONGSIDE Supabase
   // so two tabs/windows on one machine always sync, even when the websocket is
@@ -733,7 +751,16 @@ export class RealtimeBus {
     const send = Promise.resolve(
       this.channel.send({ type: "broadcast", event: "game", payload: { type: "left", payload: l } as GameMsg })
     ).catch(() => {});
-    await Promise.race([send, new Promise<void>((r) => setTimeout(r, 700))]);
+    // The channel is created with broadcast { ack: false }, so channel.send() resolves
+    // (returns "ok") IMMEDIATELY without waiting for the server to deliver the frame.
+    // Awaiting it alone therefore returns BEFORE the websocket has flushed the bytes, and
+    // the disconnect() that follows on exit/room-hop then tears the socket down with the
+    // `left` still buffered — peers never get it and wrongly show the leaver "away" for the
+    // whole grace window. Wait for BOTH the send AND a short fixed flush window so the frame
+    // actually leaves the socket, capped by an overall timeout so a hung socket can never
+    // freeze the exit.
+    const flush = Promise.all([send, new Promise<void>((r) => setTimeout(r, 300))]);
+    await Promise.race([flush, new Promise<void>((r) => setTimeout(r, 1000))]);
   }
 
   /** Broadcast a guide message (host state re-broadcast, or a client intent). Not
@@ -746,6 +773,16 @@ export class RealtimeBus {
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "guide", payload: g } as GameMsg });
   }
 
+  /** Broadcast a public-table interaction sound so peers hear it too. One-shot per
+   *  gesture (grab / drop / gather), so not rate-limited on send; still byte-capped
+   *  and capped per sender on receive. Mirrors locally first like every send. */
+  sendSfx(s: SfxMsg): void {
+    if (!BROADCAST_SFX.has(s.kind) || !withinByteCap(s)) return;
+    this.local.sendGame({ type: "sfx", payload: s });
+    if (!this.channel || this.status !== "online") return;
+    this.channel.send({ type: "broadcast", event: "game", payload: { type: "sfx", payload: s } as GameMsg });
+  }
+
   /** Host-only: ask a player to leave. Only the target acts on it. */
   sendKick(target: string, by: string, connAt?: number): void {
     const payload: KickMsg = { target, by, connAt };
@@ -754,7 +791,7 @@ export class RealtimeBus {
     this.channel.send({ type: "broadcast", event: "game", payload: { type: "kick", payload } as GameMsg });
   }
 
-  private bucketFor(id: string): { patch: TokenBucket; cursor: TokenBucket; hello: TokenBucket; guide: TokenBucket } {
+  private bucketFor(id: string): { patch: TokenBucket; cursor: TokenBucket; hello: TokenBucket; guide: TokenBucket; sfx: TokenBucket } {
     let b = this.recvBuckets.get(id);
     if (!b) {
       // Generous ceilings (well above legitimate send rates) that still cap a
@@ -766,7 +803,7 @@ export class RealtimeBus {
       // client ready/choose intents. Low-frequency (a click, a periodic reconcile), so
       // a modest ceiling stops a peer from spamming guide frames while easily clearing
       // legitimate use.
-      b = { patch: new TokenBucket(90, 60), cursor: new TokenBucket(80, 60), hello: new TokenBucket(8, 1), guide: new TokenBucket(20, 8) };
+      b = { patch: new TokenBucket(90, 60), cursor: new TokenBucket(80, 60), hello: new TokenBucket(8, 1), guide: new TokenBucket(20, 8), sfx: new TokenBucket(30, 12) };
       this.recvBuckets.set(id, b);
     }
     return b;
@@ -884,6 +921,16 @@ export class RealtimeBus {
       // flood). The sender id is the message's own `by`.
       if (g.by && !this.bucketFor(g.by).guide.consume()) return;
       for (const l of this.gameListeners) l({ type: "guide", payload: g });
+    } else if (msg.type === "sfx") {
+      const s0 = msg.payload as Partial<SfxMsg> | undefined;
+      if (!s0 || typeof s0.kind !== "string") return;
+      const kind = safeString(s0.kind, 16);
+      if (!BROADCAST_SFX.has(kind)) return; // closed set: never play an arbitrary/UI sound
+      const by = safeString(s0.by, 40);
+      // Cap per sender so a peer cannot machine-gun sounds; legitimate grab/drop/gather
+      // stays well under it.
+      if (by && !this.bucketFor(by).sfx.consume()) return;
+      for (const l of this.gameListeners) l({ type: "sfx", payload: { kind, by } });
     } else if (msg.type === "hello") {
       const p = msg.payload as { id?: string } | undefined;
       if (p && typeof p.id === "string") {

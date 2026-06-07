@@ -119,6 +119,45 @@ describe("cardZoneOverlap: reports the best seat and the in-fraction", () => {
   });
 });
 
+describe("corner privacy: total in-zone gate, no early/diagonal reveal, no flicker", () => {
+  // A card straddling the bottom-left corner diagonal is split between seat 0 (bottom band)
+  // and seat 2 (left band). With the OLD max-single-zone gate each half could fall below the
+  // privacy threshold while the body is still well inside the corner, so the card flashed
+  // public ("revealed diagonally/too quickly"). The total in-zone gate counts both halves, so
+  // it stays concealed (owned) until the body is genuinely almost fully out.
+  it("a card straddling a shared diagonal stays concealed and does NOT flip-flop owner (dead-band)", () => {
+    // Slide a card straight along the bottom-left (seat 0 / seat 2) diagonal, staying near the
+    // 50/50 split. Without the dead-band the raw argmax flips between seat 0 and seat 2 on
+    // sub-percent jitter — the corner flicker. With it, ownership is pinned to the lower seat
+    // index (0) and stays there for the whole near-tied band: one stable owner, never null.
+    const owners = new Set<number | null>();
+    for (let t = 0; t <= 1; t += 0.05) {
+      const nx = 0.12 + t * 0.10; // 0.12 → 0.22, hugging the diagonal
+      const ny = 0.88 - t * 0.10; // 0.88 → 0.78
+      owners.add(cardZoneOwner(nx, ny, 0, W, H));
+    }
+    expect(owners.has(null)).toBe(false);   // deep in the corner → always private
+    expect([...owners]).toEqual([0]);       // exactly ONE owner the whole way — no flip-flop
+  });
+
+  it("reveal is MONOTONIC along an outward corner path — once public it never flips back (no flicker)", () => {
+    // Walk a card from deep inside the bottom-left corner straight out to the public centre.
+    // Concealment must only ever turn OFF (owned → public), never back ON: a public→owned flip
+    // mid-path is exactly the corner flicker the fix removes.
+    let wentPublic = false;
+    for (let t = 0; t <= 1; t += 0.01) {
+      const nx = 0.12 + t * (0.5 - 0.12);
+      const ny = 0.88 - t * (0.88 - 0.5);
+      const owned = cardZoneOwner(nx, ny, 0, W, H) !== null;
+      if (!owned) wentPublic = true;
+      else if (wentPublic) {
+        throw new Error(`reveal flickered back to concealed at t=${t.toFixed(2)} (${nx.toFixed(3)}, ${ny.toFixed(3)})`);
+      }
+    }
+    expect(wentPublic).toBe(true); // it does become public by the centre
+  });
+});
+
 describe("zoneRect / pointInZoneCanonical stay consistent", () => {
   it("zoneRect returns the seat rectangle and the point test agrees with it", () => {
     const z = zoneRect(0);

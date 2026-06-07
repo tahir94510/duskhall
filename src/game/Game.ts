@@ -40,9 +40,9 @@ import {
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
-import { cardZoneFractions, pointInZoneCanonical, ZONE_PRIVACY_FRAC, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
+import { cardZoneOwner, pointInZoneCanonical, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
 import { clampSeedToPage, type ClampCard } from "../table/playfield.js";
-import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry, GuideWire } from "../net/realtime.js";
+import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry, GuideWire, SfxMsg } from "../net/realtime.js";
 import { initialGuide, startGuide, setOpen as setGuideOpenState, advance as advanceGuide, chooseFirst as chooseFirstGuide, adoptGuide, type GuideState } from "./guide.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
@@ -745,7 +745,14 @@ export class Game {
         const { nx, ny } = this.screenToCanonical(x, y);
         this.bus.sendCursor({ id: this.self.id, x: nx, y: ny, seat: this.claimSeat });
       },
-      playSfx: (name) => { void this.audio.play(name as SfxName); }
+      playSfx: (name) => { void this.audio.play(name as SfxName); },
+      // A public interaction sound (pickup / place): the actor always hears it, and peers
+      // hear it too when the seed card is on the shared table (a hidden-zone action stays
+      // silent for everyone else — emitPublicSfx gates on our own zone).
+      emitSfx: (name, seedId) => {
+        void this.audio.play(name as SfxName);
+        this.emitPublicSfx(seedId, name as SfxMsg["kind"]);
+      }
     };
     this.drag = new DragController(this.refs.cardsLayer, this.state, hooks);
   }
@@ -842,23 +849,15 @@ export class Game {
     return seatIsRival(this.occupancy(), seat, this.self.seat, this.spectator);
   }
 
-  // The seat whose private zone currently holds this card, or null. PURE and position-only, so
-  // EVERY client computes the exact same owner for the same card position — essential for
-  // multiplayer consistency (a path-dependent "sticky" memory could make a peer who joined
-  // mid-drag disagree about who owns a card resting near a diagonal). Trapezoid-based, so it
-  // matches the VISIBLE zones exactly and is identical for all four seats. The single low overlap
-  // threshold (ZONE_PRIVACY_FRAC = 10%) makes it behave correctly without any hysteresis:
-  //  - it CONCEALS as soon as ~10% of the body is in a zone (eager hide, any side), and
-  //  - it stays concealed until <10% remains in EVERY zone (i.e. ~90% out — a late, no-flash reveal), and
-  //  - the OWNING seat only flips to a neighbour when the MAJORITY of the body crosses the shared
-  //    diagonal (well past the halfway line), so a card never gets stolen by a side neighbour early.
+  // The seat whose private zone currently holds this card, or null (public). Delegates to the
+  // PURE, position-only cardZoneOwner so EVERY client computes the same owner for the same
+  // position — essential for multiplayer consistency (a path-dependent "sticky" memory could
+  // make a peer who joined mid-drag disagree about a card resting near a diagonal). Trapezoid-
+  // based, gated on the total in-zone fraction (eager ~10% conceal, late ~90%-out reveal), with
+  // a corner dead-band that pins a near-tied straddle to the lower seat index so a card on a
+  // shared diagonal does not flicker concealed/revealed for the seats that share that corner.
   private cardZoneOwnerOf(c: CardState): number | null {
-    const f = cardZoneFractions(c.x, c.y, c.rot, CARD_CANON_W, CARD_CANON_H);
-    let best = -1, bestF = 0;
-    for (let s = 0; s < SEAT_COUNT; s++) {
-      if (f[s] > bestF) { bestF = f[s]; best = s; }
-    }
-    return best >= 0 && bestF > ZONE_PRIVACY_FRAC ? best : null;
+    return cardZoneOwner(c.x, c.y, c.rot, CARD_CANON_W, CARD_CANON_H);
   }
 
   // Is this card in a rival's private area whose seat is still held? Decided by the
@@ -879,6 +878,23 @@ export class Game {
     const c = this.state.cards.get(id);
     if (!c) return false;
     return this.cardZoneOwnerOf(c) === this.self.seat;
+  }
+
+  // Broadcast a PUBLIC interaction sound (pickup/place/gather) so peers hear it too.
+  // We broadcast ONLY when the seed card is NOT inside our own hidden zone: a private
+  // action stays silent for everyone else (the actor has already played it locally).
+  // Gating on the ACTOR's true position is race-free — a receiver-side position check
+  // could misfire before the move's own patch lands. Spectators own no zone, so their
+  // (public) actions always carry. (Flip/shuffle convey sound via their anim hint.)
+  private emitPublicSfx(seedId: string, kind: SfxMsg["kind"]): void {
+    if (this.isOwnZoneCard(seedId)) return;
+    this.bus.sendSfx({ kind, by: this.self.id });
+  }
+
+  // A peer performed a PUBLIC interaction; play its sound here. It is sound only (any
+  // state rides on the action's own patch). Respects our local mute/volume via Audio.
+  private playRemoteSfx(s: SfxMsg): void {
+    void this.audio.play(s.kind as SfxName);
   }
 
   // Claim a card for our seat when we interact with it AND it is sitting in our
@@ -2187,6 +2203,7 @@ export class Game {
     for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
     this.scheduleFlush();
     void this.audio.play("gather");
+    this.emitPublicSfx(id, "gather"); // peers hear a public gather; a hidden-zone one stays silent
   }
 
   private shuffleAt(id: string): void {
@@ -2197,9 +2214,10 @@ export class Game {
     if (this.anyAnimating(stack)) return;
     const seed = this.state.cards.get(id);
     if (!seed) return;
-    // A shuffle inside YOUR OWN hidden area is silent (a private action makes no sound, like it
-    // already does for onlookers) — but it must still ANIMATE for you, so you see the cards riffle.
-    const privateZone = this.isOwnZoneCard(id);
+    // The ACTOR always hears their own shuffle, including one inside their own hidden zone:
+    // your private actions are audible to YOU. Onlookers stay silent for a hidden-zone shuffle
+    // and hear a public one — that gating lives on the receiver (playRemoteAnim's rival-owned
+    // check), so nothing extra is needed here.
     const upright = this.viewerUprightRot(seed.rot);
     // Lock the whole pile to peers for the entire face-down → straighten → gather →
     // riffle flow so no card can be grabbed mid-shuffle. Worst-case duration covers
@@ -2217,7 +2235,7 @@ export class Game {
         this.applyShuffleJitter(stack); // faces already down, so just the clean riffle wobble
         // Send immediately with a shuffle hint so peers riffle the same pile.
         this.flushWithAnim(stack, { kind: "shuffle", ids: stack });
-        if (!privateZone) void this.audio.play("shuffle");
+        void this.audio.play("shuffle");
       }, SHUFFLE_ANIM_MS);
     });
   }
@@ -2519,7 +2537,15 @@ export class Game {
       const nowHost = this.hostId();
       if (nowHost !== this.lastHostId) {
         if (this.lastHostId) this.recentHosts.set(this.lastHostId, Date.now() + Game.RECENT_HOST_MS);
+        const becameHost = nowHost === this.self.id && this.lastHostId !== this.self.id;
         this.lastHostId = nowHost;
+        // The host role just moved to US (the previous host left/dropped). Immediately
+        // re-broadcast the authoritative board + removed[]/claims so every peer converges
+        // at once — the departed host clears instead of lingering as "away", and active
+        // players are never momentarily shown away while waiting for the next 2s reconcile.
+        // Deferred a tick so the rest of this presence pass (seatClaims, activeSeats) is
+        // settled before we serialise the reconcile.
+        if (becameHost) queueMicrotask(() => this.sendReconcileNow());
       }
       const nowMs = Date.now();
       for (const [hid, until] of this.recentHosts) if (until <= nowMs) this.recentHosts.delete(hid);
@@ -2749,6 +2775,7 @@ export class Game {
       else if (msg.type === "hold") this.applyHold(msg.payload);
       else if (msg.type === "left") this.applyLeft(msg.payload);
       else if (msg.type === "kick") this.handleKicked(msg.payload);
+      else if (msg.type === "sfx") this.playRemoteSfx(msg.payload);
       else if (msg.type === "guide") this.handleGuide(msg.payload);
       else if (msg.type === "hello") this.respondToHello(msg.payload.id);
     });
@@ -3269,26 +3296,33 @@ export class Game {
   private reconcileTimer = 0;
   private startReconcile(): void {
     window.clearInterval(this.reconcileTimer);
-    this.reconcileTimer = window.setInterval(() => {
-      if (document.hidden || this.spectator) return;
-      // Gate on the TOTAL roster, not just seated/active players: a host with one
-      // active seat but a spectator (or an away peer) still needs to broadcast the
-      // authoritative removed[] so a peer that missed a one-shot kick/left converges.
-      // Using activeSeats here let a kicked player linger forever on a spectator that
-      // dropped the kick packet, since the reconcile that would heal it went silent.
-      if (this.players.size <= 1 || !this.isHost()) return;
-      this.patchVersion++;
-      const cards = Array.from(this.state.cards.values()).slice(0, 200).map((c) => this.wireCard(c));
-      // Reconcile is a LWW patch (each card keeps its stored ts), sent on a path
-      // exempt from the send-rate cap so a busy table never drops the self-heal. It
-      // also carries the authoritative removed[] list so a peer that missed a
-      // left/kick converges within the 2s cadence instead of after the away grace.
-      this.bus.sendReconcile({ v: this.patchVersion, by: this.self.id, cards, removed: this.buildRemovedList() });
-      // Re-broadcast the authoritative guide state so a peer that missed a guide
-      // packet (or joined mid-walkthrough) converges within the reconcile cadence.
-      if (this.guide.open || this.guide.started) this.broadcastGuideState();
-      if (this.debug) this.debug.sent++;
-    }, 2000);
+    this.reconcileTimer = window.setInterval(() => this.sendReconcileNow(), 2000);
+  }
+
+  // One authoritative self-heal broadcast (the reconcile body). Runs on the 2s timer AND
+  // immediately when the host role transfers to us (see applyPresence): the moment the old
+  // host departs we re-broadcast the board + authoritative removed[]/claims, so peers that
+  // missed the one-shot `left` converge AT ONCE — the departed host stops showing as "away"
+  // and nobody lingers — instead of waiting up to a full reconcile period.
+  private sendReconcileNow(): void {
+    if (document.hidden || this.spectator) return;
+    // Gate on the TOTAL roster, not just seated/active players: a host with one
+    // active seat but a spectator (or an away peer) still needs to broadcast the
+    // authoritative removed[] so a peer that missed a one-shot kick/left converges.
+    // Using activeSeats here let a kicked player linger forever on a spectator that
+    // dropped the kick packet, since the reconcile that would heal it went silent.
+    if (this.players.size <= 1 || !this.isHost()) return;
+    this.patchVersion++;
+    const cards = Array.from(this.state.cards.values()).slice(0, 200).map((c) => this.wireCard(c));
+    // Reconcile is a LWW patch (each card keeps its stored ts), sent on a path
+    // exempt from the send-rate cap so a busy table never drops the self-heal. It
+    // also carries the authoritative removed[] list so a peer that missed a
+    // left/kick converges within the 2s cadence instead of after the away grace.
+    this.bus.sendReconcile({ v: this.patchVersion, by: this.self.id, cards, removed: this.buildRemovedList() });
+    // Re-broadcast the authoritative guide state so a peer that missed a guide
+    // packet (or joined mid-walkthrough) converges within the reconcile cadence.
+    if (this.guide.open || this.guide.started) this.broadcastGuideState();
+    if (this.debug) this.debug.sent++;
   }
 
   private renderAllCards(): void {
