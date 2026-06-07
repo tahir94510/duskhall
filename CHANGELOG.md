@@ -5,10 +5,11 @@
 A correctness, security and polish pass. The card sync, canonical frame and balance numbers
 are unchanged. 215 tests green.
 
-- **Hidden hands never leak (security).** A rival's face-up cards in their private area could
-  briefly show through the loading veil before the roster resolved. Now any owned card stays a
-  blurred back until the table knows the seating, so a private hand is never revealed — not even
-  for a frame during load.
+- **Hidden hands never leak, empty seats never hide (security).** A rival's face-up cards in
+  their private area could briefly show through the loading veil before the roster resolved. The
+  saved board now remembers which seats were occupied, so from the very first frame a private
+  hand stays a blurred back while cards on an empty seat (no player there) read normally, face or
+  back, like any table card. Concealment is correct in every state, loading included.
 - **No more automatic kicks.** A player who drops keeps their seat reserved indefinitely; it is
   freed only by leaving or a host kick. If the host drops, hosting passes to a present player at
   once and returns to the original host when they come back (a host who *exits* hands off for good).

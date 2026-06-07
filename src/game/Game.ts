@@ -436,8 +436,11 @@ export class Game {
     // this point we suppressed host-only UI to avoid a flash on a joining client.
     if (!this.rosterReady) {
       this.rosterReady = true;
+      // Real occupancy is known now; the legacy-snapshot safety net no longer applies.
+      this.restoredWithoutClaims = false;
       this.applyRoleUI();
       this.refreshZones();
+      this.requestRender();
     }
   }
   // True once we've received an authoritative snapshot for the current room. A
@@ -453,6 +456,10 @@ export class Game {
   // until then: a freshly-joined client optimistically reads as the seat-0 host, so showing
   // host controls before this flips would flash them on then off once the real host is known.
   private rosterReady = false;
+  // Set when a legacy snapshot (no saved seat claims) restored owned cards: we then conceal
+  // every owned card until live sync resolves the real occupancy, so an old save can never
+  // flash a private hand. New snapshots carry claims and leave this false.
+  private restoredWithoutClaims = false;
   private syncNudges = 0;
   private syncNudgeTimer = 0;
 
@@ -1700,6 +1707,12 @@ export class Game {
         cards: Array.from(this.state.cards.values()).map((c) => ({
           id: c.id, defId: c.defId, x: c.x, y: c.y, z: c.z,
           rot: c.rot, faceUp: c.faceUp, ownerSeat: c.ownerSeat, ts: c.ts
+        })),
+        // Save which seats were OCCUPIED (active or reserved-away), so a refresh knows the
+        // privacy layout from the first paint and conceals occupied-rival hands while showing
+        // empty-seat cards normally — without ever flashing a private hand during load.
+        claims: Array.from(this.seatClaims.entries()).map(([seat, c]) => ({
+          seat, id: c.id, name: c.name, joinedAt: c.joinedAt, connAt: c.connAt
         }))
       };
       // localStorage (not sessionStorage) so a fully closed-and-reopened page
@@ -1713,9 +1726,28 @@ export class Game {
     try {
       const raw = localStorage.getItem(this.snapshotKey());
       if (!raw) return false;
-      const data = JSON.parse(raw) as { v: number; ts: number; cards: Array<Partial<CardState>> };
+      const data = JSON.parse(raw) as {
+        v: number; ts: number; cards: Array<Partial<CardState>>;
+        claims?: Array<{ seat?: number; id?: string; name?: string; joinedAt?: number; connAt?: number }>;
+      };
       if (!Array.isArray(data.cards) || data.cards.length === 0) return false;
       if (Date.now() - data.ts > SNAPSHOT_TTL_MS) return false; // 12h freshness
+      // Restore the saved seat occupancy so the privacy layout is correct from the FIRST
+      // paint: an occupied (or reserved-away) rival seat conceals its hand even before live
+      // sync, while an empty seat's cards read as normal table cards. Live presence then
+      // takes over and reconciles. (Without this, the first frame couldn't tell which seats
+      // were private and would either leak a hand or over-conceal an empty seat.)
+      if (Array.isArray(data.claims)) {
+        for (const c of data.claims) {
+          if (typeof c.seat !== "number" || c.seat < 0 || c.seat >= SEAT_COUNT || typeof c.id !== "string" || !c.id) continue;
+          this.seatClaims.set(c.seat, {
+            id: c.id,
+            name: typeof c.name === "string" && c.name ? c.name : "Player",
+            joinedAt: typeof c.joinedAt === "number" ? c.joinedAt : 0,
+            connAt: typeof c.connAt === "number" ? c.connAt : 0
+          });
+        }
+      }
       let z = 1;
       for (const c of data.cards) {
         if (!c.id || !c.defId) continue;
@@ -1744,6 +1776,13 @@ export class Game {
       }
       this.state.topZ = z + 10;
       this.patchVersion = data.v || 0;
+      // Safety net for a pre-this-change snapshot (no saved claims) that still holds owned
+      // cards: without occupancy we cannot tell which seats are private, so until live sync
+      // resolves the roster we treat every owned card as private (blurred back). New snapshots
+      // carry claims and never hit this. Cleared in resolveFirstSync.
+      const hadClaims = Array.isArray(data.claims) && data.claims.length > 0;
+      const anyOwned = Array.from(this.state.cards.values()).some((c) => c.ownerSeat !== null);
+      this.restoredWithoutClaims = !hadClaims && anyOwned;
       return true;
     } catch { return false; }
   }
@@ -3279,17 +3318,14 @@ export class Game {
       // animating: the concealment rule forces rotateY(0), which would fight a
       // flip mid-rotation; the very next frame after the turn settles writes the
       // correct class.
-      // Conceal a rival's owned card. SECURITY: until the roster is authoritative
-      // (rosterReady), we cannot yet tell which seat is ours, so a freshly-loaded
-      // joiner would otherwise paint a rival's face-up hand card through the
-      // translucent loader. Be pessimistic: any card the snapshot marks as OWNED
-      // (ownerSeat != null) shows its blurred back until the roster resolves, so a
-      // private hand is never revealed during load. Public cards (fresh deck,
-      // ownerSeat null) are unaffected.
-      if (!busy) {
-        const conceal = this.isRivalOwnedCard(c.id) || (!this.rosterReady && c.ownerSeat !== null);
-        el.classList.toggle("is-concealed", conceal);
-      }
+      // Conceal a card ONLY when it sits in a rival seat's zone AND that seat is occupied
+      // (active OR reserved-away). An EMPTY seat is not private, so a card resting there shows
+      // normally (face or back) like any table card. This holds in every state, including
+      // load: the seat occupancy (claims) is restored alongside the board snapshot, so the
+      // very first paint already conceals occupied-rival hands (no leak) while leaving
+      // empty-seat and own cards fully visible. (See tryRestoreSnapshot / saveSnapshot.)
+      if (!busy) el.classList.toggle("is-concealed",
+        this.isRivalOwnedCard(c.id) || (this.restoredWithoutClaims && !this.rosterReady && c.ownerSeat !== null));
       // A card resting in YOUR OWN hand area reads as sitting under a thin glass surface
       // (a sheen on the card, no blur, so you still read it perfectly). Cleared while held
       // or animating so a lifted card is clean.
