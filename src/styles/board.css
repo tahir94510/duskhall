@@ -176,7 +176,10 @@ body:not(.is-ready) .board__perspective { transition: none; }
   opacity: 1;
   box-shadow: 0 0 6px rgba(70, 196, 106, 0.55);
 }
-.seat-label.is-dropped .seat-label__dot {
+.seat-label.is-dropped .seat-label__dot,
+/* "Unreachable" (our own cross-device sync is down): the rival's status light reads amber,
+   the same "we can't confirm them right now" signal as an away/dropped seat. */
+.seat-label.is-unreachable .seat-label__dot {
   background: #e8993a;
   opacity: 1;
   box-shadow: 0 0 6px rgba(232, 153, 58, 0.5);

@@ -74,6 +74,16 @@
   transition: opacity 600ms var(--ease), border-color 600ms var(--ease);
 }
 
+/* OUR cross-device sync is down: a rival seat we can no longer follow reads as "unreachable"
+   with the same calm dimmed/dashed treatment as a dropped seat (their state is uncertain to
+   us), and clears the moment we reconnect. Driven by Game.refreshZones (this.realtimeDown). */
+.zone--unreachable {
+  opacity: 0.5;
+  border-style: dashed;
+  border-color: color-mix(in oklab, var(--seat-color) 24%, transparent);
+  transition: opacity 400ms var(--ease), border-color 400ms var(--ease);
+}
+
 /* Trapezoid placement on the 3-track board grid (board.css). Each zone spans its WHOLE board
    edge (the edge band, 28% deep) and is clipped to a trapezoid: wide at the board edge,
    tapering to the inner 44% so adjacent zones meet along the board diagonals with no overlap

@@ -200,6 +200,11 @@ export class Game {
   // page reload), so a peer who came back after the away grace still publishes a
   // newer connAt and clears its tombstone — visible at once, not stuck till expiry.
   private hasBeenOnline = false;
+  // True when realtime DROPPED after having been online (a genuine loss of cross-device sync),
+  // as opposed to the initial offline/solo state. While true, rival seats are shown as
+  // "unreachable" so a player sees that they may be out of sync with the others; cleared the
+  // instant realtime is back.
+  private realtimeDown = false;
   // Persistent seat ownership keyed by seat index. A claim survives a network
   // drop (the seat shows as "dropped"/dimmed) and is only cleared by an explicit
   // `left` broadcast, so a disconnected player never loses their seat or cards.
@@ -2724,6 +2729,8 @@ export class Game {
           toast(t("ui.connRestored"));
         }
         this.hasBeenOnline = true;
+        // Cross-device sync is back: clear the "unreachable" hint on rival seats.
+        if (this.realtimeDown) { this.realtimeDown = false; this.refreshZones(); }
       }
       if (s === "offline") {
         // Can't reach peers: never keep the loader waiting on the network. The
@@ -2733,10 +2740,14 @@ export class Game {
         this.cursorEls.clear();
         // Locks held by departed peers clear; they re-broadcast on reconnect.
         if (this.heldByOther.size) { this.heldByOther.clear(); this.requestRender(); }
-        // Tell the player live sync dropped (only after a real prior connection — never on
-        // the initial offline/solo state), so a lost connection is never silent or shown as
-        // "connecting". The status row in the menu also reflects it.
-        if (this.hasBeenOnline) toast(t("ui.connLost"));
+        // A genuine drop (we were online): tell the player live sync is down, and reflect it
+        // on the rival seats so their areas read as "unreachable" until we reconnect. Never
+        // fires on the initial offline/solo state, and never claims to be "connecting".
+        if (this.hasBeenOnline && !this.realtimeDown) {
+          this.realtimeDown = true;
+          this.refreshZones();
+          toast(t("ui.connLost"));
+        }
       }
     });
   }
@@ -3329,13 +3340,18 @@ export class Game {
       // present (network drop / closed tab). It stays reserved & dimmed until
       // that player rejoins or explicitly leaves — their cards remain private.
       const isDropped = !isActive && !!claim;
+      // Our own cross-device sync is down: a rival who reads as active may be out of reach, so
+      // mark their area "unreachable" (a dimmed, uncertain state) until we reconnect. Our own
+      // seat is never marked. Cleared automatically when realtime returns.
+      const unreachable = this.realtimeDown && !isSelfSeat && isActive;
 
       z.style.setProperty("--seat-color", `var(--seat-${seat})`);
       z.dataset.seat = String(seat);
       z.classList.toggle("zone--empty", !isActive && !isDropped);
       z.classList.toggle("zone--active", isActive);
       z.classList.toggle("zone--dropped", isDropped);
-      z.dataset.state = isActive ? "active" : isDropped ? "dropped" : "vacant";
+      z.classList.toggle("zone--unreachable", unreachable);
+      z.dataset.state = unreachable ? "unreachable" : isActive ? "active" : isDropped ? "dropped" : "vacant";
 
       // The name / status light / kick live in the non-rotating label layer that
       // shares this seat's physical slot, so they stay upright and above cards.
@@ -3346,6 +3362,7 @@ export class Game {
         labelEl.classList.toggle("is-empty", !isActive && !isDropped);
         labelEl.classList.toggle("is-active", isActive);
         labelEl.classList.toggle("is-dropped", isDropped);
+        labelEl.classList.toggle("is-unreachable", unreachable);
 
         const nameEl = labelEl.querySelector<HTMLElement>('[data-role="name"]');
         if (nameEl) {
