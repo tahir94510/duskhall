@@ -121,8 +121,11 @@
 .card.is-flip-staging .card__inner { transition: none; }
 
 /* A peer is holding this card: a subtle ivory dashed ring + not-allowed cursor
-   so you can see at a glance it's momentarily off-limits. Pure B&W, no hue. */
-.card.is-locked {
+   so you can see at a glance it's momentarily off-limits. Pure B&W, no hue.
+   Suppressed when the card is CONCEALED (inside a rival's private zone): the dashed
+   "in-motion" ring would otherwise leak that the owner is moving something in their
+   hidden area. The lock ring only ever shows for held cards on the open table. */
+.card.is-locked:not(.is-concealed) {
   cursor: not-allowed;
   outline: 1px dashed rgba(243, 239, 229, 0.5);
   outline-offset: 2px;

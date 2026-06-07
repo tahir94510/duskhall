@@ -39,9 +39,9 @@ Her oyuncuya 5 kart dağıt; kartlar gizli tutulur.
 
 Kalanı kapalı deste olarak ortaya koy.
 
-Her oyuncu desteden 1 kart açar; en yüksek tür Hizmetkâr, Büyü, Mühür, Müdahale sırasına göre ilk oyuncuyu belirler. Eşitlikte tekrar çek.
+Her oyuncu desteden 1 kart açar; en yüksek tür Hizmetkâr, Büyü, Mühür, Müdahale sırasına göre ilk oyuncuyu belirler. Eşitlikte tekrar çek. Oyun başlamadan önce açılan kartları desteye geri karıştır.
 
-Oyun saat yönünde ilerler.
+Oyun, seçilen ilk oyuncudan başlayarak saat yönünde ilerler.
 
 Oyuncu sayısı: 2 hızlı ve doğrudan; 3 dengeli ve taktiksel; 4 önerilen, kaotik ve diplomatik koltuk.
 

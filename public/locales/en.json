@@ -775,16 +775,16 @@
     "firstChosen": "{name} goes first.",
     "steps": {
       "shuffle": {
-        "title": "Setup",
-        "body": "Shuffle the deck face down in the centre. Deal 5 cards to each player to hold hidden, and leave the rest as the draw pile. The host taps the check once everyone is ready."
+        "title": "Deal",
+        "body": "Shuffle the deck and deal 5 cards to each player to keep hidden. Leave the rest face down in the centre as the draw pile. The host taps the check once everyone has their hand."
       },
       "reveal": {
         "title": "Who goes first",
-        "body": "Each player reveals the top card of the deck. The highest type goes first, in this order: Servant, then Spell, then Seal, then Intervention. If two players tie, only they reveal again. The host taps the check when this is done."
+        "body": "To decide who starts, each player draws one card from the deck and reveals it. The highest type goes first, in this order: Servant, then Spell, then Seal, then Intervention. If two players tie, only they draw again. Then shuffle those revealed cards back into the deck. The host taps the check when this is done."
       },
       "chooseFirst": {
         "title": "First player",
-        "body": "The host picks the player who revealed the highest card. Play then continues clockwise."
+        "body": "The host picks the player who revealed the highest card. They take the first turn, and play then continues clockwise."
       }
     },
     "phase": {
@@ -794,7 +794,7 @@
       },
       "action": {
         "title": "Action",
-        "body": "You have 2 action points. Spend each one on a single action: Create (play a Spell, Seal or Servant), Study (draw 1 card), or Cleanse (discard 1 card, then draw 1). Interventions are free and can be played at any time. Tap the check when you are done."
+        "body": "You have 2 HP to spend this turn (up to 5 with Crimson Monolith seals in play). Each HP buys one action: Create (play a Spell, Seal or Servant), Study (draw 1 card), or Cleanse (discard 1 card, then draw 1). Interventions are free and can be played any time. Tap the check when you are done."
       },
       "closing": {
         "title": "Closing",

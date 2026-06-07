@@ -196,8 +196,12 @@ body:not(.is-ready) .board__perspective { transition: none; }
   flex: 0 0 auto;
   display: grid;
   place-items: center;
+  /* line-height:0 so the button box is sized purely by the grid-centred glyph, never by a
+     text line-box — the × then sits dead-centre both ways next to the name. */
+  line-height: 0;
   width: 18px;
   height: 18px;
+  padding: 0;
   margin-left: 1px;
   border: 0;
   background: transparent;
@@ -207,7 +211,7 @@ body:not(.is-ready) .board__perspective { transition: none; }
   transition: color var(--dur-fast) var(--ease);
 }
 .seat-label__kick[hidden] { display: none; }
-.seat-label__kick svg { width: 13px; height: 13px; }
+.seat-label__kick svg { width: 13px; height: 13px; display: block; }
 .seat-label__kick:hover { color: #ff9a9a; }
 
 /* Anchor the cluster to the INNER edge of each strip (toward the board centre),
