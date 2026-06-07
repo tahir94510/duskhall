@@ -121,6 +121,21 @@ describe("clampSeedToOwnZone (one-way private pocket)", () => {
     expect(r.nx).toBeCloseTo(0.2 + inset + 0.2, 4);
   });
 
+  it("does NOT snag a card dragged through the open centre across a rival corner (regression)", () => {
+    // prev in the public centre (past the door, d=0.4); next over the bottom-left corner which is
+    // 'forbidden' for seat 0's pocket but is public/rival space the card is just passing across.
+    const r = clampSeedToOwnZone({ nx: 0.3, ny: 0.6 }, { nx: 0.1, ny: 0.85 }, one(), 0, cw, ch);
+    expect(r.nx).toBeCloseTo(0.1, 9);
+    expect(r.ny).toBeCloseTo(0.85, 9);
+  });
+
+  it("lets a card enter from the front-side without freezing (regression)", () => {
+    // prev in the centre near the door (d=0.35), next pushed into the pocket near the left leg.
+    const r = clampSeedToOwnZone({ nx: 0.3, ny: 0.65 }, { nx: 0.25, ny: 0.85 }, one(), 0, cw, ch);
+    expect(r.nx).toBeCloseTo(0.25, 9);
+    expect(r.ny).toBeCloseTo(0.85, 9);
+  });
+
   it("is a no-op for a spectator (seat < 0)", () => {
     const r = clampSeedToOwnZone({ nx: 0.5, ny: 0.8 }, { nx: 0.1, ny: 0.99 }, one(), -1 as Seat, cw, ch);
     expect(r.nx).toBeCloseTo(0.1, 9);
