@@ -14,7 +14,9 @@ are unchanged. 215 tests green.
   once and returns to the original host when they come back (a host who *exits* hands off for good).
 - **Truthful connection status.** It no longer reads "connecting" while effectively offline, and a
   short notice appears when live sync drops or returns.
-- **Guide fixes.** The first-player list always includes every seated player, even one who just
+- **Guide fixes.** Refreshing the page keeps the walkthrough exactly where it was (the whole
+  state is saved per room, not just whether the panel was open), so it no longer snaps back to
+  the intro. The first-player list always includes every seated player, even one who just
   stepped away or rejoined; a joiner sees a running walkthrough immediately; the "you" tag reads
   in parentheses.
 - **You hear the table now.** Other players' public flips and shuffles play their sound on your

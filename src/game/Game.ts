@@ -115,10 +115,13 @@ const LS_SEEN_ABOUT = "vaerum:seen-about";
 // Updates row shows a "New" badge while this differs from the latest entry; opening the
 // panel writes the latest here and clears the badge until the next update ships.
 const LS_SEEN_UPDATES = "vaerum:seen-updates";
-// Per-ROOM record of whether the host left the rulebook Guide panel open. A brand-new
-// room (no record) opens the Guide by default so newcomers always meet it; once the
-// host opens or closes it, that choice is remembered and restored across a refresh.
-const LS_GUIDE_OPEN_PREFIX = "vaerum:guide-open:";
+// Per-ROOM record of the FULL rulebook Guide state (open/closed, started, chosen first
+// player and step progress). Saved on every change so a page refresh restores the exact
+// walkthrough where it left off, not just whether the panel was open. A brand-new room (no
+// record) opens the Guide by default so newcomers always meet it. The legacy open-only key
+// ("vaerum:guide-open:") is swept on boot.
+const LS_GUIDE_PREFIX = "vaerum:guide:";
+const LS_GUIDE_OPEN_LEGACY_PREFIX = "vaerum:guide-open:";
 
 // `joinedAt` is the player's PERSISTED seniority in this room (their original join
 // time). It survives a refresh/reconnect so the host keeps host and seating order
@@ -347,6 +350,9 @@ export class Game {
 
     const restored = this.tryRestoreSnapshot();
     if (!restored) this.initialDealLocal();
+    // Restore the room's saved guide state too, so a page refresh keeps the walkthrough
+    // exactly where it was (open/closed, started, first player, step) instead of resetting.
+    this.restoreGuide();
 
     this.bindHooks();
     this.installKeyboardAndWheel();
@@ -1296,6 +1302,8 @@ export class Game {
     try { localStorage.removeItem(this.identKey(room)); } catch {}
     try { localStorage.removeItem(SS_SNAPSHOT_PREFIX + room); } catch {}
     try { sessionStorage.removeItem(SS_SEAT_PREFIX + room); } catch {}
+    try { localStorage.removeItem(LS_GUIDE_PREFIX + room); } catch {}
+    try { localStorage.removeItem(LS_GUIDE_OPEN_LEGACY_PREFIX + room); } catch {}
     // Note: the livecid heartbeat is keyed by client id (not room) and our id stays
     // live as we move to a fresh room, so it is intentionally left alone here.
   }
@@ -1342,6 +1350,15 @@ export class Game {
         } else if (key.startsWith(LIVE_CID_PREFIX)) {
           const beat = Number(localStorage.getItem(key) || 0);
           if (!beat || now - beat > 60000) dead.push(key); // 60s = many missed beats
+        } else if (key.startsWith(LS_GUIDE_PREFIX)) {
+          // Saved guide state shares the snapshot TTL; drop anything older so a long-
+          // abandoned room's walkthrough never resurrects.
+          try {
+            const v = JSON.parse(localStorage.getItem(key) || "{}") as { ts?: number };
+            if (typeof v.ts !== "number" || now - v.ts > SNAPSHOT_TTL_MS) dead.push(key);
+          } catch { dead.push(key); }
+        } else if (key.startsWith(LS_GUIDE_OPEN_LEGACY_PREFIX)) {
+          dead.push(key); // legacy open-only key, superseded by full-state guide storage
         }
       }
       for (const k of dead) { try { localStorage.removeItem(k); } catch {} }
@@ -1464,6 +1481,7 @@ export class Game {
     if (next === this.guide) return;
     this.guide = next;
     this.refreshGuide();
+    this.storeGuide(); // persist so a refresh restores the exact walkthrough
     if (broadcast && this.isHost()) this.broadcastGuideState();
   }
 
@@ -1476,7 +1494,16 @@ export class Game {
     if (msg.kind === "state") {
       const incoming: GuideState = { open: msg.open, started: msg.started, firstSeat: msg.firstSeat, progress: msg.progress, v: msg.v };
       const adopted = adoptGuide(this.guide, incoming);
-      if (adopted !== this.guide) { this.guide = adopted; this.refreshGuide(); }
+      // Re-render and persist ONLY on a genuinely newer state. The host re-broadcasts the
+      // same state every ~2s (reconcile); adopting that echo would otherwise re-render the
+      // panel and rewrite storage twice a second for no change.
+      if (adopted.v > this.guide.v) {
+        this.guide = adopted;
+        this.refreshGuide();
+        this.storeGuide();
+      } else {
+        this.guide = adopted; // settle on the same-or-newer object without side effects
+      }
       return;
     }
     // The only intent is "advance", folded in by the host ONLY. The host resolves the
@@ -1492,7 +1519,6 @@ export class Game {
   private openGuide(): void {
     if (!this.isHost() || this.guide.open) return;
     this.applyGuideLocal(setGuideOpenState(this.guide, true), true);
-    this.storeGuideOpen(true);
   }
 
   /** Host: close the guide panel for everyone. */
@@ -1500,39 +1526,58 @@ export class Game {
     if (!this.isHost() || !this.guide.open) return;
     void this.audio.play("ui-close");
     this.applyGuideLocal(setGuideOpenState(this.guide, false), true);
-    this.storeGuideOpen(false);
   }
 
-  private guideOpenKey(): string { return LS_GUIDE_OPEN_PREFIX + this.room; }
+  private guideKey(): string { return LS_GUIDE_PREFIX + this.room; }
 
-  /** Remember the host's open/closed choice for this room so a refresh restores it. */
-  private storeGuideOpen(open: boolean): void {
-    try { localStorage.setItem(this.guideOpenKey(), open ? "1" : "0"); } catch {}
-  }
-
-  /** The host's remembered Guide visibility for this room, or null if never set. */
-  private readStoredGuideOpen(): boolean | null {
+  /** Persist the FULL guide state for this room, so a page refresh restores the exact
+   *  walkthrough (open/closed, started, chosen first player and step progress) rather than
+   *  resetting to the intro. Stamped so a long-stale record is not resurrected. */
+  private storeGuide(): void {
     try {
-      const v = localStorage.getItem(this.guideOpenKey());
-      return v === null ? null : v === "1";
+      const g = this.guide;
+      localStorage.setItem(this.guideKey(), JSON.stringify({
+        open: g.open, started: g.started, firstSeat: g.firstSeat, progress: g.progress, v: g.v, ts: Date.now()
+      }));
+    } catch {}
+  }
+
+  /** Restore the room's saved guide state (within the snapshot TTL), or null. */
+  private readStoredGuide(): GuideState | null {
+    try {
+      const raw = localStorage.getItem(this.guideKey());
+      if (!raw) return null;
+      const o = JSON.parse(raw) as Partial<GuideState> & { ts?: number };
+      if (typeof o.ts !== "number" || Date.now() - o.ts > SNAPSHOT_TTL_MS) return null;
+      if (typeof o.v !== "number" || typeof o.progress !== "number") return null;
+      return {
+        open: o.open === true,
+        started: o.started === true,
+        firstSeat: typeof o.firstSeat === "number" ? Math.max(-1, Math.min(3, Math.round(o.firstSeat))) : -1,
+        progress: Math.max(0, Math.floor(o.progress)),
+        v: Math.max(0, Math.floor(o.v))
+      };
     } catch { return null; }
   }
 
-  /** Decide this room's INITIAL Guide visibility, once, as the host. A brand-new room
-   *  (no remembered choice) opens the Guide by default so newcomers always meet it; a
-   *  remembered choice (the host opened/closed it before a refresh) is restored. Skipped
-   *  entirely if authoritative guide state already exists (v > 0) — e.g. adopted from a
-   *  peer on join — so we never stomp a state the table is already sharing. */
+  /** Restore this room's saved guide on boot so a refresh keeps the walkthrough exactly where
+   *  it was. Marks the guide as already seeded so the host default-open seed does not stomp it. */
+  private restoreGuide(): void {
+    const stored = this.readStoredGuide();
+    if (!stored) return;
+    this.guide = stored;
+    this.guideSeeded = true;
+  }
+
+  /** Decide a BRAND-NEW room's initial Guide visibility, once, as the host: open by default so
+   *  newcomers always meet it. Skipped when a saved/peer state already exists (guideSeeded, or
+   *  v > 0), so a restored walkthrough or a state the table is already sharing is never stomped.
+   *  Gated on rosterReady so a joining client (briefly seat-0 host) never seeds wrongly. */
   private seedGuideOpenIfHost(): void {
-    // Wait for the authoritative roster: until then a joining client looks like the host and
-    // would auto-open the guide as "host", only to be demoted a moment later.
     if (!this.rosterReady || this.guideSeeded || this.spectator || !this.isHost()) return;
     this.guideSeeded = true;
-    if (this.guide.v !== 0) return; // a peer/host already established the guide state
-    const stored = this.readStoredGuideOpen();
-    const open = stored === null ? true : stored;
-    if (open !== this.guide.open) this.applyGuideLocal(setGuideOpenState(this.guide, open), true);
-    this.storeGuideOpen(open);
+    if (this.guide.v !== 0) return; // a peer/host/restore already established the guide state
+    this.applyGuideLocal(setGuideOpenState(this.guide, true), true);
   }
 
   /** A player tapped the confirm tick to complete the current step. The host applies
