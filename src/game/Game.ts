@@ -40,7 +40,7 @@ import {
 } from "../table/StackOps.js";
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
-import { cardZoneOverlap, pointInZoneCanonical, ZONE_PRIVACY_FRAC, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
+import { cardZoneFractions, pointInZoneCanonical, ZONE_PRIVACY_FRAC, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
 import { clampSeedToPage, type ClampCard } from "../table/playfield.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry, GuideWire } from "../net/realtime.js";
 import { initialGuide, startGuide, setOpen as setGuideOpenState, advance as advanceGuide, chooseFirst as chooseFirstGuide, adoptGuide, type GuideState } from "./guide.js";
@@ -842,38 +842,23 @@ export class Game {
     return seatIsRival(this.occupancy(), seat, this.self.seat, this.spectator);
   }
 
-  // The seat whose private zone currently holds this card, or null. A single low overlap
-  // threshold (ZONE_PRIVACY_FRAC, 10% of the card's area) decides it: a card is private
-  // once a small part is inside a zone from ANY side, and public again only once it is
-  // almost fully out. Because the threshold is low, it hides eagerly and reveals only
-  // near the edge, so a card never flashes to the table. Used for both concealment and
-  // the "can't touch a rival's card" rule.
-  // Hysteresis memory: the seat a card is currently "held private" by. Lets the
-  // conceal/own decision be EAGER on entry but STICKY on exit, so a card a player nudges
-  // around inside their own area never flashes to the table, and only becomes public once
-  // it has FULLY cleared the zone band. Keyed by card id; entries drop when a card leaves
-  // every zone. Device-independent (canonical), so every viewer agrees.
-  private zoneOwnerHold = new Map<string, number>();
-
+  // The seat whose private zone currently holds this card, or null. PURE and position-only, so
+  // EVERY client computes the exact same owner for the same card position — essential for
+  // multiplayer consistency (a path-dependent "sticky" memory could make a peer who joined
+  // mid-drag disagree about who owns a card resting near a diagonal). Trapezoid-based, so it
+  // matches the VISIBLE zones exactly and is identical for all four seats. The single low overlap
+  // threshold (ZONE_PRIVACY_FRAC = 10%) makes it behave correctly without any hysteresis:
+  //  - it CONCEALS as soon as ~10% of the body is in a zone (eager hide, any side), and
+  //  - it stays concealed until <10% remains in EVERY zone (i.e. ~90% out — a late, no-flash reveal), and
+  //  - the OWNING seat only flips to a neighbour when the MAJORITY of the body crosses the shared
+  //    diagonal (well past the halfway line), so a card never gets stolen by a side neighbour early.
   private cardZoneOwnerOf(c: CardState): number | null {
-    // Use the SHARED canonical card size, not this device's measured pixels, so the
-    // conceal/reveal decision is byte-identical on every screen and for every player
-    // (a card dragged out reveals everywhere at once; nudged in, hides everywhere).
-    const o = cardZoneOverlap(c.x, c.y, c.rot, CARD_CANON_W, CARD_CANON_H);
-    // No footprint overlap with any zone band at all -> fully out -> public. Drop the hold.
-    if (!o) {
-      if (this.zoneOwnerHold.has(c.id)) this.zoneOwnerHold.delete(c.id);
-      return null;
+    const f = cardZoneFractions(c.x, c.y, c.rot, CARD_CANON_W, CARD_CANON_H);
+    let best = -1, bestF = 0;
+    for (let s = 0; s < SEAT_COUNT; s++) {
+      if (f[s] > bestF) { bestF = f[s]; best = s; }
     }
-    // Already held private (sticky), OR a fresh, meaningful entry (eager): the card belongs
-    // to the zone its body now sits in. Refresh the hold to the current nearest seat so a
-    // card slid along a shared corner follows to the adjacent owner.
-    if (this.zoneOwnerHold.has(c.id) || o.frac > ZONE_PRIVACY_FRAC) {
-      this.zoneOwnerHold.set(c.id, o.seat);
-      return o.seat;
-    }
-    // Touching a band but below the eager threshold and not yet held: still public.
-    return null;
+    return best >= 0 && bestF > ZONE_PRIVACY_FRAC ? best : null;
   }
 
   // Is this card in a rival's private area whose seat is still held? Decided by the
@@ -2212,6 +2197,9 @@ export class Game {
     if (this.anyAnimating(stack)) return;
     const seed = this.state.cards.get(id);
     if (!seed) return;
+    // A shuffle inside YOUR OWN hidden area is silent (a private action makes no sound, like it
+    // already does for onlookers) — but it must still ANIMATE for you, so you see the cards riffle.
+    const privateZone = this.isOwnZoneCard(id);
     const upright = this.viewerUprightRot(seed.rot);
     // Lock the whole pile to peers for the entire face-down → straighten → gather →
     // riffle flow so no card can be grabbed mid-shuffle. Worst-case duration covers
@@ -2229,7 +2217,7 @@ export class Game {
         this.applyShuffleJitter(stack); // faces already down, so just the clean riffle wobble
         // Send immediately with a shuffle hint so peers riffle the same pile.
         this.flushWithAnim(stack, { kind: "shuffle", ids: stack });
-        void this.audio.play("shuffle");
+        if (!privateZone) void this.audio.play("shuffle");
       }, SHUFFLE_ANIM_MS);
     });
   }

@@ -84,16 +84,18 @@ describe("cardZoneOverlap: reports the best seat and the in-fraction", () => {
   it("returns null in the central area (no zone touched)", () => {
     expect(cardZoneOverlap(0.5, 0.5, 0, W, H)).toBe(null);
   });
-  it("stays detected while ANY part is in a band even when the nearest edge is a different seat (diagonal exit)", () => {
-    // A card sliding diagonally toward the bottom-right corner: its centre is nearest the RIGHT
-    // edge (seat 3) yet a sliver of its body is still in the BOTTOM band (seat 0). The union-aware
-    // overlap must still report it (non-null) so it stays concealed until FULLY out — the old
-    // nearest-seat-only test reported null here and revealed the card too early.
-    const nx = 0.65, ny = 0.63; // nearestSeat = 3 (1-nx < 1-ny), but body pokes into band 0
-    const o = cardZoneOverlap(nx, ny, 0, W, H);
-    expect(o).not.toBe(null);
-    expect(o!.seat).toBe(0); // owned by the band it actually overlaps
-    expect(o!.frac).toBeGreaterThan(0);
+  it("a corner card is owned by the TRAPEZOID holding most of its body (no side-band corner-steal)", () => {
+    // Centre inside seat 0's trapezoid near the seat-0/seat-2 diagonal. The old rectangle bands
+    // counted seat 2's full-height side band and could steal the corner while the card was still
+    // visually in seat 0; the trapezoid overlap keeps it seat 0 — the body is mostly there.
+    const o = cardZoneOverlap(0.35, 0.85, 0, W, H);
+    expect(o?.seat).toBe(0);
+  });
+  it("a card whose centre is in the public middle reads public, not concealed by a grazing sliver", () => {
+    // Centre past the door in the shared centre, only a hair of the body grazing a band. The
+    // trapezoid overlap treats it as public (its body is mostly in the centre), where the old
+    // rectangle band kept it privately 'owned' on a sub-1% sliver.
+    expect(cardZoneOverlap(0.65, 0.63, 0, W, H)).toBe(null);
   });
   it("reveals only when fully clear of every band", () => {
     // Far enough into the centre that no band is touched on any axis → public.

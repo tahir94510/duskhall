@@ -135,32 +135,47 @@ export function cardZoneOwner(nx: number, ny: number, rot: number, cardWFrac: nu
 }
 
 /**
- * The seat whose private band the card's footprint overlaps MOST, and that overlap as a fraction
- * of the card's area (0..1), or null if the card touches NO band at all (fully in the public
- * centre or off the board). cardZoneOwner gates this at ZONE_PRIVACY_FRAC (eager hide, late
- * reveal). `nx, ny` is the card CENTRE fraction; `cardWFrac, cardHFrac` are the card's size as
- * fractions of the board. We test ALL FOUR edge bands (not just the nearest seat) and keep the
- * largest overlap: this is what keeps a card concealed until it is FULLY out of every zone, even
- * when it slides diagonally across a corner where two zones meet — there the nearest seat flips,
- * but the card still overlaps the original band, so it stays private until no band overlaps at
- * all. Rotation-aware (an odd quarter-turn swaps the footprint).
+ * The fraction (0..1) of the card's footprint that lies in EACH seat's TRAPEZOID, indexed by seat.
+ * The footprint is sampled on a grid and every sample classified by seatForCanonicalPoint — i.e.
+ * by the actual diagonal-split trapezoid the point sits in, NOT by overlapping rectangle bands.
+ * The trapezoids tile the board with no overlap, so this is ANGULARLY CORRECT at every corner and
+ * edge and IDENTICAL for all four seats: a card stays "in your zone" while its body is mostly past
+ * the visual diagonal, instead of being stolen by a neighbour's full-height side band the moment it
+ * nears a corner (the old rectangle max-overlap bug). Rotation-aware (an odd quarter-turn swaps the
+ * footprint). `nx, ny` is the card CENTRE; sizes are fractions of the board.
  */
-export function cardZoneOverlap(nx: number, ny: number, rot: number, cardWFrac: number, cardHFrac: number): { seat: Seat; frac: number } | null {
+export function cardZoneFractions(nx: number, ny: number, rot: number, cardWFrac: number, cardHFrac: number): [number, number, number, number] {
+  const out: [number, number, number, number] = [0, 0, 0, 0];
   const quarter = ((Math.round(rot) % 2) + 2) % 2; // 0 or 1 (odd turn swaps w/h)
   const w = quarter === 1 ? cardHFrac : cardWFrac;
   const h = quarter === 1 ? cardWFrac : cardHFrac;
-  const area = w * h;
-  if (area <= 0) return null;
-  const cx0 = nx - w / 2, cy0 = ny - h / 2, cx1 = nx + w / 2, cy1 = ny + h / 2;
+  if (w <= 0 || h <= 0) return out;
+  const N = 5; // 5x5 = 25 samples — fine-grained enough for the privacy threshold, cheap per frame
+  for (let i = 0; i < N; i++) {
+    const sx = nx + ((i + 0.5) / N - 0.5) * w;
+    for (let j = 0; j < N; j++) {
+      const sy = ny + ((j + 0.5) / N - 0.5) * h;
+      const s = seatForCanonicalPoint(sx, sy);
+      if (s !== null) out[s]++;
+    }
+  }
+  const total = N * N;
+  out[0] /= total; out[1] /= total; out[2] /= total; out[3] /= total;
+  return out;
+}
+
+/**
+ * The seat whose TRAPEZOID the card's footprint overlaps MOST, and that overlap as a fraction of
+ * the card's area (0..1), or null if the card is in no zone at all (the public centre or off-board).
+ * cardZoneOwner gates this at ZONE_PRIVACY_FRAC. (Game.cardZoneOwnerOf adds sticky hysteresis so a
+ * card near a diagonal keeps its owner until it is mostly out.)
+ */
+export function cardZoneOverlap(nx: number, ny: number, rot: number, cardWFrac: number, cardHFrac: number): { seat: Seat; frac: number } | null {
+  const f = cardZoneFractions(nx, ny, rot, cardWFrac, cardHFrac);
   let best: { seat: Seat; frac: number } | null = null;
   for (const s of [0, 1, 2, 3] as Seat[]) {
-    const z = ZONES[s];
-    const ix = Math.min(cx1, z.x1) - Math.max(cx0, z.x0);
-    const iy = Math.min(cy1, z.y1) - Math.max(cy0, z.y0);
-    if (ix <= 0 || iy <= 0) continue;
-    const frac = (ix * iy) / area;
     // Strictly-greater keeps the lower seat index on an exact corner tie (deterministic for all).
-    if (!best || frac > best.frac) best = { seat: s, frac };
+    if (f[s] > 0 && (!best || f[s] > best.frac)) best = { seat: s, frac: f[s] };
   }
   return best;
 }

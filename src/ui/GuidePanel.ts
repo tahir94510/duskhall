@@ -112,6 +112,14 @@ export class GuidePanel {
     return this.vm?.seats.find((s) => s.seat === seat)?.name ?? t("guide.aPlayer");
   }
 
+  // The seat's name with a "(you)" tag appended when it is the local player's own seat, so a
+  // player always recognises themselves — in the turn header and the "first player" line, just
+  // like the chooseFirst picks already mark self.
+  private seatNameMaybeYou(seat: number): string {
+    const base = this.seatName(seat);
+    return this.vm && seat >= 0 && seat === this.vm.selfSeat ? `${base} ${t("guide.youTag")}` : base;
+  }
+
   private render(): void {
     const vm = this.vm;
     if (!vm) return;
@@ -146,7 +154,7 @@ export class GuidePanel {
     } else if (view.phase === "setup" && view.step) {
       this.barTextEl.innerHTML = `<span class="guide__bar-title">${esc(t(`guide.steps.${view.step.id}.title`))}</span>`;
     } else {
-      const name = view.turnSeat >= 0 ? this.seatName(view.turnSeat) : t("guide.aPlayer");
+      const name = view.turnSeat >= 0 ? this.seatNameMaybeYou(view.turnSeat) : t("guide.aPlayer");
       const phase = view.turnPhase ?? "focus";
       this.barTextEl.innerHTML =
         `<span class="guide__bar-title">${esc(t("guide.turnHeading", { name }))}</span>` +
@@ -222,7 +230,7 @@ export class GuidePanel {
     // The "X goes first / Round N" line is only meaningful on the opening round; once the
     // loop is rolling the top bar already names whose turn it is, so later rounds drop it to
     // keep the body focused on the current phase.
-    const first = view.round === 1 && vm.state.firstSeat >= 0 ? this.seatName(vm.state.firstSeat) : null;
+    const first = view.round === 1 && vm.state.firstSeat >= 0 ? this.seatNameMaybeYou(vm.state.firstSeat) : null;
     const firstLine = first ? `<p class="guide__hint">${esc(t("guide.firstChosen", { name: first }))} ${esc(t("guide.roundLabel", { n: view.round }))}</p>` : "";
     const turnHint = vm.spectator ? `<p class="guide__muted">${esc(t("guide.spectatorNote"))}</p>`
       : yours ? `<p class="guide__hint">${esc(t("guide.yourTurn"))}</p>`
