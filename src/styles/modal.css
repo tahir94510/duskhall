@@ -103,7 +103,7 @@
   font-family: var(--font-display);
   text-decoration: none;
   letter-spacing: 0.01em;
-  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 .btn:hover { border-color: var(--line-3); background: rgba(26, 26, 26, 0.78); color: var(--ivory); }
 a.btn, a.btn:hover { text-decoration: none; color: var(--ivory); }
