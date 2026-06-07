@@ -2840,11 +2840,20 @@ export class Game {
     // visible jump. Sent unconditionally (even a closed guide) so a joiner whose cached guide
     // the host has since CLOSED still converges (the periodic reconcile skips a closed guide).
     if (this.isHost()) this.broadcastGuideState();
-    const otherSeats = Array.from(this.players.values())
-      .filter((p) => p.id !== askerId && p.seat >= 0)
-      .map((p) => p.seat);
-    if (!otherSeats.length) return; // asker is alone (or only spectators present)
-    if (this.self.seat === Math.min(...otherSeats)) this.sendSnapshot();
+    const others = Array.from(this.players.values()).filter((p) => p.id !== askerId && p.seat >= 0);
+    if (!others.length) return; // asker is alone (or only spectators present)
+    // Prefer the HOST as the responder: its seat claims / removed[] are the authoritative away
+    // picture, so a joiner converges to the exact roster at once instead of learning possibly
+    // stale claims from a non-host peer (which would only self-heal a reconcile later — a window
+    // where a present player could read as "away"). The host id is deterministic on every client,
+    // so exactly one peer answers. If the host is the asker (a reconnecting host) or is not in the
+    // roster, fall back to the lowest-seat peer (still a single, agreed-upon responder).
+    const host = this.hostId();
+    const hostResponds = !!host && host !== askerId && others.some((p) => p.id === host);
+    const iRespond = hostResponds
+      ? this.self.id === host
+      : this.self.seat === Math.min(...others.map((p) => p.seat));
+    if (iRespond) this.sendSnapshot();
   }
 
   // The host is the room's "owner": the present, seated player who has been here the
