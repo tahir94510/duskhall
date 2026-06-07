@@ -43,7 +43,7 @@
     "connOnline": "Online",
     "connConnecting": "Connecting...",
     "connOffline": "Offline",
-    "connLost": "Connection lost — reconnecting…",
+    "connLost": "Connection lost. Reconnecting...",
     "connRestored": "Reconnected.",
     "guide": "Guide"
   },
@@ -242,9 +242,9 @@
         "title": "Privacy, presence and a more alive table",
         "items": [
           "Your hand stays private: an opponent's cards are never shown, not even for a moment while the table is loading.",
-          "Players who drop are no longer kicked automatically — their seat is kept until they leave or the host removes them. If the host drops, hosting passes to someone present and returns to them when they come back.",
+          "Players who drop are no longer kicked automatically. Their seat is kept until they leave or the host removes them. If the host drops, hosting passes to someone present and comes back to them when they return.",
           "Clearer connection status, with a brief note when live sync drops or comes back.",
-          "You now hear other players' flips and shuffles, not just see them — so the table feels alive. Moves inside a hidden hand stay private and silent.",
+          "You now hear other players' flips and shuffles, not just see them, so the table feels alive. Moves inside a hidden hand stay private and silent.",
           "Polish: a dragged card sits cleanly on its shadow, the first-player list always shows everyone seated, text is easier to read, there are more player names, and the music reshuffles fresh in each room."
         ]
       },
@@ -256,7 +256,7 @@
           "Player names and the green status light always stay clear above the hand areas, and a card you move past another player's area now stays on top of it.",
           "The table appears fully drawn instead of popping its card art in. If you come back to the tab after a while, you'll see a brief loading only when something needs to reload.",
           "Better fit on phones: the deck and discard piles no longer overlap, and the guide no longer covers the logo or the menu button.",
-          "Turning a pile over no longer rotates it upright on its own — it just turns over, the same as a single card. To square a pile up, use Gather."
+          "Turning a pile over no longer rotates it upright on its own. It just turns over, the same as a single card. To square a pile up, use Gather."
         ]
       },
       {
