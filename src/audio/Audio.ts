@@ -601,6 +601,16 @@ export class AudioEngine {
     return typeof next === "number" ? next : 0;
   }
 
+  /** Begin a FRESH shuffled rotation: every remaining track plays once before any repeats,
+   *  reshuffling when the bag empties. The currently-playing track keeps playing and is
+   *  excluded from the new bag so it is not the very next track. Called when a room opens so
+   *  the shuffle "memory" is scoped to the room session, then runs until the room closes. */
+  resetMusicRotation(): void {
+    if (this.musicPlaylist.length <= 1) return;
+    this.musicBag = this.buildShuffledBag(this.musicIndex, true);
+    this.saveMusicState();
+  }
+
   private restoreMusicState(): void {
     const n = this.musicPlaylist.length;
     // Restore the remaining bag if it still matches the current playlist size.
@@ -635,9 +645,15 @@ export class AudioEngine {
   // Drive the shared <audio> element to track #i in the playlist. Autoplay
   // blocking is handled by retrying on the next user gesture.
   private playMusicTrack(i: number): void {
-    if (!this.musicElement || this.musicPlaylist.length === 0) return;
-    const path = this.musicPlaylist[i];
+    const n = this.musicPlaylist.length;
+    if (!this.musicElement || n === 0) return;
+    // Wrap a stale/out-of-range index into the current playlist (the manifest can change
+    // between sessions), so a saved index that now points past the list never silently
+    // halts the music — it just lands on a valid track.
+    const idx = ((Math.trunc(i) % n) + n) % n;
+    const path = this.musicPlaylist[idx];
     if (!path) return;
+    this.musicIndex = idx;
     const el = this.musicElement;
     // A lone track loops itself for a seamless bed; a playlist relies on the
     // "ended" handler to advance, so looping must stay off there.

@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.9.17: Privacy, presence, connection & polish
+
+A correctness, security and polish pass. The card sync, canonical frame and balance numbers
+are unchanged. 215 tests green.
+
+- **Hidden hands never leak (security).** A rival's face-up cards in their private area could
+  briefly show through the loading veil before the roster resolved. Now any owned card stays a
+  blurred back until the table knows the seating, so a private hand is never revealed — not even
+  for a frame during load.
+- **No more automatic kicks.** A player who drops keeps their seat reserved indefinitely; it is
+  freed only by leaving or a host kick. If the host drops, hosting passes to a present player at
+  once and returns to the original host when they come back (a host who *exits* hands off for good).
+- **Truthful connection status.** It no longer reads "connecting" while effectively offline, and a
+  short notice appears when live sync drops or returns.
+- **Guide fixes.** The first-player list always includes every seated player, even one who just
+  stepped away or rejoined; a joiner sees a running walkthrough immediately; the "you" tag reads
+  in parentheses.
+- **You hear the table now.** Other players' public flips and shuffles play their sound on your
+  screen too (hidden-hand moves stay silent and private).
+- **Visual & content polish.** A dragged card lines up cleanly with its lift shadow (no gap), and
+  a card moved within your own hand no longer spills a shadow across the tray; the guide's buttons
+  are frameless and centred; muted text is more readable; the name pool is larger; the music
+  reshuffles fresh each room; and a brief loader covers a language change.
+
+
 ## 0.9.16: Drop the legacy "kabal" namespace
 
 Housekeeping: the project was renamed KABAL → Vaerum long ago, but the old `kabal`

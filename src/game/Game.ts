@@ -25,7 +25,7 @@ import { t, onLocaleChange } from "../i18n/index.js";
 import { getOrCreateRoom, newRoom, setRoomSlug } from "../net/room.js";
 import { showLoader, hideLoader } from "../ui/loader.js";
 import { seededDeck } from "./deck.js";
-import { seatIsRival, cardIsRivalOwned, hostId, isHost, hostCandidatesWithAway, resolveSeating, shouldClearTombstone, shouldReTombstone, seniorityOnReturn, type Occupancy, type HostCandidate, type AwayHostClaim, type SeatClaimEntry } from "./occupancy.js";
+import { seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, shouldClearTombstone, shouldReTombstone, seniorityOnReturn, type Occupancy, type HostCandidate, type SeatClaimEntry } from "./occupancy.js";
 import {
   findStackOverlapping,
   findConnectedStack,
@@ -230,32 +230,19 @@ export class Game {
   // The last host id we computed, so applyPresence can detect a transfer and stamp the
   // outgoing host into recentHosts.
   private lastHostId = "";
-  // "Away" grace: a seat whose owner dropped (closed the tab / lost the network)
-  // without sending an explicit `left` stays reserved & dimmed ONLY for this long.
-  // If they have not returned by then we vacate the seat for good — release their
-  // cards to the public table and stop showing them as "away" — so a player who
-  // truly went away never lingers forever in everyone else's view. A reconnect
-  // within the window cancels the timer and keeps their seat. Each client runs
-  // this independently and converges (claims are local; card release is LWW).
+  // A dropped player's seat is reserved INDEFINITELY (no auto-eviction); a seat is freed
+  // only by an explicit exit or a host kick. This map is vestigial (no timer is ever
+  // armed now) but kept so the few cancel/clear call sites stay valid and harmless.
   private awayTimers = new Map<number, number>();
-  // How long a dropped player's seat (and concealed cards, and host role) is held before the
-  // system auto-evicts them. Generous on purpose: a refresh, a network blip, a phone locking or
-  // an app-switch must NEVER cost a player their hand or presence — only a deliberate exit, a
-  // host kick, or a genuinely long absence releases them. (The host can still kick an unwanted
-  // away player immediately.) SENIORITY_RECOVERY_MS tracks this, preserving the no-two-hosts
-  // invariant below.
-  private static readonly AWAY_GRACE_MS = 120000;
-  // How recently the stored identity must have been active for us to RECOVER our
-  // seniority (joinedAt) on (re)connect. A quick refresh/drop is well within this
-  // window, so we keep host; an absence longer than this (our seat was released long
-  // ago) yields a fresh seniority, so we can't reclaim host after being gone.
-  // INVARIANT: this must NOT exceed AWAY_GRACE_MS. Peers vacate an away seat and
-  // transfer host exactly at the away grace; if the recovery window ran longer, an
-  // ex-host returning in the gap [away grace, recovery] would recover its senior
-  // joinedAt AND clear its tombstone (fresh connAt), re-winning host and briefly
-  // splitting the room into two hosts. Matching the windows means once peers have
-  // expired the seat, the returner always ranks last and can never steal host back.
-  private static readonly SENIORITY_RECOVERY_MS = Game.AWAY_GRACE_MS;
+  // How recently the stored identity must have been active for us to RECOVER our original
+  // seniority (joinedAt) on reconnect — i.e. for a host who merely DROPPED (never exited) to
+  // reclaim host when they return. Since away seats are never auto-evicted, the seat is still
+  // reserved on every peer when the owner returns, so recovering seniority can never split the
+  // room into two hosts (the old short-window invariant is gone). We allow recovery for as long
+  // as the stored identity itself lives (IDENT_TTL_MS), so a long absence still reclaims host.
+  // An explicit EXIT wipes that identity (clearRoomStorage) and resets joinedAt, so an exited
+  // host returns junior and never reclaims — exactly the intended distinction.
+  private static readonly SENIORITY_RECOVERY_MS = IDENT_TTL_MS;
 
   constructor(deps: GameDeps) {
     this.host = deps.host;
@@ -1428,17 +1415,25 @@ export class Game {
   /** Build the read-model the panel renders from. */
   private buildGuideVM(): GuideVM {
     const seats: GuideSeatInfo[] = [];
-    for (const p of this.players.values()) {
-      if (p.seat >= 0 && this.activeSeats.has(p.seat)) {
-        seats.push({
-          seat: p.seat,
-          name: p.name,
-          color: SEAT_COLORS[p.seat] ?? SEAT_COLORS[0]!,
-          isSelf: p.id === this.self.id
-        });
-      }
+    // Iterate the four physical seats directly (not the players map) so the first-player
+    // picker reflects true seat occupancy: a seat counts as seated if a player is ACTIVE on
+    // it OR it is reserved by an away claim (owner dropped, never left). This is what keeps a
+    // dropped — and especially a just-REJOINED — player from ever going missing from the list,
+    // regardless of whether the guide was restarted.
+    for (let seat = 0; seat < SEAT_COUNT; seat++) {
+      const active = this.activeSeats.has(seat)
+        ? Array.from(this.players.values()).find((p) => p.seat === seat)
+        : undefined;
+      const claim = this.seatClaims.get(seat);
+      if (!active && !claim) continue;
+      const id = active ? active.id : claim!.id;
+      seats.push({
+        seat,
+        name: active ? active.name : claim!.name,
+        color: SEAT_COLORS[seat] ?? SEAT_COLORS[0]!,
+        isSelf: id === this.self.id
+      });
     }
-    seats.sort((a, b) => a.seat - b.seat);
     // Suppress host-only guide controls (Start/close/restart) until the roster is
     // authoritative, so a joining client never flashes them before it is demoted.
     return { state: this.guide, seats, selfSeat: this.claimSeat, spectator: this.spectator, isHost: this.rosterReady && this.isHost() };
@@ -1826,10 +1821,14 @@ export class Game {
   // gather; an already-tidy single-spot pile straightens in place). The pile stays
   // elevated across all phases. `actMs` is the acting animation's length so the
   // elevation covers it. Each phase plays its own soft cue for a clean audio flow.
-  private tidyStackThen(stack: string[], anchorId: string, act: () => void, actMs: number): void {
+  private tidyStackThen(stack: string[], anchorId: string, act: () => void, actMs: number, squareUp = true): void {
     const anchor = this.state.cards.get(anchorId);
     if (!anchor) return;
-    const target = this.viewerUprightRot(anchor.rot);
+    // `squareUp` true (shuffle): tidy TO upright, so a deck squares up before the riffle.
+    // false (flip): tidy to the pile's CURRENT orientation (the top card's angle) — a flip
+    // turns the pile over WITHOUT silently rotating it, matching a single-card flip. A
+    // scattered pile still collects into one block; it just keeps whatever angle it was at.
+    const target = squareUp ? this.viewerUprightRot(anchor.rot) : anchor.rot;
     // Already a tidy single stack (resting deck/discard)? Skip the dead-time and
     // turn/shuffle it instantly — only a scattered or fanned pile needs the tidy.
     if (isTidyStack(this.state, stack, anchor.x, anchor.y, target)) {
@@ -1845,9 +1844,11 @@ export class Game {
     this.elevateDuringAnim(stack, total);
 
     const doGather = () => {
-      // Re-resolve the anchor's spot (it may have a fresh position) and collect.
+      // Re-resolve the anchor's spot (it may have a fresh position) and collect, to the
+      // same target orientation chosen above (upright for shuffle, current angle for flip).
       const a = this.state.cards.get(anchorId) ?? anchor;
-      gatherStack(this.state, stack, a.x, a.y, this.viewerUprightRot(a.rot));
+      const gatherRot = squareUp ? this.viewerUprightRot(a.rot) : a.rot;
+      gatherStack(this.state, stack, a.x, a.y, gatherRot);
       for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
       this.elevateDuringAnim(stack, gatherMs + actMs);
       // Write the gathered transforms so the cards SLIDE together via the CSS
@@ -1902,7 +1903,9 @@ export class Game {
     // one can grab/flip/rotate a card out from under the animation. Released by a
     // guaranteed timer covering the worst-case (straighten + gather + flip) duration.
     this.lockPileForAnim(stack, STACK_STRAIGHTEN_MS + STACK_TIDY_MS + FLIP_ANIM_MS);
-    this.tidyStackThen(stack, topId, () => this.performStackFlip(stack), FLIP_ANIM_MS);
+    // squareUp:false — a flip turns the pile over in place, keeping its orientation (it does
+    // NOT force the pile upright). Squaring up is the separate Gather action.
+    this.tidyStackThen(stack, topId, () => this.performStackFlip(stack), FLIP_ANIM_MS, false);
   }
 
   // The flip itself: reverse depth order + toggle every face, then float the pile
@@ -2251,14 +2254,18 @@ export class Game {
     if (!this.dirtyIds.size) return;
     this.patchVersion++;
     const now = this.stamp();
+    // Skip any id whose card has vanished (e.g. a room reset cleared the board between
+    // the schedule and this flush): the same guard flushWithAnim already uses, so a
+    // missing card can never crash the commit on a non-null assertion.
     const cards = Array.from(this.dirtyIds).slice(0, 200).map((id) => {
-      const c = this.state.cards.get(id)!;
+      const c = this.state.cards.get(id);
+      if (!c) return null;
       // Stamp with the monotonic clock + our id so peers resolve conflicts
       // deterministically and skew can never reject this as stale.
       c.ts = now;
       c.by = this.self.id;
       return this.wireCard(c);
-    });
+    }).filter((c): c is PatchCard => c !== null);
     // A finished gesture is a commit, not a preview: it must not be dropped by the
     // send-rate bucket during a busy drag, or peers keep the stale position.
     this.bus.sendCommit({ v: this.patchVersion, by: this.self.id, cards });
@@ -2516,46 +2523,12 @@ export class Game {
     for (const [id, t] of this.removedTombstones) if (t.until <= now) this.removedTombstones.delete(id);
   }
 
-  // Start a grace countdown for every seat that is currently "away" (a persistent
-  // claim whose owner is not present), and cancel the countdown for any seat that
-  // is active again or has become empty. When a countdown elapses the seat is
-  // vacated for good (expireSeat), so a player who really left never stays shown
-  // as "away" forever — while a quick drop+reconnect keeps their seat.
+  // Away players are NEVER auto-evicted. A seat whose owner dropped (closed the tab /
+  // lost the network) stays reserved and dimmed ("away") indefinitely; it is freed ONLY
+  // by an explicit exit (applyLeft) or a host kick. So there is no grace countdown to
+  // arm — we just defensively clear any timer that may linger from an older build.
   private manageAwayTimers(): void {
-    for (let seat = 0; seat < SEAT_COUNT; seat++) {
-      const claim = this.seatClaims.get(seat);
-      const away = !!claim && !this.activeSeats.has(seat);
-      const pending = this.awayTimers.get(seat);
-      if (away) {
-        if (pending) continue; // already counting down for this seat
-        const claimId = claim!.id;
-        const handle = window.setTimeout(() => {
-          this.awayTimers.delete(seat);
-          this.expireSeat(seat, claimId);
-        }, Game.AWAY_GRACE_MS);
-        this.awayTimers.set(seat, handle);
-      } else if (pending) {
-        window.clearTimeout(pending);
-        this.awayTimers.delete(seat);
-      }
-    }
-  }
-
-  // The away grace lapsed: if the seat is STILL held by the same dropped claim,
-  // vacate it for good. applyLeft already frees the seat, releases that seat's
-  // cards to the public table and tombstones the owner — exactly what we want.
-  private expireSeat(seat: number, claimId: string): void {
-    const claim = this.seatClaims.get(seat);
-    if (!claim || claim.id !== claimId) return; // reclaimed or already gone
-    if (this.activeSeats.has(seat)) return; // owner came back just in time
-    this.applyLeft({ id: claimId, seat });
-    // Each client runs its own away countdown, so they can lapse a few moments
-    // apart (or a late joiner never saw the away state at all). Broadcast the
-    // departure so every peer frees the seat and releases its cards at once
-    // instead of waiting for its own timer or the next host reconcile. applyLeft
-    // is idempotent and tombstoned, so a redundant `left` from another client is a
-    // harmless no-op.
-    this.bus.sendLeft({ id: claimId, seat });
+    if (this.awayTimers.size) this.clearAwayTimers();
   }
 
   private clearAwayTimers(): void {
@@ -2703,6 +2676,7 @@ export class Game {
         if (this.hasBeenOnline) {
           this.selfConnAt = Date.now();
           this.bus.updateMe(this.presencePayload());
+          toast(t("ui.connRestored"));
         }
         this.hasBeenOnline = true;
       }
@@ -2714,6 +2688,10 @@ export class Game {
         this.cursorEls.clear();
         // Locks held by departed peers clear; they re-broadcast on reconnect.
         if (this.heldByOther.size) { this.heldByOther.clear(); this.requestRender(); }
+        // Tell the player live sync dropped (only after a real prior connection — never on
+        // the initial offline/solo state), so a lost connection is never silent or shown as
+        // "connecting". The status row in the menu also reflects it.
+        if (this.hasBeenOnline) toast(t("ui.connLost"));
       }
     });
   }
@@ -2723,6 +2701,11 @@ export class Game {
   // of an N-peer storm, and the asker never answers itself.
   private respondToHello(askerId: string): void {
     if (this.spectator) return;
+    // The HOST re-broadcasts the authoritative guide state immediately on any sync request,
+    // so a joiner sees a running walkthrough at once instead of waiting up to the ~2s
+    // reconcile. Guide state is host-authoritative, so this is gated on isHost (independent
+    // of the snapshot responder, which is the lowest-seat player to dedupe board snapshots).
+    if (this.isHost() && (this.guide.open || this.guide.started)) this.broadcastGuideState();
     const otherSeats = Array.from(this.players.values())
       .filter((p) => p.id !== askerId && p.seat >= 0)
       .map((p) => p.seat);
@@ -2746,17 +2729,12 @@ export class Game {
     if (!this.spectator && this.claimSeat >= 0 && !active.some((c) => c.id === this.self.id)) {
       active.push({ id: this.self.id, joinedAt: this.selfJoinedAt, seat: this.claimSeat });
     }
-    // Include AWAY claims (seat reserved, owner not currently present) so a host that
-    // merely DROPPED keeps the role for the whole away-grace window instead of it
-    // bouncing to another player the instant their presence vanishes. The dropped host
-    // is the earliest joiner, so hostId() keeps them; once the claim is released (real
-    // leave/kick or grace expiry) the role transfers to the next-oldest active player.
-    const awayClaims: AwayHostClaim[] = [];
-    for (const [seat, claim] of this.seatClaims) {
-      if (this.activeSeats.has(seat)) continue;
-      awayClaims.push({ id: claim.id, joinedAt: claim.joinedAt, seat });
-    }
-    return hostCandidatesWithAway(active, awayClaims);
+    // Host is the senior currently-ACTIVE player. An away host (dropped, not exited) yields
+    // the role IMMEDIATELY to the senior active player so the table never waits on someone who
+    // is gone. Their seat stays reserved; when they RETURN they become active again with their
+    // recovered (oldest) seniority and so reclaim host. An exited host returns junior (fresh
+    // seniority) and never reclaims. Away claims are therefore excluded from host candidacy.
+    return active;
   }
   private hostId(): string {
     return hostId(this.hostCandidates());
@@ -3054,7 +3032,9 @@ export class Game {
     // riffleDeckAfterGather waits out the settle window before the wobble.
     if (p.anim) {
       if (isSnapshot) {
-        if (p.anim.kind === "shuffle") this.riffleDeckAfterGather(p.anim.ids);
+        // Reset-deck riffle: the deck is public, so peers hear the shuffle too (sound:true),
+        // matching "public table actions are seen AND heard by everyone".
+        if (p.anim.kind === "shuffle") this.riffleDeckAfterGather(p.anim.ids, true);
       } else {
         this.playRemoteAnim(p.anim);
       }
@@ -3070,7 +3050,12 @@ export class Game {
   private playRemoteAnim(anim: PatchAnim): void {
     const ids = anim.ids.filter((id) => this.state.cards.has(id) && this.cardEls.has(id));
     if (!ids.length || this.anyAnimating(ids)) return;
+    // A concealed (rival hidden-zone) gesture is never animated OR sounded for onlookers:
+    // its cards just update silently under the filter, as now. Reaching past this means the
+    // whole pile is PUBLIC, so a peer's action is both seen AND heard here — table actions
+    // are conveyed consistently to everyone (only hidden-zone moves stay silent).
     for (const id of ids) if (this.isRivalOwnedCard(id)) return;
+    void this.audio.play(anim.kind === "flip" ? "flip" : "shuffle");
     if (anim.kind === "flip") {
       // Physical turn-over: the patch already carries the reversed z and the unified
       // target faces, so flipVisibleCardId picks the SAME visible card the actor saw,
@@ -3238,12 +3223,25 @@ export class Game {
       // animating: the concealment rule forces rotateY(0), which would fight a
       // flip mid-rotation; the very next frame after the turn settles writes the
       // correct class.
-      if (!busy) el.classList.toggle("is-concealed", this.isRivalOwnedCard(c.id));
+      // Conceal a rival's owned card. SECURITY: until the roster is authoritative
+      // (rosterReady), we cannot yet tell which seat is ours, so a freshly-loaded
+      // joiner would otherwise paint a rival's face-up hand card through the
+      // translucent loader. Be pessimistic: any card the snapshot marks as OWNED
+      // (ownerSeat != null) shows its blurred back until the roster resolves, so a
+      // private hand is never revealed during load. Public cards (fresh deck,
+      // ownerSeat null) are unaffected.
+      if (!busy) {
+        const conceal = this.isRivalOwnedCard(c.id) || (!this.rosterReady && c.ownerSeat !== null);
+        el.classList.toggle("is-concealed", conceal);
+      }
       // A card resting in YOUR OWN hand area reads as sitting under a thin glass surface
       // (a sheen on the card, no blur, so you still read it perfectly). Cleared while held
       // or animating so a lifted card is clean.
-      if (!busy) el.classList.toggle("is-own-zone", this.isOwnZoneCard(c.id));
-      else el.classList.remove("is-own-zone");
+      // Keep is-own-zone in sync even while held/animating (DragController updates the
+      // card's live x/y), so a card moved WITHIN its owner's zone can keep a contained lift
+      // instead of spilling the big table shadow across the tray. The under-glass sheen
+      // (::after) is separately suppressed for held/animating cards in card.css.
+      el.classList.toggle("is-own-zone", this.isOwnZoneCard(c.id));
       // Busy indicator while a peer is holding this card. Skip while WE are dragging
       // or animating it (busy): a stale peer lock would otherwise paint the dashed
       // "locked" outline on top of our own grab/flip. The settle frame restores it.
@@ -3448,6 +3446,10 @@ export class Game {
   }
 
   private resetTable(): void {
+    // Opening a new room starts a fresh shuffled music rotation (each track once before a
+    // repeat), so the shuffle "memory" is scoped to the room session. The current track keeps
+    // playing; only the upcoming order is reshuffled.
+    this.audio.resetMusicRotation();
     // Hide any open card tooltip first: its anchor card element is about to be
     // wiped, which would otherwise leave a tooltip pinned to a card that no longer
     // exists in the new room.

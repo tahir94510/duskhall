@@ -43,6 +43,8 @@
     "connOnline": "Çevrimiçi",
     "connConnecting": "Bağlanıyor...",
     "connOffline": "Çevrimdışı",
+    "connLost": "Bağlantı koptu — yeniden bağlanılıyor…",
+    "connRestored": "Yeniden bağlanıldı.",
     "guide": "Rehber"
   },
   "diag": {
@@ -235,27 +237,35 @@
     "empty": "Henüz güncelleme yok.",
     "entries": [
       {
+        "v": "2026-06-07",
+        "date": "7 Haziran 2026",
+        "title": "Gizlilik, varlık ve daha canlı bir masa",
+        "items": [
+          "Elin gizli kalır: rakibinin kartları, masa yüklenirken bir an bile olsa asla gösterilmez.",
+          "Düşen oyuncular artık otomatik atılmıyor — koltukları, çıkana ya da host onları çıkarana kadar korunur. Host düşerse hostluk anında masadaki bir oyuncuya geçer ve host geri döndüğünde ona geri verilir.",
+          "Daha net bağlantı durumu; canlı eşitleme koptuğunda ya da geri geldiğinde kısa bir bilgi.",
+          "Diğer oyuncuların kart çevirme ve karıştırmalarını artık yalnızca görmüyor, duyuyorsun da — masa daha canlı. Gizli el içindeki hamleler sessiz ve gizli kalır.",
+          "İnce ayarlar: sürüklenen kart gölgesiyle tam hizalı oturur, ilk oyuncu listesi her zaman tüm oturanları gösterir, yazılar daha okunaklı, daha çok oyuncu adı var ve müzik her odada yeniden karışır."
+        ]
+      },
+      {
         "v": "2026-06-06.2",
         "date": "6 Haziran 2026",
-        "title": "Daha temiz katman, yükleme ve yerleşim",
+        "title": "Daha akıcı, daha net bir masa",
         "items": [
-          "Oyuncu adları ve yeşil durum ışığı artık buzlu el tepsilerinin üstünde her zaman net; başkasının alanının üzerinden sürüklediğin kart altına kaymak yerine üstte kalıyor ve rakibin eli tek bir yumuşak bulanıklıkla görünüyor (eski çift bulanıklık kalktı). Gizliliğin değişmedi.",
-          "Host'a ait olan (ya da sende olmayan) yetkiler masayı açtığında artık bir an için görünüp kaybolmuyor — oyun, gerçek oturma düzenini öğrenene kadar onları göstermiyor.",
-          "Masa artık kart görselleri sonradan belirmek yerine tam çizilmiş halde geliyor. Sekmeden bir süre ayrılıp döndüğünde, kısa bir yükleme yalnızca görseller gerçekten yeniden yüklenmesi gerektiğinde çıkıyor; hızlı geçişte anında geri geliyor.",
-          "Deste ile çöplük telefonlarda artık birbirine değmiyor ve küçük ekranlarda rehber üst çubuğun altına inerek logoyla veya menü düğmesiyle çakışmıyor.",
-          "Küçük düzeltmeler: Başlat düğmesinin boşluğu düzeldi, deste zaten toplanmışken Topla düğmesi soluklaşıyor ve 'ilk kim oynar' satırı yalnızca ilk turda görünüyor."
+          "Oyuncu adları ve yeşil durum ışığı el alanlarının üstünde her zaman net kalıyor; başka bir oyuncunun alanının üzerinden taşıdığın kart artık onun üstünde kalıyor.",
+          "Masa, kart görselleri sonradan belirmek yerine tam çizilmiş olarak geliyor. Sekmeye bir süre sonra döndüğünde, yalnızca bir şeyin yeniden yüklenmesi gerekiyorsa kısa bir yükleme görürsün.",
+          "Telefonlarda daha iyi yerleşim: deste ile çöplük artık üst üste binmiyor ve rehber logoyu ya da menü düğmesini örtmüyor.",
+          "Bir desteyi ters çevirmek artık onu kendiliğinden düzleştirmiyor — tıpkı tek bir kart gibi sadece ters dönüyor. Desteyi düzeltmek için Topla'yı kullan."
         ]
       },
       {
         "v": "2026-06-06.1",
         "date": "6 Haziran 2026",
-        "title": "Rehber akışı ve menü düzeltmeleri",
+        "title": "Rehberde ince ayarlar",
         "items": [
-          "Rehber artık her adımda tam olarak doğru düğmeleri gösteriyor: ilk oyuncuyu seçerken onay tiki görünmüyor ve kapatma düğmesi yalnızca ev sahibine ait. Yalnızca ev sahibine ya da yalnızca izleyiciye özel menü öğeleri artık yanlış oyunculara sızmıyor.",
-          "Üç nokta menüsü artık rehber panelinin arkasında değil önünde açılıyor; rehber yeni bir odada varsayılan olarak açılır ve onu en son açık mı kapalı mı bıraktığınızı hatırlar.",
-          "Başlat artık yalnızca rehberi başlatır ve kartlarınızı olduğu gibi bırakır (yeni bir karıştırma isterseniz giriş metni önce Desteyi sıfırla'yı önerir). Yeniden başlat artık rehberin kendi çubuğunda, yalnızca ev sahibine özel bir düğme: onay ister ve yalnızca rehberi sıfırlar, kartları asla.",
-          "Küçültme artık herkes için bir tur aşaması özelliği: rehber kurulum boyunca tam olarak görünür kalır, her oyuncunun küçültme düğmesi turlar başlayınca etkinleşir. Çubuk ayrıca yanındaki düğmelerle aynı yükseklikte.",
-          "Desteyi sıfırla tüm kartları toplayıp düzleşen desteyi herkes için karıştırıyor; sesler harekete göre zamanlanıyor ve deste zaten düzgünse hiç beklenmiyor, kartları karıştırmadan yerine oturtmak yerine."
+          "Başlat'a basmak artık yalnızca rehberi başlatıyor ve kartlarını olduğu gibi bırakıyor. Önce yeni bir karıştırma istersen Desteyi sıfırla'yı kullan.",
+          "Yeniden başlat, rehberin kendi düğmelerinin yanında. Yalnızca rehberi sıfırlar, kartlarını asla; ve önce onay ister."
         ]
       },
       {
@@ -753,7 +763,7 @@
     "waitYourTurn": "Sıranı bekle.",
     "yourTurn": "Sıra sende. Bitirince onay işaretine bas.",
     "aPlayer": "bir oyuncu",
-    "youTag": "sen",
+    "youTag": "(sen)",
     "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir ve kartlarına hiç dokunmaz. Kartları dilediğin gibi taşımakta, çevirmekte ve karıştırmakta özgürsün. İpucu: yeni karıştırılmış bir desteyle başlamak istersen önce menüden Desteyi sıfırla'yı kullan, sonra Başlat'a bas.",
     "introWaiting": "Oyunun başlaması için host bekleniyor.",
     "start": "Başlat",

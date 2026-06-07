@@ -515,7 +515,11 @@ export class RealtimeBus {
   private async openChannel(): Promise<void> {
     if (!this.wantConnected || !this.desiredRoom || !this.desiredMe) return;
     if (!this.isAvailable()) { this.setStatus("offline"); return; }
-    this.setStatus("connecting");
+    // Only the VERY FIRST attempt reads as "connecting". Once we've failed/dropped at least
+    // once (reconnectAttempt > 0), we are genuinely offline and stay "offline" through the
+    // retry backoff instead of flapping back to a misleading "connecting" — the status never
+    // claims to be connecting while it is effectively not connected.
+    this.setStatus(this.reconnectAttempt === 0 ? "connecting" : "offline");
     const room = this.desiredRoom;
     const me = this.desiredMe;
     try {

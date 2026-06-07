@@ -72,31 +72,34 @@
   white-space: nowrap;
 }
 
-.guide__controls { display: flex; align-items: center; gap: 5px; flex: none; }
+.guide__controls { display: flex; align-items: center; gap: 4px; flex: none; }
+/* Frameless control buttons (close, restart, minimize/maximize): no border or resting
+   background, matching the project's quiet icon-button language. The icon is grid-centred
+   and the colour/background ease in on hover. The confirm tick is the one exception below:
+   it keeps a filled background (no border) so it reads as the primary action. */
 .guide__btn {
   width: 28px;
   height: 28px;
   display: grid;
   place-items: center;
   border-radius: 8px;
-  border: 1px solid var(--line-2);
-  background: rgba(22, 22, 22, 0.6);
+  border: 0;
+  background: transparent;
   color: var(--ivory-dim);
   cursor: pointer;
-  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
-.guide__btn svg { width: 16px; height: 16px; }
-.guide__btn:hover { color: var(--ivory); border-color: var(--line-3); background: rgba(30, 30, 30, 0.8); }
+.guide__btn svg { width: 16px; height: 16px; display: block; }
+.guide__btn:hover { color: var(--ivory); background: rgba(243, 239, 229, 0.08); }
 .guide__btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.guide__btn:disabled:hover { color: var(--ivory-dim); border-color: var(--line-2); background: rgba(22, 22, 22, 0.6); }
-.guide__close { font-size: 18px; line-height: 1; }
-/* The confirm tick, when it is this player's to press, reads as the primary action. */
+.guide__btn:disabled:hover { color: var(--ivory-dim); background: transparent; }
+/* The confirm tick, when it is this player's to press, reads as the primary action: a filled
+   ivory chip (no border, by design). */
 .guide__tick:not(:disabled) {
   background: var(--ivory);
   color: var(--ink);
-  border-color: var(--ivory);
 }
-.guide__tick:not(:disabled):hover { background: #fff; border-color: #fff; }
+.guide__tick:not(:disabled):hover { background: #fff; }
 
 .guide__body {
   padding: 12px;

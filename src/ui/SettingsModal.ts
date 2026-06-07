@@ -1,5 +1,6 @@
 import { Modal, escape } from "./Modal.js";
 import { t, getLocale, loadLocale, type Locale } from "../i18n/index.js";
+import { showLoader, hideLoader } from "./loader.js";
 import type { AudioEngine } from "../audio/Audio.js";
 
 function setFill(input: HTMLInputElement): void {
@@ -98,6 +99,11 @@ export function openSettingsModal(
     pill.addEventListener("click", (e) => {
       e.preventDefault();
       if (getLocale() === code) return;
+      // Switching language fetches the locale file and re-renders the whole UI. Cover that
+      // brief work with the loading veil so the table never re-renders half-translated in
+      // front of the player; lift it once everything is rebuilt and painted.
+      showLoader();
+      const startedAt = performance.now();
       void loadLocale(code).then(() => {
         // Apply the new language to the board, then REBUILD this panel so its own
         // title and labels are translated too. Updating only the pills left the rest
@@ -105,6 +111,11 @@ export function openSettingsModal(
         // until it was closed and reopened.
         onLangChange(code);
         openSettingsModal(modal, audio, onLangChange);
+      }).finally(() => {
+        // Keep the veil up a brief, deliberate moment (never a 1-frame flash), then resume
+        // exactly where the player was, now fully translated.
+        const elapsed = performance.now() - startedAt;
+        window.setTimeout(hideLoader, Math.max(0, 280 - elapsed));
       });
     });
   });

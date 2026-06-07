@@ -9,7 +9,10 @@
   --line-3: rgba(243, 239, 229, 0.26);
   --ivory: #f3efe5;
   --ivory-dim: #b8b4aa;
-  --ivory-mute: #837f76;
+  /* Muted text/labels. Lifted from the old #837f76 (~3.2:1 on the dark panels, below the
+     4.5:1 AA floor) to a readable grey-ivory while staying clearly "muted" beneath
+     --ivory-dim. Ghosted uses (empty-seat labels at low opacity) are unaffected in intent. */
+  --ivory-mute: #9b968b;
 
   /* Ambient framing trim for the wide-screen gutters (the decorative frame around
      the centered square field) and carved edges. Kept ivory-toned, never a garish
