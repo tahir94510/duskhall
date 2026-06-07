@@ -22,12 +22,6 @@ export interface DragHooks {
    *  can be dragged into the off-board margin but never off-screen. `cards` are the group's
    *  canonical offsets + rotations from the seed. */
   clampSeed(nx: number, ny: number, cards: ClampCard[]): { nx: number; ny: number };
-  /** Confine the dragged group to the local player's OWN private zone as a one-way pocket:
-   *  a card may be pushed IN from any side, but once inside it can only leave through the
-   *  front door (the inner edge toward the centre) — the outer edge and the two diagonal
-   *  legs are solid from within. `prev` is last frame's seed (where the group was), `nx/ny`
-   *  the page-clamped candidate. No-op for spectators / other zones. */
-  confineToOwnZone(prevNx: number, prevNy: number, nx: number, ny: number, cards: ClampCard[]): { nx: number; ny: number };
   onCardMoved(ids: string[]): void;
   /** Pointer released over (x, y): re-arm the hover tooltip without a re-enter.
    *  `pointerType` lets the handler skip the auto-probe on touch (info is explicit
@@ -293,14 +287,10 @@ export class DragController {
       clampCards.push({ dx: rel.dx, dy: rel.dy, rot: c ? c.rot : 0 });
     }
     ({ nx: seedNx, ny: seedNy } = this.hooks.clampSeed(seedNx, seedNy, clampCards));
-
-    // Then confine to OUR own zone as a one-way pocket. The seed card (s.ids[0], rel offset 0)
-    // still holds last frame's position here — read it as the "previous" seed BEFORE the update
-    // loop below overwrites it, so a wall crossing is judged against where the group actually was.
-    const seedCard = this.state.cards.get(s.ids[0]!);
-    const prevNx = seedCard ? seedCard.x : seedNx;
-    const prevNy = seedCard ? seedCard.y : seedNy;
-    ({ nx: seedNx, ny: seedNy } = this.hooks.confineToOwnZone(prevNx, prevNy, seedNx, seedNy, clampCards));
+    // No private-zone "wall": a card moves freely everywhere on the page. Ownership/privacy is
+    // decided by the card's resting position (concealment), and a drop whose body lands in an
+    // OCCUPIED rival's area bounces back on pointer-up (see below) — so a rival's area can never be
+    // occupied, without any drag-time friction.
 
     for (const id of s.ids) {
       const rel = s.relOffsets.get(id);
