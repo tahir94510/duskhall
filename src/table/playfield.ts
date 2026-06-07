@@ -119,23 +119,38 @@ export function clampSeedToOwnZone(
 ): { nx: number; ny: number } {
   if (seat < 0) return { nx: next.nx, ny: next.ny };
   const arr = Array.from(cards);
-  const outside = (sx: number, sy: number): boolean => {
+  const forbidden = (sx: number, sy: number): boolean => {
     for (const c of arr) {
       if (cardOutsideOwnZone(sx + c.dx, sy + c.dy, c.rot, seat, cardWFrac, cardHFrac)) return true;
     }
     return false;
   };
-  // Free to move: the destination is inside the pocket, or out through the open door/centre.
-  if (!outside(next.nx, next.ny)) return { nx: next.nx, ny: next.ny };
-  // Already outside (e.g. mid-entry from a wall side): never trap — let it through.
-  if (outside(prev.nx, prev.ny)) return { nx: next.nx, ny: next.ny };
+  // Is the WHOLE group resting INSIDE the pocket right now — in the band (every card on the pocket
+  // side of the door) and past none of the walls? ONLY then do the pocket walls apply. A card in
+  // the open centre, over a rival's area, out in the page margin, or entering from outside is
+  // completely unconstrained. (The earlier version keyed off "not forbidden", which treats the open
+  // centre as inside — so a card entering from the front-sides or dragged across a rival's zone got
+  // snagged on the diagonal wall and froze. That was the reported regression.)
+  const inPocket = (sx: number, sy: number): boolean => {
+    for (const c of arr) {
+      const { d } = seatDepthLateral(seat, sx + c.dx, sy + c.dy);
+      if (d > ZONE_DEPTH) return false; // past the door, into the public centre
+      if (cardOutsideOwnZone(sx + c.dx, sy + c.dy, c.rot, seat, cardWFrac, cardHFrac)) return false;
+    }
+    return true;
+  };
+  // Not in our pocket -> never constrained: move (and enter from any side) freely.
+  if (!inPocket(prev.nx, prev.ny)) return { nx: next.nx, ny: next.ny };
+  // In the pocket: free to stay inside or leave through the front door (the centre); only blocked
+  // from crossing the outer board edge or a diagonal leg outward.
+  if (!forbidden(next.nx, next.ny)) return { nx: next.nx, ny: next.ny };
   // Crossing a wall outward: stop at the furthest point that keeps every card inside.
   let lo = 0, hi = 1;
   for (let i = 0; i < 22; i++) {
     const mid = (lo + hi) / 2;
     const mx = prev.nx + (next.nx - prev.nx) * mid;
     const my = prev.ny + (next.ny - prev.ny) * mid;
-    if (outside(mx, my)) hi = mid; else lo = mid;
+    if (forbidden(mx, my)) hi = mid; else lo = mid;
   }
   return { nx: prev.nx + (next.nx - prev.nx) * lo, ny: prev.ny + (next.ny - prev.ny) * lo };
 }
