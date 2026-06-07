@@ -39,9 +39,9 @@ Deal 5 cards to each player; keep them hidden.
 
 Place the remaining deck face-down at the centre.
 
-Each player reveals one card from the deck; the highest category in the order Servant, Spell, Seal, Intervention chooses the first player. Re-draw on ties.
+Each player reveals one card from the deck; the highest category in the order Servant, Spell, Seal, Intervention chooses the first player. Re-draw on ties. Shuffle the revealed cards back into the deck before play begins.
 
-Play proceeds clockwise.
+Play proceeds clockwise, starting with the chosen first player.
 
 Player counts: 2 means fast and direct; 3 means balanced and tactical; 4 means the recommended chaotic, diplomatic seat.
 

@@ -701,7 +701,16 @@ export class Game {
       endHold: (ids) => this.broadcastHold(ids, true),
       isLocked: (id) => this.isLockedByOther(id),
       isRivalOwned: (id) => this.isRivalOwnedCard(id),
-      bringToTop: (ids) => this.bringCardsToTop(ids),
+      bringToTop: (ids) => {
+        this.bringCardsToTop(ids);
+        // Commit the new stacking z to peers AT ONCE (this fires on grab, before the drag
+        // moves). Otherwise the bumped z only rode the throttled drag-preview / drop commit,
+        // so peers briefly saw the grabbed card UNDER other table cards. sendCommit is
+        // unthrottled and applyPatch applies z + raises topZ on every peer, so the card reads
+        // on top for everyone the instant it is picked up.
+        for (const id of ids) this.dirtyIds.add(id);
+        this.scheduleFlush();
+      },
       showContextBar: (id, x, y) => this.contextBar.show(id, x, y),
       hideContextBar: () => this.contextBar.hide(),
       emitCursor: (x, y) => {

@@ -5,6 +5,20 @@
 A correctness, security and polish pass. The card sync, canonical frame and balance numbers
 are unchanged. 215 tests green.
 
+- **Clearer guide walkthrough.** The setup steps now read plainly: deal first, then each player
+  draws and reveals a card to pick who goes first, then the revealed cards are shuffled back into
+  the deck before play starts with the chosen player. The Action phase now uses the rulebook's
+  term, HP (up to 5 with Crimson Monolith seals), instead of "action points", so the guide, the
+  rulebook and the cards all agree. (HP is the per-turn action resource; Ascension, declared with
+  three Seals, is a separate win condition, so there is no conflict.)
+- **A card you drag reads on top for everyone at once.** Picking up a card now broadcasts its new
+  stacking immediately, so other players no longer briefly see it tucked under other table cards
+  until you drop it.
+- **No "moving" outline over a private hand.** The dashed in-motion ring now shows only for held
+  cards on the open table; a card moved inside its owner's hidden area shows others just the calm
+  blurred back, never a ring that would hint at the hidden activity.
+- **Centred kick control.** The per-seat remove (×) button sits dead-centre next to the name.
+
 - **Hidden hands never leak, empty seats never hide (security).** A rival's face-up cards in
   their private area could briefly show through the loading veil before the roster resolved. The
   saved board now remembers which seats were occupied, so from the very first frame a private
