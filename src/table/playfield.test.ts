@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { clampSeedToPage, clampSeedToOwnZone, type ClampCard, type PageBounds } from "./playfield.js";
-import { seatDepthLateral, ZONE_DEPTH } from "./SlotGrid.js";
+import { clampSeedToPage, type ClampCard, type PageBounds } from "./playfield.js";
 import type { BoardBox, Seat } from "./rotation.js";
 
 // An 800x800 board centred at (500, 400) in a 1000x800 viewport. For seat 0 (no rotation):
@@ -43,6 +42,16 @@ describe("clampSeedToPage", () => {
     expect(py + cardH / 2).toBeLessThanOrEqual(bounds.maxY + 1e-6);
   });
 
+  it("clamps each axis independently so a card slides along the edge it is pressed to", () => {
+    // Pushed hard past the right edge AND moved vertically: x pins at the edge, y is free to track.
+    const a = clampSeedToPage(99, 0.25, single(), box, 0, cardW, cardH, bounds);
+    const b = clampSeedToPage(99, 0.75, single(), box, 0, cardW, cardH, bounds);
+    expect(a.nx).toBeCloseTo(b.nx, 9);          // same clamped x edge
+    expect(a.ny).not.toBeCloseTo(b.ny, 3);      // y slid freely (not locked)
+    expect(a.ny).toBeCloseTo(0.25, 6);
+    expect(b.ny).toBeCloseTo(0.75, 6);
+  });
+
   it("uses the swapped extent for a sideways (odd quarter-turn) card", () => {
     // rot=1 -> on-screen the card is cardH wide, so the right-edge limit uses cardH/2.
     const r = clampSeedToPage(99, 0.5, single(1), box, 0, cardW, cardH, bounds);
@@ -73,102 +82,6 @@ describe("clampSeedToPage", () => {
     expect(scr.py).toBeLessThanOrEqual(bounds.maxY + 1e-6);
   });
 });
-
-describe("clampSeedToOwnZone (sliding one-way pocket)", () => {
-  // Canonical card footprint fractions (board is square). For seat 0/1 the depth axis is Y, so
-  // hd = cardHFrac/2 = 0.09 and hu = cardWFrac/2 = 0.0625; inset (diagonal leg) = hd + hu = 0.1525.
-  const cw = 0.125;
-  const ch = 0.18;
-  const hd = ch / 2; // 0.09
-  const inset = ch / 2 + cw / 2; // 0.1525
-  const one = (rot = 0): ClampCard[] => [{ dx: 0, dy: 0, rot }];
-  const eps = 0.012;
-
-  it("SLIDES along the left leg without crossing it or locking (seat 0)", () => {
-    // prev inside (d=0.2, u=0.5). Drag hard left/down into the left leg.
-    const r = clampSeedToOwnZone({ nx: 0.5, ny: 0.8 }, { nx: 0.1, ny: 0.8 }, one(), 0, cw, ch);
-    const { d, u } = seatDepthLateral(0, r.nx, r.ny);
-    expect(u - d).toBeGreaterThanOrEqual(inset - eps); // never crossed the wall
-    expect(d).toBeGreaterThanOrEqual(hd - eps);          // never crossed the outer edge
-    expect(d).toBeLessThanOrEqual(ZONE_DEPTH + eps);     // still in the pocket
-    expect(r.nx).toBeLessThan(0.5 - 0.02);               // it MOVED (did not lock at prev)
-  });
-
-  it("stops at the outer board edge but keeps sliding laterally (seat 0)", () => {
-    const r = clampSeedToOwnZone({ nx: 0.5, ny: 0.8 }, { nx: 0.5, ny: 0.99 }, one(), 0, cw, ch);
-    const { d } = seatDepthLateral(0, r.nx, r.ny);
-    expect(d).toBeCloseTo(hd, 2); // pinned at the card's near edge
-    expect(r.nx).toBeCloseTo(0.5, 2);
-  });
-
-  it("leaves freely through the front door (centred, within the opening)", () => {
-    const r = clampSeedToOwnZone({ nx: 0.5, ny: 0.8 }, { nx: 0.5, ny: 0.5 }, one(), 0, cw, ch);
-    expect(r.nx).toBeCloseTo(0.5, 9);
-    expect(r.ny).toBeCloseTo(0.5, 9);
-  });
-
-  it("does NOT teleport out a diagonal past the door (must funnel to the door)", () => {
-    // next is past the door (d>ZONE_DEPTH) but laterally outside the opening -> must be clamped
-    // back into the pocket, never returned as-is.
-    const r = clampSeedToOwnZone({ nx: 0.5, ny: 0.8 }, { nx: 0.1, ny: 0.5 }, one(), 0, cw, ch);
-    const { d, u } = seatDepthLateral(0, r.nx, r.ny);
-    expect(d).toBeLessThanOrEqual(ZONE_DEPTH + eps);  // did not escape to the centre
-    expect(u - d).toBeGreaterThanOrEqual(inset - eps); // did not cross the left leg
-  });
-
-  it("lets a card enter from the side (outside -> inside is never blocked)", () => {
-    const r = clampSeedToOwnZone({ nx: 0.1, ny: 0.8 }, { nx: 0.5, ny: 0.8 }, one(), 0, cw, ch);
-    expect(r.nx).toBeCloseTo(0.5, 9);
-    expect(r.ny).toBeCloseTo(0.8, 9);
-  });
-
-  it("group: the LEFT card's body never crosses the leg, and the group still moves", () => {
-    const cards: ClampCard[] = [{ dx: 0, dy: 0, rot: 0 }, { dx: -0.2, dy: 0, rot: 0 }];
-    const r = clampSeedToOwnZone({ nx: 0.6, ny: 0.8 }, { nx: 0.4, ny: 0.8 }, cards, 0, cw, ch);
-    const left = seatDepthLateral(0, r.nx - 0.2, r.ny); // the trailing (left) card
-    expect(left.u - left.d).toBeGreaterThanOrEqual(inset - eps);
-    expect(r.nx).toBeLessThan(0.6 - 0.01); // moved
-  });
-
-  it("does NOT snag a card dragged through the open centre across a rival corner (regression)", () => {
-    const r = clampSeedToOwnZone({ nx: 0.3, ny: 0.6 }, { nx: 0.1, ny: 0.85 }, one(), 0, cw, ch);
-    expect(r.nx).toBeCloseTo(0.1, 9);
-    expect(r.ny).toBeCloseTo(0.85, 9);
-  });
-
-  it("lets a card enter from the front-side without freezing (regression)", () => {
-    const r = clampSeedToOwnZone({ nx: 0.3, ny: 0.65 }, { nx: 0.25, ny: 0.85 }, one(), 0, cw, ch);
-    expect(r.nx).toBeCloseTo(0.25, 9);
-    expect(r.ny).toBeCloseTo(0.85, 9);
-  });
-
-  it("is a no-op for a spectator (seat < 0)", () => {
-    const r = clampSeedToOwnZone({ nx: 0.5, ny: 0.8 }, { nx: 0.1, ny: 0.99 }, one(), -1 as Seat, cw, ch);
-    expect(r.nx).toBeCloseTo(0.1, 9);
-    expect(r.ny).toBeCloseTo(0.99, 9);
-  });
-
-  it("confines symmetrically for all four seats (outward push stops at the board edge)", () => {
-    for (const seat of [0, 1, 2, 3] as Seat[]) {
-      const inside = depthLateralToCanon(seat, 0.2, 0.5);
-      const out = depthLateralToCanon(seat, 0.005, 0.5);
-      const r = clampSeedToOwnZone(inside, out, one(), seat, cw, ch);
-      const { d } = seatDepthLateral(seat, r.nx, r.ny);
-      const seatHd = seat === 0 || seat === 1 ? ch / 2 : cw / 2;
-      expect(d).toBeCloseTo(seatHd, 2);
-    }
-  });
-});
-
-// Inverse of seatDepthLateral for the symmetry test (axis-aligned per seat).
-function depthLateralToCanon(seat: Seat, d: number, u: number): { nx: number; ny: number } {
-  switch (seat) {
-    case 0: return { nx: u, ny: 1 - d };
-    case 1: return { nx: u, ny: d };
-    case 2: return { nx: d, ny: u };
-    default: return { nx: 1 - d, ny: u };
-  }
-}
 
 // local mirror of canonicalToScreen for the seat-2 assertion (avoids importing the impl detail)
 function canonical(nx: number, ny: number, seat: Seat, b: BoardBox): { px: number; py: number } {

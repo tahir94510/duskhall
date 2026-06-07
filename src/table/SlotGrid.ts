@@ -64,38 +64,13 @@ const ZONES: Record<Seat, ZoneRect> = {
 };
 
 // Perpendicular distance from a canonical point to a seat's own board edge.
-export function edgeDist(seat: Seat, nx: number, ny: number): number {
+function edgeDist(seat: Seat, nx: number, ny: number): number {
   switch (seat) {
     case 0: return 1 - ny; // bottom edge y=1
     case 1: return ny;     // top edge y=0
     case 2: return nx;     // left edge x=0
     case 3: return 1 - nx; // right edge x=1
   }
-}
-
-// A canonical point in a seat's own (depth, lateral) frame: `d` is the distance in
-// from the seat's board edge (0 at the edge, ZONE_DEPTH at the inner "door"), `u` is the
-// position ALONG that edge. The four seats are fully symmetric, so every seat's trapezoid
-// is the SAME shape in (d, u): outer wall d = 0, the two diagonal legs u = d and u = 1 - d,
-// and the open door at d = ZONE_DEPTH. (The board is a square — board.css --field — so
-// canonical x and y share one scale and the legs are true 45° lines.) Used by the own-zone
-// drag confinement (playfield.clampSeedToOwnZone) to test a card footprint against the
-// trapezoid walls in one seat-independent frame. Derived to match nearestSeat exactly:
-//   seat 0 (bottom): d = 1-ny, u = nx     seat 1 (top):   d = ny,   u = nx
-//   seat 2 (left):   d = nx,   u = ny      seat 3 (right): d = 1-nx, u = ny
-export function seatDepthLateral(seat: Seat, nx: number, ny: number): { d: number; u: number } {
-  switch (seat) {
-    case 0: return { d: 1 - ny, u: nx };
-    case 1: return { d: ny, u: nx };
-    case 2: return { d: nx, u: ny };
-    case 3: return { d: 1 - nx, u: ny };
-  }
-}
-
-// Is the seat's depth axis the canonical Y axis (bottom/top seats) rather than X
-// (left/right seats)? Decides which card half-extent binds the depth vs lateral walls.
-export function seatDepthIsY(seat: Seat): boolean {
-  return seat === 0 || seat === 1;
 }
 
 // The seat whose board EDGE is closest to (nx, ny). This is the diagonal corner split: a
