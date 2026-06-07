@@ -13,7 +13,9 @@ are unchanged. 215 tests green.
   freed only by leaving or a host kick. If the host drops, hosting passes to a present player at
   once and returns to the original host when they come back (a host who *exits* hands off for good).
 - **Truthful connection status.** It no longer reads "connecting" while effectively offline, and a
-  short notice appears when live sync drops or returns.
+  short notice appears when live sync drops or returns. While your connection is down, the other
+  players' areas read as "unreachable" (dimmed) so you can see at a glance that you may be out of
+  sync with them; they return to normal the moment you reconnect.
 - **Guide fixes.** Refreshing the page keeps the walkthrough exactly where it was (the whole
   state is saved per room, not just whether the panel was open), so it no longer snaps back to
   the intro. The first-player list always includes every seated player, even one who just
