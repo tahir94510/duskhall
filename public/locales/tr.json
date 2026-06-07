@@ -43,7 +43,7 @@
     "connOnline": "Çevrimiçi",
     "connConnecting": "Bağlanıyor...",
     "connOffline": "Çevrimdışı",
-    "connLost": "Bağlantı koptu — yeniden bağlanılıyor…",
+    "connLost": "Bağlantı koptu. Yeniden bağlanılıyor...",
     "connRestored": "Yeniden bağlanıldı.",
     "guide": "Rehber"
   },
@@ -242,9 +242,9 @@
         "title": "Gizlilik, varlık ve daha canlı bir masa",
         "items": [
           "Elin gizli kalır: rakibinin kartları, masa yüklenirken bir an bile olsa asla gösterilmez.",
-          "Düşen oyuncular artık otomatik atılmıyor — koltukları, çıkana ya da host onları çıkarana kadar korunur. Host düşerse hostluk anında masadaki bir oyuncuya geçer ve host geri döndüğünde ona geri verilir.",
+          "Düşen oyuncular artık otomatik atılmıyor. Koltukları, çıkana ya da host onları çıkarana kadar korunur. Host düşerse hostluk anında masadaki bir oyuncuya geçer ve host geri döndüğünde ona geri verilir.",
           "Daha net bağlantı durumu; canlı eşitleme koptuğunda ya da geri geldiğinde kısa bir bilgi.",
-          "Diğer oyuncuların kart çevirme ve karıştırmalarını artık yalnızca görmüyor, duyuyorsun da — masa daha canlı. Gizli el içindeki hamleler sessiz ve gizli kalır.",
+          "Diğer oyuncuların kart çevirme ve karıştırmalarını artık yalnızca görmüyor, duyuyorsun da. Böylece masa daha canlı. Gizli el içindeki hamleler sessiz ve gizli kalır.",
           "İnce ayarlar: sürüklenen kart gölgesiyle tam hizalı oturur, ilk oyuncu listesi her zaman tüm oturanları gösterir, yazılar daha okunaklı, daha çok oyuncu adı var ve müzik her odada yeniden karışır."
         ]
       },
@@ -256,7 +256,7 @@
           "Oyuncu adları ve yeşil durum ışığı el alanlarının üstünde her zaman net kalıyor; başka bir oyuncunun alanının üzerinden taşıdığın kart artık onun üstünde kalıyor.",
           "Masa, kart görselleri sonradan belirmek yerine tam çizilmiş olarak geliyor. Sekmeye bir süre sonra döndüğünde, yalnızca bir şeyin yeniden yüklenmesi gerekiyorsa kısa bir yükleme görürsün.",
           "Telefonlarda daha iyi yerleşim: deste ile çöplük artık üst üste binmiyor ve rehber logoyu ya da menü düğmesini örtmüyor.",
-          "Bir desteyi ters çevirmek artık onu kendiliğinden düzleştirmiyor — tıpkı tek bir kart gibi sadece ters dönüyor. Desteyi düzeltmek için Topla'yı kullan."
+          "Bir desteyi ters çevirmek artık onu kendiliğinden düzleştirmiyor. Tıpkı tek bir kart gibi sadece ters dönüyor. Desteyi düzeltmek için Topla'yı kullan."
         ]
       },
       {
