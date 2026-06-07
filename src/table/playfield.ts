@@ -6,6 +6,7 @@
 // exact on every device and aspect ratio, and for every seat rotation.
 
 import { canonicalToScreen, screenToCanonical, seatRotationDeg, rotateVec, type Seat, type BoardBox } from "./rotation.js";
+import { seatDepthLateral, seatDepthIsY, ZONE_DEPTH } from "./SlotGrid.js";
 
 export interface ClampCard {
   /** canonical offset of this card's centre from the dragged group's seed */
@@ -62,4 +63,79 @@ export function clampSeedToPage(
   const px = clampAxis(seed.px, loX, hiX);
   const py = clampAxis(seed.py, loY, hiY);
   return screenToCanonical(px, py, seat, box);
+}
+
+/** A canonical seed position (the dragged group's reference point). */
+export interface SeedPos { nx: number; ny: number; }
+
+// Is a single card's footprint OUTSIDE the seat's own trapezoid, i.e. has it crossed one of
+// the three solid walls (the outer board edge or either diagonal leg)? The card is taken as an
+// axis-aligned box in the seat's (depth, lateral) frame (true since the board is square), so its
+// nearest corner must clear each wall by the half-extents. The DOOR (depth past ZONE_DEPTH,
+// toward the centre) is never a wall, so a card heading into the public centre is always free.
+function cardOutsideOwnZone(
+  cx: number, cy: number, rot: number, seat: Seat, cardWFrac: number, cardHFrac: number
+): boolean {
+  const { d, u } = seatDepthLateral(seat, cx, cy);
+  // Canonical footprint swaps on an odd card quarter-turn, exactly like cardZoneOverlap.
+  const quarter = ((Math.round(rot) % 2) + 2) % 2;
+  const wx = quarter === 1 ? cardHFrac : cardWFrac; // extent along canonical X
+  const wy = quarter === 1 ? cardWFrac : cardHFrac; // extent along canonical Y
+  const depthIsY = seatDepthIsY(seat);
+  const hd = (depthIsY ? wy : wx) / 2; // half-extent along the depth axis
+  const hu = (depthIsY ? wx : wy) / 2; // half-extent along the lateral axis
+  // Outer wall: the card's near edge cannot pass the board edge (d = 0).
+  if (d < hd) return true;
+  // Diagonal legs exist only within the band [0, ZONE_DEPTH]; past the door it is open.
+  if (d <= ZONE_DEPTH) {
+    const inset = hu + hd; // nearest box corner to a 45° leg
+    if (u - d < inset) return true;       // left leg (u = d)
+    if (1 - d - u < inset) return true;   // right leg (u = 1 - d)
+  }
+  return false;
+}
+
+/**
+ * Confine the dragged group to the local player's OWN private zone as a one-way pocket: the
+ * three solid walls (outer board edge + the two diagonal legs) may be crossed INWARD from
+ * anywhere, but never OUTWARD — the only way out is the front door (the inner edge toward the
+ * table centre). Pure, canonical, footprint-based (the card BODY stops at the frame), and applied
+ * to the whole group as a rigid block (the tightest card binds, like clampSeedToPage).
+ *
+ * Implementation: a group position is "outside" if ANY card's footprint has crossed a wall. If
+ * the new seed is inside (or heading into the centre) it passes unchanged, so a card can be
+ * pushed in from any side. If it would cross a wall outward (prev inside, next outside) we
+ * binary-search the furthest still-inside point on the prev→next segment and stop there. If the
+ * group is already outside it is never trapped (it can keep leaving / re-enter freely). For a
+ * spectator (no seat) it is a no-op.
+ */
+export function clampSeedToOwnZone(
+  prev: SeedPos,
+  next: SeedPos,
+  cards: Iterable<ClampCard>,
+  seat: Seat,
+  cardWFrac: number,
+  cardHFrac: number
+): { nx: number; ny: number } {
+  if (seat < 0) return { nx: next.nx, ny: next.ny };
+  const arr = Array.from(cards);
+  const outside = (sx: number, sy: number): boolean => {
+    for (const c of arr) {
+      if (cardOutsideOwnZone(sx + c.dx, sy + c.dy, c.rot, seat, cardWFrac, cardHFrac)) return true;
+    }
+    return false;
+  };
+  // Free to move: the destination is inside the pocket, or out through the open door/centre.
+  if (!outside(next.nx, next.ny)) return { nx: next.nx, ny: next.ny };
+  // Already outside (e.g. mid-entry from a wall side): never trap — let it through.
+  if (outside(prev.nx, prev.ny)) return { nx: next.nx, ny: next.ny };
+  // Crossing a wall outward: stop at the furthest point that keeps every card inside.
+  let lo = 0, hi = 1;
+  for (let i = 0; i < 22; i++) {
+    const mid = (lo + hi) / 2;
+    const mx = prev.nx + (next.nx - prev.nx) * mid;
+    const my = prev.ny + (next.ny - prev.ny) * mid;
+    if (outside(mx, my)) hi = mid; else lo = mid;
+  }
+  return { nx: prev.nx + (next.nx - prev.nx) * lo, ny: prev.ny + (next.ny - prev.ny) * lo };
 }

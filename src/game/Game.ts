@@ -41,7 +41,7 @@ import {
 import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
 import { cardZoneOverlap, pointInZoneCanonical, ZONE_PRIVACY_FRAC, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
-import { clampSeedToPage, type ClampCard } from "../table/playfield.js";
+import { clampSeedToPage, clampSeedToOwnZone, type ClampCard } from "../table/playfield.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry, GuideWire } from "../net/realtime.js";
 import { initialGuide, startGuide, setOpen as setGuideOpenState, advance as advanceGuide, chooseFirst as chooseFirstGuide, adoptGuide, type GuideState } from "./guide.js";
 import { isNewerWrite } from "../net/lww.js";
@@ -671,6 +671,17 @@ export class Game {
           maxY: Math.max(M, window.innerHeight - M)
         };
         return clampSeedToPage(nx, ny, cards, this.boardBox(), this.self.seat as Seat, w, h, bounds);
+      },
+      // Confine a dragged card to OUR own private zone as a one-way pocket: it can be pushed in
+      // from any side but, once inside, can only leave through the front door (the inner edge
+      // toward the centre). Canonical + footprint-based, using the MEASURED card fraction so the
+      // wall sits where the player sees the card edge. A spectator (no seat) is never confined.
+      confineToOwnZone: (prevNx, prevNy, nx, ny, cards: ClampCard[]) => {
+        if (this.spectator || this.self.seat < 0) return { nx, ny };
+        const { w, h } = this.cardMetrics();
+        const wFrac = w / this.boardSize.width;
+        const hFrac = h / this.boardSize.height;
+        return clampSeedToOwnZone({ nx: prevNx, ny: prevNy }, { nx, ny }, cards, this.self.seat as Seat, wFrac, hFrac);
       },
       onCardMoved: (ids) => {
         for (const id of ids) this.dirtyIds.add(id);

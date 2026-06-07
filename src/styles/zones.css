@@ -1,97 +1,98 @@
 .zone {
   position: relative;
-  border-radius: var(--r-zone);
-  /* A light frosted-glass tray: it SOFTENS the felt behind it (backdrop blur) and carries a
-     faint top catch-light and a clean hairline edge, so each seat's area reads as a defined
-     surface that sits gently ABOVE the table, never a dark wall. A near-zero white tint keeps
-     it a raised glass tray rather than a dark well, so the four trays frame the play surface
-     instead of caving it into a box. */
-  background:
-    linear-gradient(180deg, rgba(243, 239, 229, 0.04) 0%, rgba(243, 239, 229, 0) 50%),
-    rgba(255, 255, 255, 0.012);
-  /* Faint edge on purpose: a strong border on all four trapezoids draws the diagonal seams
-     into a 'box' illusion. A whisper of an edge lets the opponent/empty trays sit quietly so
-     the play surface stays open and only YOUR tray (and active opponents) read clearly. */
-  border: 1px solid rgba(243, 239, 229, 0.05);
-  box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.04);
-  backdrop-filter: blur(9px) saturate(106%);
-  -webkit-backdrop-filter: blur(9px) saturate(106%);
-  transition: border-color var(--dur) var(--ease), opacity var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  /* FRAMELESS by design: the four hand trays and the open centre read as ONE connected play
+     surface — like the shared deck/discard area where the rival zones meet — never a boxed-in
+     seat. No border and no inset frame; just a soft frost and a gentle edge fade so each tray
+     melts into the felt. The trapezoid clip below still keeps the geometry exact (what looks
+     private IS private); the edge-fade mask dissolves the sharp diagonal seams and the hard
+     corners so nothing reads as a 'box'. */
+  background: rgba(243, 239, 229, 0.012);
+  backdrop-filter: blur(7px) saturate(105%);
+  -webkit-backdrop-filter: blur(7px) saturate(105%);
+  transition: opacity var(--dur) var(--ease), background var(--dur) var(--ease);
   isolation: isolate;
   z-index: var(--z-zone);
   pointer-events: none;
 }
 
-/* Every tray (yours, rival, empty) stays BELOW the card layer (--z-board), so cards always
-   paint cleanly on top of the frosted glass. A rival's hand stays private through the per-card
-   concealment blur (card.css .is-concealed), not by lifting the tray over the cards — lifting
-   it also dragged your own moving cards and the seat-name labels under the glass and stacked a
-   second blur on rival cards. Privacy is unchanged; the tray is purely the frosted surface. */
+/* Every tray rests BELOW the card layer (--z-board), so cards always paint cleanly on top of the
+   frosted glass. A rival's hand stays private through the per-card concealment blur (card.css
+   .is-concealed), not by lifting the tray over the cards. */
 
-/* Your own hand tray, the most defined surface on the table so "this is your area" is
-   unmistakable, yet still light so you read your hand at a glance. Cards render ABOVE the zone
-   (higher z), so the frost only softens the felt behind the tray, never your own cards. A
-   brighter top catch-light, a stronger ivory edge and a soft outer halo set it apart as the
-   active, owned surface. */
+/* Your own hand tray: the most defined surface so "this is your area" reads at a glance, yet
+   still FRAMELESS. A soft ivory wash, strongest along YOUR board edge and fading toward the
+   centre (paired with the edge mask), so the area is felt without any hard border, inset frame
+   or outer halo. Cards render ABOVE the zone, so the frost only softens the felt behind the
+   tray, never your own cards. */
 .zone--self {
-  background:
-    linear-gradient(180deg, rgba(243, 239, 229, 0.11) 0%, rgba(243, 239, 229, 0) 52%),
-    rgba(255, 255, 255, 0.045);
-  backdrop-filter: blur(8px) saturate(112%);
-  -webkit-backdrop-filter: blur(8px) saturate(112%);
-  border-color: rgba(243, 239, 229, 0.22);
-  box-shadow:
-    inset 0 1px 0 rgba(243, 239, 229, 0.14),
-    inset 0 0 0 1px rgba(243, 239, 229, 0.07),
-    0 -3px 22px rgba(243, 239, 229, 0.04);
+  background: linear-gradient(to top,
+    rgba(243, 239, 229, 0.085) 0%,
+    rgba(243, 239, 229, 0.028) 38%,
+    rgba(243, 239, 229, 0) 72%);
+  backdrop-filter: blur(7px) saturate(112%);
+  -webkit-backdrop-filter: blur(7px) saturate(112%);
 }
 
-/* The player name, status light and host kick control no longer live inside the
-   zone panel: they render in a separate non-rotating layer above the cards (see
-   .board__labels in board.css) so a card placed in a zone can never cover them
-   and every name reads upright. The zone div itself is now purely the frosted
-   panel + its occupancy state (colour / dimming). */
+/* The player name, status light and host kick control live in a separate non-rotating layer
+   above the cards (.board__labels in board.css) so a card placed in a zone can never cover them
+   and every name reads upright. The zone div is purely the frosted panel + its occupancy state. */
 
-/* An open seat still draws its frosted trapezoid, just quietly, so the table always reads as a
-   full four-seat board (a framed surface) rather than one lonely strip when seats are empty. */
-.zone--empty { opacity: 0.22; color: var(--ivory-mute); }
-.zone--active {
+/* An open seat still draws its frosted trapezoid, just very quietly, so the table always reads
+   as a full four-seat board rather than one lonely strip when seats are empty. */
+.zone--empty { opacity: 0.16; color: var(--ivory-mute); }
+.zone--active { opacity: 1; }
+/* A live rival tray carries a whisper of its seat accent — strongest at the rival's own board
+   edge (the edge mask fades it toward the centre), so an occupied tray reads as "live & whose"
+   with no hard frame. The seat tones are near-monochrome ivory/grey, so this stays calm. Scoped
+   away from your own tray, which keeps its dedicated ivory wash above. */
+.zone--active:not(.zone--self) {
   color: var(--seat-color);
-  border-color: color-mix(in oklab, var(--seat-color) 42%, transparent);
-  opacity: 1;
-  /* A whisper of the seat accent inside the frame so an occupied tray glows just
-     enough to read as "live", over the shared top catch-light. */
-  box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.06), inset 0 0 0 1px color-mix(in oklab, var(--seat-color) 16%, transparent);
+  background-color: color-mix(in oklab, var(--seat-color) 7%, transparent);
 }
-/* Dropped seat: the player lost connection / closed the tab but did NOT leave.
-   Their area stays reserved and clearly "asleep" (dimmed, dashed) — their cards
-   remain private — until they rejoin or explicitly leave. */
+/* Dropped: the player lost connection / closed the tab but did NOT leave. Their area stays
+   reserved and clearly "asleep" (dimmed) — their cards remain private — until they rejoin or
+   leave. The amber status light (board.css) carries the "away" signal; no dashed frame is needed
+   now that the trays are frameless. */
 .zone--dropped {
-  opacity: 0.5;
+  opacity: 0.42;
   color: var(--ivory-mute);
-  border-style: dashed;
-  border-color: color-mix(in oklab, var(--seat-color) 24%, transparent);
-  transition: opacity 600ms var(--ease), border-color 600ms var(--ease);
+  transition: opacity 600ms var(--ease), background 600ms var(--ease);
 }
-
-/* OUR cross-device sync is down: a rival seat we can no longer follow reads as "unreachable"
-   with the same calm dimmed/dashed treatment as a dropped seat (their state is uncertain to
-   us), and clears the moment we reconnect. Driven by Game.refreshZones (this.realtimeDown). */
+/* OUR cross-device sync is down: a rival seat we can no longer follow reads "unreachable" with
+   the same calm dimmed treatment as a dropped seat, and clears the moment we reconnect. */
 .zone--unreachable {
-  opacity: 0.5;
-  border-style: dashed;
-  border-color: color-mix(in oklab, var(--seat-color) 24%, transparent);
-  transition: opacity 400ms var(--ease), border-color 400ms var(--ease);
+  opacity: 0.42;
+  transition: opacity 400ms var(--ease), background 400ms var(--ease);
 }
 
 /* Trapezoid placement on the 3-track board grid (board.css). Each zone spans its WHOLE board
-   edge (the edge band, 28% deep) and is clipped to a trapezoid: wide at the board edge,
-   tapering to the inner 44% so adjacent zones meet along the board diagonals with no overlap
-   and the centre 0.44 x 0.44 stays free for the deck/discard. The clip matches the canonical
-   nearest-edge split in SlotGrid.ts, so what looks private IS private. Each hand area is now
-   nearly the full edge wide, so a player reads their whole hand at a glance. The inner taper
-   is 0.28 of the board: 28% of the strip's long side, 100% of its depth (a true 45deg corner). */
+   edge (the edge band, 28% deep) and is clipped to a trapezoid: wide at the board edge, tapering
+   to the inner 44% so adjacent zones meet along the board diagonals with no overlap and the centre
+   0.44 x 0.44 stays free for the deck/discard. The clip matches the canonical nearest-edge split
+   in SlotGrid.ts, so what looks private IS private. */
 .zone--top { grid-column: 1 / 4; grid-row: 1; clip-path: polygon(0% 0%, 100% 0%, 72% 100%, 28% 100%); }
 .zone--left { grid-column: 1; grid-row: 1 / 4; clip-path: polygon(0% 0%, 100% 28%, 100% 72%, 0% 100%); }
 .zone--right { grid-column: 3; grid-row: 1 / 4; clip-path: polygon(100% 0%, 100% 100%, 0% 72%, 0% 28%); }
 .zone--self, .zone--bottom { grid-column: 1 / 4; grid-row: 3; clip-path: polygon(28% 0%, 72% 0%, 100% 100%, 0% 100%); }
+
+/* Edge fade: each tray is strongest along its own board edge and dissolves toward the centre, so
+   the inner ("door") edge melts into the open shared area instead of ending on a hard line, and
+   the narrow trapezoid tip + its sharp corners simply fade out. Directions are in physical screen
+   space (the zone divs never rotate — only the cards layer does), so each slot fades toward the
+   table centre. Masks the frost too, so the blur tapers off cleanly into the felt. */
+.zone--self, .zone--bottom {
+  -webkit-mask-image: linear-gradient(to top, #000 24%, rgba(0, 0, 0, 0.4) 68%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 24%, rgba(0, 0, 0, 0.4) 68%, transparent 100%);
+}
+.zone--top {
+  -webkit-mask-image: linear-gradient(to bottom, #000 24%, rgba(0, 0, 0, 0.4) 68%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 24%, rgba(0, 0, 0, 0.4) 68%, transparent 100%);
+}
+.zone--left {
+  -webkit-mask-image: linear-gradient(to right, #000 24%, rgba(0, 0, 0, 0.4) 68%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 24%, rgba(0, 0, 0, 0.4) 68%, transparent 100%);
+}
+.zone--right {
+  -webkit-mask-image: linear-gradient(to left, #000 24%, rgba(0, 0, 0, 0.4) 68%, transparent 100%);
+  mask-image: linear-gradient(to left, #000 24%, rgba(0, 0, 0, 0.4) 68%, transparent 100%);
+}
