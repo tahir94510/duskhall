@@ -66,7 +66,7 @@
    never leaves it stuck on touch; skipped for concealed (blurred) rival cards and for
    cards already held or mid-animation (which carry their own elevation). */
 @media (hover: hover) {
-  .card:not(.is-concealed):not(.is-held):not(.is-animating):hover {
+  .card:not(.is-concealed):not(.is-held):not(.is-animating):not(.is-locked):hover {
     filter: brightness(1.05);
     /* Lift the hovered card ABOVE its neighbours so it is fully readable even when it sits
        under others in a pile. !important is required to beat the inline stacking z (set by the
@@ -75,7 +75,7 @@
        while the shadow + brightness below give the smooth 2.5D "picked up" read. */
     z-index: var(--z-hover) !important;
   }
-  .card:not(.is-concealed):not(.is-held):not(.is-animating):hover::before {
+  .card:not(.is-concealed):not(.is-held):not(.is-animating):not(.is-locked):hover::before {
     box-shadow: var(--shadow-card-raised);
     /* Shadow swells a hair and softens downward, so the card reads as lifted toward
        the light directly above — depth from light + cast only, geometry untouched. */
