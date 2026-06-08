@@ -96,7 +96,8 @@ Output Directory: dist
   - Ctrl + scroll: flip the whole stack under the cursor
   - Shift + scroll: rotate 90° sideways; over a pile it turns and squares up the whole stack
   - G: gather the stack under the cursor; M: shuffle it
-  - Long-press on touch: open an action bar (flip, rotate, gather, shuffle, info). Flip turns the whole pile under your finger, or a lone card if that is all there is.
+  - V: turn the table to view it from your left-hand neighbour's side; press again to return. Local view only, nothing changes for anyone else.
+  - Long-press on touch: open an action bar (flip, turn sideways, gather, shuffle, info, turn the view). Flip turns the whole pile under your finger, or a lone card if that is all there is.
 - **Privacy:** cards you drop into your own zone are private; opponents see their backs and can infer the count, not the contents.
 - **URL:** `https://vaerum.example/P86B3T` (6-char path slug per room).
 - **Leave room:** opens a fresh room with a new link, with you as host; the others stay in the old room.
