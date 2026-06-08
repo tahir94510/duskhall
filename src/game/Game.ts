@@ -38,7 +38,7 @@ import {
   rotationsDiffer,
   isTidyStack
 } from "../table/StackOps.js";
-import { rotateVec, seatRotationDeg, nextQuarterSeat, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
+import { rotateVec, seatRotationDeg, seatForLocalSlot, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
 import { cardZoneOwner, pointInZoneCanonical, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
 import { clampSeedToPage, type ClampCard } from "../table/playfield.js";
@@ -514,6 +514,12 @@ export class Game {
   // never touches privacy, ownership, cursors-to-peers, or presence — those stay on
   // self.seat / claimSeat, so multiplayer state is identical no matter how we look.
   private viewSeat: Seat = 0;
+  // The board rotation actually applied to CSS, kept as a CUMULATIVE degree value
+  // (not snapped to 0/90/180/270) so each turn moves by the SHORTEST signed delta to
+  // the target angle — the board never spins the long way around (e.g. -90°→180° as a
+  // three-quarter spin). It stays congruent to seatRotationDeg(viewSeat) mod 360, so
+  // the canonical math (which uses the seat angle) and the visual stay in lockstep.
+  private boardRotDeg = 0;
   // True during the short rotate animation so a second toggle (key or button) can't
   // start before the first settles, and so input that depends on the angle is held.
   private viewRotating = false;
@@ -607,17 +613,27 @@ export class Game {
   }
 
   private applyBoardPerspective(): void {
-    this.refs.board.style.setProperty("--board-rot", `${seatRotationDeg(this.viewSeat)}deg`);
+    const target = seatRotationDeg(this.viewSeat);
+    // Advance the cumulative angle by the shortest signed step to the target so the
+    // turn is always a single near-way quarter, never a long spin.
+    let delta = (((target - this.boardRotDeg) % 360) + 360) % 360; // 0..359
+    if (delta > 180) delta -= 360;                                  // -180..180
+    this.boardRotDeg += delta;
+    this.refs.board.style.setProperty("--board-rot", `${this.boardRotDeg}deg`);
   }
 
-  // Turn the LOCAL camera a quarter-turn (V key / mobile button). Purely visual: only
-  // viewSeat changes — privacy, ownership, cursors-to-peers and presence all stay on
-  // self.seat/claimSeat, so peers see nothing. Ignored while a card is in hand (active
-  // drag) or while a previous turn is still settling, so it never fights a drag or
-  // stacks two rotations. Honours prefers-reduced-motion by skipping the settle delay.
+  // Toggle the LOCAL camera between our own seat and our LEFT-hand neighbour's angle
+  // (press once to look from the left, press again to come back home) — a two-state
+  // flip, not an endless spin. Purely visual: only viewSeat changes, so privacy,
+  // ownership, cursors-to-peers and presence all stay on self.seat/claimSeat and peers
+  // see nothing. Ignored while a card is in hand (active drag) or while a previous turn
+  // is still settling, so it never fights a drag or stacks two rotations. Honours
+  // prefers-reduced-motion by skipping the settle delay.
   private togglePerspective(): void {
     if (this.viewRotating || (this.drag?.isActive() ?? false)) return;
-    const next = nextQuarterSeat(this.viewSeat);
+    const home = this.self.seat as Seat;
+    // From home, look at the left neighbour's side; from anywhere else, return home.
+    const next = this.viewSeat === home ? seatForLocalSlot(home, "left") : home;
     if (next === this.viewSeat) return;
     this.viewSeat = next;
     this.applyBoardPerspective();
@@ -692,7 +708,7 @@ export class Game {
 
   private bindHooks(): void {
     const hooks: DragHooks = {
-      canInteract: () => !this.spectator,
+      canInteract: () => !this.spectator && !this.viewRotating,
       getSelfSeat: () => this.self.seat,
       pointInSelfZone: (x, y) => this.pointInZone(this.self.seat, x, y),
       pointInOpponentZone: (x, y) => {
@@ -1099,6 +1115,7 @@ export class Game {
       // sits BEFORE the spectator guard below. preventDefault stops any stray page action.
       if (k === "v") { e.preventDefault(); this.togglePerspective(); return; }
       if (this.spectator) return;
+      if (this.viewRotating) return; // mid camera-turn: the cursor→card mapping is in flux
       // Desktop convenience: G gathers, M shuffles the stack under the cursor.
       // Both are multi-card actions, so a single card under the cursor triggers
       // nothing at all (no sound, no effect) — the same rule the touch bar applies
@@ -1127,6 +1144,7 @@ export class Game {
     window.addEventListener("wheel", (e) => {
       if (this.modal.isOpen()) return;
       if (this.spectator) return;
+      if (this.viewRotating) return; // mid camera-turn: pointer↔canonical is in flux
       if (this.drag && this.drag.isActive()) return;
       const pt = this.lastPointer;
       if (!pt) return;

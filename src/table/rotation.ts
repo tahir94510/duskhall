@@ -26,18 +26,6 @@ export function seatRotationDeg(mySeat: Seat): number {
   }
 }
 
-// The seat whose board angle is one clockwise quarter-turn (+90°) from `from`.
-// Because the four seats cover the four right-angle rotations, stepping by +90°
-// always lands on another seat and returns to `from` after exactly four steps —
-// so the perspective toggle (V key / button) walks every side once and back home,
-// never an endless spin and never a dead step. Pure, so it is unit-tested directly.
-export function nextQuarterSeat(from: Seat): Seat {
-  const norm = (d: number) => ((d % 360) + 360) % 360;
-  const target = norm(seatRotationDeg(from) + 90);
-  const found = ([0, 1, 2, 3] as Seat[]).find((s) => norm(seatRotationDeg(s)) === target);
-  return found ?? from;
-}
-
 // Rotate a pixel vector (dx, dy) by `deg` degrees, in real pixel space. The
 // board is rotated by CSS about the cards-layer centre, so screen<->canonical
 // mapping must rotate the pixel offset from that centre. (An earlier version
