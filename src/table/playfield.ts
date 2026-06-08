@@ -11,7 +11,7 @@
 // bounces back on pointer-up (DragController + Game.isRivalOwnedCard) — so a rival's area can never
 // be occupied, with zero drag-time friction.
 
-import { canonicalToScreen, screenToCanonical, seatRotationDeg, rotateVec, type Seat, type BoardBox } from "./rotation.js";
+import { canonicalToScreenDeg, screenToCanonicalDeg, rotateVec, type BoardBox } from "./rotation.js";
 
 export interface ClampCard {
   /** canonical offset of this card's centre from the dragged group's seed */
@@ -43,21 +43,30 @@ export function clampSeedToPage(
   seedNy: number,
   cards: Iterable<ClampCard>,
   box: BoardBox,
-  seat: Seat,
+  boardRotDeg: number,
   cardW: number,
   cardH: number,
   bounds: PageBounds
 ): { nx: number; ny: number } {
-  const boardRot = seatRotationDeg(seat);
-  const seed = canonicalToScreen(seedNx, seedNy, seat, box);
+  // Works at ANY board rotation in degrees, not just a settled seat angle, so the same clamp keeps
+  // a card on the page through a live camera-turn — reaching every edge the current angle exposes
+  // while never letting the card body leave the viewport.
+  const boardRot = boardRotDeg;
+  const seed = canonicalToScreenDeg(seedNx, seedNy, boardRotDeg, box);
   let loX = -Infinity, hiX = Infinity, loY = -Infinity, hiY = Infinity;
   for (const c of cards) {
     // The card's screen offset from the seed (the board rotation turns the canonical offset).
     const [ox, oy] = rotateVec(c.dx * box.width, c.dy * box.height, boardRot);
-    // Total quarter-turns on screen = card rot + board rot; an odd total swaps width/height.
-    const quarter = (((Math.round(c.rot) + boardRot / 90) % 2) + 2) % 2;
-    const halfX = (quarter === 1 ? cardH : cardW) / 2;
-    const halfY = (quarter === 1 ? cardW : cardH) / 2;
+    // The card's on-screen half-extents are the axis-aligned bounding box of its rectangle rotated
+    // by its TOTAL angle (its own rot quarter-turns plus the board rotation). This is exact at every
+    // angle: it reduces to cardW/cardH at 0deg and the swapped cardH/cardW at 90deg, and gives the
+    // true (larger) diagonal extent at the in-between angles a live camera-turn passes through, so a
+    // held card never pokes off the page mid-turn.
+    const totalRad = ((c.rot * 90 + boardRot) * Math.PI) / 180;
+    const ac = Math.abs(Math.cos(totalRad));
+    const as = Math.abs(Math.sin(totalRad));
+    const halfX = (ac * cardW + as * cardH) / 2;
+    const halfY = (as * cardW + ac * cardH) / 2;
     // bounds.minX + halfX <= seed.px + ox <= bounds.maxX - halfX  (and same for y)
     loX = Math.max(loX, bounds.minX + halfX - ox);
     hiX = Math.min(hiX, bounds.maxX - halfX - ox);
@@ -68,5 +77,5 @@ export function clampSeedToPage(
     lo <= hi ? Math.min(Math.max(v, lo), hi) : (lo + hi) / 2;
   const px = clampAxis(seed.px, loX, hiX);
   const py = clampAxis(seed.py, loY, hiY);
-  return screenToCanonical(px, py, seat, box);
+  return screenToCanonicalDeg(px, py, boardRotDeg, box);
 }
