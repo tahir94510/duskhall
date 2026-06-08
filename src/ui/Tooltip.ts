@@ -13,6 +13,11 @@ export class Tooltip {
   private active: ActiveTip | null = null;
   private mouseX = 0;
   private mouseY = 0;
+  // When set, the panel is CENTERED above this element's rect (the rulebook term and the touch
+  // card-info pane), instead of being offset up-and-right of a cursor point. Cleared on every
+  // hover path so a mouse tooltip follows the cursor as before. One consistent anchored placement
+  // for both the rules glossary and the card info pane.
+  private anchorRect: { left: number; top: number; right: number; bottom: number } | null = null;
   // True while a pointer button is held down anywhere: during a drag/hold we
   // never want the info panel to appear over the card in hand.
   private pressed = false;
@@ -43,6 +48,9 @@ export class Tooltip {
     // Safety net: leaving the board entirely always dismisses the tooltip.
     this.host.addEventListener("pointerleave", this.onHostLeave, { passive: true });
     window.addEventListener("scroll", this.hide, { passive: true });
+    // Capture phase so scrolling an INNER container (e.g. a modal body, which doesn't bubble a
+    // scroll to window) also dismisses an anchored panel before it drifts from its term.
+    document.addEventListener("scroll", this.hide, { capture: true, passive: true });
     window.addEventListener("blur", this.hide);
     // A tap/click anywhere outside the panel dismisses a sticky (touch-opened)
     // tooltip, so it never requires tapping the exact card again to close.
@@ -86,6 +94,7 @@ export class Tooltip {
     if (e.pointerType === "touch") return;
     const data = this.resolve(e.target as Element);
     if (!data) return;
+    this.anchorRect = null;
     this.mouseX = e.clientX;
     this.mouseY = e.clientY;
     window.clearTimeout(this.showTimer);
@@ -100,8 +109,9 @@ export class Tooltip {
     if (!defId) return;
     if (!cardEl.classList.contains("is-faceup") || cardEl.classList.contains("is-concealed")) return;
     const r = cardEl.getBoundingClientRect();
-    this.mouseX = r.left + r.width / 2;
-    this.mouseY = r.top;
+    // Centre the panel over the card and place it above (flipping below near the top), the same
+    // anchored placement the rulebook terms use — so touch card info and the rules glossary match.
+    this.anchorRect = { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
     window.clearTimeout(this.showTimer);
     this.sticky = true;
     this.show({ defId, cardEl });
@@ -116,6 +126,7 @@ export class Tooltip {
     const el = document.elementFromPoint(x, y);
     const data = el ? this.resolve(el) : null;
     if (!data) return;
+    this.anchorRect = null;
     this.mouseX = x;
     this.mouseY = y;
     window.clearTimeout(this.showTimer);
@@ -207,8 +218,7 @@ export class Tooltip {
   // Position the (already rendered) panel at an anchor element and reveal it.
   private anchorTo(anchor: HTMLElement, sticky: boolean): void {
     const r = anchor.getBoundingClientRect();
-    this.mouseX = r.left + r.width / 2;
-    this.mouseY = r.top;
+    this.anchorRect = { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
     this.sticky = sticky;
     this.active = { defId: "", cardEl: anchor };
     this.el.classList.add("is-elevated");
@@ -224,6 +234,20 @@ export class Tooltip {
     const margin = 12;
     const w = this.el.offsetWidth || 280;
     const h = this.el.offsetHeight || 120;
+    // Anchored mode (rules term / touch card info): centre horizontally over the element and sit
+    // ABOVE it, flipping below when there is no room up top. Clamped to the viewport on both axes.
+    if (this.anchorRect) {
+      const r = this.anchorRect;
+      const maxX = Math.max(margin, window.innerWidth - w - margin);
+      const x = Math.min(Math.max(r.left + (r.right - r.left) / 2 - w / 2, margin), maxX);
+      let y = r.top - h - OFFSET;
+      if (y < margin) y = r.bottom + OFFSET;
+      if (y + h + margin > window.innerHeight) y = Math.max(margin, window.innerHeight - h - margin);
+      this.el.style.transform = `translate(${x}px, ${y}px)`;
+      return;
+    }
+    // Cursor mode (mouse hover): offset up and to the right of the pointer, flipping sides/below
+    // when it would run off-screen.
     let x = this.mouseX + OFFSET;
     let y = this.mouseY - h - OFFSET;
     if (y < margin) y = this.mouseY + OFFSET;
@@ -239,6 +263,7 @@ export class Tooltip {
     window.clearTimeout(this.showTimer);
     this.active = null;
     this.sticky = false;
+    this.anchorRect = null;
     this.el.classList.remove("is-visible", "is-elevated");
   };
 }

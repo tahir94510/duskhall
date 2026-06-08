@@ -92,15 +92,12 @@
   .perspective-btn.is-busy svg { animation: perspective-nudge var(--dur-slow) var(--ease); }
   @keyframes perspective-nudge { from { transform: rotate(-90deg); } to { transform: rotate(0deg); } }
 }
-/* Show it wherever a keyboard shortcut is unlikely to be the primary path:
-   any touch/coarse pointer, or a small screen. Desktop+mouse uses the V key. */
-@media (pointer: coarse), (hover: none), (max-width: 900px) {
+/* On TOUCH the camera turn lives in the long-press action bar (a card's menu), so the floating
+   button is hidden there to keep the corner clear. It only appears as a fallback on a small
+   screen driven by a MOUSE (no long-press menu, and the V key may not be at hand). Desktop+mouse
+   on a large screen uses the V key. */
+@media (max-width: 900px) and (hover: hover) and (pointer: fine) {
   .perspective-btn { display: grid; }
-}
-@media (pointer: coarse) {
-  /* Comfortable ≥48px touch target already; keep the icon a touch larger. */
-  .perspective-btn { width: 52px; height: 52px; }
-  .perspective-btn svg { width: 24px; height: 24px; }
 }
 
 @media (max-width: 760px) {

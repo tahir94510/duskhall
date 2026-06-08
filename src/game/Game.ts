@@ -270,6 +270,7 @@ export class Game {
       onGather: (id) => this.gatherAt(id),
       onMix: (id) => this.shuffleAt(id),
       onRotate: (id) => this.rotateSmart(id),
+      onPerspective: () => this.togglePerspective(),
       onInfo: (id) => this.showCardInfo(id),
       canShowInfo: (id) => this.canShowCardInfo(id),
       stackFor: (id) => findConnectedStack(this.state, this.boardSize, id, this.cardMetrics()),
@@ -630,7 +631,11 @@ export class Game {
   // is still settling, so it never fights a drag or stacks two rotations. Honours
   // prefers-reduced-motion by skipping the settle delay.
   private togglePerspective(): void {
-    if (this.viewRotating || (this.drag?.isActive() ?? false)) return;
+    // Allowed WHILE a card is in hand: the held pile lives inside .board__perspective, so it
+    // turns smoothly with the table, and DragController freezes the drag for the turn then
+    // re-anchors it to the finger (see isViewTurning). Only a turn already in flight blocks a
+    // second one, so two presses never stack.
+    if (this.viewRotating) return;
     const home = this.self.seat as Seat;
     // From home, look at the left neighbour's side; from anywhere else, return home.
     const next = this.viewSeat === home ? seatForLocalSlot(home, "left") : home;
@@ -709,6 +714,9 @@ export class Game {
   private bindHooks(): void {
     const hooks: DragHooks = {
       canInteract: () => !this.spectator && !this.viewRotating,
+      // True while a V camera-turn animation is in flight. The drag stays alive but freezes
+      // (the held pile rides the rotating table), then re-anchors to the finger when it ends.
+      isViewTurning: () => this.viewRotating,
       getSelfSeat: () => this.self.seat,
       pointInSelfZone: (x, y) => this.pointInZone(this.self.seat, x, y),
       pointInOpponentZone: (x, y) => {
@@ -743,7 +751,11 @@ export class Game {
           maxX: Math.max(M, window.innerWidth - M),
           maxY: Math.max(M, window.innerHeight - M)
         };
-        return clampSeedToPage(nx, ny, cards, this.boardBox(), this.self.seat as Seat, w, h, bounds);
+        // Clamp in the frame the board is actually DRAWN from (viewSeat), not our own seat.
+        // After a V camera-turn viewSeat != self.seat, and clamping in the self.seat frame
+        // mapped the allowed region onto the wrong axis — walling cards off from the visual
+        // left/right zones. viewSeat keeps the clamp aligned with what is on screen.
+        return clampSeedToPage(nx, ny, cards, this.boardBox(), this.viewSeat, w, h, bounds);
       },
       onCardMoved: (ids) => {
         for (const id of ids) this.dirtyIds.add(id);

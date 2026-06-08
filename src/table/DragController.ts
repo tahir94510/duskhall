@@ -4,6 +4,10 @@ import type { ClampCard } from "./playfield.js";
 export interface DragHooks {
   /** False for spectators (room full), blocks all card manipulation. */
   canInteract(): boolean;
+  /** True while a V camera-turn is animating. An active drag stays alive but freezes for the
+   *  turn (the held pile rides the rotating table), then re-anchors to the finger on the next
+   *  move, so V works mid-drag without the card jumping. */
+  isViewTurning(): boolean;
   getSelfSeat(): number;
   pointInSelfZone(x: number, y: number): boolean;
   pointInOpponentZone(x: number, y: number): number | null;
@@ -79,6 +83,9 @@ interface DragSession {
   els: Map<string, HTMLDivElement>;
   dragging: boolean;
   longPressTimer: number;
+  /** Set true while a V camera-turn ran during this drag; the next move re-derives the anchor
+   *  so the held pile stays put under the finger instead of jumping to a stale offset. */
+  reanchorPending: boolean;
 }
 
 export class DragController {
@@ -240,6 +247,7 @@ export class DragController {
       relOffsets,
       els,
       dragging: false,
+      reanchorPending: false,
       longPressTimer: window.setTimeout(() => {
         if (!this.session || this.session.dragging) return;
         if (e.pointerType === "touch") this.hooks.showContextBar(id, e.clientX, e.clientY);
@@ -259,6 +267,30 @@ export class DragController {
     if (!s || e.pointerId !== s.pointerId) return;
     const m = this.hooks.boardMetrics();
     const { nx: pointerNx, ny: pointerNy } = this.hooks.toCanonical(e.clientX, e.clientY);
+
+    // V pressed mid-drag: while the table turns, leave the held pile where it is so it rides
+    // the rotating board (it's a child of .board__perspective). Re-anchor once the turn ends so
+    // the finger picks the pile up exactly where it sits, with no jump.
+    if (this.hooks.isViewTurning()) {
+      s.reanchorPending = true;
+      return;
+    }
+    if (s.reanchorPending) {
+      s.reanchorPending = false;
+      const seed = this.state.cards.get(s.ids[0]!);
+      if (seed) {
+        // The turn rotated the board under a still finger, so the SAME screen point now maps to a
+        // different canonical point. Re-derive the anchor offset from the current pointer so the
+        // pile stays exactly where it sits (no jump), while preserving the grab-origin invariant
+        // (startN + anchor = the seed position at grab) that snap-back relies on.
+        const originX = s.startNx + s.anchorDx;
+        const originY = s.startNy + s.anchorDy;
+        s.anchorDx = seed.x - pointerNx;
+        s.anchorDy = seed.y - pointerNy;
+        s.startNx = originX - s.anchorDx;
+        s.startNy = originY - s.anchorDy;
+      }
+    }
 
     if (!s.dragging) {
       const dx = (pointerNx - s.startNx) * m.width;

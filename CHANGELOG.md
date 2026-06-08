@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.9.19: Camera turns that hold up, and consistent info bubbles
+
+A drag, perspective and UI-consistency pass. The card sync, canonical frame and balance numbers
+are unchanged. 220 tests green.
+
+- **The V camera turn holds up from every side.** After turning the table, cards drag into the
+  left and right hand areas again, instead of hitting an invisible wall. The drag clamp now runs
+  in the angle the board is actually drawn from (the viewed seat), not your own seat, so the
+  reachable area always matches what is on screen.
+- **Turn the view with a card in hand.** Pressing V while holding a card now turns the table under
+  the held pile (it rides the rotation), then hands it back to your finger exactly where it sits,
+  so you can pick the new side and place the card without a jump.
+- **The turn-view button moved into the card menu on touch.** Long-press a card and its action bar
+  now carries the turn-view button, instead of a control floating in the bottom-right corner. On a
+  small screen driven by a mouse it stays available as a corner button.
+- **The guide's turn line is never cut off.** A longer name or the "(you)" tag in "Turn: Player
+  (you)" now wraps instead of being clipped with an ellipsis.
+- **One consistent info bubble.** A highlighted rulebook term and the card info panel now use the
+  same placement: centred just above what you point at, clamped to the screen, instead of the term
+  bubble drifting far off to the right.
+- **Clearer guide wording.** The setup steps read in one consistent voice in Turkish, the English
+  first-player step reads more naturally, and the guide and shortcuts now describe the turn-view
+  button's new home in the card menu.
+
 ## 0.9.18: Spatial sound, corner privacy & clean host exit
 
 A multiplayer-feel pass: interaction sounds are now consistently spatial, the hidden-zone

@@ -156,8 +156,9 @@ export class GuidePanel {
     } else {
       const name = view.turnSeat >= 0 ? this.seatNameMaybeYou(view.turnSeat) : t("guide.aPlayer");
       const phase = view.turnPhase ?? "focus";
+      const heading = t("guide.turnHeading", { name });
       this.barTextEl.innerHTML =
-        `<span class="guide__bar-title">${esc(t("guide.turnHeading", { name }))}</span>` +
+        `<span class="guide__bar-title" title="${esc(heading)}">${esc(heading)}</span>` +
         `<span class="guide__bar-phase" data-phase="${esc(phase)}">${esc(t(`guide.phase.${phase}.title`))}</span>`;
     }
 

@@ -14,6 +14,9 @@ const ICON_GATHER = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
 const ICON_MIX = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 7 H7 L17 17 H21 M3 17 H7 L17 7 H21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M18 4 L21 7 L18 10 M18 14 L21 17 L18 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 // Info "i": shows the face-up card's details on touch, where there is no hover.
 const ICON_INFO = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 11 V16.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.1" fill="currentColor"/></svg>`;
+// Perspective (camera-turn): the touch path to the V shortcut. A table (rounded square) with a
+// circular arrow sweeping around it — "turn the view". Mirrors the icon in Game.installPerspectiveButton.
+const ICON_PERSPECTIVE = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="8" y="8" width="8" height="8" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 9 A 8 8 0 0 1 19 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M19 15 A 8 8 0 0 1 5 17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M19 3 V7 H15 M5 21 V17 H9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 
 export interface ContextHooks {
   /** Flip the whole pile under the finger, or a lone card if that's all there is. */
@@ -21,6 +24,8 @@ export interface ContextHooks {
   onGather(id: string): void;
   onMix(id: string): void;
   onRotate(id: string): void;
+  /** Turn the local camera a quarter (the touch path to the V key). Card-independent. */
+  onPerspective(): void;
   /** Show the card's details (touch has no hover); only when it reads face-up. */
   onInfo(id: string): void;
   /** Returns the stack containing `id` so the bar can disable irrelevant actions. */
@@ -46,6 +51,7 @@ export class ContextBar {
       <button type="button" class="context-bar__btn" data-act="gather" aria-label="${esc(t("actions.gather"))}">${ICON_GATHER}</button>
       <button type="button" class="context-bar__btn" data-act="mix" aria-label="${esc(t("actions.shuffle"))}">${ICON_MIX}</button>
       <button type="button" class="context-bar__btn" data-act="info" aria-label="${esc(t("actions.info"))}">${ICON_INFO}</button>
+      <button type="button" class="context-bar__btn" data-act="perspective" aria-label="${esc(t("actions.perspective"))}">${ICON_PERSPECTIVE}</button>
     `;
     document.body.appendChild(this.el);
     this.bind();
@@ -65,6 +71,7 @@ export class ContextBar {
         else if (act === "gather") this.hooks.onGather(id);
         else if (act === "mix") this.hooks.onMix(id);
         else if (act === "info") this.hooks.onInfo(id);
+        else if (act === "perspective") this.hooks.onPerspective();
         this.hide();
       });
     });
