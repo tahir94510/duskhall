@@ -259,11 +259,14 @@
 /* A rival's private card: it is silently un-grabbable, so the cursor says so (not the plain
    arrow, which read as empty table). Never applies to your own cards — you never see them concealed. */
 .card.is-concealed { cursor: not-allowed; }
-/* Force the back to face the camera — but NOT while a flip is mid-animation, so a
-   concealment toggle that lands during a turn can't yank the card back to 0deg and
-   make it blink. A concealed card can only be flipped by its owner (who never sees
-   it concealed), so the animating+concealed pairing is harmless and brief. */
-.card.is-concealed:not(.is-animating):not(.is-flip-quiet) .card__inner { transform: rotateY(0deg) !important; }
+/* Force the back to face the camera and keep the front hidden, INCLUDING while a
+   gesture animates. Peers now replay a rival's hidden-zone flip/shuffle so the motion
+   reads (elevation, riffle jitter) for everyone, but the card's face must never turn
+   into view: the elevation/jitter ride .card-level transforms, while this pins the
+   .card__inner to its back-facing pose so the secret face stays blurred-out the whole
+   time. The owner is never concealed from themselves, so their own flips animate fully.
+   (is-flip-quiet cards are opacity:0 pile members, so they need no pinning.) */
+.card.is-concealed:not(.is-flip-quiet) .card__inner { transform: rotateY(0deg) !important; }
 .card.is-concealed .card__face--back {
   visibility: visible;
   /* Blur scales with the card so a rival's hidden card reads as equally concealed
@@ -271,7 +274,7 @@
      tiny phone card. Tied to --card-w (≈2.2px at a ~100px card) and clamped. */
   filter: blur(var(--card-blur)) saturate(0.85) brightness(0.96);
 }
-.card.is-concealed:not(.is-animating):not(.is-flip-quiet) .card__face--front { visibility: hidden; }
+.card.is-concealed:not(.is-flip-quiet) .card__face--front { visibility: hidden; }
 
 /* "Under glass": a card resting in its owner's own hand area reads as sitting just beneath
    a thin glass surface. A crisp top catch-light and a faint diagonal sheen, with NO blur, so
