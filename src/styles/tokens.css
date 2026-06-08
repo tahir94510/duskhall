@@ -32,6 +32,11 @@
   --seat-2: #9d998e;
   --seat-3: #6a665d;
 
+  /* Shared control unit: the height of the header icon buttons AND the minimized Guide bar, so the
+     two always stand the SAME height side by side at every breakpoint. Overridden per device in
+     mobile.css (one place), and every consumer reads this token — change it once, everything tracks. */
+  --ctrl: 36px;
+
   /* Geometry */
   --r-card: 10px;
   --r-panel: 10px;

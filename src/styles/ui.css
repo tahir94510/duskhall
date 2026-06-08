@@ -33,8 +33,9 @@
 
 .icon-btn {
   position: relative;
-  width: 36px;
-  height: 36px;
+  /* Shared control unit so the header buttons and the minimized Guide bar always match height. */
+  width: var(--ctrl);
+  height: var(--ctrl);
   display: grid;
   place-items: center;
   border-radius: 8px;

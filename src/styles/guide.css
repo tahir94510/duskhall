@@ -41,11 +41,14 @@
      and the controls never float. The bar never grows because the row never wraps (see status). */
   align-items: center;
   gap: 6px;
-  /* Tuned so the bar (and thus the whole panel when minimized) stands the same
-     height as the 36px header buttons it sits beside: 4 + 28 + 4 = 36. */
-  padding: 4px 6px 4px 12px;
+  /* The bar (and thus the whole panel when minimized) stands the SAME height as the header icon
+     buttons it sits beside, on every device — both read the shared --ctrl unit, so they never drift
+     apart (the three-dot menu button and the minimized Guide line up exactly). Vertical padding is
+     3px so the 28px control row + padding (34px) can shrink to the smallest --ctrl (34px) exactly,
+     while min-height lets the bar grow to the larger 36/40px units. */
+  padding: 3px 6px 3px 12px;
   border-bottom: 1px solid var(--line);
-  min-height: 36px;
+  min-height: var(--ctrl);
 }
 .guide.is-min .guide__bar { border-bottom: none; }
 
