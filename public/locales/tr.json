@@ -195,7 +195,7 @@
         "desc": "Masayı solundaki oyuncunun açısından görürsün; tekrar basınca kendi açına dönersin. Bu yalnızca senin görünümünü değiştirir, başka kimse için bir şey değişmez. Açtığın Mühür ve Hizmetkârları dizeceğin boş alanı önüne getirmek için kullan."
       }
     ],
-    "mobileNote": "Dokunmatik cihazlarda kartın üstüne uzun basarak eylem çubuğunu aç. Çubuktaki görünümü çevir düğmesi V tuşuyla aynı işi yapar."
+    "mobileNote": "Dokunmatikte fare ya da klavye yoktur. Bir karta uzun basınca eylem çubuğu açılır; oradan kartı çevirebilir, yana döndürebilir, destesini toplayabilir ya da karıştırabilir, bilgilerini görebilir veya görünümü çevirebilirsin (V tuşuyla aynı)."
   },
   "leaveConfirm": {
     "title": "Odadan çık?",
@@ -780,7 +780,7 @@
     "yourTurn": "Sıra sende. Bitirince onay işaretine bas.",
     "aPlayer": "bir oyuncu",
     "youTag": "(sen)",
-    "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir ve kartlarına hiç dokunmaz. Kartları dilediğin gibi taşımakta, çevirmekte ve karıştırmakta özgürsün. İpucu: yeni karıştırılmış bir desteyle başlamak istersen önce menüden Desteyi sıfırla'yı kullan, sonra Başlat'a bas. Masayı başka bir taraftan görmek için istediğin an V tuşuna bas (dokunmatik ekranda bir karta basılı tut ve açılan menüden görünümü çevir düğmesine dokun); açtığın kartları dizerken işine yarar.",
+    "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir, kartlarına asla dokunmaz; böylece kartları dilediğin gibi taşıyabilir, çevirebilir ve karıştırabilirsin. İpucu: yeni karıştırılmış bir desteyle başlamak istersen önce menüden Desteyi sıfırla'yı kullan, sonra Başlat'a bas.",
     "introWaiting": "Oyunun başlaması için ev sahibi bekleniyor.",
     "start": "Başlat",
     "restart": "Yeniden başlat",

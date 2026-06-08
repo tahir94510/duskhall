@@ -440,6 +440,33 @@ export class DragController {
       return;
     }
 
+    // A camera-turn ran during this drag and no ordinary move has consumed it yet (released during
+    // or right after the turn): place the pile under the cursor at the SETTLED angle, exactly as a
+    // final move would, so the drop lands where the cursor is once the board squares up — never on
+    // the mid-animation arc the live glue left it on. (No-op cost when framePending is false.)
+    if (s.framePending) {
+      s.framePending = false;
+      const mt = this.hooks.boardMetrics();
+      const { nx, ny } = this.hooks.toCanonical(e.clientX, e.clientY);
+      let seedNx = nx + s.anchorDx;
+      let seedNy = ny + s.anchorDy;
+      const clampCards: ClampCard[] = [];
+      for (const [id, rel] of s.relOffsets) {
+        const c = this.state.cards.get(id);
+        clampCards.push({ dx: rel.dx, dy: rel.dy, rot: c ? c.rot : 0 });
+      }
+      ({ nx: seedNx, ny: seedNy } = this.hooks.clampSeed(seedNx, seedNy, clampCards));
+      for (const id of s.ids) {
+        const rel = s.relOffsets.get(id);
+        const c = this.state.cards.get(id);
+        if (!rel || !c) continue;
+        c.x = seedNx + rel.dx;
+        c.y = seedNy + rel.dy;
+        const el = s.els.get(id);
+        if (el) el.style.transform = `translate3d(${c.x * mt.width - mt.cardW / 2}px, ${c.y * mt.height - mt.cardH / 2}px, 0) rotate(${c.rot * 90}deg)`;
+      }
+    }
+
     // STATE FIRST: update every card's canonical position synchronously, so
     // the RAF render loop never sees a half-applied drop.
     const selfSeat = this.hooks.getSelfSeat();

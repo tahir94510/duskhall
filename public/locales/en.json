@@ -195,7 +195,7 @@
         "desc": "View the table from your left-hand neighbour's side; press again to return to your own. This changes only your own view, nothing for anyone else. Use it to bring your open space in front of you, then lay out the Seals and Servants you reveal there."
       }
     ],
-    "mobileNote": "On touch devices, long-press a card to open its action bar. Its view-turn button does the same as the V key."
+    "mobileNote": "On touch there is no mouse or keyboard. Long-press a card to open its action bar, then tap to flip it, turn it sideways, gather or shuffle its stack, read its details, or turn the view (the same as the V key)."
   },
   "leaveConfirm": {
     "title": "Exit room?",
@@ -780,7 +780,7 @@
     "yourTurn": "It is your turn. Tap the check when you are done.",
     "aPlayer": "a player",
     "youTag": "(you)",
-    "introBody": "This guide walks the whole table through a game, one step at a time. It only suggests what to do next, and never moves your cards. You stay free to move, flip and shuffle them however you like. Tip: use Reset deck from the menu first if you want to begin from a freshly shuffled deck, then press Start. Press V any time to turn the table and view it from another side (on touch, hold a card and tap the view-turn button in its menu); handy for laying out the cards you reveal.",
+    "introBody": "This guide walks the whole table through a game, one step at a time. It only suggests what to do next and never moves your cards, so you stay free to move, flip and shuffle them however you like. Tip: to begin from a freshly shuffled deck, use Reset deck from the menu first, then press Start.",
     "introWaiting": "Waiting for the host to start the game.",
     "start": "Start",
     "restart": "Restart",

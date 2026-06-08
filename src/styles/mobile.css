@@ -94,11 +94,16 @@
   .perspective-btn.is-busy svg { animation: perspective-nudge var(--dur-slow) var(--ease); }
   @keyframes perspective-nudge { from { transform: rotate(-90deg); } to { transform: rotate(0deg); } }
 }
-/* On TOUCH the camera turn lives in the long-press action bar (a card's menu), so the floating
-   button is hidden there to keep the corner clear. It only appears as a fallback on a small
-   screen driven by a MOUSE (no long-press menu, and the V key may not be at hand). Desktop+mouse
-   on a large screen uses the V key. */
+/* On TOUCH (coarse pointer) the camera turn lives in the long-press action bar (a card's menu),
+   so the floating button is hidden there to keep the corner clear. It appears as a fallback only
+   where neither the action bar nor the V key is the natural path:
+   - a small screen driven by a mouse (no long-press menu, the V key may not be at hand), and
+   - a no-hover device with a FINE pointer (e.g. a TV / remote: no keyboard, no touch long-press).
+   A large desktop with a mouse uses the V key. Touch never matches (pointer: coarse is excluded). */
 @media (max-width: 900px) and (hover: hover) and (pointer: fine) {
+  .perspective-btn { display: grid; }
+}
+@media (hover: none) and (pointer: fine) {
   .perspective-btn { display: grid; }
 }
 
