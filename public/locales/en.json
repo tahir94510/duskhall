@@ -33,7 +33,7 @@
     "newRoom": "A new room has been opened.",
     "roomFull": "The room is full, so you are watching as a spectator.",
     "timer": "Time",
-    "waiting": "Waiting for players...",
+    "waiting": "You are the only one here. Share the room link to play with friends.",
     "pasteJoin": "Paste code or link to join",
     "joined": "Joined the room",
     "alreadyInRoom": "You're already in this room.",
@@ -43,8 +43,8 @@
     "connOnline": "Online",
     "connConnecting": "Connecting...",
     "connOffline": "Offline",
-    "connLost": "Connection lost. Reconnecting...",
-    "connRestored": "Reconnected.",
+    "connLost": "Connection lost. Reconnecting; your moves are saved and will sync.",
+    "connRestored": "Back online. Your moves are in sync.",
     "guide": "Guide"
   },
   "diag": {
@@ -156,7 +156,7 @@
   },
   "shortcutsList": {
     "title": "Shortcuts",
-    "subtitle": "The cursor target wins; empty space does nothing.",
+    "subtitle": "Every action works on the card under your cursor. Empty space does nothing.",
     "items": [
       {
         "keys": "Left-press, drag",
