@@ -6,6 +6,8 @@ import {
   seatForLocalSlot,
   screenToCanonical,
   canonicalToScreen,
+  screenToCanonicalDeg,
+  canonicalToScreenDeg,
   type Seat,
   type LocalSlot,
   type BoardBox
@@ -200,6 +202,43 @@ describe("four-player table reads consistently for every seat (regression)", () 
     for (const v of SEATS) {
       const slots = SEATS.map((s) => localSlotForSeat(v, s));
       expect(new Set(slots).size).toBe(4); // all four screen slots used exactly once
+    }
+  });
+});
+
+describe("arbitrary-angle (mid-turn) transforms", () => {
+  // A non-square board with an off-origin centre, the same shape that caught the square-board bug.
+  const box: BoardBox = { cx: 960, cy: 400, width: 1600, height: 820 };
+  const points: Array<[number, number]> = [
+    [0.5, 0.5], [0.4, 0.5], [0.6, 0.5], [0.1, 0.9], [0.92, 0.08], [0.0, 0.0], [1.0, 1.0]
+  ];
+  // The in-between angles a live V camera-turn passes through (not just settled seat angles).
+  const angles = [-90, -75, -45, -18, 0, 18, 45, 90, 137, 180, 222, 270, 359];
+
+  it("canonical -> screen -> canonical round-trips at every intermediate angle", () => {
+    for (const deg of angles) {
+      for (const [nx, ny] of points) {
+        const { px, py } = canonicalToScreenDeg(nx, ny, deg, box);
+        const back = screenToCanonicalDeg(px, py, deg, box);
+        expect(back.nx).toBeCloseTo(nx, 6);
+        expect(back.ny).toBeCloseTo(ny, 6);
+      }
+    }
+  });
+
+  it("the seat helpers equal the deg helpers at each seat's settled angle", () => {
+    for (const v of [0, 1, 2, 3] as Seat[]) {
+      const deg = seatRotationDeg(v);
+      for (const [nx, ny] of points) {
+        const seatScreen = canonicalToScreen(nx, ny, v, box);
+        const degScreen = canonicalToScreenDeg(nx, ny, deg, box);
+        expect(degScreen.px).toBeCloseTo(seatScreen.px, 6);
+        expect(degScreen.py).toBeCloseTo(seatScreen.py, 6);
+        const seatCanon = screenToCanonical(seatScreen.px, seatScreen.py, v, box);
+        const degCanon = screenToCanonicalDeg(degScreen.px, degScreen.py, deg, box);
+        expect(degCanon.nx).toBeCloseTo(seatCanon.nx, 6);
+        expect(degCanon.ny).toBeCloseTo(seatCanon.ny, 6);
+      }
     }
   });
 });
