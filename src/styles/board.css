@@ -91,6 +91,17 @@
    re-seats only animate during live play. */
 body:not(.is-ready) .board__perspective { transition: none; }
 
+/* Camera turn (V key / perspective button): the cards rotate smoothly via the
+   transform transition above, but the frosted zone trays and the upright seat
+   labels are SIBLINGS of .board, so they re-map their slot instantly. A brief
+   fade-in over the same duration masks that snap so the whole turn reads as one
+   cohesive motion. Honours reduced motion automatically (--dur-slow -> 0ms). */
+@media (prefers-reduced-motion: no-preference) {
+  .table.is-rotating .zones,
+  .table.is-rotating .board__labels { animation: board-view-turn var(--dur-slow) var(--ease); }
+  @keyframes board-view-turn { from { opacity: 0.25; } to { opacity: 1; } }
+}
+
 .board__perspective > * { pointer-events: auto; }
 /* ...but the decorative scaffolding layers (slot outlines, the cards LAYER box,
    and the deck/discard dock) must stay transparent to input. They are full-board

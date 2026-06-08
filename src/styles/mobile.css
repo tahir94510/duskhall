@@ -57,6 +57,52 @@
 
 .context-bar__btn svg { width: 16px; height: 16px; }
 
+/* Perspective (camera-turn) button — the touch / no-keyboard path to the V shortcut.
+   Hidden by default; shown on coarse pointers and small screens (below). Bottom-right
+   corner, clear of the top-right header/guide, the bottom-centre toast and the
+   bottom-left debug HUD. Sits above board & cursors, below modals. Frosted to match
+   the header icon buttons so it belongs to the same 2.5D control family. */
+.perspective-btn {
+  position: fixed;
+  right: max(env(safe-area-inset-right), 14px);
+  bottom: max(env(safe-area-inset-bottom), 14px);
+  z-index: var(--z-guide);
+  display: none;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(22, 22, 22, 0.62);
+  border: 1px solid var(--line-2);
+  color: var(--ivory-dim);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(12px) saturate(115%);
+  -webkit-backdrop-filter: blur(12px) saturate(115%);
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease),
+              background var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.perspective-btn svg { width: 22px; height: 22px; }
+@media (hover: hover) {
+  .perspective-btn:hover { color: var(--ivory); border-color: var(--line-3); background: rgba(28, 28, 28, 0.78); }
+}
+.perspective-btn:active { color: var(--ivory); border-color: var(--line-3); background: rgba(32, 32, 32, 0.85); transform: scale(0.94); }
+/* A short spin nudge while the view settles, so a tap reads as "turning". */
+.perspective-btn.is-busy { color: var(--ivory); border-color: var(--line-3); }
+@media (prefers-reduced-motion: no-preference) {
+  .perspective-btn.is-busy svg { animation: perspective-nudge var(--dur-slow) var(--ease); }
+  @keyframes perspective-nudge { from { transform: rotate(-90deg); } to { transform: rotate(0deg); } }
+}
+/* Show it wherever a keyboard shortcut is unlikely to be the primary path:
+   any touch/coarse pointer, or a small screen. Desktop+mouse uses the V key. */
+@media (pointer: coarse), (hover: none), (max-width: 900px) {
+  .perspective-btn { display: grid; }
+}
+@media (pointer: coarse) {
+  /* Comfortable ≥48px touch target already; keep the icon a touch larger. */
+  .perspective-btn { width: 52px; height: 52px; }
+  .perspective-btn svg { width: 24px; height: 24px; }
+}
+
 @media (max-width: 760px) {
   .table {
     /* Field-proportional 3-track grid (NOT vw/vh): the play field is a SQUARE

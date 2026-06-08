@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   rotateVec,
   seatRotationDeg,
+  nextQuarterSeat,
   localSlotForSeat,
   seatForLocalSlot,
   screenToCanonical,
@@ -25,6 +26,35 @@ const EXPECTED: Record<Seat, Record<Seat, LocalSlot>> = {
   2: { 0: "right", 1: "left", 2: "bottom", 3: "top" },
   3: { 0: "left", 1: "right", 2: "top", 3: "bottom" }
 };
+
+describe("nextQuarterSeat: the perspective-toggle step", () => {
+  const norm = (d: number) => ((d % 360) + 360) % 360;
+
+  it("returns to the start after exactly four quarter-turns, from any seat", () => {
+    for (const start of SEATS) {
+      let s = start;
+      for (let i = 0; i < 4; i++) s = nextQuarterSeat(s);
+      expect(s).toBe(start); // four 90° steps = full circle, back home
+    }
+  });
+
+  it("visits all four seats once over a full cycle (a clean rotation, no skips/repeats)", () => {
+    for (const start of SEATS) {
+      const visited = new Set<Seat>();
+      let s = start;
+      for (let i = 0; i < 4; i++) { visited.add(s); s = nextQuarterSeat(s); }
+      expect(visited.size).toBe(4); // every side seen exactly once
+    }
+  });
+
+  it("each step advances the board angle by exactly +90°", () => {
+    for (const start of SEATS) {
+      const next = nextQuarterSeat(start);
+      expect(norm(seatRotationDeg(next))).toBe(norm(seatRotationDeg(start) + 90));
+      expect(next).not.toBe(start); // never a dead step
+    }
+  });
+});
 
 describe("seat → local slot mapping", () => {
   it("places the viewer's own seat at the bottom for every seat", () => {

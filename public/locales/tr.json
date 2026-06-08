@@ -69,7 +69,8 @@
     "rotate": "90° döndür",
     "gather": "Topla",
     "shuffle": "Karıştır",
-    "info": "Kart bilgisi"
+    "info": "Kart bilgisi",
+    "perspective": "Görünümü çevir"
   },
   "table": {
     "deck": "Deste",
@@ -188,13 +189,17 @@
       {
         "keys": "M",
         "desc": "İmlecin altındaki yığını karıştır"
+      },
+      {
+        "keys": "V",
+        "desc": "Masayı çeyrek tur döndürüp başka bir taraftan görürsün; tekrar bastıkça döndürerek kendi açına dönersin. Yalnızca senin görüşün — kimse için hiçbir şeyi değiştirmez. Açık alanın kendi alanının altında kaldığı açıyı bulmak için kullan; açtığın Mühür ve Hizmetkârları sağ tarafındaki boşluğa diz."
       }
     ],
-    "mobileNote": "Dokunmatik cihazlarda kartın üstüne uzun basarak eylem çubuğunu aç."
+    "mobileNote": "Dokunmatik cihazlarda kartın üstüne uzun basarak eylem çubuğunu aç. Görünümü çevir düğmesi (sağ alt) V tuşuyla aynı işi yapar."
   },
   "leaveConfirm": {
     "title": "Odadan çık?",
-    "body": "Bu odadan ayrılırsın ve yeni bağlantıyla taze bir oda açılır; oranın sahibi (host) sen olursun. Burada sana ait kartlar diğer oyunculara serbest bırakılır.",
+    "body": "Bu odadan ayrılırsın ve yeni bağlantıyla taze bir oda açılır; oranın ev sahibi sen olursun. Burada sana ait kartlar diğer oyunculara serbest bırakılır.",
     "leave": "Çık"
   },
   "joinByCode": {
@@ -242,7 +247,7 @@
         "title": "Gizlilik, varlık ve daha canlı bir masa",
         "items": [
           "Elin gizli kalır: rakibinin kartları, masa yüklenirken bir an bile olsa asla gösterilmez.",
-          "Düşen oyuncular artık otomatik atılmıyor. Koltukları, çıkana ya da host onları çıkarana kadar korunur. Host düşerse hostluk anında masadaki bir oyuncuya geçer ve host geri döndüğünde ona geri verilir.",
+          "Düşen oyuncular artık otomatik atılmıyor. Koltukları, çıkana ya da ev sahibi onları çıkarana kadar korunur. Ev sahibi düşerse ev sahipliği anında masadaki bir oyuncuya geçer ve ev sahibi geri döndüğünde ona geri verilir.",
           "Daha net bağlantı durumu; canlı eşitleme koptuğunda ya da geri geldiğinde kısa bir bilgi.",
           "Diğer oyuncuların kart çevirme ve karıştırmalarını artık yalnızca görmüyor, duyuyorsun da. Böylece masa daha canlı. Gizli el içindeki hamleler sessiz ve gizli kalır.",
           "İnce ayarlar: sürüklenen kart gölgesiyle tam hizalı oturur, ilk oyuncu listesi her zaman tüm oturanları gösterir, yazılar daha okunaklı, daha çok oyuncu adı var ve müzik her odada yeniden karışır."
@@ -274,9 +279,9 @@
         "title": "Yeni oyuncular için yerleşik rehber",
         "items": [
           "Artık tüm masayı bir oyun boyunca adım adım yönlendiren isteğe bağlı bir Rehber var: hazırlık, kimin başlayacağı ve her oyuncunun sırası. Yalnızca ne yapılacağını önerir. Kartları yine dilediğin gibi taşımakta, çevirmekte ve karıştırmakta özgürsün.",
-          "Rehberi host menüden açar ve herkeste görünür. Hazırlık adımlarını host yürütür, oyunu panelin içinden başlatır ya da yeniden başlatır. Oyun sırasında her fazı, sırası gelen oyuncu onay işaretine basarak tamamlar.",
+          "Rehberi ev sahibi menüden açar ve herkeste görünür. Hazırlık adımlarını ev sahibi yürütür, oyunu panelin içinden başlatır ya da yeniden başlatır. Oyun sırasında her fazı, sırası gelen oyuncu onay işaretine basarak tamamlar.",
           "Panelin üst barı kimin sırasında olduğunu ve mevcut fazı gösterir. Yer kazanmak için paneli bu bara küçültebilir, istediğin an tekrar büyütebilirsin.",
-          "Desteyi sıfırla ve Rehber kontrolleri artık yalnızca host'a aittir; böylece oyun yanlışlıkla sıfırlanmaz."
+          "Desteyi sıfırla ve Rehber kontrolleri artık yalnızca ev sahibine aittir; böylece oyun yanlışlıkla sıfırlanmaz."
         ]
       },
       {
@@ -385,7 +390,7 @@
           "Vaerum sana ve arkadaşlarına ortak bir masa sunar. Kartları gerçek zamanlı olarak birlikte dağıtır, taşır, çevirir, toplar, karıştırır ve döndürürsünüz. Kuralları kendiliğinden uygulamaz; tıpkı yüz yüze oynar gibi kuralları kendiniz işletirsiniz.",
           "Her oyuncunun, masanın kendi kenarında özel bir alanı vardır. Bu alana koyduğun kartlar diğerlerinden gizlenir; onlar kartın yüzünü değil, yalnızca bulanık bir arkasını görür. Bir kartı alanından dışarı sürükleyince herkese görünür olur, geri sürükleyince yeniden gizlenir. Kart, alanının kenarını geçtiği anda gizliyle görünür arasında geçiş yapar ve bu, her oyuncuda ve her ekranda aynı görünür.",
           "Temel hareketler: kartı sürükleyerek taşı, tüm yığını taşımak için Ctrl'ye basılı tutarak sürükle. Bir kartı çevirmek için üzerinde tekerleği kaydır, tüm desteyi çevirmek için sağ tıkla (ya da Ctrl+tekerlek). Dağınık bir desteyi derli toplu yapmak için G, karıştırmak için M, yana döndürmek için Shift+tekerlek. Telefonda kartı basılı tutarak hızlı eylemleri aç. Tüm listeyi menüdeki Kısayollar bölümünde bulabilirsin.",
-          "Menüde host'a özel iki kontrol daha var. Rehberi aç, kural rehberini tüm masaya gösterir: hazırlığı, kimin başlayacağını ve her oyuncunun sırasını anlatır; adımı, sırası gelen oyuncu onay işaretine basarak ilerletir. Hazırlık adımlarını host yürütür ve panelin içinden oyunu Başlat ya da Yeniden başlat ile başlatabilir; bu, deste toplanıp karıştırılarak temiz bir başlangıç sağlar. Desteyi sıfırla ise tüm kartları karışık tek desteye döndürür. Rehber yalnızca önerir. Oyununu asla kısıtlamaz."
+          "Menüde ev sahibine özel iki kontrol daha var. Rehberi aç, kural rehberini tüm masaya gösterir: hazırlığı, kimin başlayacağını ve her oyuncunun sırasını anlatır; adımı, sırası gelen oyuncu onay işaretine basarak ilerletir. Hazırlık adımlarını ev sahibi yürütür ve panelin içinden oyunu Başlat ya da Yeniden başlat ile başlatabilir; bu, deste toplanıp karıştırılarak temiz bir başlangıç sağlar. Desteyi sıfırla ise tüm kartları karışık tek desteye döndürür. Rehber yalnızca önerir. Oyununu asla kısıtlamaz."
         ]
       },
       {
@@ -611,7 +616,7 @@
           "BÜYÜLER 1 HP harcar. Oynamadan önce geçerli bir hedef belirleyin. Tüm olası hedefler hedef alınamaz ise büyü oynanamaz; HP harcanmaz.",
           "MÜDAHALELER HP harcamaz. Sıra kimde olursa olsun, en son eyleme tepki olarak oynanabilir.",
           "Karmik Yansıma ve Kan Kefareti BENCİL: yalnızca KENDİ kartlarınızı veya kendinizi korumak için.",
-          "Sustur! EVRENSEL: taze atılmış herhangi bir Büyü veya Müdahaleyi iptal edebilir. Mühür veya Hizmetkâr yerleştirmek (Yarat eylemi) Büyü ya da Müdahale DEĞİLDİR, bu yüzden Sustur! masaya yerleştirmeyi durduramaz.",
+          "Sustur! EVRENSEL: taze atılmış herhangi bir Büyü veya Müdahaleyi iptal edebilir. Mühür veya Hizmetkâr yerleştirmek (Oluştur eylemi) Büyü ya da Müdahale DEĞİLDİR, bu yüzden Sustur! masaya yerleştirmeyi durduramaz.",
           "HİZMETKÂR: HİZMETKÂR KALKANI mutlaktır. Bir oyuncunun masasında en az 1 Hizmetkâr varsa, hiçbir rakip o oyuncunun Mühürlerini doğrudan hedef alamaz. Rakip önce tüm Hizmetkârları yok etmek zorundadır."
         ]
       },
@@ -759,42 +764,42 @@
     "maximize": "Büyüt",
     "minimizeTurnOnly": "Rehberi, turlar başladığında küçültebilirsin.",
     "confirm": "Bu adımı tamamla",
-    "hostConfirms": "Bu adımı host onaylar.",
+    "hostConfirms": "Bu adımı ev sahibi onaylar.",
     "waitYourTurn": "Sıranı bekle.",
     "yourTurn": "Sıra sende. Bitirince onay işaretine bas.",
     "aPlayer": "bir oyuncu",
     "youTag": "(sen)",
-    "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir ve kartlarına hiç dokunmaz. Kartları dilediğin gibi taşımakta, çevirmekte ve karıştırmakta özgürsün. İpucu: yeni karıştırılmış bir desteyle başlamak istersen önce menüden Desteyi sıfırla'yı kullan, sonra Başlat'a bas.",
-    "introWaiting": "Oyunun başlaması için host bekleniyor.",
+    "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir ve kartlarına hiç dokunmaz. Kartları dilediğin gibi taşımakta, çevirmekte ve karıştırmakta özgürsün. İpucu: yeni karıştırılmış bir desteyle başlamak istersen önce menüden Desteyi sıfırla'yı kullan, sonra Başlat'a bas. Masayı başka bir taraftan görmek için istediğin an V tuşuna (dokunmatikte sağ alttaki görünüm çevirme düğmesine) bas — açtığın kartları dizmek için kullanışlı.",
+    "introWaiting": "Oyunun başlaması için ev sahibi bekleniyor.",
     "start": "Başlat",
     "restart": "Yeniden başlat",
     "spectatorNote": "Bu oyunu izliyorsun.",
-    "pickWait": "İlk oyuncuyu host seçiyor.",
+    "pickWait": "İlk oyuncuyu ev sahibi seçiyor.",
     "turnHeading": "Sıra: {name}",
     "roundLabel": "Tur {n}.",
     "firstChosen": "İlk oyuncu {name}.",
     "steps": {
       "shuffle": {
         "title": "Dağıtım",
-        "body": "Desteyi karıştırın ve her oyuncuya gizli tutacağı 5 kart dağıtın. Kalanı ortada kapalı şekilde çekme destesi olarak bırakın. Herkesin eli olunca host onay işaretine basar."
+        "body": "Desteyi karıştırın ve her oyuncuya gizli tutacağı 5 kart dağıtın. Kalanı ortada kapalı şekilde çekme destesi olarak bırakın. Herkese kartlar dağıtıldıktan sonra ev sahibi onay işaretine basar."
       },
       "reveal": {
         "title": "Kim başlıyor",
-        "body": "Kimin başlayacağını belirlemek için her oyuncu desteden bir kart çekip açar. En yüksek tür başlar; sıralama şöyle: önce Hizmetkâr, sonra Büyü, sonra Mühür, sonra Müdahale. İki oyuncu eşitse yalnızca onlar yeniden çeker. Sonra açılan bu kartları desteye geri karıştırın. Bu bittiğinde host onay işaretine basar."
+        "body": "Kimin başlayacağını belirlemek için her oyuncu desteden bir kart çekip açar. En yüksek tür başlar; sıralama şöyle: önce Hizmetkâr, sonra Büyü, sonra Mühür, sonra Müdahale. İki oyuncu eşitse yalnızca onlar yeniden çeker. Sonra açılan bu kartları desteye geri karıştırın. Bu bittiğinde ev sahibi onay işaretine basar."
       },
       "chooseFirst": {
         "title": "İlk oyuncu",
-        "body": "En yüksek kartı açan oyuncuyu host seçer. İlk turu o oynar, oyun oradan saat yönünde devam eder."
+        "body": "En yüksek kartı açan oyuncuyu ev sahibi seçer. İlk turu o oynar, oyun oradan saat yönünde devam eder."
       }
     },
     "phase": {
       "focus": {
-        "title": "Odak",
-        "body": "Desteden 2 kart çek. Sahada Zaman Yarığı mühürün varsa daha fazla çekersin. Çektiğinde onay işaretine bas."
+        "title": "Odaklanma",
+        "body": "Desteden 2 kart çek. Sahada Zaman Çatlağı mührün varsa daha fazla çekersin. Çektiğinde onay işaretine bas."
       },
       "action": {
-        "title": "Eylem",
-        "body": "Bu turda harcayacağın 2 HP'n var (sahada Kızıl Monolit mührün varsa 5'e kadar). Her HP bir eylem alır: Yarat (bir Büyü, Mühür ya da Hizmetkâr oyna), İncele (1 kart çek) ya da Arındır (1 kart at, sonra 1 kart çek). Müdahaleler bedavadır ve her an oynanabilir. Bitince onay işaretine bas."
+        "title": "Aksiyon",
+        "body": "Bu turda harcayacağın 2 HP'n var (sahada Kızıl Monolit mührün varsa 5'e kadar). Her HP bir eylem alır: Oluştur (bir Büyü, Mühür ya da Hizmetkâr oyna), Araştır (1 kart çek) ya da Arındır (1 kart at, sonra 1 kart çek). Müdahaleler bedavadır ve her an oynanabilir. Bitince onay işaretine bas."
       },
       "closing": {
         "title": "Kapanış",
