@@ -67,7 +67,9 @@
    your own tray, which keeps its dedicated ivory wash above. */
 .zone--active:not(.zone--self) {
   color: var(--seat-color);
-  background-color: color-mix(in oklab, var(--seat-color) 9%, transparent);
+  /* A touch more seat tint so an occupied rival area reads its full extent (which edge is whose)
+     at a glance — still soft and edge-faded toward the centre, never a hard frame. */
+  background-color: color-mix(in oklab, var(--seat-color) 12%, transparent);
 }
 /* Dropped: the player lost connection / closed the tab but did NOT leave. Their area stays reserved
    and clearly "asleep" (dimmed) — their cards remain private — until they rejoin or leave. The amber
@@ -101,9 +103,9 @@
    full box. The diagonal seams shared with neighbours stay felt through the two trays' own frost
    meeting along them. */
 .zone--self, .zone--bottom { box-shadow: inset 0 -1px 0 rgba(243, 239, 229, 0.12), inset 0 -10px 20px rgba(0, 0, 0, 0.10); }
-.zone--top { box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.09), inset 0 10px 20px rgba(0, 0, 0, 0.10); }
-.zone--left { box-shadow: inset 1px 0 0 rgba(243, 239, 229, 0.09), inset 10px 0 20px rgba(0, 0, 0, 0.10); }
-.zone--right { box-shadow: inset -1px 0 0 rgba(243, 239, 229, 0.09), inset -10px 0 20px rgba(0, 0, 0, 0.10); }
+.zone--top { box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.11), inset 0 10px 20px rgba(0, 0, 0, 0.10); }
+.zone--left { box-shadow: inset 1px 0 0 rgba(243, 239, 229, 0.11), inset 10px 0 20px rgba(0, 0, 0, 0.10); }
+.zone--right { box-shadow: inset -1px 0 0 rgba(243, 239, 229, 0.11), inset -10px 0 20px rgba(0, 0, 0, 0.10); }
 
 /* Edge fade: each tray is strongest along its own board edge and dissolves toward the centre, so the
    inner ("door") edge melts into the open shared area instead of ending on a hard line, and the
