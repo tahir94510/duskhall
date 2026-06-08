@@ -38,7 +38,7 @@ import {
   rotationsDiffer,
   isTidyStack
 } from "../table/StackOps.js";
-import { rotateVec, seatRotationDeg, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
+import { rotateVec, seatRotationDeg, nextQuarterSeat, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
 import { cardZoneOwner, pointInZoneCanonical, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
 import { clampSeedToPage, type ClampCard } from "../table/playfield.js";
@@ -169,6 +169,9 @@ export class Game {
   private dragPreviewIds = new Set<string>();
   private dragPreviewHandle = 0;
   private cursorEls = new Map<string, HTMLDivElement>();
+  // Last canonical cursor payload per peer, so a local camera turn (togglePerspective)
+  // can re-project every ghost AT ONCE instead of waiting for the peer's next packet.
+  private lastCursors = new Map<string, { x: number; y: number; seat: number }>();
   // Cache of card id -> DOM node so the render loop never has to query the DOM
   // (a per-card querySelector every frame was the main idle-CPU jank source).
   private cardEls = new Map<string, HTMLDivElement>();
@@ -345,6 +348,7 @@ export class Game {
     this.self.seat = this.self.seat >= 0 ? this.self.seat : 0;
     this.spectator = false;
     this.claimSeat = this.self.seat;
+    this.viewSeat = this.self.seat as Seat; // camera starts at our own seat
     this.self.color = SEAT_COLORS[this.self.seat] ?? SEAT_COLORS[0]!;
     this.writeIdentity();
 
@@ -361,6 +365,7 @@ export class Game {
 
     this.bindHooks();
     this.installKeyboardAndWheel();
+    this.installPerspectiveButton();
     this.installResizeObserver();
     this.installRealtime();
     this.installAudioBoot();
@@ -500,6 +505,21 @@ export class Game {
   // still watches from seat 0's POV but must not claim it).
   private claimSeat = 0;
 
+  // The seat whose ANGLE the board is currently drawn from — i.e. which corner sits
+  // at the bottom of our screen. Normally equals self.seat, but the V key / mobile
+  // button (togglePerspective) turns it a quarter at a time so a player can look at
+  // the table from another side and lay out their cards where the open space falls,
+  // whatever the screen's shape. This is a PURELY LOCAL camera: it drives only the
+  // visual projection (board rotation, screen↔canonical, zone slot placement) and
+  // never touches privacy, ownership, cursors-to-peers, or presence — those stay on
+  // self.seat / claimSeat, so multiplayer state is identical no matter how we look.
+  private viewSeat: Seat = 0;
+  // True during the short rotate animation so a second toggle (key or button) can't
+  // start before the first settles, and so input that depends on the angle is held.
+  private viewRotating = false;
+  private viewRotateTimer = 0;
+  private perspectiveBtn: HTMLButtonElement | null = null;
+
   private presencePayload(): PresencePlayer {
     return {
       id: this.self.id,
@@ -587,7 +607,42 @@ export class Game {
   }
 
   private applyBoardPerspective(): void {
-    this.refs.board.style.setProperty("--board-rot", `${seatRotationDeg(this.self.seat as Seat)}deg`);
+    this.refs.board.style.setProperty("--board-rot", `${seatRotationDeg(this.viewSeat)}deg`);
+  }
+
+  // Turn the LOCAL camera a quarter-turn (V key / mobile button). Purely visual: only
+  // viewSeat changes — privacy, ownership, cursors-to-peers and presence all stay on
+  // self.seat/claimSeat, so peers see nothing. Ignored while a card is in hand (active
+  // drag) or while a previous turn is still settling, so it never fights a drag or
+  // stacks two rotations. Honours prefers-reduced-motion by skipping the settle delay.
+  private togglePerspective(): void {
+    if (this.viewRotating || (this.drag?.isActive() ?? false)) return;
+    const next = nextQuarterSeat(this.viewSeat);
+    if (next === this.viewSeat) return;
+    this.viewSeat = next;
+    this.applyBoardPerspective();
+    this.refreshZones();        // re-map which physical slot shows which seat (+ self highlight)
+    this.reprojectCursors();    // peer ghosts follow the new angle immediately
+    const reduce = typeof window.matchMedia === "function"
+      && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const dur = reduce ? 0 : 320; // matches --dur-slow board transition
+    // Crossfade lives on the table root because .zones / .board__labels are SIBLINGS of
+    // .board (not children), so they cannot be reached through a .board descendant rule.
+    this.refs.root.classList.add("is-rotating");
+    this.perspectiveBtn?.classList.add("is-busy");
+    this.viewRotating = true;
+    window.clearTimeout(this.viewRotateTimer);
+    this.viewRotateTimer = window.setTimeout(() => {
+      this.viewRotating = false;
+      this.refs.root.classList.remove("is-rotating");
+      this.perspectiveBtn?.classList.remove("is-busy");
+    }, dur);
+  }
+
+  // Re-draw every known peer cursor from its last canonical position, used after a
+  // camera turn so ghosts snap to the new angle without waiting for the next packet.
+  private reprojectCursors(): void {
+    for (const [id, c] of this.lastCursors) this.renderCursor({ id, ...c });
   }
 
   // The cumulative `rot` value (quarter-turns) that makes a card appear UPRIGHT
@@ -599,7 +654,7 @@ export class Game {
   // see the pile at whatever angle their own seat implies, which is exactly the
   // intended per-viewer ("relative") behaviour.
   private viewerUprightRot(currentRot: number): number {
-    const boardRot = seatRotationDeg(this.self.seat as Seat); // 0 / 180 / -90 / 90
+    const boardRot = seatRotationDeg(this.viewSeat); // 0 / 180 / -90 / 90 — follows the camera
     const residue = (((-boardRot / 90) % 4) + 4) % 4; // 0..3
     let delta = (((residue - currentRot) % 4) + 4) % 4; // 0..3 forward
     if (delta > 2) delta -= 4; // take the shortest direction (−1 instead of +3)
@@ -624,13 +679,15 @@ export class Game {
   }
 
   private screenToCanonical(clientX: number, clientY: number): { nx: number; ny: number } {
-    return screenToCanonical(clientX, clientY, this.self.seat as Seat, this.boardBox());
+    // Uses viewSeat (the angle the board is drawn from), so pointer math always matches
+    // what is on screen even while the camera is turned away from our own seat.
+    return screenToCanonical(clientX, clientY, this.viewSeat, this.boardBox());
   }
 
   // Canonical [0,1] fraction -> viewport pixel, matching exactly where CSS
   // paints a card at that canonical position (used to place peer cursors).
   private canonicalToScreen(nx: number, ny: number): { px: number; py: number } {
-    return canonicalToScreen(nx, ny, this.self.seat as Seat, this.boardBox());
+    return canonicalToScreen(nx, ny, this.viewSeat, this.boardBox());
   }
 
   private bindHooks(): void {
@@ -922,7 +979,7 @@ export class Game {
   // slot; the other seats fall out of the same board rotation the cards use, so
   // hit-testing, labels and ownership all agree for every seat.
   private physicalZoneForSeat(seat: number): HTMLDivElement | null {
-    const slot = localSlotForSeat(this.self.seat as Seat, seat as Seat);
+    const slot = localSlotForSeat(this.viewSeat, seat as Seat);
     return this.refs.zones[SLOT_INDEX[slot]] ?? null;
   }
 
@@ -930,7 +987,7 @@ export class Game {
   // seat on THIS viewer's screen. Shares the exact physical slot mapping with
   // physicalZoneForSeat, so the label always sits over its own zone.
   private physicalLabelForSeat(seat: number): HTMLDivElement | null {
-    const slot = localSlotForSeat(this.self.seat as Seat, seat as Seat);
+    const slot = localSlotForSeat(this.viewSeat, seat as Seat);
     return this.refs.labels[SLOT_INDEX[slot]] ?? null;
   }
 
@@ -1035,8 +1092,13 @@ export class Game {
         this.modal.close();
         return;
       }
-      if (this.modal.isOpen() || this.spectator) return;
+      if (this.modal.isOpen()) return;
       const k = e.key.toLowerCase();
+      // V turns the local camera a quarter (see togglePerspective). Allowed even while
+      // spectating — it is a view-only aid that changes nothing for anyone else — so it
+      // sits BEFORE the spectator guard below. preventDefault stops any stray page action.
+      if (k === "v") { e.preventDefault(); this.togglePerspective(); return; }
+      if (this.spectator) return;
       // Desktop convenience: G gathers, M shuffles the stack under the cursor.
       // Both are multi-card actions, so a single card under the cursor triggers
       // nothing at all (no sound, no effect) — the same rule the touch bar applies
@@ -1104,6 +1166,28 @@ export class Game {
     }, { passive: false });
 
     window.addEventListener("contextmenu", (e) => e.preventDefault());
+  }
+
+  // A persistent on-screen control that turns the local camera a quarter (same as the
+  // V key) — the touch/keyboard-less path to togglePerspective. CSS shows it on coarse
+  // pointers / small screens and tucks it into the safe-area; it never overlaps a card
+  // because it lives above the board in its own fixed layer and is pointer-isolated.
+  private installPerspectiveButton(): void {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "perspective-btn";
+    // A table (rounded square) with a circular arrow sweeping around it — "turn the view".
+    btn.innerHTML = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="8" y="8" width="8" height="8" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 9 A 8 8 0 0 1 19 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M19 15 A 8 8 0 0 1 5 17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M19 3 V7 H15 M5 21 V17 H9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+    const label = () => { const s = t("actions.perspective"); btn.setAttribute("aria-label", s); btn.title = s; };
+    label();
+    onLocaleChange(label);
+    // Keep the press off the board (no card grab / context-bar fight) but DON'T
+    // preventDefault on pointerdown — on some mobile browsers that suppresses the
+    // synthesized click. The action runs on click, which fires for mouse and touch.
+    btn.addEventListener("pointerdown", (e) => { e.stopPropagation(); });
+    btn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); this.togglePerspective(); });
+    document.body.appendChild(btn);
+    this.perspectiveBtn = btn;
   }
 
   private installVisibility(): void {
@@ -1880,7 +1964,11 @@ export class Game {
     // Drive the turn through the shared visual (old face → rAF → new face) so the
     // rotateY animates now that renderAllCards no longer toggles is-faceup mid-flip.
     this.runFlipVisual([id], id, FLIP_ANIM_MS);
-    this.scheduleFlush();
+    // Send with a flip hint (not a plain flush) so PEERS replay the same turn —
+    // animation AND, for a public card, the sound. A plain scheduleFlush carried only
+    // the new face, so a lone-card flip used to be silent and instant for onlookers
+    // while a stack flip (which already used flushWithAnim) animated and sounded.
+    this.flushWithAnim([id], { kind: "flip", ids: [id], toFaceUp: c.faceUp });
     void this.audio.play("flip");
     this.rearmTooltipAtPointer();
   }
@@ -2566,6 +2654,9 @@ export class Game {
       if (perspectiveSeat !== this.self.seat) {
         this.self.seat = perspectiveSeat;
         this.self.color = SEAT_COLORS[perspectiveSeat] ?? SEAT_COLORS[0]!;
+        // A real (re)seat snaps the camera back home: a leftover turned-away view from a
+        // previous seat would otherwise leave the board drawn from the wrong angle.
+        this.viewSeat = perspectiveSeat as Seat;
         this.applyBoardPerspective();
       }
       // Re-publish ONLY when our resolved claim changed (e.g. we were bumped to a
@@ -2700,6 +2791,7 @@ export class Game {
     // their just-freed cards are immediately grabbable (not stuck until the 6s TTL).
     const el = this.cursorEls.get(l.id);
     if (el) { el.remove(); this.cursorEls.delete(l.id); }
+    this.lastCursors.delete(l.id);
     // Clear by holder ID (robust to seat-reassignment races) AND by seat (covers a hold whose
     // by-id we somehow missed), so a leaver/kicked/away-expired peer never strands a lock.
     for (const [cid, h] of this.heldByOther) {
@@ -2781,6 +2873,7 @@ export class Game {
     });
     this.bus.onCursor((c) => {
       if (this.debug && c.id !== this.self.id) { this.debug.markIn(); this.debug.recvCursor++; }
+      if (c.id !== this.self.id) this.lastCursors.set(c.id, { x: c.x, y: c.y, seat: c.seat });
       this.renderCursor(c);
     });
     this.bus.onStatus((s) => {
@@ -2814,6 +2907,7 @@ export class Game {
         this.resolveFirstSync();
         for (const el of this.cursorEls.values()) el.remove();
         this.cursorEls.clear();
+        this.lastCursors.clear();
         // Locks held by departed peers clear; they re-broadcast on reconnect.
         if (this.heldByOther.size) { this.heldByOther.clear(); this.requestRender(); }
         // A genuine drop (we were online): tell the player live sync is down, and reflect it
@@ -2918,6 +3012,7 @@ export class Game {
       // joinRoom() raises the loader synchronously, so the old table is covered immediately.
       for (const el of this.cursorEls.values()) el.remove();
       this.cursorEls.clear();
+      this.lastCursors.clear();
       this.clearRoomStorage(this.room);
       void this.joinRoom(newRoom()).then(() => toast(t("kick.kicked")));
       return;
@@ -3196,12 +3291,14 @@ export class Game {
   private playRemoteAnim(anim: PatchAnim): void {
     const ids = anim.ids.filter((id) => this.state.cards.has(id) && this.cardEls.has(id));
     if (!ids.length || this.anyAnimating(ids)) return;
-    // A concealed (rival hidden-zone) gesture is never animated OR sounded for onlookers:
-    // its cards just update silently under the filter, as now. Reaching past this means the
-    // whole pile is PUBLIC, so a peer's action is both seen AND heard here — table actions
-    // are conveyed consistently to everyone (only hidden-zone moves stay silent).
-    for (const id of ids) if (this.isRivalOwnedCard(id)) return;
-    void this.audio.play(anim.kind === "flip" ? "flip" : "shuffle");
+    // The ANIMATION always plays so every gesture looks consistent to everyone — even a
+    // gesture inside a rival's hidden zone, where the card's FACE stays hidden by the
+    // is-concealed filter (only its motion shows, never its content). The SOUND, however,
+    // is gated: a hidden-zone action stays silent for onlookers (the actor already heard it
+    // locally), while a public table action is heard by all. Sound only when nothing in the
+    // pile is rival-owned (i.e. the whole pile is public from our seat).
+    const concealed = ids.some((id) => this.isRivalOwnedCard(id));
+    if (!concealed) void this.audio.play(anim.kind === "flip" ? "flip" : "shuffle");
     if (anim.kind === "flip") {
       // Physical turn-over: the patch already carries the reversed z and the unified
       // target faces, so flipVisibleCardId picks the SAME visible card the actor saw,
@@ -3529,6 +3626,7 @@ export class Game {
       this.spectator = false;
       this.header.setSpectatorMode(false);
       this.claimSeat = this.self.seat;
+      this.viewSeat = this.self.seat as Seat; // a room hop snaps the camera home
       this.self.color = SEAT_COLORS[this.self.seat] ?? SEAT_COLORS[0]!;
       this.writeIdentity();
       this.applyBoardPerspective();
@@ -3573,7 +3671,7 @@ export class Game {
         this.selfJoinedAt = Date.now();
         this.selfConnAt = Date.now();
         // We open the new room as its host: seat 0, first-player perspective.
-        this.self.seat = 0; this.claimSeat = 0;
+        this.self.seat = 0; this.claimSeat = 0; this.viewSeat = 0;
         this.self.color = SEAT_COLORS[0]!;
         this.spectator = false;
         this.header.setSpectatorMode(false);
@@ -3618,6 +3716,7 @@ export class Game {
     this.patchVersion = 0;
     for (const el of this.cursorEls.values()) el.remove();
     this.cursorEls.clear();
+    this.lastCursors.clear();
     // Leaving the room wipes ALL roster/seat state, not just the cards. Without
     // this, the old room's players/activeSeats/claims bleed into the fresh room,
     // so a lone host in a new room sees phantom "away" players. Clear every

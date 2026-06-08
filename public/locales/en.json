@@ -69,7 +69,8 @@
     "rotate": "Rotate 90°",
     "gather": "Gather",
     "shuffle": "Shuffle",
-    "info": "Card info"
+    "info": "Card info",
+    "perspective": "Turn the view"
   },
   "table": {
     "deck": "Deck",
@@ -188,9 +189,13 @@
       {
         "keys": "M",
         "desc": "Shuffle the stack under the cursor"
+      },
+      {
+        "keys": "V",
+        "desc": "Turn the table a quarter-turn so you view it from another side; press again to keep turning back to your own. Purely your own view — it changes nothing for anyone else. Use it to find the angle where the open space sits below your own area, and lay the Seals and Servants you reveal into the space on your right."
       }
     ],
-    "mobileNote": "On touch devices, long-press a card to open its action bar."
+    "mobileNote": "On touch devices, long-press a card to open its action bar. The view-turn button (bottom-right) does the same as the V key."
   },
   "leaveConfirm": {
     "title": "Exit room?",
@@ -764,7 +769,7 @@
     "yourTurn": "It is your turn. Tap the check when you are done.",
     "aPlayer": "a player",
     "youTag": "(you)",
-    "introBody": "This guide walks the whole table through a game, one step at a time. It only suggests what to do next, and never moves your cards. You stay free to move, flip and shuffle them however you like. Tip: use Reset deck from the menu first if you want to begin from a freshly shuffled deck, then press Start.",
+    "introBody": "This guide walks the whole table through a game, one step at a time. It only suggests what to do next, and never moves your cards. You stay free to move, flip and shuffle them however you like. Tip: use Reset deck from the menu first if you want to begin from a freshly shuffled deck, then press Start. Press V (or the view-turn button, bottom-right on touch) any time to turn the table and view it from another side — handy for laying out the cards you reveal.",
     "introWaiting": "Waiting for the host to start the game.",
     "start": "Start",
     "restart": "Restart",
