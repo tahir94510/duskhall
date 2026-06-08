@@ -151,17 +151,50 @@ export const OWNER_TIE_MARGIN = 0.06;
 //      transition a single clean crossing (one seat, then the other), never a rapid flip-flop.
 export function cardZoneOwner(nx: number, ny: number, rot: number, cardWFrac: number, cardHFrac: number): Seat | null {
   const f = cardZoneFractions(nx, ny, rot, cardWFrac, cardHFrac);
-  // Top two seats by overlap.
+  // Top two seats by trapezoid overlap — this decides WHOSE zone (the diagonal corner split, so a
+  // corner is never stolen by a neighbour's full-height side band).
   let s0 = -1, f0 = 0, s1 = -1, f1 = 0;
   for (const s of [0, 1, 2, 3] as Seat[]) {
     if (f[s] > f0) { s1 = s0; f1 = f0; s0 = s; f0 = f[s]; }
     else if (f[s] > f1) { s1 = s; f1 = f[s]; }
   }
-  const inZone = f[0] + f[1] + f[2] + f[3];
-  if (s0 < 0 || inZone <= ZONE_PRIVACY_FRAC) return null;
-  // Genuine corner straddle (both top zones really overlapped, and near-tied) → lower index.
-  if (s1 >= 0 && f1 > 0 && f0 - f1 < OWNER_TIE_MARGIN) return Math.min(s0, s1) as Seat;
-  return s0 as Seat;
+  if (s0 < 0) return null;
+  // The owning seat, with the corner dead-band (a near-tied straddle pins to the lower index so a
+  // card on a shared diagonal does not flip-flop owner).
+  const owner: Seat = (s1 >= 0 && f1 > 0 && f0 - f1 < OWNER_TIE_MARGIN) ? (Math.min(s0, s1) as Seat) : (s0 as Seat);
+  // PRIVACY gate on the OWNER's FULL-WIDTH edge band, NOT the tapered trapezoid. The trapezoid
+  // narrows toward the corners, so gating privacy on it let a rival's card read public while half
+  // of it was still inside the corner — earlier than at a flat edge. The edge band is the same
+  // depth (ZONE_DEPTH) all along the edge, so a card stays concealed until its body has genuinely
+  // left the edge, identically at a corner and at the middle of an edge (what the player expects).
+  if (seatBandOverlap(owner, nx, ny, rot, cardWFrac, cardHFrac) <= ZONE_PRIVACY_FRAC) return null;
+  return owner;
+}
+
+/**
+ * Fraction (0..1) of the card's footprint that lies in a seat's FULL-WIDTH on-board edge band: the
+ * ZONE_DEPTH-deep strip along that seat's whole board edge (NOT the diagonal-split trapezoid). Used
+ * only to gate concealment, so the conceal/reveal boundary is a uniform perpendicular depth along
+ * the entire edge — corners reveal at the same point a flat edge does. Off-board samples (dragged
+ * past an edge into the page margin) are excluded, so a card reveals as it physically leaves.
+ */
+export function seatBandOverlap(seat: Seat, nx: number, ny: number, rot: number, cardWFrac: number, cardHFrac: number): number {
+  const quarter = ((Math.round(rot) % 2) + 2) % 2; // 0 or 1 (odd turn swaps w/h)
+  const w = quarter === 1 ? cardHFrac : cardWFrac;
+  const h = quarter === 1 ? cardWFrac : cardHFrac;
+  if (w <= 0 || h <= 0) return 0;
+  const N = 9;
+  let count = 0;
+  for (let i = 0; i < N; i++) {
+    const sx = nx + ((i + 0.5) / N - 0.5) * w;
+    for (let j = 0; j < N; j++) {
+      const sy = ny + ((j + 0.5) / N - 0.5) * h;
+      if (sx < 0 || sx > 1 || sy < 0 || sy > 1) continue; // off-board: no longer hidden
+      const d = edgeDist(seat, sx, sy);
+      if (d >= 0 && d < ZONE_DEPTH) count++;
+    }
+  }
+  return count / (N * N);
 }
 
 /**

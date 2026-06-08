@@ -187,19 +187,29 @@ body:not(.is-ready) .board__perspective { transition: none; }
   opacity: 1;
   box-shadow: 0 0 6px rgba(70, 196, 106, 0.55);
 }
-.seat-label.is-dropped .seat-label__dot,
-/* "Unreachable" (our own cross-device sync is down): the rival's status light reads amber,
-   the same "we can't confirm them right now" signal as an away/dropped seat. */
-.seat-label.is-unreachable .seat-label__dot {
+/* Away: that player dropped / closed the tab but kept their seat. A WARM amber light — "their
+   side went quiet". */
+.seat-label.is-dropped .seat-label__dot {
   background: #e8993a;
   opacity: 1;
-  box-shadow: 0 0 6px rgba(232, 153, 58, 0.5);
+  box-shadow: 0 0 7px rgba(232, 153, 58, 0.55);
+}
+/* Unreachable: OUR OWN cross-device sync is down, so we can't confirm this rival right now. A
+   COOL, neutral slate light (not the warm amber) reads as "the link on our side dropped",
+   distinct from a player who is genuinely away. It clears the moment we reconnect. */
+.seat-label.is-unreachable .seat-label__dot {
+  background: #9aa0a6;
+  opacity: 1;
+  box-shadow: 0 0 7px rgba(154, 160, 166, 0.5);
 }
 .seat-label.is-active { color: var(--seat-color, var(--ivory-mute)); }
 /* A truly empty seat (no player, no claim) shows NOTHING — no floating dot, no
    name. The dimmed empty zone panel alone signals an open seat. */
 .seat-label.is-empty .seat-label__cluster { display: none; }
-.seat-label.is-dropped { opacity: 0.85; }
+/* Clearly dimmed (more than before) so an away / unreachable seat reads as "not with us right
+   now" at a glance, without disappearing. */
+.seat-label.is-dropped { opacity: 0.72; }
+.seat-label.is-unreachable { opacity: 0.8; }
 
 /* Host-only kick control, immediately after the name (on the far side of the
    status light), so it reads "● name ✕" as one unit. */

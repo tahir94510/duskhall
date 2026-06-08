@@ -33,7 +33,7 @@
     "newRoom": "Yeni bir oda açıldı.",
     "roomFull": "Oda dolu olduğu için izleyici olarak bakıyorsun.",
     "timer": "Süre",
-    "waiting": "Oyuncular bekleniyor...",
+    "waiting": "Şu an tek başınasın. Arkadaşlarınla oynamak için oda bağlantısını paylaş.",
     "pasteJoin": "Katılmak için kodu veya bağlantıyı yapıştır",
     "joined": "Odaya katıldın",
     "alreadyInRoom": "Zaten bu odadasın.",
@@ -43,8 +43,8 @@
     "connOnline": "Çevrimiçi",
     "connConnecting": "Bağlanıyor...",
     "connOffline": "Çevrimdışı",
-    "connLost": "Bağlantı koptu. Yeniden bağlanılıyor...",
-    "connRestored": "Yeniden bağlanıldı.",
+    "connLost": "Bağlantı koptu. Yeniden bağlanılıyor; hamlelerin kayıtlı, bağlanınca eşitlenecek.",
+    "connRestored": "Tekrar çevrimiçisin. Hamlelerin eşitlendi.",
     "guide": "Rehber"
   },
   "diag": {
@@ -156,7 +156,7 @@
   },
   "shortcutsList": {
     "title": "Kısayollar",
-    "subtitle": "Hedef imleçtir; boş alanda hiçbir şey olmaz.",
+    "subtitle": "Her işlem imlecin altındaki kart için geçerlidir. Boş alanda hiçbir şey olmaz.",
     "items": [
       {
         "keys": "Sol tık, sürükle",

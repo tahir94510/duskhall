@@ -33,7 +33,9 @@
 
 .guide__bar {
   display: flex;
-  align-items: center;
+  /* Top-align so the controls stay on the title's first line instead of floating to the
+     vertical centre when the status wraps to two lines (a long name + the phase chip). */
+  align-items: flex-start;
   gap: 6px;
   /* Tuned so the bar (and thus the whole panel when minimized) stands the same
      height as the 36px header buttons it sits beside: 4 + 28 + 4 = 36. */
@@ -48,9 +50,12 @@
   display: flex;
   align-items: center;
   /* Wrap the title + phase chip to a second line on a narrow panel instead of clipping the
-     name. The bar grows to fit; row-gap keeps the wrapped line tidy. */
+     name. The bar grows to fit; row-gap keeps the wrapped line tidy. min-height matches the
+     28px control row so a single-line status centres level with the controls, while a wrapped
+     status grows downward and the controls stay pinned to the top line. */
   flex-wrap: wrap;
   gap: 4px 8px;
+  min-height: 28px;
   min-width: 0;
 }
 .guide__bar-title {
@@ -76,7 +81,9 @@
   white-space: nowrap;
 }
 
-.guide__controls { display: flex; align-items: center; gap: 4px; flex: none; }
+/* A single control row, pinned to the TOP of the bar (align-self) so it stays on the title's
+   first line when the status wraps to two lines, instead of drifting to the vertical centre. */
+.guide__controls { display: flex; align-items: center; gap: 4px; flex: none; align-self: flex-start; }
 /* Frameless control buttons (close, restart, minimize/maximize): no border or resting
    background, matching the project's quiet icon-button language. The icon is grid-centred
    and the colour/background ease in on hover. The confirm tick is the one exception below:
