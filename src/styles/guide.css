@@ -33,7 +33,9 @@
 
 .guide__bar {
   display: flex;
-  align-items: center;
+  /* Top-align so the controls stay on the title's first line instead of floating to the
+     vertical centre when the status wraps to two lines (a long name + the phase chip). */
+  align-items: flex-start;
   gap: 6px;
   /* Tuned so the bar (and thus the whole panel when minimized) stands the same
      height as the 36px header buttons it sits beside: 4 + 28 + 4 = 36. */
@@ -48,11 +50,16 @@
   display: flex;
   align-items: center;
   /* Wrap the title + phase chip to a second line on a narrow panel instead of clipping the
-     name. The bar grows to fit; row-gap keeps the wrapped line tidy. */
+     name. The bar grows to fit; row-gap keeps the wrapped line tidy. min-height matches the
+     28px control row so a single-line status centres level with the controls, while a wrapped
+     status grows downward and the controls stay pinned to the top line. */
   flex-wrap: wrap;
   gap: 4px 8px;
+  min-height: 28px;
   min-width: 0;
 }
+/* The control cluster stays a single row pinned to the top of the bar. */
+.guide__controls { align-self: flex-start; }
 .guide__bar-title {
   font-size: 13px;
   font-weight: 600;

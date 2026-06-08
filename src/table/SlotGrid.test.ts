@@ -158,6 +158,30 @@ describe("corner privacy: total in-zone gate, no early/diagonal reveal, no flick
   });
 });
 
+describe("corner reveal matches the flat edge (uniform band depth, the corner-conceal fix)", () => {
+  // The privacy gate is the owner's FULL-WIDTH edge band, so a card reveals at the same
+  // perpendicular depth all along an edge — a corner no longer reveals a rival's card while half
+  // of it is still inside (the reported bug). Walk a seat-0 card straight DOWN off the bottom edge.
+  const revealNy = (nx: number): number => {
+    for (let ny = 0.95; ny <= 1.45; ny += 0.002) {
+      if (cardZoneOwner(nx, ny, 0, W, H) === null) return ny;
+    }
+    return 1.45;
+  };
+  it("reveals at the same depth near a corner as at the middle of the edge", () => {
+    const mid = revealNy(0.5);
+    // Hugging the right side but with the whole card still on-board in x (0.80 + W/2 < 1):
+    const nearCorner = revealNy(0.80);
+    expect(nearCorner).toBeCloseTo(mid, 2);
+  });
+  it("a card centred on the edge near a corner is still concealed (whole card must leave)", () => {
+    // Half the body is off-board, half is in the band → still owned/concealed, exactly as it would
+    // be at the middle of the edge. A corner does not reveal it early.
+    expect(cardZoneOwner(0.80, 1.0, 0, W, H)).toBe(0);
+    expect(cardZoneOwner(0.5, 1.0, 0, W, H)).toBe(0);
+  });
+});
+
 describe("zoneRect / pointInZoneCanonical stay consistent", () => {
   it("zoneRect returns the seat rectangle and the point test agrees with it", () => {
     const z = zoneRect(0);

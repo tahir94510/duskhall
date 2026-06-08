@@ -12,7 +12,12 @@
   gap: var(--grid-gap);
   z-index: var(--z-zone);
   pointer-events: none;
-  clip-path: inset(0 round clamp(18px, calc(var(--field) * 0.03), 36px));
+  /* Round the four outer table corners — and keep them rounded even once a seat fills. Using
+     border-radius + overflow:hidden (not clip-path) is deliberate: a child with backdrop-filter
+     ESCAPES an ancestor's clip-path, so an active tray's frost used to paint a hard 90° corner
+     back over the rounding. overflow-clipping reliably clips the filtered trays to the round box. */
+  border-radius: clamp(18px, calc(var(--field) * 0.03), 36px);
+  overflow: hidden;
 }
 
 .zone {
@@ -54,7 +59,7 @@
 
 /* An open seat still draws its frosted trapezoid, just quietly, so the table always reads as a full
    four-seat board rather than one lonely strip when seats are empty. */
-.zone--empty { opacity: 0.2; color: var(--ivory-mute); }
+.zone--empty { opacity: 0.32; color: var(--ivory-mute); }
 .zone--active { opacity: 1; }
 /* A live rival tray carries a whisper of its seat accent — strongest at the rival's own board edge
    (the edge mask fades it toward the centre), so an occupied tray reads as "live & whose" with no

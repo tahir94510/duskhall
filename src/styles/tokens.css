@@ -24,11 +24,13 @@
   --accent: #f3efe5;
   --accent-dim: #b3afa5;
 
-  /* Seat accents: pure black-and-white nobility, four ivory tones */
+  /* Seat accents: four ivory-to-graphite tones forming a clear ladder. The ramp is widened at
+     the dark end so seat 2 and seat 3 stay tellable apart on small / dim OLED screens (they used
+     to read nearly identical). Still pure neutral greys — the monochrome nobility holds. */
   --seat-0: #f3efe5;
-  --seat-1: #cdc8bc;
-  --seat-2: #a09c92;
-  --seat-3: #79766f;
+  --seat-1: #d4cfc3;
+  --seat-2: #9d998e;
+  --seat-3: #6a665d;
 
   /* Geometry */
   --r-card: 10px;
