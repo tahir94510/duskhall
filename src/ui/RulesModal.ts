@@ -194,7 +194,10 @@ export function openRulesModal(modal: Modal, tooltip?: Tooltip): void {
     <nav class="rules__toc" aria-label="TOC">${tocHtml}</nav>
     <div class="rules__content">${introHtml}${sectionsHtml}${closingHtml}</div>
   </div>`;
-  modal.open({ title, subtitle, bodyHtml });
+  // Closing the rulebook must also dismiss any term/card info panel opened from inside it —
+  // otherwise a sticky tooltip whose anchor (a term button) was just removed with the modal
+  // lingers, stranded at a stale position (the top-left "ghost bubble"). hide() clears it.
+  modal.open({ title, subtitle, bodyHtml, onClose: () => tooltip?.hide() });
 
   const body = modal.bodyEl();
   body?.querySelectorAll<HTMLAnchorElement>('.rules__toc a').forEach((a) => {

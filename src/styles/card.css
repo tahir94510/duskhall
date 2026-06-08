@@ -72,13 +72,12 @@
    cards already held or mid-animation (which carry their own elevation). */
 @media (hover: hover) {
   .card:not(.is-concealed):not(.is-held):not(.is-animating):not(.is-locked):hover {
+    /* A quiet "picked up under the pointer" read from LIGHT + SHADOW only — the card brightens a
+       touch and its cast swells (below). It deliberately does NOT jump above its neighbours in the
+       stack: a mere hover should not reorder the table (clicking already lifts a card to the top,
+       and a face-up card's info shows on hover whatever its stacking). Keeps the z-order calm and
+       predictable for every player, local and online. */
     filter: brightness(1.05);
-    /* Lift the hovered card ABOVE its neighbours so it is fully readable even when it sits
-       under others in a pile. !important is required to beat the inline stacking z (set by the
-       render loop to the card's resting z); --z-hover (450) stays below the held/anim band so a
-       dragged/flipping card and peer cursors always remain on top. Snaps (z has no transition),
-       while the shadow + brightness below give the smooth 2.5D "picked up" read. */
-    z-index: var(--z-hover) !important;
   }
   .card:not(.is-concealed):not(.is-held):not(.is-animating):not(.is-locked):hover::before {
     box-shadow: var(--shadow-card-raised);
