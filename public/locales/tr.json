@@ -192,7 +192,7 @@
       },
       {
         "keys": "V",
-        "desc": "Masayı çeyrek tur döndürüp başka bir taraftan görürsün; tekrar bastıkça döndürerek kendi açına dönersin. Yalnızca senin görüşün — kimse için hiçbir şeyi değiştirmez. Açık alanın kendi alanının altında kaldığı açıyı bulmak için kullan; açtığın Mühür ve Hizmetkârları sağ tarafındaki boşluğa diz."
+        "desc": "Masayı çeyrek tur döndürüp başka bir taraftan görürsün; tekrar bastıkça döndürerek kendi açına dönersin. Bu yalnızca senin görünümünü değiştirir, başka kimse için bir şey değişmez. Açtığın Mühür ve Hizmetkârları dizeceğin boş alanı önüne getirmek için kullan."
       }
     ],
     "mobileNote": "Dokunmatik cihazlarda kartın üstüne uzun basarak eylem çubuğunu aç. Görünümü çevir düğmesi (sağ alt) V tuşuyla aynı işi yapar."
@@ -769,7 +769,7 @@
     "yourTurn": "Sıra sende. Bitirince onay işaretine bas.",
     "aPlayer": "bir oyuncu",
     "youTag": "(sen)",
-    "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir ve kartlarına hiç dokunmaz. Kartları dilediğin gibi taşımakta, çevirmekte ve karıştırmakta özgürsün. İpucu: yeni karıştırılmış bir desteyle başlamak istersen önce menüden Desteyi sıfırla'yı kullan, sonra Başlat'a bas. Masayı başka bir taraftan görmek için istediğin an V tuşuna (dokunmatikte sağ alttaki görünüm çevirme düğmesine) bas — açtığın kartları dizmek için kullanışlı.",
+    "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir ve kartlarına hiç dokunmaz. Kartları dilediğin gibi taşımakta, çevirmekte ve karıştırmakta özgürsün. İpucu: yeni karıştırılmış bir desteyle başlamak istersen önce menüden Desteyi sıfırla'yı kullan, sonra Başlat'a bas. Masayı başka bir taraftan görmek için istediğin an V tuşuna (dokunmatikte sağ alttaki görünüm çevirme düğmesine) bas; açtığın kartları dizmek için kullanışlı.",
     "introWaiting": "Oyunun başlaması için ev sahibi bekleniyor.",
     "start": "Başlat",
     "restart": "Yeniden başlat",

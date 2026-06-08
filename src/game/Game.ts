@@ -2651,11 +2651,19 @@ export class Game {
       this.spectator = mySeat < 0;
       this.claimSeat = mySeat; // -1 while spectating
       const perspectiveSeat = mySeat < 0 ? 0 : mySeat; // spectators watch from seat 0
+      const claimChanged = this.claimSeat !== prevClaim;
       if (perspectiveSeat !== this.self.seat) {
         this.self.seat = perspectiveSeat;
         this.self.color = SEAT_COLORS[perspectiveSeat] ?? SEAT_COLORS[0]!;
         // A real (re)seat snaps the camera back home: a leftover turned-away view from a
         // previous seat would otherwise leave the board drawn from the wrong angle.
+        this.viewSeat = perspectiveSeat as Seat;
+        this.applyBoardPerspective();
+      } else if (claimChanged) {
+        // The perspective-seat NUMBER is unchanged but our actual claim changed — e.g. a
+        // spectator (forced to seat 0's view) who had turned the camera is now seated at
+        // seat 0. Snap home so a turned view never persists past a seating change. Gated on
+        // claimChanged (a rare seating event), so a deliberate turn during play is untouched.
         this.viewSeat = perspectiveSeat as Seat;
         this.applyBoardPerspective();
       }
