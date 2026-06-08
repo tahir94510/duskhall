@@ -72,16 +72,42 @@ describe("clampSeedToPage", () => {
     expect(seedPx + 200 + cardW / 2).toBeCloseTo(bounds.maxX, 4);
   });
 
-  it("handles a rotated board (seat 2): canonical x maps to the screen vertical", () => {
-    // seat 2 rotates -90deg; just assert the result keeps the card on the page.
-    const r = clampSeedToPage(99, 99, single(), box, 2 as Seat, cardW, cardH, bounds);
+  it("handles a rotated board (-90deg, the seat-2 view): canonical x maps to the screen vertical", () => {
+    // -90deg is the seat-2 / left-neighbour camera angle; assert the result keeps the card on the page.
+    const r = clampSeedToPage(99, 99, single(), box, -90, cardW, cardH, bounds);
     const scr = canonical(r.nx, r.ny, 2, box);
     expect(scr.px).toBeGreaterThanOrEqual(bounds.minX - 1e-6);
     expect(scr.px).toBeLessThanOrEqual(bounds.maxX + 1e-6);
     expect(scr.py).toBeGreaterThanOrEqual(bounds.minY - 1e-6);
     expect(scr.py).toBeLessThanOrEqual(bounds.maxY + 1e-6);
   });
+
+  it("keeps the card on the page at every INTERMEDIATE angle of a live turn", () => {
+    // Mid-turn the board passes through angles between two seats (e.g. -45deg). The clamp must hold
+    // the card on the page at each of them, so a held card never pokes off-screen while it spins.
+    for (const deg of [-15, -30, -45, -60, -75, 30, 120, 200]) {
+      const r = clampSeedToPage(99, 99, single(1), box, deg, cardW, cardH, bounds);
+      const scr = canonicalDeg(r.nx, r.ny, deg, box);
+      // The sideways card (rot=1) is cardH wide, cardW tall on the un-turned axis; assert the full
+      // body, rotated by deg, stays within the page on both axes.
+      const halfX = Math.abs(Math.cos((deg * Math.PI) / 180)) * (cardH / 2) + Math.abs(Math.sin((deg * Math.PI) / 180)) * (cardW / 2);
+      const halfY = Math.abs(Math.sin((deg * Math.PI) / 180)) * (cardH / 2) + Math.abs(Math.cos((deg * Math.PI) / 180)) * (cardW / 2);
+      expect(scr.px - halfX).toBeGreaterThanOrEqual(bounds.minX - 1e-6);
+      expect(scr.px + halfX).toBeLessThanOrEqual(bounds.maxX + 1e-6);
+      expect(scr.py - halfY).toBeGreaterThanOrEqual(bounds.minY - 1e-6);
+      expect(scr.py + halfY).toBeLessThanOrEqual(bounds.maxY + 1e-6);
+    }
+  });
 });
+
+// canonicalToScreen at an arbitrary angle, mirroring rotation.canonicalToScreenDeg.
+function canonicalDeg(nx: number, ny: number, deg: number, b: BoardBox): { px: number; py: number } {
+  const lx = nx * b.width - b.width / 2;
+  const ly = ny * b.height - b.height / 2;
+  const rad = (deg * Math.PI) / 180;
+  const cos = Math.cos(rad), sin = Math.sin(rad);
+  return { px: b.cx + (lx * cos - ly * sin), py: b.cy + (lx * sin + ly * cos) };
+}
 
 // local mirror of canonicalToScreen for the seat-2 assertion (avoids importing the impl detail)
 function canonical(nx: number, ny: number, seat: Seat, b: BoardBox): { px: number; py: number } {

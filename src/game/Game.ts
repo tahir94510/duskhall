@@ -38,7 +38,7 @@ import {
   rotationsDiffer,
   isTidyStack
 } from "../table/StackOps.js";
-import { rotateVec, seatRotationDeg, seatForLocalSlot, localSlotForSeat, SLOT_INDEX, screenToCanonical, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
+import { rotateVec, seatRotationDeg, seatForLocalSlot, localSlotForSeat, SLOT_INDEX, screenToCanonical, screenToCanonicalDeg, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
 import { cardZoneOwner, pointInZoneCanonical, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
 import { clampSeedToPage, type ClampCard } from "../table/playfield.js";
@@ -652,12 +652,33 @@ export class Game {
     this.refs.root.classList.add("is-rotating");
     this.perspectiveBtn?.classList.add("is-busy");
     this.viewRotating = true;
+    // If a card is in hand, glue the held pile to the cursor for the whole turn: it stays under
+    // the finger and pivots with the table instead of swinging away, and stays on the page. No-op
+    // when nothing is held.
+    this.drag?.beginViewTurnGlue();
     window.clearTimeout(this.viewRotateTimer);
     this.viewRotateTimer = window.setTimeout(() => {
       this.viewRotating = false;
       this.refs.root.classList.remove("is-rotating");
       this.perspectiveBtn?.classList.remove("is-busy");
     }, dur);
+  }
+
+  // The board's CURRENT on-screen rotation in degrees, read live from the animating .board__perspective
+  // transform (so it is the in-between angle mid-turn, not just the settled seat angle). Falls back to
+  // the settled viewSeat angle if the transform can't be read.
+  private liveBoardRotDeg(): number {
+    const el = this.refs.cardsLayer.parentElement;
+    if (el && typeof window.getComputedStyle === "function") {
+      const tf = window.getComputedStyle(el).transform;
+      if (tf && tf !== "none" && typeof DOMMatrixReadOnly === "function") {
+        try {
+          const m = new DOMMatrixReadOnly(tf);
+          return (Math.atan2(m.b, m.a) * 180) / Math.PI;
+        } catch { /* fall through to the settled angle */ }
+      }
+    }
+    return seatRotationDeg(this.viewSeat);
   }
 
   // Re-draw every known peer cursor from its last canonical position, used after a
@@ -755,8 +776,24 @@ export class Game {
         // After a V camera-turn viewSeat != self.seat, and clamping in the self.seat frame
         // mapped the allowed region onto the wrong axis — walling cards off from the visual
         // left/right zones. viewSeat keeps the clamp aligned with what is on screen.
-        return clampSeedToPage(nx, ny, cards, this.boardBox(), this.viewSeat, w, h, bounds);
+        return clampSeedToPage(nx, ny, cards, this.boardBox(), seatRotationDeg(this.viewSeat), w, h, bounds);
       },
+      // Live (mid-turn) variants: while the board animates between two seat angles, the held pile is
+      // re-placed every frame at the CURRENT angle so its grab point stays under the cursor and its
+      // body stays on the page. These take the raw degrees read off the animating board.
+      canonicalAtDeg: (clientX, clientY, deg) => screenToCanonicalDeg(clientX, clientY, deg, this.boardBox()),
+      clampSeedAtDeg: (nx, ny, cards: ClampCard[], deg) => {
+        const { w, h } = this.cardMetrics();
+        const M = 4;
+        const bounds = {
+          minX: M,
+          minY: M,
+          maxX: Math.max(M, window.innerWidth - M),
+          maxY: Math.max(M, window.innerHeight - M)
+        };
+        return clampSeedToPage(nx, ny, cards, this.boardBox(), deg, w, h, bounds);
+      },
+      liveRotDeg: () => this.liveBoardRotDeg(),
       onCardMoved: (ids) => {
         for (const id of ids) this.dirtyIds.add(id);
         this.scheduleFlush();

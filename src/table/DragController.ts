@@ -4,10 +4,16 @@ import type { ClampCard } from "./playfield.js";
 export interface DragHooks {
   /** False for spectators (room full), blocks all card manipulation. */
   canInteract(): boolean;
-  /** True while a V camera-turn is animating. An active drag stays alive but freezes for the
-   *  turn (the held pile rides the rotating table), then re-anchors to the finger on the next
-   *  move, so V works mid-drag without the card jumping. */
+  /** True while a V camera-turn is animating. While it is, the held pile is re-placed every frame
+   *  at the board's live angle (canonicalAtDeg + clampSeedAtDeg) so it stays pinned under the cursor
+   *  and on the page, pivoting with the table instead of jumping. */
   isViewTurning(): boolean;
+  /** The board's CURRENT on-screen rotation in degrees (the live, mid-animation angle). */
+  liveRotDeg(): number;
+  /** Viewport pixel -> canonical, at an explicit board angle in degrees (the live mid-turn angle). */
+  canonicalAtDeg(clientX: number, clientY: number, deg: number): { nx: number; ny: number };
+  /** Clamp the dragged group onto the page at an explicit board angle in degrees. */
+  clampSeedAtDeg(nx: number, ny: number, cards: ClampCard[], deg: number): { nx: number; ny: number };
   getSelfSeat(): number;
   pointInSelfZone(x: number, y: number): boolean;
   pointInOpponentZone(x: number, y: number): number | null;
@@ -83,13 +89,21 @@ interface DragSession {
   els: Map<string, HTMLDivElement>;
   dragging: boolean;
   longPressTimer: number;
-  /** Set true while a V camera-turn ran during this drag; the next move re-derives the anchor
-   *  so the held pile stays put under the finger instead of jumping to a stale offset. */
-  reanchorPending: boolean;
+  /** Last pointer position in viewport pixels, kept fresh on every move so a camera-turn that
+   *  happens between moves can re-place the held pile under the cursor without a new pointer event. */
+  lastClientX: number;
+  lastClientY: number;
+  /** Set when a camera-turn ran during this session; the next move re-expresses the anchor and
+   *  grab-origin in the new (settled) frame so the pile neither jumps nor starts a spurious drag,
+   *  while keeping the snap-back origin correct. */
+  framePending: boolean;
 }
 
 export class DragController {
   private session: DragSession | null = null;
+  // rAF handle for the camera-turn glue loop (0 when idle). While a V turn animates with a card in
+  // hand, this loop re-places the held pile every frame at the board's live angle.
+  private viewTurnRaf = 0;
   // Pending snap-back outline timers, keyed by card id, so a re-grab within the 260ms window
   // clears the stale timer instead of letting it strip the class off the new gesture's state.
   private snapTimers = new Map<string, number>();
@@ -247,7 +261,9 @@ export class DragController {
       relOffsets,
       els,
       dragging: false,
-      reanchorPending: false,
+      lastClientX: e.clientX,
+      lastClientY: e.clientY,
+      framePending: false,
       longPressTimer: window.setTimeout(() => {
         if (!this.session || this.session.dragging) return;
         if (e.pointerType === "touch") this.hooks.showContextBar(id, e.clientX, e.clientY);
@@ -265,24 +281,29 @@ export class DragController {
   private onPointerMove = (e: PointerEvent): void => {
     const s = this.session;
     if (!s || e.pointerId !== s.pointerId) return;
+    s.lastClientX = e.clientX;
+    s.lastClientY = e.clientY;
+
+    // While a camera-turn animates, the rAF glue loop owns the held pile's position (it re-places it
+    // at the board's live angle every frame). Just keep the cursor fresh and let the loop drive it,
+    // so the pile tracks the finger and the turn at once.
+    if (this.hooks.isViewTurning()) {
+      if (s.dragging) this.beginViewTurnGlue();
+      return;
+    }
+
     const m = this.hooks.boardMetrics();
     const { nx: pointerNx, ny: pointerNy } = this.hooks.toCanonical(e.clientX, e.clientY);
 
-    // V pressed mid-drag: while the table turns, leave the held pile where it is so it rides
-    // the rotating board (it's a child of .board__perspective). Re-anchor once the turn ends so
-    // the finger picks the pile up exactly where it sits, with no jump.
-    if (this.hooks.isViewTurning()) {
-      s.reanchorPending = true;
-      return;
-    }
-    if (s.reanchorPending) {
-      s.reanchorPending = false;
+    // First move after a camera-turn: re-express the anchor and grab-origin in the new settled frame
+    // (the board rotated under the cursor, so the same screen point now maps elsewhere in canonical).
+    // For a pile that was being dragged this is a no-op (the glue already kept it consistent); for one
+    // grabbed-but-not-yet-dragged it re-bases the threshold so the next drag neither jumps nor fires
+    // spuriously. The grab-origin (startN + anchor) is preserved, so snap-back still returns home.
+    if (s.framePending) {
+      s.framePending = false;
       const seed = this.state.cards.get(s.ids[0]!);
       if (seed) {
-        // The turn rotated the board under a still finger, so the SAME screen point now maps to a
-        // different canonical point. Re-derive the anchor offset from the current pointer so the
-        // pile stays exactly where it sits (no jump), while preserving the grab-origin invariant
-        // (startN + anchor = the seed position at grab) that snap-back relies on.
         const originX = s.startNx + s.anchorDx;
         const originY = s.startNy + s.anchorDy;
         s.anchorDx = seed.x - pointerNx;
@@ -343,10 +364,62 @@ export class DragController {
     this.hooks.onDragProgress(s.ids);
   };
 
+  // Start (or keep running) the camera-turn glue loop. While the board animates, the held pile is
+  // re-placed every frame at the board's LIVE angle so its grab point stays under the cursor and its
+  // body stays on the page — it pivots smoothly with the table rather than jumping. The loop ends
+  // itself when the turn settles or the drag/session ends. Anchor and grab-origin are untouched, so
+  // when the turn ends the next pointer move and any snap-back continue seamlessly.
+  beginViewTurnGlue(): void {
+    const s = this.session;
+    if (!s) return;
+    // Mark every active session so the first move after the turn re-bases its frame (covers a card
+    // grabbed but not yet dragged, and a turn that finishes between moves with the finger still).
+    s.framePending = true;
+    if (!s.dragging) return;
+    if (this.viewTurnRaf) return; // already running
+    const step = (): void => {
+      this.viewTurnRaf = 0;
+      const sess = this.session;
+      if (!sess || !sess.dragging) return;
+      const turning = this.hooks.isViewTurning();
+      this.placeHeldAtLiveAngle(sess);
+      // Keep going until the board settles; one last placement at the settled angle then stop.
+      if (turning) this.viewTurnRaf = requestAnimationFrame(step);
+    };
+    this.viewTurnRaf = requestAnimationFrame(step);
+  }
+
+  // Re-place the held pile so the grab point sits under the last cursor position at the board's
+  // current (live) rotation, clamped to the page. Pure positioning: it never broadcasts (the cards
+  // are hold-locked, peers keep their last position until the turn ends and a real move/drop fires).
+  private placeHeldAtLiveAngle(s: DragSession): void {
+    const deg = this.hooks.liveRotDeg();
+    const m = this.hooks.boardMetrics();
+    const { nx, ny } = this.hooks.canonicalAtDeg(s.lastClientX, s.lastClientY, deg);
+    let seedNx = nx + s.anchorDx;
+    let seedNy = ny + s.anchorDy;
+    const clampCards: ClampCard[] = [];
+    for (const [id, rel] of s.relOffsets) {
+      const c = this.state.cards.get(id);
+      clampCards.push({ dx: rel.dx, dy: rel.dy, rot: c ? c.rot : 0 });
+    }
+    ({ nx: seedNx, ny: seedNy } = this.hooks.clampSeedAtDeg(seedNx, seedNy, clampCards, deg));
+    for (const id of s.ids) {
+      const rel = s.relOffsets.get(id);
+      const c = this.state.cards.get(id);
+      if (!rel || !c) continue;
+      c.x = seedNx + rel.dx;
+      c.y = seedNy + rel.dy;
+      const el = s.els.get(id);
+      if (el) el.style.transform = `translate3d(${c.x * m.width - m.cardW / 2}px, ${c.y * m.height - m.cardH / 2}px, 0) rotate(${c.rot * 90}deg)`;
+    }
+  }
+
   private onPointerUp = (e: PointerEvent): void => {
     const s = this.session;
     if (!s || e.pointerId !== s.pointerId) return;
     window.clearTimeout(s.longPressTimer);
+    if (this.viewTurnRaf) { cancelAnimationFrame(this.viewTurnRaf); this.viewTurnRaf = 0; }
     // Release the ephemeral lock for every grabbed card (drag or mere click).
     this.hooks.endHold(s.ids);
 
@@ -452,6 +525,7 @@ export class DragController {
     window.removeEventListener("pointerup", this.onPointerUp);
     window.removeEventListener("pointercancel", this.onPointerUp);
     window.removeEventListener("lostpointercapture", this.onPointerUp);
+    if (this.viewTurnRaf) { cancelAnimationFrame(this.viewTurnRaf); this.viewTurnRaf = 0; }
     for (const t of this.snapTimers.values()) window.clearTimeout(t);
     this.snapTimers.clear();
     this.host.removeEventListener("contextmenu", this.onContextMenu);

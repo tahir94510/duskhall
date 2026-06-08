@@ -91,20 +91,32 @@ export interface BoardBox {
   height: number;
 }
 
-// Viewport pixel -> canonical [0,1] fraction.
-export function screenToCanonical(clientX: number, clientY: number, seat: Seat, box: BoardBox): { nx: number; ny: number } {
-  const [ux, uy] = rotateVec(clientX - box.cx, clientY - box.cy, -seatRotationDeg(seat));
+// Viewport pixel -> canonical [0,1] fraction, for an ARBITRARY board rotation in degrees. The
+// seat helpers below are the common case (a settled seat angle); this raw form is used while the
+// board is mid-turn, where the live animated angle is some value between two seat angles.
+export function screenToCanonicalDeg(clientX: number, clientY: number, deg: number, box: BoardBox): { nx: number; ny: number } {
+  const [ux, uy] = rotateVec(clientX - box.cx, clientY - box.cy, -deg);
   return {
     nx: (ux + box.width / 2) / box.width,
     ny: (uy + box.height / 2) / box.height
   };
 }
 
-// Canonical [0,1] fraction -> viewport pixel (matches exactly where CSS paints a
-// card centre at that canonical position).
-export function canonicalToScreen(nx: number, ny: number, seat: Seat, box: BoardBox): { px: number; py: number } {
+// Canonical [0,1] fraction -> viewport pixel, for an ARBITRARY board rotation in degrees.
+export function canonicalToScreenDeg(nx: number, ny: number, deg: number, box: BoardBox): { px: number; py: number } {
   const lx = nx * box.width - box.width / 2;
   const ly = ny * box.height - box.height / 2;
-  const [sx, sy] = rotateVec(lx, ly, seatRotationDeg(seat));
+  const [sx, sy] = rotateVec(lx, ly, deg);
   return { px: box.cx + sx, py: box.cy + sy };
+}
+
+// Viewport pixel -> canonical [0,1] fraction (settled seat angle).
+export function screenToCanonical(clientX: number, clientY: number, seat: Seat, box: BoardBox): { nx: number; ny: number } {
+  return screenToCanonicalDeg(clientX, clientY, seatRotationDeg(seat), box);
+}
+
+// Canonical [0,1] fraction -> viewport pixel (matches exactly where CSS paints a
+// card centre at that canonical position; settled seat angle).
+export function canonicalToScreen(nx: number, ny: number, seat: Seat, box: BoardBox): { px: number; py: number } {
+  return canonicalToScreenDeg(nx, ny, seatRotationDeg(seat), box);
 }

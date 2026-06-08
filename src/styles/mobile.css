@@ -50,7 +50,9 @@
 }
 
 .context-bar__btn.is-disabled {
-  opacity: 0.32;
+  /* Faint, but still clearly visible against the dark bar so a disabled action reads as
+     present-but-unavailable rather than missing. */
+  opacity: 0.45;
   pointer-events: none;
   cursor: not-allowed;
 }
