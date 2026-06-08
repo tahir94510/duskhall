@@ -372,10 +372,17 @@ export class DragController {
   beginViewTurnGlue(): void {
     const s = this.session;
     if (!s) return;
-    // Mark every active session so the first move after the turn re-bases its frame (covers a card
-    // grabbed but not yet dragged, and a turn that finishes between moves with the finger still).
+    // Mark every active session so the first move after the turn re-bases its frame.
     s.framePending = true;
-    if (!s.dragging) return;
+    // Holding a card and turning the view IS an intent to place it: promote a grabbed-but-not-yet-
+    // moved card to a real drag so it follows the cursor through the turn (the reported "the card
+    // doesn't come unless I nudge it first" bug). The grab already lifted it into the held band; we
+    // just start treating it as in-hand, cancel the pending long-press, and close any context bar.
+    if (!s.dragging) {
+      s.dragging = true;
+      window.clearTimeout(s.longPressTimer);
+      this.hooks.hideContextBar();
+    }
     if (this.viewTurnRaf) return; // already running
     const step = (): void => {
       this.viewTurnRaf = 0;
