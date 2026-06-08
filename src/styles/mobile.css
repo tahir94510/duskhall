@@ -153,7 +153,8 @@
     border-radius: 6px;
   }
   .shortcuts-grid { grid-template-columns: 1fr; }
-  .icon-btn { width: 34px; height: 34px; }
+  /* Drive the shared control unit so the header buttons AND the minimized Guide bar shrink together. */
+  :root { --ctrl: 34px; }
 }
 
 @media (max-width: 480px) {
@@ -186,15 +187,17 @@
   .context-bar { max-width: min(92vw, 300px); justify-content: center; }
   .context-bar__btn { width: 44px; height: 44px; }
   .context-bar__btn svg { width: 18px; height: 18px; }
-  /* The header icon buttons are also primary touch targets. */
-  .icon-btn { width: 40px; height: 40px; }
+  /* Comfortable touch targets: header buttons AND the minimized Guide bar grow together via --ctrl. */
+  :root { --ctrl: 40px; }
 }
 
 /* Very small screens (≤400px): tighten paddings further and keep modals fully
    on-screen (the head/body/foot all shrink so even a tall rules modal fits). */
 @media (max-width: 400px) {
   .header { left: 8px; right: 8px; gap: 6px; }
-  .icon-btn { width: 34px; height: 34px; }
+  /* Tightest phones: header buttons and the minimized Guide bar shrink together (overrides the
+     coarse 40px above, which sits earlier in source order). */
+  :root { --ctrl: 34px; }
   .icon-btn svg { width: 16px; height: 16px; }
   .modal-backdrop { padding: 8px; }
   .modal { max-height: min(94vh, calc(100dvh - 16px)); }
