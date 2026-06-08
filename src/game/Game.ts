@@ -208,6 +208,12 @@ export class Game {
   // "unreachable" so a player sees that they may be out of sync with the others; cleared the
   // instant realtime is back.
   private realtimeDown = false;
+  // Grace timer before a dropped connection is SURFACED. Supabase Realtime briefly flaps on a
+  // page refresh (online → a transient CHANNEL_ERROR/CLOSED → reconnect); without this debounce
+  // that momentary blip popped a scary "connection lost" on every refresh. We only show the
+  // warning if the link is still down after the grace, so a genuine sustained drop still reports.
+  private connLostTimer = 0;
+  private static readonly CONN_LOST_GRACE_MS = 2500;
   // Persistent seat ownership keyed by seat index. A claim survives a network
   // drop (the seat shows as "dropped"/dimmed) and is only cleared by an explicit
   // `left` broadcast, so a disconnected player never loses their seat or cards.
@@ -2963,6 +2969,9 @@ export class Game {
       // peer answers it (see respondToHello), which also recovers state after a
       // dropped channel.
       if (s === "online") {
+        // A (re)connect settled within the grace, so cancel any pending "connection lost" warning:
+        // a brief refresh/initial-sync flap never surfaces as an error.
+        if (this.connLostTimer) { window.clearTimeout(this.connLostTimer); this.connLostTimer = 0; }
         // On a genuine RECONNECT (not the first connect), stamp a fresh connAt and
         // re-publish, so peers who tombstoned us after the away grace see a newer
         // connAt and clear it — we reappear at once instead of staying hidden until
@@ -2970,7 +2979,9 @@ export class Game {
         if (this.hasBeenOnline) {
           this.selfConnAt = Date.now();
           this.bus.updateMe(this.presencePayload());
-          toast(t("ui.connRestored"));
+          // Only reassure "back online" if we actually told the player it dropped — otherwise a
+          // silent flap would announce a recovery from a loss they never saw.
+          if (this.realtimeDown) toast(t("ui.connRestored"));
         }
         this.hasBeenOnline = true;
         // Cross-device sync is back: clear the "unreachable" hint on rival seats.
@@ -2985,13 +2996,19 @@ export class Game {
         this.lastCursors.clear();
         // Locks held by departed peers clear; they re-broadcast on reconnect.
         if (this.heldByOther.size) { this.heldByOther.clear(); this.requestRender(); }
-        // A genuine drop (we were online): tell the player live sync is down, and reflect it
-        // on the rival seats so their areas read as "unreachable" until we reconnect. Never
-        // fires on the initial offline/solo state, and never claims to be "connecting".
-        if (this.hasBeenOnline && !this.realtimeDown) {
-          this.realtimeDown = true;
-          this.refreshZones();
-          toast(t("ui.connLost"));
+        // A genuine drop (we were online): tell the player live sync is down, and reflect it on the
+        // rival seats as "unreachable" — but only AFTER a short grace, so a transient flap on
+        // refresh/initial sync that recovers right away never surfaces a "connection lost". Never
+        // fires on the initial offline/solo state (hasBeenOnline gates it). If online returns
+        // first, the timer above is cancelled.
+        if (this.hasBeenOnline && !this.realtimeDown && !this.connLostTimer) {
+          this.connLostTimer = window.setTimeout(() => {
+            this.connLostTimer = 0;
+            // Reaching here means we never went back online during the grace (online clears it).
+            this.realtimeDown = true;
+            this.refreshZones();
+            toast(t("ui.connLost"));
+          }, Game.CONN_LOST_GRACE_MS);
         }
       }
     });
