@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   rotateVec,
   seatRotationDeg,
-  nextQuarterSeat,
   localSlotForSeat,
   seatForLocalSlot,
   screenToCanonical,
@@ -27,31 +26,18 @@ const EXPECTED: Record<Seat, Record<Seat, LocalSlot>> = {
   3: { 0: "left", 1: "right", 2: "top", 3: "bottom" }
 };
 
-describe("nextQuarterSeat: the perspective-toggle step", () => {
+describe("perspective toggle target: the LEFT-hand neighbour", () => {
   const norm = (d: number) => ((d % 360) + 360) % 360;
 
-  it("returns to the start after exactly four quarter-turns, from any seat", () => {
-    for (const start of SEATS) {
-      let s = start;
-      for (let i = 0; i < 4; i++) s = nextQuarterSeat(s);
-      expect(s).toBe(start); // four 90° steps = full circle, back home
-    }
-  });
-
-  it("visits all four seats once over a full cycle (a clean rotation, no skips/repeats)", () => {
-    for (const start of SEATS) {
-      const visited = new Set<Seat>();
-      let s = start;
-      for (let i = 0; i < 4; i++) { visited.add(s); s = nextQuarterSeat(s); }
-      expect(visited.size).toBe(4); // every side seen exactly once
-    }
-  });
-
-  it("each step advances the board angle by exactly +90°", () => {
-    for (const start of SEATS) {
-      const next = nextQuarterSeat(start);
-      expect(norm(seatRotationDeg(next))).toBe(norm(seatRotationDeg(start) + 90));
-      expect(next).not.toBe(start); // never a dead step
+  it("each seat's left-slot neighbour is a distinct seat, one quarter-turn away", () => {
+    // The V key toggles between home and seatForLocalSlot(home, "left"); verify that
+    // target is well-defined, never the viewer itself, and exactly a 90° board turn.
+    for (const home of SEATS) {
+      const left = seatForLocalSlot(home, "left");
+      expect(left).not.toBe(home);                       // a real other side
+      expect(localSlotForSeat(home, left)).toBe("left"); // it really sits on our left
+      const delta = norm(seatRotationDeg(left) - seatRotationDeg(home));
+      expect(delta === 90 || delta === 270).toBe(true);  // a single quarter-turn either way
     }
   });
 });

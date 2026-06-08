@@ -192,7 +192,7 @@
       },
       {
         "keys": "V",
-        "desc": "Masayı çeyrek tur döndürüp başka bir taraftan görürsün; tekrar bastıkça döndürerek kendi açına dönersin. Bu yalnızca senin görünümünü değiştirir, başka kimse için bir şey değişmez. Açtığın Mühür ve Hizmetkârları dizeceğin boş alanı önüne getirmek için kullan."
+        "desc": "Masayı solundaki oyuncunun açısından görürsün; tekrar basınca kendi açına dönersin. Bu yalnızca senin görünümünü değiştirir, başka kimse için bir şey değişmez. Açtığın Mühür ve Hizmetkârları dizeceğin boş alanı önüne getirmek için kullan."
       }
     ],
     "mobileNote": "Dokunmatik cihazlarda kartın üstüne uzun basarak eylem çubuğunu aç. Görünümü çevir düğmesi (sağ alt) V tuşuyla aynı işi yapar."

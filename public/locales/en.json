@@ -192,7 +192,7 @@
       },
       {
         "keys": "V",
-        "desc": "Turn the table a quarter-turn to view it from another side; press again to keep turning back to your own. This changes only your own view, nothing for anyone else. Use it to bring your open space in front of you, then lay out the Seals and Servants you reveal there."
+        "desc": "View the table from your left-hand neighbour's side; press again to return to your own. This changes only your own view, nothing for anyone else. Use it to bring your open space in front of you, then lay out the Seals and Servants you reveal there."
       }
     ],
     "mobileNote": "On touch devices, long-press a card to open its action bar. The view-turn button (bottom-right) does the same as the V key."
