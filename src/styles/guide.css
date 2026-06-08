@@ -58,8 +58,6 @@
   min-height: 28px;
   min-width: 0;
 }
-/* The control cluster stays a single row pinned to the top of the bar. */
-.guide__controls { align-self: flex-start; }
 .guide__bar-title {
   font-size: 13px;
   font-weight: 600;
@@ -83,7 +81,9 @@
   white-space: nowrap;
 }
 
-.guide__controls { display: flex; align-items: center; gap: 4px; flex: none; }
+/* A single control row, pinned to the TOP of the bar (align-self) so it stays on the title's
+   first line when the status wraps to two lines, instead of drifting to the vertical centre. */
+.guide__controls { display: flex; align-items: center; gap: 4px; flex: none; align-self: flex-start; }
 /* Frameless control buttons (close, restart, minimize/maximize): no border or resting
    background, matching the project's quiet icon-button language. The icon is grid-centred
    and the colour/background ease in on hover. The confirm tick is the one exception below:
