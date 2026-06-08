@@ -87,7 +87,7 @@
     },
     "ascension": {
       "term": "Yükseliş",
-      "def": "Kapanış aşamanızın sonunda masanızda en az 3 Mühür varsa Yükseliş ilan edebilirsiniz (geri alınamaz). Sonra her rakip bir tam tur (Yargılama) boyunca Mühürlerinizi yok etmeye, çalmaya ya da etkisiz kılmaya çalışır. Sıra size döndüğünde, Odaklanma'dan önce hâlâ en az 3 Mührünüz duruyorsa oyunu kazanırsınız."
+      "def": "Kapanış aşamanızın sonunda masanızda en az 3 Mühür varsa Yükseliş ilan edebilirsiniz (geri alınamaz). Sonra her rakip bir tam tur (Sınav) boyunca Mühürlerinizi yok etmeye, çalmaya ya da etkisiz kılmaya çalışır. Sıra size döndüğünde, Odaklanma'dan önce hâlâ en az 3 Mührünüz duruyorsa oyunu kazanırsınız."
     },
     "servantShield": {
       "term": "Hizmetkâr Kalkanı",
@@ -587,10 +587,10 @@
         "id": "setup",
         "title": "2. Kurulum",
         "body": [
-          "72 kartlık desteyi iyice karıştır.",
-          "Her oyuncuya 5 kart dağıt; kartlar gizli tutulur.",
-          "Kalanı kapalı deste olarak ortaya koy.",
-          "Her oyuncu desteden 1 kart açar; en yüksek tür Hizmetkâr, Büyü, Mühür, Müdahale sırasına göre ilk oyuncuyu belirler. Eşitlikte tekrar çek. Oyun başlamadan önce açılan kartları desteye geri karıştır.",
+          "72 kartlık desteyi iyice karıştırın.",
+          "Her oyuncuya 5 kart dağıtın; kartlar gizli tutulur.",
+          "Kalanı kapalı deste olarak ortaya koyun.",
+          "Her oyuncu desteden 1 kart açar; en yüksek tür Hizmetkâr, Büyü, Mühür, Müdahale sırasına göre ilk oyuncuyu belirler. Eşitlikte tekrar çekin. Oyun başlamadan önce açılan kartları desteye geri karıştırın.",
           "Oyun, seçilen ilk oyuncudan başlayarak saat yönünde ilerler.",
           "Oyuncu sayısı: 2 hızlı ve doğrudan; 3 dengeli ve taktiksel; 4 önerilen, kaotik ve diplomatik koltuk."
         ]
@@ -696,11 +696,11 @@
           "Kızıl Monolit: Aksiyon'da 2 yerine 3 HP kullanırsın. Her ek kopya +1 HP (en fazla 5). Konulduğu turun ERTESİ tur etkinleşir.",
           "Ölüçağıranın Gözü: Kapanış'ın başında, el sınırı kontrolünden önce, Çöplüğün en üst kartını elinize alırsınız (her ek kopya bir kart daha alır). Sınır kontrolünden önce gerçekleştiği için eliniz 7'yi aşarsa her zamanki gibi 7'ye inersiniz ve az önce aldığınız kartı atabilirsiniz; yani tutmak istediğiniz bir kartı feda etmenize asla yol açmaz. Çöplük boşsa hiçbir şey olmaz. Konulduğu turda işler.",
           "BÜYÜLER (24 toplam):",
-          "Eterik Çarpma: 1 HP. Bir rakibin masasındaki 1 kartı yok et. Hizmetkâr Kalkanı uygulanır.",
+          "Eterik Çarpma: 1 HP. Bir rakibin masasındaki 1 kartı yok edin. Hizmetkâr Kalkanı uygulanır.",
           "Gölge Hırsızlığı: 1 HP. Rakibin eli kimse göremeyecek şekilde kapalı karıştırılır ve içinden rastgele 1 kart elinize geçer; hangisi olduğunu kimse seçmez. Hiçlik Örtüsü engeller.",
-          "Kadim Görü: 1 HP. Desteden 3 kart çek. Yalnızca kendine oynanır; hiçbir rakibi hedeflemez.",
+          "Kadim Görü: 1 HP. Desteden 3 kart çekin. Yalnızca kendinize oynanır; hiçbir rakibi hedeflemez.",
           "Zihin Paraziti: 1 HP. Bir rakibin Hizmetkârını ele geçirip kendi masanıza alırsınız; etkilerini korur ve 3 Hizmetkâr sınırınıza dahil olur. Ele geçirmek yok etmek değildir; çalınan bir Buzul Ucube tur atlatma cezasını tetiklemez.",
-          "Kaderin Cilvesi: 1 HP. Kendi elindeki tüm kartları seçilen bir rakibin elindeki tüm kartlarla takas et. Hiçlik Örtüsü engeller.",
+          "Kaderin Cilvesi: 1 HP. Kendi elinizdeki tüm kartları seçilen bir rakibin elindeki tüm kartlarla takas edin. Hiçlik Örtüsü engeller.",
           "MÜDAHALELER (16 toplam):",
           "Sustur!: 0 HP. Taze atılmış bir Büyü veya Müdahaleyi iptal et. İptal edilen kart ve Sustur! Çöplüğe gider. Evrensel hedef.",
           "Karmik Yansıma: 0 HP. Bencil. Size ya da masanızdaki kartlarınıza yönelen saldırıyı iptal eder ve saldırgana geri döndürür; bu geri dönüşte saldırganın kendi Hizmetkâr Kalkanı geçerlidir.",
