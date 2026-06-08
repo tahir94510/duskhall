@@ -195,7 +195,7 @@
         "desc": "Masayı solundaki oyuncunun açısından görürsün; tekrar basınca kendi açına dönersin. Bu yalnızca senin görünümünü değiştirir, başka kimse için bir şey değişmez. Açtığın Mühür ve Hizmetkârları dizeceğin boş alanı önüne getirmek için kullan."
       }
     ],
-    "mobileNote": "Dokunmatik cihazlarda kartın üstüne uzun basarak eylem çubuğunu aç. Görünümü çevir düğmesi (sağ alt) V tuşuyla aynı işi yapar."
+    "mobileNote": "Dokunmatik cihazlarda kartın üstüne uzun basarak eylem çubuğunu aç. Çubuktaki görünümü çevir düğmesi V tuşuyla aynı işi yapar."
   },
   "leaveConfirm": {
     "title": "Odadan çık?",
@@ -241,6 +241,17 @@
     "badge": "Yeni",
     "empty": "Henüz güncelleme yok.",
     "entries": [
+      {
+        "v": "2026-06-08",
+        "date": "8 Haziran 2026",
+        "title": "Daha akıcı görünüm çevirme ve düzgün bilgi baloncukları",
+        "items": [
+          "Masayı V ile çevirmek artık her açıdan düzgün çalışıyor: çevirdikten sonra kartları sol ve sağ alanlara sürükleyebilir, kart elindeyken V'ye basıp masayı altında döndürerek kartı yeni taraftan yerleştirebilirsin.",
+          "Dokunmatikte görünümü çevir düğmesi artık köşede durmuyor; bir karta basılı tutunca açılan eylem menüsünde yer alıyor.",
+          "Rehberdeki sıra satırı, örneğin \"Sıra: Oyuncu (sen)\", artık kırpılmıyor.",
+          "Kurallarda, vurgulu bir terimin bilgi baloncuğu artık tam ortada ve hemen üstte çıkıyor; kart bilgi paneliyle aynı."
+        ]
+      },
       {
         "v": "2026-06-07",
         "date": "7 Haziran 2026",
@@ -769,7 +780,7 @@
     "yourTurn": "Sıra sende. Bitirince onay işaretine bas.",
     "aPlayer": "bir oyuncu",
     "youTag": "(sen)",
-    "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir ve kartlarına hiç dokunmaz. Kartları dilediğin gibi taşımakta, çevirmekte ve karıştırmakta özgürsün. İpucu: yeni karıştırılmış bir desteyle başlamak istersen önce menüden Desteyi sıfırla'yı kullan, sonra Başlat'a bas. Masayı başka bir taraftan görmek için istediğin an V tuşuna (dokunmatikte sağ alttaki görünüm çevirme düğmesine) bas; açtığın kartları dizmek için kullanışlı.",
+    "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir ve kartlarına hiç dokunmaz. Kartları dilediğin gibi taşımakta, çevirmekte ve karıştırmakta özgürsün. İpucu: yeni karıştırılmış bir desteyle başlamak istersen önce menüden Desteyi sıfırla'yı kullan, sonra Başlat'a bas. Masayı başka bir taraftan görmek için istediğin an V tuşuna bas (dokunmatik ekranda bir karta basılı tut ve açılan menüden görünümü çevir düğmesine dokun); açtığın kartları dizerken işine yarar.",
     "introWaiting": "Oyunun başlaması için ev sahibi bekleniyor.",
     "start": "Başlat",
     "restart": "Yeniden başlat",
@@ -781,11 +792,11 @@
     "steps": {
       "shuffle": {
         "title": "Dağıtım",
-        "body": "Desteyi karıştırın ve her oyuncuya gizli tutacağı 5 kart dağıtın. Kalanı ortada kapalı şekilde çekme destesi olarak bırakın. Herkese kartlar dağıtıldıktan sonra ev sahibi onay işaretine basar."
+        "body": "Desteyi karıştır ve her oyuncuya gizli tutacağı 5 kart dağıt. Kalanı ortada kapalı şekilde çekme destesi olarak bırak. Herkese kartlar dağıtıldıktan sonra ev sahibi onay işaretine basar."
       },
       "reveal": {
         "title": "Kim başlıyor",
-        "body": "Kimin başlayacağını belirlemek için her oyuncu desteden bir kart çekip açar. En yüksek tür başlar; sıralama şöyle: önce Hizmetkâr, sonra Büyü, sonra Mühür, sonra Müdahale. İki oyuncu eşitse yalnızca onlar yeniden çeker. Sonra açılan bu kartları desteye geri karıştırın. Bu bittiğinde ev sahibi onay işaretine basar."
+        "body": "Kimin başlayacağını belirlemek için her oyuncu desteden bir kart çekip açar. En yüksek tür başlar; sıralama şöyle: önce Hizmetkâr, sonra Büyü, sonra Mühür, sonra Müdahale. İki oyuncu eşitse yalnızca onlar yeniden çeker. Sonra açılan bu kartları desteye geri karıştır. Bu bittiğinde ev sahibi onay işaretine basar."
       },
       "chooseFirst": {
         "title": "İlk oyuncu",

@@ -47,7 +47,10 @@
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
+  /* Wrap the title + phase chip to a second line on a narrow panel instead of clipping the
+     name. The bar grows to fit; row-gap keeps the wrapped line tidy. */
+  flex-wrap: wrap;
+  gap: 4px 8px;
   min-width: 0;
 }
 .guide__bar-title {
@@ -55,9 +58,10 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--ivory);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Show the full turn line (e.g. "Sıra: Oyuncu (sen)") — wrap rather than truncate with an
+     ellipsis, so a longer name or the "(sen)/(you)" tag is never cut off. */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .guide__bar-phase {
   flex: none;
