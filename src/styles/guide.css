@@ -10,7 +10,10 @@
   top: max(env(safe-area-inset-top), 12px);
   /* Sit just left of the header menu button (36px button + gutter + gap). */
   right: calc(max(env(safe-area-inset-right), 14px) + 44px);
-  width: min(330px, calc(100vw - 24px));
+  /* Wide enough that the turn line ("Sıra: <name> (sen)") + the phase chip + the four controls
+     all sit on ONE clean row for normal names, so nothing wraps to a second line. Capped to the
+     viewport; below 520px the panel goes full-width (see the media query at the foot of the file). */
+  width: min(372px, calc(100vw - 24px));
   /* Above board and cursors, but below the header (800) so the three-dot menu
      overlays the panel rather than dropping behind it. */
   z-index: var(--z-guide);
@@ -33,9 +36,10 @@
 
 .guide__bar {
   display: flex;
-  /* Top-align so the controls stay on the title's first line instead of floating to the
-     vertical centre when the status wraps to two lines (a long name + the phase chip). */
-  align-items: flex-start;
+  /* One clean single-height row: the status and the controls are both centred against the same
+     fixed bar height, so a single-line title ("Dağıtım") sits dead-centre with no empty gap below,
+     and the controls never float. The bar never grows because the row never wraps (see status). */
+  align-items: center;
   gap: 6px;
   /* Tuned so the bar (and thus the whole panel when minimized) stands the same
      height as the 36px header buttons it sits beside: 4 + 28 + 4 = 36. */
@@ -48,14 +52,13 @@
 .guide__status {
   flex: 1;
   display: flex;
-  /* nowrap so the PHASE CHIP ("Odaklanma"/"Aksiyon") never breaks onto its own lower line. The
-     title is the flexible item: it shrinks and wraps its OWN text across two lines when a long
-     name needs it, while the chip stays beside it on the first line. flex-start keeps the chip
-     level with the title's first line; the bar grows downward to fit a wrapped title. */
+  align-items: center;
+  /* Single row, never wrapping: the phase chip ("Odaklanma"/"Aksiyon") stays inline and the bar
+     stays one clean line. The panel is sized so the whole line fits for normal names; the title is
+     the one item allowed to shrink, ellipsising only as a last resort for a pathologically long
+     name (the chip and controls are always kept whole). */
   flex-wrap: nowrap;
-  align-items: flex-start;
-  gap: 4px 8px;
-  min-height: 28px;
+  gap: 8px;
   min-width: 0;
 }
 .guide__bar-title {
@@ -63,10 +66,13 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--ivory);
-  /* Show the full turn line (e.g. "Sıra: Oyuncu (sen)") — wrap rather than truncate with an
-     ellipsis, so a longer name or the "(sen)/(you)" tag is never cut off. */
+  /* Stay on one line; the widened panel fits the full "Sıra: <name> (sen)" for normal names, and
+     an extreme name ellipsises here instead of wrapping the bar to a second line. */
+  flex: 0 1 auto;
   min-width: 0;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .guide__bar-phase {
   flex: none;
@@ -81,9 +87,7 @@
   white-space: nowrap;
 }
 
-/* A single control row, pinned to the TOP of the bar (align-self) so it stays on the title's
-   first line when the status wraps to two lines, instead of drifting to the vertical centre. */
-.guide__controls { display: flex; align-items: center; gap: 4px; flex: none; align-self: flex-start; }
+.guide__controls { display: flex; align-items: center; gap: 4px; flex: none; }
 /* Frameless control buttons (close, restart, minimize/maximize): no border or resting
    background, matching the project's quiet icon-button language. The icon is grid-centred
    and the colour/background ease in on hover. The confirm tick is the one exception below:
