@@ -78,7 +78,7 @@
     "tableau": "Mühürler · Hizmetkârlar",
     "youSuffix": " (sen)",
     "droppedSuffix": " (uzakta)",
-    "pile": "Bu yığında {count} kart"
+    "pile": "Bu yığında {count} kart var"
   },
   "glossary": {
     "etherResonance": {
@@ -407,12 +407,12 @@
     "intro": "Bir hata mı buldun ya da bir fikrin, isteğin mi var? Bize ilet; oyunu birlikte şekillendirelim.",
     "form": "Geri bildirim formunu aç",
     "issues": "GitHub'da bildir",
-    "none": "Henüz bir geri bildirim kanalı yapılandırılmamış. Daha sonra tekrar deneyin."
+    "none": "Henüz bir geri bildirim kanalı yapılandırılmamış. Lütfen daha sonra tekrar bak."
   },
   "legalDoc": {
     "title": "Hakkında ve Yasal",
-    "subtitle": "Vaerum nedir ve verilerinizi nasıl ele alır.",
-    "intro": "Vaerum, arkadaşlarınızla oynamak için tasarlanmış ücretsiz, tarayıcı tabanlı bir dijital kart masasıdır. Bu sayfa oyunun ne olduğunu, hangi verileri ele alıp almadığını ve kullanım koşullarını açıklar.",
+    "subtitle": "Vaerum nedir ve verilerini nasıl ele alır.",
+    "intro": "Vaerum, arkadaşlarınla oynamak için tasarlanmış ücretsiz, tarayıcı tabanlı bir dijital kart masasıdır. Bu sayfa oyunun ne olduğunu, hangi verileri ele alıp almadığını ve kullanım koşullarını açıklar.",
     "sections": [
       {
         "id": "howto",
@@ -429,7 +429,7 @@
         "title": "Hakkında",
         "body": [
           "Vaerum: Eterin Vârisleri, 2 ila 4 oyunculu bir strateji kart oyunu için dijital bir masadır. Sana ve arkadaşlarına ortak bir masa sunar: kartları gerçek zamanlı olarak dağıt, taşı, çevir, grupla ve karıştır. Kuralları senin yerine uygulamaz; tıpkı gerçek bir masada olduğu gibi kuralları kural kitabına bakarak kendiniz uygularsınız.",
-          "Küçük ve hızlı bir web uygulaması olarak geliştirildi ve tamamen tarayıcında çalışır. Cihazlar arası canlı oyun, her masanın hamlelerini iletmek için gerçek zamanlı bir mesajlaşma hizmeti kullanır; oyununuzu saklayan bir oyun sunucusu yoktur.",
+          "Küçük ve hızlı bir web uygulaması olarak geliştirildi ve tamamen tarayıcında çalışır. Cihazlar arası canlı oyun, her masanın hamlelerini iletmek için gerçek zamanlı bir mesajlaşma hizmeti kullanır; oyununu saklayan bir oyun sunucusu yoktur.",
           "Vaerum bağımsız bir tasarımcı tarafından yapılıyor ve oynaması ücretsizdir."
         ]
       },
@@ -439,7 +439,7 @@
         "body": [
           "Vaerum, mümkün olduğunca az veriye ihtiyaç duyacak şekilde tasarlandı.",
           "**Hesap yok.** Kayıt olmaz, giriş yapmazsın. Verilecek bir isim, e-posta ya da parola yoktur.",
-          "**Takip ve reklam yok.** Vaerum hiçbir analitik, reklam veya üçüncü taraf izleyici çalıştırmaz. Oyununuz profillenmez ve satılmaz.",
+          "**Takip ve reklam yok.** Vaerum hiçbir analitik, reklam veya üçüncü taraf izleyici çalıştırmaz. Oyunun profillenmez ve satılmaz.",
           "**Cihazında kalanlar.** Ses ayarların, seçtiğin dil, rastgele bir görünen ad ve kısa ömürlü bir oda kimliği, masanın bunları ziyaretler arasında hatırlaması için tarayıcının yerel deposunda saklanır. Bunları istediğin an tarayıcı ayarlarından temizleyebilirsin.",
           "**Oyuncular arasında gidenler.** Bir oda canlıyken masadaki hamleler (kart konumları, çevirmeler, imleçler) gerçek zamanlı bir mesajlaşma hizmeti üzerinden iletilir; böylece odandaki diğer oyuncular onları görür. Bu veri geçicidir: o an masadaki oyunculara iletilir ve gönderildikten sonra bir sunucuda saklanmaz.",
           "**Oda bağlantısı.** Bir oda, bağlantısındaki kısa bir kodla tanımlanır. Bağlantıya sahip herkes o odaya katılabilir; bu yüzden bağlantıyı yalnızca masanda istediğin kişilerle paylaş."

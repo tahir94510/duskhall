@@ -159,6 +159,14 @@ export class ContextBar {
     this.el.classList.remove("is-visible");
   };
 
+  // Re-evaluate the live button states while the bar is OPEN, so a change on the board — a card just
+  // dropped settling into your area, a new card entering it, a pile gathered, flipped or disturbed —
+  // updates the Gather / Arrange / Info states at once, instead of staying stale until the bar is
+  // closed and reopened. The render loop calls this every frame it repaints; a no-op while hidden.
+  refresh(): void {
+    if (this.cardId && this.el.classList.contains("is-visible")) this.refreshButtonStates(this.cardId);
+  }
+
   destroy(): void {
     document.removeEventListener("pointerdown", this.onOutside, true);
     this.el.remove();
