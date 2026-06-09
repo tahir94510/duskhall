@@ -192,9 +192,13 @@ export function arrangeZone(cards: CardState[], seat: Seat, opts: ArrangeOpts): 
 }
 
 /**
- * True when `cards` already sit where arrangeZone would place them — same (x,y) within `eps` and
- * the same orientation (mod 4). z is intentionally ignored (it always rebases), so a repeat tidy
- * on an already-arranged zone is a silent no-op. Mirrors StackOps.isTidyStack.
+ * True when `cards` already sit where arrangeZone would place them — same (x,y) within `eps`, the
+ * same orientation (mod 4), AND the same relative stacking order. The z ORDER matters: a tidy lays
+ * the stacks bottom-to-top in a fixed grouped order, so a card later bumped to the front (e.g. one
+ * flipped, which jumps to the top of the area) leaves the positions tidy but the stacking broken —
+ * this must read as NOT arranged so a fresh tidy is allowed to restore the clean deck order (and the
+ * D key / Tidy button re-enables). Absolute z is meaningless (it always rebases onto the live topZ),
+ * so we compare the relative ORDER, not the values. Mirrors StackOps.isTidyStack.
  */
 export function isZoneArranged(cards: CardState[], seat: Seat, opts: ArrangeOpts, eps = 1e-3): boolean {
   if (cards.length < 1) return true;
@@ -206,6 +210,14 @@ export function isZoneArranged(cards: CardState[], seat: Seat, opts: ArrangeOpts
     if (!c) return false;
     if (Math.abs(c.x - tgt.x) > eps || Math.abs(c.y - tgt.y) > eps) return false;
     if ((((c.rot % 4) + 4) % 4) !== (((tgt.rot % 4) + 4) % 4)) return false;
+  }
+  // Relative stacking order: the live cards sorted by z must match the order the targets were laid
+  // (targets carry increasing relative z in lay order). Same tie-break (z, then id) on both sides so
+  // a tidied set compares equal to itself, while any cross-stack interleaving reads as untidy.
+  const targetOrder = [...targets].sort((a, b) => a.z - b.z).map((t) => t.id);
+  const currentOrder = [...cards].sort((a, b) => (a.z - b.z) || a.id.localeCompare(b.id)).map((c) => c.id);
+  for (let i = 0; i < targetOrder.length; i++) {
+    if (targetOrder[i] !== currentOrder[i]) return false;
   }
   return true;
 }

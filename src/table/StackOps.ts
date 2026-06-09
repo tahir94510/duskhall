@@ -10,6 +10,13 @@ import { mulberry32 } from "../game/deck.js";
 // squarely on top of each other (well above 60 %) to group.
 const OVERLAP_RATIO = 0.6;
 
+// Two cards count as the SAME pile (one stacked on the other) when their centres sit within this
+// canonical distance on both axes. A gathered or tidied stack co-locates its cards exactly (0
+// apart), while the tidy layout's neighbouring stacks are always >= ~0.05 apart (adjacent type
+// stacks) and its two depth rows are 0.05 apart — all comfortably outside this epsilon, so the
+// stack count never bleeds one stack into the next. Canonical (device-independent) units.
+const STACK_POS_EPS = 0.03;
+
 // The cumulative quarter-turn value congruent to `target` (mod 4) that is NEAREST
 // to a card's CURRENT `rot`. `rot` is cumulative (it never wraps), so naively
 // writing the same `target` to every card can change a sideways card's value by a
@@ -141,52 +148,25 @@ export function findConnectedStack(
 }
 
 /**
- * For every card, the size of the connected pile it belongs to and how many cards sit BELOW it
- * (lower z) within that pile. A pile is a set of cards overlapping one another by at least
- * OVERLAP_RATIO of the smaller footprint — the same rule the stack ops use — found in one union-find
- * pass. Used to paint a count badge on any card that covers at least one other (below >= 1). O(n^2)
- * in the card count: cheap for a table deck, and only run on dirty render frames.
+ * How many cards sit DIRECTLY stacked on each card — i.e. share its centre position within
+ * STACK_POS_EPS. This is the true "pile" a player sees (a gathered or tidied stack of co-located
+ * cards), and it is deliberately POSITIONAL rather than overlap-based: a loose-overlap test (used
+ * for grab/flip/gather) wrongly merges neighbouring stacks that merely graze each other — exactly
+ * the tidy layout's adjacent type-stacks and its two depth-staggered rows — which made the stack
+ * count "jump" once a hand held more than one card type. Counting only cards on the SAME spot is
+ * type-agnostic and exact: a mixed-type pile counts correctly, while distinct adjacent stacks each
+ * keep their own count. Canonical units, so the result is identical on every device. O(n^2) in the
+ * card count: cheap for a table deck, and only run on dirty render frames.
  */
-export function pileSizes(
-  state: BoardState,
-  board: BoardSize,
-  size?: { w: number; h: number }
-): Map<string, { size: number; below: number }> {
-  const { w, h } = size && size.w > 0 ? size : cardSizeFallback();
+export function coLocatedCounts(state: BoardState, eps = STACK_POS_EPS): Map<string, number> {
   const cards = Array.from(state.cards.values());
-  const n = cards.length;
-  const out = new Map<string, { size: number; below: number }>();
-  if (n === 0) return out;
-  const boxes = cards.map((c) => cardPixelBox(c, board, w, h));
-  const parent = cards.map((_, i) => i);
-  const find = (i: number): number => {
-    while (parent[i] !== i) { parent[i] = parent[parent[i]!]!; i = parent[i]!; }
-    return i;
-  };
-  for (let i = 0; i < n; i++) {
-    const bi = boxes[i]!;
-    for (let j = i + 1; j < n; j++) {
-      const bj = boxes[j]!;
-      const inter = intersectionArea(bi, bj);
-      if (inter <= 0) continue;
-      // Measure against the SMALLER footprint so a rotated card still pairs with an upright one.
-      const minArea = Math.min(bi.w * bi.h, bj.w * bj.h);
-      if (inter / minArea < OVERLAP_RATIO) continue;
-      const ri = find(i), rj = find(j);
-      if (ri !== rj) parent[ri] = rj;
+  const out = new Map<string, number>();
+  for (const a of cards) {
+    let n = 0;
+    for (const b of cards) {
+      if (Math.abs(a.x - b.x) <= eps && Math.abs(a.y - b.y) <= eps) n++;
     }
-  }
-  const groups = new Map<number, number[]>();
-  for (let i = 0; i < n; i++) {
-    const r = find(i);
-    const g = groups.get(r);
-    if (g) g.push(i); else groups.set(r, [i]);
-  }
-  for (const members of groups.values()) {
-    const sz = members.length;
-    // Ascending z so each card's "below" count is its rank from the bottom of the pile.
-    members.sort((a, b) => cards[a]!.z - cards[b]!.z);
-    members.forEach((idx, rank) => out.set(cards[idx]!.id, { size: sz, below: rank }));
+    out.set(a.id, n);
   }
   return out;
 }
