@@ -19,6 +19,12 @@ unchanged. 273 tests green.
   out as a clean, ordered deck; it now also notices when the stacking ORDER is broken — e.g. a
   card flipped after a tidy jumps to the front — and re-enables so a fresh press restores the
   order, then greys out again once everything (position, facing AND order) is back in place.
+- **The action bar stays live.** The touch action bar now re-checks its buttons every frame it is
+  open, so a card settling into your area or a new card arriving enables Gather / Tidy / Info at
+  once, instead of the bar showing a stale, lagging state until it is closed and reopened.
+- **Tidy never touches a rival's card.** A card that belongs to an occupied rival's zone is left
+  alone by your tidy even when its tip overhangs your corner — ownership is live and position-based,
+  so a rival's overhanging card is theirs, never pulled into your layout.
 - **Tidy turns every card face-up.** Pressing D (or the touch Tidy button) now also turns each
   card in your area to face you, so a laid-out hand reads at once instead of leaving some cards
   backs-up.

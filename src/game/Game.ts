@@ -859,7 +859,9 @@ export class Game {
         for (const id of ids) this.dirtyIds.add(id);
         this.scheduleFlush();
       },
-      showContextBar: (id, x, y) => this.contextBar.show(id, x, y),
+      // Open the bar with the live state, then schedule a render so its button states are re-checked
+      // on the very next frame too — catching a card that is still settling when the bar opens.
+      showContextBar: (id, x, y) => { this.contextBar.show(id, x, y); this.requestRender(); },
       hideContextBar: () => this.contextBar.hide(),
       emitCursor: (x, y) => {
         // Not seated (a full-room visitor at the gate) means no cursor broadcast — a seatless
@@ -2421,6 +2423,11 @@ export class Game {
       // overhanging the zone edge, which the tidy pulls fully back in), while public, centre and
       // rival-zone cards are excluded.
       if (!pointInZoneCanonical(seat, c.x, c.y)) continue;
+      // Never tidy a card that belongs to an occupied rival's zone, even if its centre grazes our
+      // trapezoid: ownership is live and position-based, so a rival's card overhanging our corner is
+      // theirs, not ours to pull into our layout. (pointInZoneCanonical is a pure trapezoid test;
+      // this is the authoritative owner test the claim uses, so the two never disagree at the edge.)
+      if (this.isRivalOwnedCard(c.id)) continue;
       if (this.isLockedByOther(c.id)) continue;    // a peer is holding/dragging it
       if (this.myHeldIds.includes(c.id)) continue; // I'm dragging it right now
       // A card mid flip/settle is INTENTIONALLY included: a tidy takes authoritative control of
@@ -3739,6 +3746,9 @@ export class Game {
         delete el.dataset.stackCount;
       }
     }
+    // Keep the open action bar's button states (Gather/Arrange/Info…) live with the board, so a card
+    // settling into your area or a new card arriving re-enables the right buttons without a reopen.
+    this.contextBar.refresh();
   }
 
   // Bind every absolute seat to its physical zone div for THIS viewer, then set
