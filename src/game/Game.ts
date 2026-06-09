@@ -2009,6 +2009,10 @@ export class Game {
     const c = this.state.cards.get(id);
     if (!c) return;
     if (this.isRivalOwnedCard(id) || this.isLockedByOther(id)) return;
+    // Reject a repeat while this card is still mid-turn, exactly like flipCard — without it a fast
+    // double scroll/tap rotates twice and double-bumps z, so a peer that saw only one of the two
+    // patches ends a quarter-turn (and a z slot) out of sync.
+    if (this.anyAnimating([id])) return;
     // Cumulative rotation: keep adding turns so 270°→360°→450° flows forward
     // visually instead of teleporting back to 0°.
     c.rot = c.rot + dir;
@@ -2490,7 +2494,7 @@ export class Game {
     const handle = this.animTimers.get(id);
     if (handle !== undefined) { window.clearTimeout(handle); this.animTimers.delete(id); }
     const el = this.cardEls.get(id);
-    if (el) el.classList.remove("is-animating", "is-shuffling", "is-flip-quiet", "is-flip-staging");
+    if (el) el.classList.remove("is-animating", "is-shuffling", "is-flip-quiet", "is-flip-staging", "is-flipping");
   }
 
   // Tidy our own hidden-zone cards into a clean, deck-like layout: identical cards collected into one
@@ -2663,6 +2667,12 @@ export class Game {
     // Every local mutation routes through here, so this is the single place
     // that guarantees the layout gets repainted on the next frame.
     this.requestRender();
+    // Claim authorship of every currently-dirty card RIGHT NOW (fresh ts/by), not 40ms later when
+    // flush() finally runs. Otherwise a just-moved/rotated/gathered/tidied card keeps its OLD ts
+    // during that gap, so a host reconcile or peer patch carrying the same stored ts could win the
+    // equal-ts tiebreak and snap it back mid-animation. flush() re-stamps higher right before it
+    // broadcasts, so peers still receive exactly one authoritative write per card.
+    this.stampCards(Array.from(this.dirtyIds));
     if (this.flushHandle) return;
     this.flushHandle = window.setTimeout(() => {
       this.flushHandle = 0;
@@ -2675,6 +2685,19 @@ export class Game {
   private stamp(): number {
     this.clock = Math.max(this.clock + 1, Date.now());
     return this.clock;
+  }
+
+  // Stamp these cards as a local write NOW (ts/by). The paths that mutate position/rotation and then
+  // only scheduleFlush (deferred a frame) would otherwise leave the cards on their OLD ts during that
+  // gap, so a host reconcile or peer patch carrying the same stored ts could win the equal-ts
+  // tiebreak (by writer id) and snap the just-moved cards back mid-animation. flush() re-stamps
+  // higher before broadcasting, so peers still receive one authoritative write.
+  private stampCards(ids: string[]): void {
+    const now = this.stamp();
+    for (const id of ids) {
+      const c = this.state.cards.get(id);
+      if (c) { c.ts = now; c.by = this.self.id; }
+    }
   }
 
   // Build the wire form of a card with coordinates rounded to ~sub-pixel
@@ -3412,10 +3435,12 @@ export class Game {
       ids: this.myHeldIds, by: this.self.id, seat: this.self.seat, until: Date.now() + Game.HOLD_TTL_MS, release: false
     });
     send();
-    // Refresh well before the TTL so a long, deliberate hold stays locked for
-    // peers; cleared on release (above).
+    // Refresh THREE times per TTL (every third), not twice: with a half-TTL interval a single
+    // dropped refresh frame (a packet-loss blip) is enough for the lock to expire on peers while the
+    // holder still has the card in hand, freeing it to be grabbed. At a third, one lost frame still
+    // leaves two refreshes within the window. Cleared on release (above).
     window.clearInterval(this.heldRefresh);
-    this.heldRefresh = window.setInterval(send, Math.floor(Game.HOLD_TTL_MS / 2));
+    this.heldRefresh = window.setInterval(send, Math.floor(Game.HOLD_TTL_MS / 3));
   }
 
   // Lock a whole pile to peers for the duration of a multi-phase animation
@@ -3779,8 +3804,10 @@ export class Game {
         delete el.dataset.stackCount;
       }
       // Only the TOP card of a co-located pile keeps its drop shadow; buried cards drop theirs so a
-      // tight stack casts one clean shadow rather than a smear of N overlapping ones.
-      el.classList.toggle("is-buried", !!info?.covered);
+      // tight stack casts one clean shadow rather than a smear of N overlapping ones. A card you are
+      // actively holding is never buried — it must keep its lifted drag shadow even while it passes
+      // over another card (held piles manage their own shadows: lead = big, the rest = light).
+      el.classList.toggle("is-buried", !!info?.covered && !el.classList.contains("is-held"));
     }
     // Keep the open action bar's button states (Gather/Arrange/Info…) live with the board, so a card
     // settling into your area or a new card arriving re-enables the right buttons without a reopen.

@@ -42,9 +42,13 @@ export class Tooltip {
     this.host.addEventListener("pointerout", this.onOut, { passive: true });
     this.host.addEventListener("pointermove", this.onMove, { passive: true });
     this.host.addEventListener("pointerdown", this.onDown, { passive: true });
-    // Clear the pressed flag on release no matter where the pointer ends up.
+    // Clear the pressed flag on release no matter where the pointer ends up. lostpointercapture is
+    // included because a drag that grabbed the pointer (DragController captures it on a card) can end
+    // with only that event — never a window pointerup — and without this the pressed flag would stay
+    // stuck true and silently kill all hover tooltips until the next clean down/up.
     window.addEventListener("pointerup", this.onUp, { passive: true });
     window.addEventListener("pointercancel", this.onUp, { passive: true });
+    window.addEventListener("lostpointercapture", this.onUp, { passive: true });
     // Safety net: leaving the board entirely always dismisses the tooltip.
     this.host.addEventListener("pointerleave", this.onHostLeave, { passive: true });
     window.addEventListener("scroll", this.hide, { passive: true });
