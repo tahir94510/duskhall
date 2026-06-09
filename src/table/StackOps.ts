@@ -148,25 +148,32 @@ export function findConnectedStack(
 }
 
 /**
- * How many cards sit DIRECTLY stacked on each card — i.e. share its centre position within
- * STACK_POS_EPS. This is the true "pile" a player sees (a gathered or tidied stack of co-located
- * cards), and it is deliberately POSITIONAL rather than overlap-based: a loose-overlap test (used
- * for grab/flip/gather) wrongly merges neighbouring stacks that merely graze each other — exactly
- * the tidy layout's adjacent type-stacks and its two depth-staggered rows — which made the stack
- * count "jump" once a hand held more than one card type. Counting only cards on the SAME spot is
- * type-agnostic and exact: a mixed-type pile counts correctly, while distinct adjacent stacks each
- * keep their own count. Canonical units, so the result is identical on every device. O(n^2) in the
- * card count: cheap for a table deck, and only run on dirty render frames.
+ * For each card: how many cards sit DIRECTLY stacked on its exact spot (share its centre within
+ * STACK_POS_EPS), and whether it is COVERED by another card on that spot (one with a higher z, ties
+ * broken by id) — i.e. it is buried, not the top of its pile. Deliberately POSITIONAL rather than
+ * overlap-based: a loose-overlap test wrongly merges neighbouring stacks that merely graze each
+ * other (the tidy layout's adjacent type-stacks and its two depth-staggered rows), which made the
+ * stack count "jump" once a hand held more than one card type. `count` drives the hover info box's
+ * pile line; `covered` lets the renderer suppress the drop shadow of buried cards so a tight pile
+ * casts ONE clean shadow instead of N stacked ones smearing into a dark blob (most visible while a
+ * rotate or gather slides the cards together). Type-agnostic, canonical units (identical on every
+ * device). O(n^2) in the card count: cheap for a table deck, only run on dirty render frames.
  */
-export function coLocatedCounts(state: BoardState, eps = STACK_POS_EPS): Map<string, number> {
+export function coLocatedStacks(state: BoardState, eps = STACK_POS_EPS): Map<string, { count: number; covered: boolean }> {
   const cards = Array.from(state.cards.values());
-  const out = new Map<string, number>();
+  const out = new Map<string, { count: number; covered: boolean }>();
   for (const a of cards) {
-    let n = 0;
+    let count = 0;
+    let covered = false;
     for (const b of cards) {
-      if (Math.abs(a.x - b.x) <= eps && Math.abs(a.y - b.y) <= eps) n++;
+      if (Math.abs(a.x - b.x) <= eps && Math.abs(a.y - b.y) <= eps) {
+        count++;
+        // Another card shares this spot and sits above us (higher z, ties broken by id): we are
+        // buried. Exactly one card per pile — the topmost — ends up not covered.
+        if (b.id !== a.id && (b.z > a.z || (b.z === a.z && b.id > a.id))) covered = true;
+      }
     }
-    out.set(a.id, n);
+    out.set(a.id, { count, covered });
   }
   return out;
 }

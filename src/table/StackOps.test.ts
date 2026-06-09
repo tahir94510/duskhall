@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { BoardState, CardState } from "./types.js";
-import { findStackOverlapping, findConnectedStack, coLocatedCounts, flipStackOver, gatherStack, shuffleStack, alignRotation, rotationsDiffer, flipVisibleCardId, isTidyStack, nearestCongruentRot, setStackFace, topVisibleId, turnStackOver } from "./StackOps.js";
+import { findStackOverlapping, findConnectedStack, coLocatedStacks, flipStackOver, gatherStack, shuffleStack, alignRotation, rotationsDiffer, flipVisibleCardId, isTidyStack, nearestCongruentRot, setStackFace, topVisibleId, turnStackOver } from "./StackOps.js";
 
 // A 1000 x 1450 board so one card-width (96) maps cleanly; card is 96 x 139.2.
 const BOARD = { width: 1000, height: 1450 };
@@ -16,20 +16,20 @@ function board(cards: CardState[]): BoardState {
   return { cards: m, topZ: cards.length };
 }
 
-describe("coLocatedCounts (hover info-box stack count)", () => {
-  it("counts every card stacked on the same spot", () => {
+describe("coLocatedStacks (hover info-box count + buried-shadow flag)", () => {
+  it("counts every card stacked on the same spot, and only the top is not covered", () => {
     const st = board([card("a", 0.5, 0.5, 1), card("b", 0.5, 0.5, 2), card("c", 0.5, 0.5, 3)]);
-    const m = coLocatedCounts(st);
-    expect(m.get("a")).toBe(3);
-    expect(m.get("b")).toBe(3);
-    expect(m.get("c")).toBe(3);
+    const m = coLocatedStacks(st);
+    expect(m.get("a")).toEqual({ count: 3, covered: true });
+    expect(m.get("b")).toEqual({ count: 3, covered: true });
+    expect(m.get("c")).toEqual({ count: 3, covered: false }); // top of the pile casts the shadow
   });
 
-  it("a far-apart card is a stack of one", () => {
+  it("a far-apart card is a stack of one, never covered", () => {
     const st = board([card("a", 0.2, 0.2, 1), card("b", 0.8, 0.8, 2)]);
-    const m = coLocatedCounts(st);
-    expect(m.get("a")).toBe(1);
-    expect(m.get("b")).toBe(1);
+    const m = coLocatedStacks(st);
+    expect(m.get("a")).toEqual({ count: 1, covered: false });
+    expect(m.get("b")).toEqual({ count: 1, covered: false });
   });
 
   it("does NOT merge two neighbouring stacks that merely graze each other", () => {
@@ -39,11 +39,11 @@ describe("coLocatedCounts (hover info-box stack count)", () => {
       card("a1", 0.40, 0.5, 1), card("a2", 0.40, 0.5, 2),
       card("b1", 0.45, 0.5, 3), card("b2", 0.45, 0.5, 4)
     ]);
-    const m = coLocatedCounts(st);
-    expect(m.get("a1")).toBe(2);
-    expect(m.get("a2")).toBe(2);
-    expect(m.get("b1")).toBe(2);
-    expect(m.get("b2")).toBe(2);
+    const m = coLocatedStacks(st);
+    expect(m.get("a1")!.count).toBe(2);
+    expect(m.get("a2")).toEqual({ count: 2, covered: false }); // each stack has its own top
+    expect(m.get("b1")!.count).toBe(2);
+    expect(m.get("b2")).toEqual({ count: 2, covered: false });
   });
 
   it("counts a mixed-type pile correctly (type-agnostic)", () => {
@@ -52,10 +52,10 @@ describe("coLocatedCounts (hover info-box stack count)", () => {
       { ...card("spell", 0.5, 0.5, 2), defId: "etherStrike" },
       { ...card("servant", 0.5, 0.5, 3), defId: "runicWarden" }
     ]);
-    const m = coLocatedCounts(st);
-    expect(m.get("seal")).toBe(3);
-    expect(m.get("spell")).toBe(3);
-    expect(m.get("servant")).toBe(3);
+    const m = coLocatedStacks(st);
+    expect(m.get("seal")!.count).toBe(3);
+    expect(m.get("spell")!.count).toBe(3);
+    expect(m.get("servant")).toEqual({ count: 3, covered: false });
   });
 });
 
