@@ -46,7 +46,9 @@ export function buildTable(host: HTMLElement): BoardRefs {
   root.appendChild(zoneLayer);
   // Fixed physical order: [bottom, top, left, right]. Each div is bound to an
   // absolute seat per-viewer at runtime (see Game.refreshZones), so the local
-  // player always reads their own area at the bottom.
+  // player always reads their own area at the bottom. zone--self here is only the
+  // boot-frame default; refreshZones re-binds it to whichever physical slot the
+  // local seat currently renders in (it moves during a V camera turn).
   const seats = [
     { cls: "zone zone--self zone--bottom" },
     { cls: "zone zone--top" },

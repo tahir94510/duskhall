@@ -53,7 +53,9 @@ import { AudioEngine, type SfxName } from "../audio/Audio.js";
 import { getOrAssignName, resetName, pickNameExcluding, setName, nameKey } from "../util/names.js";
 
 const SEAT_COUNT = 4;
-const SEAT_COLORS = ["#f3efe5", "#cdc8bc", "#a09c92", "#79766f"];
+// Mirrors --seat-0..3 in tokens.css (the cursor ghosts are painted from here, the zones/labels
+// from the CSS tokens) — keep the two in step or a player's cursor and their tray drift apart.
+const SEAT_COLORS = ["#f3efe5", "#d8d3c7", "#b9b4a8", "#948f83"];
 // Temporary z-band for cards mid-animation (flip/shuffle/held). Sits above the
 // static card layer (--z-card) but below cursors (--z-cursor: 600), so an
 // animating pile floats over the table yet never covers peer cursors/header.
@@ -555,6 +557,9 @@ export class Game {
   // start before the first settles, and so input that depends on the angle is held.
   private viewRotating = false;
   private viewRotateTimer = 0;
+  // Defers the visual zone/label remap of a camera turn into the fade-out dip (see
+  // togglePerspective), so the slot swap can never flash mid-turn.
+  private viewRemapTimer = 0;
   private perspectiveBtn: HTMLButtonElement | null = null;
 
   private presencePayload(): PresencePlayer {
@@ -672,12 +677,11 @@ export class Game {
     if (next === this.viewSeat) return;
     this.viewSeat = next;
     this.applyBoardPerspective();
-    this.refreshZones();        // re-map which physical slot shows which seat (+ self highlight)
     this.reprojectCursors();    // peer ghosts follow the new angle immediately
     const reduce = typeof window.matchMedia === "function"
       && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const dur = reduce ? 0 : 320; // matches --dur-slow board transition
-    // Crossfade lives on the table root because .zones / .board__labels are SIBLINGS of
+    // Fade lives on the table root because .zones / .board__labels are SIBLINGS of
     // .board (not children), so they cannot be reached through a .board descendant rule.
     this.refs.root.classList.add("is-rotating");
     this.perspectiveBtn?.classList.add("is-busy");
@@ -686,6 +690,14 @@ export class Game {
     // the finger and pivots with the table instead of swinging away, and stays on the page. No-op
     // when nothing is held.
     this.drag?.beginViewTurnGlue();
+    // Re-map which physical slot shows which seat (+ the self highlight) at ~35% of the turn —
+    // inside the fully-transparent window of the board-view-turn dip (board.css), so the snap to
+    // the new colours/names is never visible. Purely visual: ownership, hit-testing and cursors
+    // all read viewSeat directly, so nothing depends on the DOM remap landing instantly. With
+    // reduced motion there is no dip, so the remap applies immediately instead.
+    window.clearTimeout(this.viewRemapTimer);
+    if (dur === 0) this.refreshZones();
+    else this.viewRemapTimer = window.setTimeout(() => this.refreshZones(), Math.round(dur * 0.35));
     window.clearTimeout(this.viewRotateTimer);
     this.viewRotateTimer = window.setTimeout(() => {
       this.viewRotating = false;
@@ -2914,7 +2926,9 @@ export class Game {
       for (const p of sorted) {
         const seat = resolved.has(p.id) ? resolved.get(p.id)! : -1;
         p.seat = seat;
-        p.color = seat >= 0 ? (SEAT_COLORS[seat] ?? SEAT_COLORS[0]!) : "#7a766f";
+        // Seatless visitors carry the muted ivory (--ivory-mute) instead of a seat tone,
+        // so a roster row without a seat never borrows a player's accent.
+        p.color = seat >= 0 ? (SEAT_COLORS[seat] ?? SEAT_COLORS[0]!) : "#9b968b";
         this.players.set(p.id, p);
       }
 
@@ -3887,6 +3901,10 @@ export class Game {
 
       z.style.setProperty("--seat-color", `var(--seat-${seat})`);
       z.dataset.seat = String(seat);
+      // The "your area" highlight rides on whichever PHYSICAL slot our seat currently renders
+      // in (bottom at home, elsewhere during a V camera turn), so the ivory wash always marks
+      // OUR seat — never a rival who happens to be drawn at the bottom while the view is turned.
+      z.classList.toggle("zone--self", isSelfSeat);
       z.classList.toggle("zone--empty", !isActive && !isDropped);
       z.classList.toggle("zone--active", isActive);
       z.classList.toggle("zone--dropped", isDropped);
@@ -4068,6 +4086,12 @@ export class Game {
     // exists in the new room.
     this.tooltip.hide();
     this.refs.cardsLayer.innerHTML = "";
+    // Cancel every in-flight card animation timer BEFORE the new room deals: card ids repeat
+    // across rooms (deck-seeded), so an old room's settle timer firing late would otherwise
+    // delete the NEW room's entry for the same id and let the render loop interrupt its
+    // animation mid-flight.
+    for (const handle of this.animTimers.values()) window.clearTimeout(handle);
+    this.animTimers.clear();
     this.state.cards.clear();
     this.cardEls.clear();
     this.state.topZ = 10;

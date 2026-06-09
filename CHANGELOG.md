@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.9.22: Readable seat colours, and a clean camera turn
+
+A colour and camera-turn fix pass. The card sync, canonical frame and balance numbers are
+unchanged. 273 tests green.
+
+- **Readable seat ladder.** The four seat tones (`--seat-0..3` in tokens.css) ran from ivory
+  down to a graphite (#6a665d) that fell below AA contrast on the dark table, so seat 2/3
+  names read as faded or disconnected and their 12% zone tints vanished. The ladder is
+  retuned (#f3efe5, #d8d3c7, #b9b4a8, #948f83) so the darkest step still reads clearly while
+  the four stay tellable apart; the rival-zone tint is bumped to 14% to compensate the
+  compressed ramp.
+- **Cursor colours re-synced.** SEAT_COLORS in Game.ts had drifted from the CSS seat tokens
+  (the tokens were retuned earlier without it), so a player's cursor and their tray carried
+  slightly different tones. The two now mirror each other, with a comment binding them. The
+  presence fallback colour also drops a leftover gold (#c8a45a) for the palette's muted ivory.
+- **The self highlight follows your seat.** zone--self (your area's ivory wash and readable
+  boundary) was baked onto the bottom zone div at build, so during a V camera turn the bottom
+  tray, now showing your neighbour, still glowed as "yours" while your real area was styled
+  as a rival's. refreshZones now binds zone--self to whichever physical slot your seat renders
+  in, and all of its directional styling (wash, edge mask, door catch-light) reads a per-slot
+  --edge axis so it stays correct in any slot.
+- **Directional tray lighting.** Every tray's frost wash used the bottom tray's "to top"
+  gradient, so the top and side areas were lit along the wrong axis and read brighter or
+  dimmer than each other. The wash and the door fade now follow each tray's own --edge.
+- **No colour flash on a V turn.** The zone/label remap used to apply instantly at the start
+  of the turn under a light 0.25 fade, with the zone background transition crossfading through
+  in-between colours. The fade now dips fully out, the remap is deferred into that invisible
+  window (about 35% of the turn), and zone/label transitions are suspended for the turn.
+  Reduced motion applies the remap immediately, as before.
+- **Stale animation timers cleared on room switch.** Card ids repeat across rooms, so an old
+  room's flip/shuffle settle timer firing after a hop could delete the new room's timer entry
+  for the same id. resetTable now cancels all pending card-animation timers.
+
 ## 0.9.21: Stack counter, and a rounder tidy
 
 A polish pass on the hand-area tidy plus a new at-a-glance stack count, with several

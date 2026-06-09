@@ -251,6 +251,17 @@
     "empty": "No updates yet.",
     "entries": [
       {
+        "v": "2026-06-09.2",
+        "date": "June 9, 2026",
+        "title": "Every name readable, and a cleaner camera turn",
+        "items": [
+          "Every player's name is now clearly readable. The four seat tones used to run so dark that the third and fourth seats looked faded, as if those players had disconnected; the ladder is retuned so each seat keeps its own shade and every name stays bright on the dark table.",
+          "Seat colours now match everywhere: a player's name, their hand area's tint and their cursor all carry the exact same tone, so you always know whose is whose at a glance.",
+          "Turning the view with V no longer flashes mixed-up colours. The areas and names now swap behind a clean dip and return already showing the right seats, and the 'your area' glow follows your seat around the table instead of staying glued to the bottom edge while the view is turned.",
+          "Each hand area's soft wash now runs along its own table edge; the side and top areas used to borrow the bottom area's lighting, which made some areas look brighter than others."
+        ]
+      },
+      {
         "v": "2026-06-09",
         "date": "June 9, 2026",
         "title": "Tidy your hand, and a stack counter",
