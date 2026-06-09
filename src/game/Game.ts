@@ -281,13 +281,19 @@ export class Game {
       onInfo: (id) => this.showCardInfo(id),
       onArrange: () => this.arrangeOwnZone(), // zone-wide; the tapped id only gates visibility
       canShowInfo: (id) => this.canShowCardInfo(id),
-      // Show the Arrange button ONLY when the tapped card sits in our own zone and there are at
-      // least two cards there to tidy — so it never appears on a public/centre or rival card.
+      // Show the Arrange button ONLY on a card that sits in our OWN zone, so it never appears on a
+      // public/centre or rival card. Greying when there is nothing to do is handled by isAreaTidy.
       canArrange: (id) => {
         if (!this.seated()) return false;
         const c = this.state.cards.get(id);
-        if (!c || this.cardZoneOwnerOf(c) !== this.self.seat) return false;
-        return this.ownZoneArrangeableIds().length >= 2;
+        return !!c && this.cardZoneOwnerOf(c) === this.self.seat;
+      },
+      // Grey the Arrange button out (like Gather on a tidy pile) when there is nothing to tidy:
+      // fewer than two of our own cards, or the area is already laid out. It re-enables the moment
+      // the layout is disturbed or a new card enters, so a tidy is never offered as a dead tap.
+      isAreaTidy: () => {
+        const ids = this.ownZoneArrangeableIds();
+        return ids.length < 2 || this.ownZoneArranged(ids);
       },
       stackFor: (id) => findConnectedStack(this.state, this.boardSize, id, this.cardMetrics()),
       isPileTidy: (id) => this.pileIsTidy(id)
@@ -2404,18 +2410,31 @@ export class Game {
   // stays SILENT for peers (own-zone seed → emitPublicSfx no-ops) while the motion rides the
   // normal patch + CSS transition, so everyone SEES the cards slide (blurred, as our area always
   // is) but only WE hear it. Already-tidy → silent no-op, so mashing the key never spams.
+  // True when our own hand area is already laid out exactly as arrangeOwnZone would leave it (or has
+  // nothing to lay out): fewer than two of our own cards, or every card already on its target spot
+  // and angle. Used so a repeat press/tap is a silent no-op instead of replaying the sound and
+  // motion. It compares the LIVE cards against a freshly computed layout, so any disturbance — a
+  // card nudged, a new card entering the zone, one leaving — makes the target differ and a fresh
+  // tidy is allowed again.
+  private ownZoneArranged(ids: string[]): boolean {
+    const cards = ids.map((id) => this.state.cards.get(id)).filter((c): c is CardState => !!c);
+    if (cards.length < 2) return true;
+    const opts = { uprightRot: this.viewerUprightRot(cards[0]!.rot), cardW: CARD_CANON_W, cardH: CARD_CANON_H };
+    return isZoneArranged(cards, this.self.seat as Seat, opts);
+  }
+
   private arrangeOwnZone(): void {
     if (!this.seated() || this.viewRotating) return;
     const ids = this.ownZoneArrangeableIds();
     if (ids.length < 2) return;            // a lone card is already "arranged"
     if (this.anyAnimating(ids)) return;    // don't fight an in-flight settle
+    if (this.ownZoneArranged(ids)) return; // already laid out → no sound, no patch (never spams)
     const cards = ids.map((id) => this.state.cards.get(id)).filter((c): c is CardState => !!c);
     if (cards.length < 2) return;
     const seat = this.self.seat as Seat;
     // Square to the angle that reads upright for THIS viewer's camera (same rule as gather/shuffle).
     const uprightRot = this.viewerUprightRot(cards[0]!.rot);
     const opts = { uprightRot, cardW: CARD_CANON_W, cardH: CARD_CANON_H };
-    if (isZoneArranged(cards, seat, opts)) return; // already laid out → no sound, no patch
     const targets = arrangeZone(cards, seat, opts);
     if (!targets.length) return;
     this.syncTopZ(); // lift the arranged set above the board (compacts z if it had drifted up)

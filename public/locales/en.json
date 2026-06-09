@@ -191,7 +191,7 @@
       },
       {
         "keys": "V",
-        "desc": "View the table from your left-hand neighbour's side; press again to return to your own. This changes only your own view, nothing for anyone else — handy for bringing your own area square in front of you."
+        "desc": "View the table from your left-hand neighbour's side; press again to return to your own. This changes only your own view, nothing for anyone else. It is handy for bringing your own area square in front of you."
       },
       {
         "keys": "D",
@@ -254,7 +254,7 @@
         "date": "June 9, 2026",
         "title": "Tidy your whole area in one press",
         "items": [
-          "Press D — or, on touch, long-press one of your own cards and tap Tidy your area — to lay your hidden area out as a clean deck: matching cards stacked together, sorted by type and centred, however many you are holding. It never spills into a neighbour's space.",
+          "Press D (or, on touch, long-press one of your own cards and tap Tidy your area) to lay your hidden area out as a clean deck: matching cards stacked together, sorted by type and centred, however many you are holding. It never spills into a neighbour's space.",
           "Only you hear it settle; everyone else simply sees your cards slide into place, still hidden behind their backs.",
           "Clearer help text along the way: Shortcuts now lists D next to Gather and Shuffle, and the touch action bar reads in one natural voice instead of singling out a single key."
         ]

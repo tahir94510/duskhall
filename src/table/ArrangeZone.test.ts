@@ -105,10 +105,9 @@ describe("arrangeZone: grouping & stacking", () => {
 describe("arrangeZone: centering", () => {
   it("centres the row horizontally about the zone mid-line (seat 0)", () => {
     const cards = makeCards([["timeRift", 1], ["etherStrike", 1], ["silence", 1]]);
-    const targets = arrangeZone(cards, 0, optsFor(0));
-    const xs = [...new Set(targets.map((t) => t.x))];
-    const mean = xs.reduce((s, x) => s + x, 0) / xs.length;
-    expect(mean).toBeCloseTo(0.5, 6); // symmetric about the bottom zone's centre line
+    const xs = arrangeZone(cards, 0, optsFor(0)).map((t) => t.x);
+    const extentCentre = (Math.min(...xs) + Math.max(...xs)) / 2;
+    expect(extentCentre).toBeCloseTo(0.5, 6); // the block of stacks sits centred on the mid-line
   });
 });
 
@@ -148,6 +147,79 @@ describe("arrangeZone: idempotency & determinism", () => {
   it("returns nothing for fewer than two cards", () => {
     expect(arrangeZone(makeCards([["timeRift", 1]]), 0, optsFor(0))).toEqual([]);
     expect(isZoneArranged(makeCards([["timeRift", 1]]), 0, optsFor(0))).toBe(true);
+  });
+});
+
+describe("arrangeZone: centering holds for every seat", () => {
+  // The coordinate that runs ALONG each seat's edge (the one the layout centres on u=0).
+  const alongEdge = (seat: Seat, t: { x: number; y: number }): number =>
+    (seat === 0 || seat === 1) ? t.x : t.y;
+
+  it("centres a single all-identical stack on the zone mid-line, every seat", () => {
+    for (const seat of SEATS) {
+      const targets = arrangeZone(makeCards([["etherStrike", 5]]), seat, optsFor(seat));
+      // One pile → every copy shares the centred spot.
+      for (const t of targets) expect(alongEdge(seat, t)).toBeCloseTo(0.5, 9);
+      for (const t of targets) expect(cardZoneOwner(t.x, t.y, t.rot, W, H)).toBe(seat);
+    }
+  });
+
+  it("keeps the row's extent symmetric about the mid-line for a medium hand, every seat", () => {
+    // "Centred" means the BLOCK of stacks is centred: its leftmost and rightmost stacks sit an
+    // equal distance from the zone's mid-line. (Uneven gaps between type groups can shift the
+    // centroid slightly, but the extent stays centred — what the eye reads as centred.)
+    for (const seat of SEATS) {
+      const targets = arrangeZone(makeCards(MEDIUM), seat, optsFor(seat));
+      const along = targets.map((t) => alongEdge(seat, t));
+      const extentCentre = (Math.min(...along) + Math.max(...along)) / 2;
+      expect(extentCentre).toBeCloseTo(0.5, 6);
+    }
+  });
+});
+
+describe("arrangeZone: row count tracks the stack count", () => {
+  const depthsFor = (seat: Seat, spec: Array<[string, number]>): number[] => {
+    const targets = arrangeZone(makeCards(spec), seat, optsFor(seat));
+    const depthOf = (t: { x: number; y: number }): number =>
+      seat === 0 ? 1 - t.y : seat === 1 ? t.y : seat === 2 ? t.x : 1 - t.x;
+    return [...new Set(targets.map((t) => +depthOf(t).toFixed(4)))];
+  };
+  const EIGHT: Array<[string, number]> = [
+    ["timeRift", 1], ["veilOfVoid", 1], ["crimsonMonolith", 1], ["necromancersEye", 1],
+    ["etherStrike", 1], ["shadowTheft", 1], ["ancientSight", 1], ["mindParasite", 1]
+  ];
+  const NINE: Array<[string, number]> = [...EIGHT, ["twistOfFate", 1]];
+
+  it("lays eight stacks (the threshold) in a single centred row", () => {
+    expect(depthsFor(0, EIGHT).length).toBe(1);
+  });
+
+  it("splits nine stacks (over the threshold) into two rows, still in-bounds", () => {
+    for (const seat of SEATS) {
+      expect(depthsFor(seat, NINE).length).toBe(2);
+      for (const t of arrangeZone(makeCards(NINE), seat, optsFor(seat))) {
+        expect(cardZoneOwner(t.x, t.y, t.rot, W, H)).toBe(seat);
+      }
+    }
+  });
+});
+
+describe("isZoneArranged: re-enables when the layout changes", () => {
+  it("reports tidy right after arranging, then untidy once a card is nudged or added", () => {
+    const arranged = applied(makeCards(MEDIUM), 0);
+    expect(isZoneArranged(arranged, 0, optsFor(0))).toBe(true);
+
+    // Nudge one card off its spot → no longer arranged (a fresh tidy is allowed).
+    const nudged = arranged.map((c) => ({ ...c }));
+    nudged[0]!.x += 0.05;
+    expect(isZoneArranged(nudged, 0, optsFor(0))).toBe(false);
+
+    // A new card entering the zone changes the target layout → no longer arranged.
+    const withNew: CardState[] = [
+      ...arranged.map((c) => ({ ...c })),
+      { id: "bloodAtonement-0", defId: "bloodAtonement", x: 0.5, y: 0.86, z: 99, rot: 0, faceUp: false, ownerSeat: 0, ts: 0 }
+    ];
+    expect(isZoneArranged(withNew, 0, optsFor(0))).toBe(false);
   });
 });
 

@@ -17,9 +17,6 @@ export interface SlotPos {
   ny: number;
 }
 
-const SEAL_COUNT = 4;
-const SERVANT_COUNT = 3;
-
 // The four zones are full-width EDGE BANDS, ZONE_DEPTH (0.28) deep, that meet along the two
 // board diagonals so each seat owns a TRAPEZOID: the seat's whole board edge (wide) tapering
 // to the 0.44 inner edge, with the four corners split evenly between the two seats that share
@@ -39,13 +36,8 @@ const SERVANT_COUNT = 3;
 // The corners belong to whichever of the two adjacent edges is closer (a 45deg diagonal split).
 
 interface ZoneRect {
-  // canonical normalised rect
+  // canonical normalised rect (the trapezoid's bounding band)
   x0: number; y0: number; x1: number; y1: number;
-  // orientation: which axis the row runs along (horizontal or vertical)
-  horizontal: boolean;
-  // direction: which side is "in front" (closer to the centre)
-  // For bottom seat, seals are on the inner edge (y near 0.72)
-  // For left seat, seals are on the inner edge (x near 0.28), etc.
 }
 
 // How deep each edge band reaches in from its board edge. The centre square of side
@@ -57,10 +49,10 @@ export const ZONE_DEPTH = 0.28;
 // nearestSeat (the card centre's closest board edge), and the drawn panel is clipped to the
 // matching trapezoid in zones.css. zoneRect exposes these bounding bands.
 const ZONES: Record<Seat, ZoneRect> = {
-  0: { x0: 0.0, y0: 1 - ZONE_DEPTH, x1: 1.0, y1: 1.0, horizontal: true },
-  1: { x0: 0.0, y0: 0.0, x1: 1.0, y1: ZONE_DEPTH, horizontal: true },
-  2: { x0: 0.0, y0: 0.0, x1: ZONE_DEPTH, y1: 1.0, horizontal: false },
-  3: { x0: 1 - ZONE_DEPTH, y0: 0.0, x1: 1.0, y1: 1.0, horizontal: false }
+  0: { x0: 0.0, y0: 1 - ZONE_DEPTH, x1: 1.0, y1: 1.0 },
+  1: { x0: 0.0, y0: 0.0, x1: 1.0, y1: ZONE_DEPTH },
+  2: { x0: 0.0, y0: 0.0, x1: ZONE_DEPTH, y1: 1.0 },
+  3: { x0: 1 - ZONE_DEPTH, y0: 0.0, x1: 1.0, y1: 1.0 }
 };
 
 // Perpendicular distance from a canonical point to a seat's own board edge.
@@ -247,74 +239,8 @@ export function cardZoneOverlap(nx: number, ny: number, rot: number, cardWFrac: 
   return best;
 }
 
-const ROW_GAP = 0.018; // gap between the two rows (Seal row vs Servant row), in canonical units
-
-// v3.2: per-seat slot grid is intentionally empty. The visual was cluttering
-// the table and the snap-to-slot magnetism is now reserved for the central
-// Deck / Discard dock (see Game.applySnap). Returning [] for every seat keeps
-// every consumer working without rendering slot outlines.
+// Per-seat slot grid is intentionally empty: the visual cluttered the table and the
+// snap-to-slot magnetism is no longer used (cards are placed by hand, the deck/discard
+// dock aside). Returning [] for every seat keeps the board renderer working without
+// drawing slot outlines, while SlotPos stays as the renderer's element shape.
 export function slotsForSeat(_seat: Seat): SlotPos[] { return []; }
-
-// Legacy implementation preserved below for the day per-seat slots come back.
-// @ts-expect-error kept intentionally unused for future revival
-function _legacySlotsForSeat(seat: Seat): SlotPos[] {
-  const rect = ZONES[seat];
-  const out: SlotPos[] = [];
-  const longSide = rect.horizontal ? rect.x1 - rect.x0 : rect.y1 - rect.y0;
-  const shortSide = rect.horizontal ? rect.y1 - rect.y0 : rect.x1 - rect.x0;
-  const halfRow = (shortSide - ROW_GAP) / 2;
-
-  for (let k = 0; k < 2; k++) {
-    const kind: SlotKind = k === 0 ? "seal" : "servant";
-    const count = kind === "seal" ? SEAL_COUNT : SERVANT_COUNT;
-    for (let i = 0; i < count; i++) {
-      // even spacing along the long side
-      const t = (i + 0.5) / count;
-      const longPos = rect.horizontal ? rect.x0 + t * longSide : rect.y0 + t * longSide;
-      // distance from inner edge: seal row sits closer to centre
-      const innerOffset = k * (halfRow + ROW_GAP) + halfRow / 2;
-      let nx = 0;
-      let ny = 0;
-      if (rect.horizontal) {
-        nx = longPos;
-        // seat 0: inner edge is y0 (top of bottom zone). Move "outward" (away from centre) by innerOffset.
-        // seat 1: inner edge is y1 (bottom of top zone). Move outward (upward) by innerOffset.
-        if (seat === 0) ny = rect.y0 + innerOffset;
-        else ny = rect.y1 - innerOffset;
-      } else {
-        ny = longPos;
-        if (seat === 2) nx = rect.x0 + innerOffset;
-        else nx = rect.x1 - innerOffset;
-      }
-      out.push({ seat, kind, index: i, nx, ny });
-    }
-  }
-  return out;
-}
-
-export function allSlots(): SlotPos[] {
-  const out: SlotPos[] = [];
-  for (const s of [0, 1, 2, 3] as Seat[]) out.push(...slotsForSeat(s));
-  return out;
-}
-
-/**
- * Snap radius in canonical-space squared distance. Card-w as fraction of board ≈ 0.08,
- * so snap kicks in within ~0.4 card-widths (~3 % of board) and breaks at ~0.6 card-widths.
- */
-const SNAP_RADIUS = 0.035;
-const BREAK_RADIUS = 0.06;
-
-export function findNearestSlot(slots: SlotPos[], nx: number, ny: number, ownerSeat: Seat | null): { slot: SlotPos; dist: number } | null {
-  let best: { slot: SlotPos; dist: number } | null = null;
-  for (const s of slots) {
-    if (ownerSeat !== null && s.seat !== ownerSeat) continue;
-    const dx = s.nx - nx;
-    const dy = s.ny - ny;
-    const d = Math.hypot(dx, dy);
-    if (!best || d < best.dist) best = { slot: s, dist: d };
-  }
-  return best;
-}
-
-export { SNAP_RADIUS, BREAK_RADIUS };

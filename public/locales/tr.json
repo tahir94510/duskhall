@@ -191,7 +191,7 @@
       },
       {
         "keys": "V",
-        "desc": "Masayı solundaki oyuncunun açısından görürsün; tekrar basınca kendi açına dönersin. Bu yalnızca senin görünümünü değiştirir, başka kimse için bir şey değişmez — kendi alanını tam karşına almak için elverişlidir."
+        "desc": "Masayı solundaki oyuncunun açısından görürsün; tekrar basınca kendi açına dönersin. Bu yalnızca senin görünümünü değiştirir, başka kimse için bir şey değişmez. Kendi alanını tam karşına almak için elverişlidir."
       },
       {
         "keys": "D",
@@ -254,7 +254,7 @@
         "date": "9 Haziran 2026",
         "title": "Tüm alanını tek dokunuşla derle topla",
         "items": [
-          "D'ye bas — ya da dokunmatikte kendi kartlarından birine uzun basıp Alanını düzenle'ye dokun — gizli alanın tertemiz bir deste gibi dizilsin: aynı kartlar üst üste, türüne göre sıralı ve ortalanmış, kaç tane olursa olsun. Komşunun alanına asla taşmaz.",
+          "D'ye bas (ya da dokunmatikte kendi kartlarından birine uzun basıp Alanını düzenle'ye dokun); gizli alanın tertemiz bir deste gibi dizilsin: aynı kartlar üst üste, türüne göre sıralı ve ortalanmış, kaç tane olursa olsun. Komşunun alanına asla taşmaz.",
           "Yerleşme sesini yalnız sen duyarsın; diğerleri kartlarının yerine süzülüşünü görür, içerik yine arkalarının ardında gizli kalır.",
           "Yol boyunca daha açık yardım metni: Kısayollar artık D'yi Topla ve Karıştır'ın yanında gösteriyor, dokunmatik eylem çubuğu da tek bir tuşu öne çıkarmak yerine tek ve doğal bir dille okunuyor."
         ]

@@ -3,24 +3,30 @@
 ## 0.9.20: Tidy your whole area in one press
 
 A hand-area quality-of-life pass plus a text polish. The card sync, canonical frame and balance
-numbers are unchanged. 263 tests green.
+numbers are unchanged. 268 tests green.
 
-- **Lay your area out as a deck with D.** Press D — or, on touch, long-press one of your own cards
-  and tap "Tidy your area" — and every card in your hidden area settles into a clean, grouped
-  layout: matching cards stacked into one pile, piles sorted by type (Seals, Spells, Interventions,
-  Servants) and centred, fanning tighter and splitting into two rows only as the count grows. It is
-  computed in the shared canonical frame from the fixed card footprint, so it is identical on every
-  screen and never spills past your trapezoid into a neighbour's space.
+- **Lay your area out as a deck with D.** Press D (or, on touch, long-press one of your own cards
+  and tap "Tidy your area") and every card in your hidden area settles into a clean, grouped layout:
+  matching cards stacked into one pile, piles sorted by type (Seals, Spells, Interventions, Servants)
+  and centred, fanning tighter and splitting into two rows only as the count grows. It is computed in
+  the shared canonical frame from the fixed card footprint, so it is identical on every screen and
+  never spills past your trapezoid into a neighbour's space.
 - **Yours to hear, everyone's to see.** Like every other in-area action, only you hear the tidy
   settle; the other seats just watch your cards slide into place, still hidden behind their backs,
-  in real time. It only ever moves your own cards — a card a rival is dragging across your corner is
-  never swept into the layout — and re-pressing on an already-tidy area does nothing.
+  in real time. It only ever moves your own cards. A card a rival is dragging across your corner is
+  never swept into the layout.
+- **No empty taps or repeats.** Re-pressing on an area that is already laid out does nothing: no
+  sound, no motion. The touch button greys out, just like Gather on a tidy pile, whenever there is
+  nothing to do, and lights up again the moment the layout is disturbed or a new card enters.
 - **The touch action bar carries it too.** Long-press one of your own cards and the action bar now
   offers a Tidy button, shown only on your own hand-area cards so it never appears on a shared or
   rival card.
 - **Clearer help text.** Shortcuts now lists D next to Gather and Shuffle, and the touch note reads
   in one natural voice instead of awkwardly singling out the V key. The rulebook's control tips and
   the "What's new" entry describe the new tidy action in both English and Turkish.
+- **Tidy-up under the hood.** Removed long-dead slot-grid scaffolding that no longer had any callers
+  (`allSlots`, `findNearestSlot`, the legacy per-seat slot layout and the unused snap-radius
+  constants), and replaced the stray long dashes that had crept into the player-facing text.
 
 ## 0.9.19: Camera turns that hold up, and consistent info bubbles
 

@@ -43,10 +43,14 @@ export interface ContextHooks {
   /** True when the card currently reads face-up to the local player, so the
    *  Info button can disable itself on a face-down card (nothing to show). */
   canShowInfo(id: string): boolean;
-  /** True when the tapped card is in the local player's OWN zone and there are at least two cards
-   *  there to tidy. Gates the Arrange button's VISIBILITY (it is hidden, not just disabled, on any
-   *  other card), so the action only ever offers itself on your own hand area. */
+  /** True when the tapped card is in the local player's OWN zone. Gates the Arrange button's
+   *  VISIBILITY (it is hidden on any other card), so the action only ever offers itself on your
+   *  own hand area. */
   canArrange(id: string): boolean;
+  /** True when there is nothing to tidy (fewer than two of your own cards, or the area is already
+   *  laid out), so the Arrange button greys out like Gather on an already-collected pile instead
+   *  of sitting there as a dead tap. Re-enables once the layout is disturbed or a card is added. */
+  isAreaTidy(id: string): boolean;
 }
 
 export class ContextBar {
@@ -114,11 +118,15 @@ export class ContextBar {
     setDisabled("mix", !isStack);
     // Info only makes sense for a card that currently reads face-up.
     setDisabled("info", !this.hooks.canShowInfo(id));
-    // Arrange is HIDDEN (not merely disabled) unless this is one of our own hand-area cards: it
-    // is a whole-zone action, so showing it on a public or rival card would be misleading. Hiding
-    // it also keeps the common tap (public/centre card) at the original six buttons.
+    // Arrange is HIDDEN on any card outside our own zone (a whole-zone action would be misleading
+    // on a public or rival card), and on our own cards it greys out when there is nothing to tidy —
+    // so it is never a dead tap and the common tap on a shared card keeps the original six buttons.
     const arrangeBtn = this.el.querySelector<HTMLButtonElement>(`[data-act="arrange"]`);
-    if (arrangeBtn) arrangeBtn.style.display = this.hooks.canArrange(id) ? "" : "none";
+    if (arrangeBtn) {
+      const showArrange = this.hooks.canArrange(id);
+      arrangeBtn.style.display = showArrange ? "" : "none";
+      if (showArrange) setDisabled("arrange", this.hooks.isAreaTidy(id));
+    }
   }
 
   show(id: string, clientX: number, clientY: number): void {
