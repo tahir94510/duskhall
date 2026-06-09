@@ -77,7 +77,8 @@
     "discard": "Discard",
     "tableau": "Seals · Servants",
     "youSuffix": " (you)",
-    "droppedSuffix": " (away)"
+    "droppedSuffix": " (away)",
+    "pile": "{count} cards in this pile"
   },
   "glossary": {
     "etherResonance": {

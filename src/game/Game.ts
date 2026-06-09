@@ -2211,6 +2211,9 @@ export class Game {
       const c = this.state.cards.get(id);
       const el = this.cardEls.get(id);
       if (!c || !el) continue;
+      // 2.5D turn lift for the duration of the turn (a shadow/light depth read in card.css). Cleared
+      // at settle below. Hidden pile members are opacity:0, so only the visible card shows the lift.
+      el.classList.add("is-flipping");
       el.classList.toggle("is-faceup", !c.faceUp);
     }
     // Pin the visible card one slot above the WHOLE pile's animation band so it is
@@ -2232,7 +2235,11 @@ export class Game {
       }
     });
     window.setTimeout(() => {
-      for (const id of ids) this.cardEls.get(id)?.classList.remove("is-flip-quiet");
+      for (const id of ids) {
+        const el = this.cardEls.get(id);
+        el?.classList.remove("is-flip-quiet");
+        el?.classList.remove("is-flipping");
+      }
       // Let the render loop settle the faces/z on its next tick. We must NOT paint
       // synchronously here: is-animating has just cleared, so a synchronous pass would
       // toggle is-concealed and let `.is-concealed:not(.is-animating)` snap the card's
@@ -2279,6 +2286,8 @@ export class Game {
       const el = this.cardEls.get(id);
       if (!el) continue;
       el.classList.add("is-flip-staging");
+      // 2.5D turn lift for the duration of the turn (see card.css); cleared at settle below.
+      el.classList.add("is-flipping");
       el.classList.toggle("is-faceup", !targetFaceUp);
       probe = el;
     }
@@ -2302,7 +2311,11 @@ export class Game {
       }
     });
     window.setTimeout(() => {
-      for (const id of ids) this.cardEls.get(id)?.classList.remove("is-flip-quiet");
+      for (const id of ids) {
+        const el = this.cardEls.get(id);
+        el?.classList.remove("is-flip-quiet");
+        el?.classList.remove("is-flipping");
+      }
       this.requestRender();
     }, durMs);
   }
@@ -3717,9 +3730,12 @@ export class Game {
       // "locked" outline on top of our own grab/flip. The settle frame restores it.
       if (!busy) el.classList.toggle("is-locked", this.isLockedByOther(c.id));
       else el.classList.remove("is-locked");
-      // Stack-count badge: show this card's pile size in its top-left corner when it is covering at
-      // least one other card (below >= 1). Cleared otherwise. The number is the WHOLE pile count, so
-      // the top of a deck reads the deck size at a glance.
+      // Stack-count badge: show how many cards sit AT-OR-BELOW this card (this card + the cards
+      // under it = below + 1) in its top-left corner, whenever it is covering at least one other
+      // (below >= 1). Cleared otherwise. So the TOP of a pile reads the full pile size, while a
+      // fanned-out lower card reads only its own sub-count rather than repeating the whole total.
+      // The same count is stashed on the element (data-stack-count) for the hover tooltip's pile
+      // line; it is removed when there is no stack so a stale value can never leak.
       let badge = this.countEls.get(c.id);
       if (!badge) {
         const q = el.querySelector<HTMLElement>(".card__count");
@@ -3728,11 +3744,14 @@ export class Game {
       if (badge) {
         const info = piles.get(c.id);
         if (info && info.below >= 1) {
-          const txt = String(info.size);
+          const n = info.below + 1;
+          const txt = String(n);
           if (badge.textContent !== txt) badge.textContent = txt;
+          if (el.dataset.stackCount !== txt) el.dataset.stackCount = txt;
           if (!el.classList.contains("has-stack")) el.classList.add("has-stack");
-        } else if (el.classList.contains("has-stack")) {
-          el.classList.remove("has-stack");
+        } else {
+          if (el.dataset.stackCount) delete el.dataset.stackCount;
+          if (el.classList.contains("has-stack")) el.classList.remove("has-stack");
         }
       }
     }

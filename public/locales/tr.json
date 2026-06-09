@@ -77,7 +77,8 @@
     "discard": "Çöplük",
     "tableau": "Mühürler · Hizmetkârlar",
     "youSuffix": " (sen)",
-    "droppedSuffix": " (uzakta)"
+    "droppedSuffix": " (uzakta)",
+    "pile": "Bu yığında {count} kart"
   },
   "glossary": {
     "etherResonance": {
