@@ -20,35 +20,30 @@
   will-change: transform;
 }
 
-/* Stack-count badge: the number of cards in this card's pile, in the top-left corner, shown only
-   when the card covers at least one other (.has-stack, set by the render loop). It sits OUTSIDE
-   .card__inner so it never flips with the face nor blurs with a concealed back. Everything scales
-   from --card-w, so it stays a tidy, legible size on every screen from a small phone to a 4K TV. */
+/* Stack-count badge: how many cards sit AT-OR-BELOW this card in its pile (this card + the cards
+   under it), painted in the top-left corner and shown only when the card covers at least one other
+   (.has-stack, set by the render loop). Deliberately FRAMELESS — no box, background, or border —
+   just a clean numeral held legible over any artwork by a tight dark halo (matching the tooltip
+   text), so it reads as a quiet tag rather than a heavy pill. It sits OUTSIDE .card__inner so it
+   never flips with the face nor blurs with a concealed back, which is what keeps it visible on a
+   face-down card and on a rival's concealed card (under the blur). The size scales from --card-w
+   so it stays tidy and consistent on every screen from a small phone to a 4K TV. */
 .card__count {
   position: absolute;
-  top: calc(var(--card-w) * 0.06);
-  left: calc(var(--card-w) * 0.06);
+  top: calc(var(--card-w) * 0.05);
+  left: calc(var(--card-w) * 0.07);
   display: none;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  min-width: 1.5em;
-  height: 1.5em;
-  padding: 0 0.36em;
-  font-size: clamp(8px, calc(var(--card-w) * 0.26), 28px);
-  font-weight: 700;
   line-height: 1;
+  font-size: clamp(7px, calc(var(--card-w) * 0.2), 17px);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: #fff;
-  background: rgba(10, 12, 16, 0.84);
-  border: 1px solid rgba(255, 255, 255, 0.38);
-  border-radius: 999px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+  /* No box — a tight dark halo (not a soft blur) keeps the glyph edges crisp over any card art. */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.9), 0 0 1px rgba(0, 0, 0, 0.9);
   pointer-events: none;
   z-index: 3;
 }
-.card.has-stack .card__count { display: inline-flex; }
+.card.has-stack .card__count { display: block; }
 
 /* The drop shadow lives on a FLAT underlay (::before), a sibling of the 3D
    .card__inner rather than its ancestor. A box-shadow on the perspective root
@@ -130,9 +125,22 @@
    stays on the card. On the public table the full lift still applies. */
 .card.is-held.is-held-lead.is-own-zone::before { box-shadow: var(--shadow-card-raised); }
 
+/* 2.5D turn lift: while a card is mid-flip it rises a touch toward the light and its cast swells
+   to the same 'raised' depth as a hover/hold, then settles — so the turn reads as the card lifting
+   off the felt to flip and laying back down, not a flat in-plane spin. The lift rides the flat
+   shadow underlay (::before, a sibling of the 3D inner with no inline transform) plus a faint
+   brighten, so it NEVER touches the rotateY geometry and so can't fight the staged turn or its
+   peer replay. The class is added/removed by runFlipVisual / runSameFaceTurn around the turn. */
+.card.is-flipping { filter: brightness(1.03); }
+.card.is-flipping::before {
+  box-shadow: var(--shadow-card-raised);
+  transform: scale(1.03) translateY(-1px);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card::before,
   .card:hover::before,
+  .card.is-flipping::before,
   .card.is-held.is-held-lead::before { transform: none; }
 }
 

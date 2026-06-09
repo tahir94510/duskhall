@@ -156,7 +156,7 @@ export class Tooltip {
   // Returns false if the id is unknown. Shared by the live card tooltip and the rulebook's
   // clickable card names, so both read identically. Starts the panel hidden so the first
   // frame after innerHTML can never leak in at a stale position.
-  private renderDef(defId: string): boolean {
+  private renderDef(defId: string, stackCount?: number): boolean {
     const def = CARD_DEFS.find((d) => d.id === defId);
     if (!def) return false;
     this.el.classList.remove("is-visible");
@@ -166,12 +166,21 @@ export class Tooltip {
     const artUrl = this.artUrls?.get(def.id);
     this.el.classList.toggle("has-art", !!artUrl);
     this.el.style.backgroundImage = artUrl ? `url('${encodeURI(artUrl)}')` : "";
+    // When this card sits on a pile (≥2 at-or-below it), add a divider and a quiet line stating
+    // how many cards are in it. Omitted entirely for a single, un-stacked card, so a lone card's
+    // panel reads exactly as before. The count is the card's own at-or-below total (top card =
+    // whole pile), passed in from the render loop via the card element's data-stack-count.
+    const pileLine = stackCount && stackCount >= 2
+      ? `
+      <div class="tooltip__divider" aria-hidden="true"></div>
+      <div class="tooltip__stack">${escapeHtml(t("table.pile", { count: stackCount }))}</div>`
+      : "";
     this.el.innerHTML = `
       <div class="tooltip__scrim" aria-hidden="true"></div>
       <div class="tooltip__title">${escapeHtml(t(`cards.${def.id}.name`))}</div>
       <div class="tooltip__type">${escapeHtml(t(`categories.${def.category}.name`))}</div>
       <div class="tooltip__body">${escapeHtml(t(`cards.${def.id}.effect`))}</div>
-      <div class="tooltip__flavor">${escapeHtml(t(`cards.${def.id}.flavor`))}</div>
+      <div class="tooltip__flavor">${escapeHtml(t(`cards.${def.id}.flavor`))}</div>${pileLine}
     `;
     return true;
   }
@@ -184,7 +193,9 @@ export class Tooltip {
     if (!data.cardEl.classList.contains("is-faceup")) return;
     if (data.cardEl.classList.contains("is-concealed") || data.cardEl.classList.contains("is-held")) return;
     if (data.cardEl.classList.contains("is-animating")) return;
-    if (!this.renderDef(data.defId)) return;
+    // Pile size for the count line: the card's own at-or-below total, stashed by the render loop.
+    const stackCount = Number(data.cardEl.dataset.stackCount) || 0;
+    if (!this.renderDef(data.defId, stackCount)) return;
     this.active = data;
     this.position();
     void this.el.offsetWidth; // force layout commit so opacity transition starts from the right place
