@@ -30,7 +30,7 @@ import { seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, shouldCl
 import {
   findStackOverlapping,
   findConnectedStack,
-  coLocatedCounts,
+  coLocatedStacks,
   gatherStack,
   shuffleStack,
   turnStackOver,
@@ -2029,6 +2029,12 @@ export class Game {
     // transition (interpolating rot*90deg) travels that same short arc.
     gatherStack(this.state, stack, anchor.x, anchor.y, anchor.rot + dir);
     for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
+    // Lift the pile into the animation band for the turn and write its transforms now, so it rotates
+    // and squares up as one elevated block (the render loop skips transforms while is-animating).
+    // This keeps the :hover brighten/shadow (gated :not(.is-animating)) from flickering as the cards
+    // sweep under the cursor, and pairs with the buried-shadow rule so the turn never darkens.
+    this.elevateDuringAnim(stack, STACK_TIDY_MS);
+    this.animateCardTransforms(stack);
     this.scheduleFlush();
     void this.audio.play("flip");
   }
@@ -2403,6 +2409,11 @@ export class Game {
     this.syncTopZ(); // lift the gathered pile above every board card
     gatherStack(this.state, stack, seed.x, seed.y, upright);
     for (const cid of stack) { this.claimIfInOwnZone(cid); this.dirtyIds.add(cid); }
+    // Slide the pile together as one elevated block (same as rotate/tidy): is-animating lifts it for
+    // the slide so hover can't flicker over the moving cards, and animateCardTransforms drives the
+    // CSS transition the render loop would otherwise own. Cleared automatically after the slide.
+    this.elevateDuringAnim(stack, STACK_TIDY_MS);
+    this.animateCardTransforms(stack);
     this.scheduleFlush();
     void this.audio.play("gather");
     this.emitPublicSfx(id, "gather"); // peers hear a public gather; a hidden-zone one stays silent
@@ -3671,9 +3682,11 @@ export class Game {
 
   private renderAllCards(): void {
     const { w: cardW, h: cardH } = this.cardMetrics();
-    // How many cards are stacked on each card's exact spot, for the hover info box's pile line.
-    // Positional (co-located), so neighbouring tidy stacks never bleed into one another's count.
-    const stackCounts = coLocatedCounts(this.state);
+    // Per-card co-located stack info: how many cards share its exact spot (for the hover info box's
+    // pile line) and whether it is buried under another there (so only the TOP card of a pile casts a
+    // drop shadow — N stacked shadows otherwise smear into a dark blob, worst while a rotate/gather
+    // slides the pile together). Positional, so neighbouring tidy stacks never bleed into one count.
+    const stacks = coLocatedStacks(this.state);
     for (const c of this.state.cards.values()) {
       const el = this.cardEls.get(c.id);
       if (!el) continue;
@@ -3738,13 +3751,17 @@ export class Game {
       // Pile size for the hover info box: how many cards sit stacked on this card's spot. Stashed on
       // the element (data-stack-count) for the tooltip to read; removed when this is not a stack of
       // two or more, so a single card never shows a pile line and no stale value can leak.
-      const n = stackCounts.get(c.id) ?? 1;
+      const info = stacks.get(c.id);
+      const n = info?.count ?? 1;
       if (n >= 2) {
         const txt = String(n);
         if (el.dataset.stackCount !== txt) el.dataset.stackCount = txt;
       } else if (el.dataset.stackCount) {
         delete el.dataset.stackCount;
       }
+      // Only the TOP card of a co-located pile keeps its drop shadow; buried cards drop theirs so a
+      // tight stack casts one clean shadow rather than a smear of N overlapping ones.
+      el.classList.toggle("is-buried", !!info?.covered);
     }
     // Keep the open action bar's button states (Gather/Arrange/Info…) live with the board, so a card
     // settling into your area or a new card arriving re-enables the right buttons without a reopen.

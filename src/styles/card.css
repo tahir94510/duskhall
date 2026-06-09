@@ -100,6 +100,15 @@
    stays on the card. On the public table the full lift still applies. */
 .card.is-held.is-held-lead.is-own-zone::before { box-shadow: var(--shadow-card-raised); }
 
+/* Buried card: another card sits directly on top of it on the same spot, so it casts NO drop shadow.
+   Only the top of a co-located pile carries a shadow — otherwise N stacked semi-transparent casts
+   pile into a dark smear (worst while a rotate or gather slides the pile together, and on a thick
+   resting deck). Placed after the held rules so a buried card in a held pile also stays shadowless;
+   the lifted lead card is the top, never buried, so it keeps its float shadow. The ::before keeps
+   its box-shadow transition, so a card's shadow fades out as it tucks under and back in as it lifts
+   clear — no pop. */
+.card.is-buried::before { box-shadow: none; }
+
 /* 2.5D turn lift: while a card is mid-flip it rises a touch toward the light and its cast swells
    to the same 'raised' depth as a hover/hold, then settles — so the turn reads as the card lifting
    off the felt to flip and laying back down, not a flat in-plane spin. The lift rides the flat

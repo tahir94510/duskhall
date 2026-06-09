@@ -25,6 +25,13 @@ unchanged. 273 tests green.
 - **Tidy never touches a rival's card.** A card that belongs to an occupied rival's zone is left
   alone by your tidy even when its tip overhangs your corner — ownership is live and position-based,
   so a rival's overhanging card is theirs, never pulled into your layout.
+- **No more shadow smear under a pile.** Only the top card of a stack on one spot casts a drop
+  shadow now; the cards buried under it drop theirs. A thick deck reads as one clean shadow instead
+  of dozens of overlapping casts darkening the felt — most visible while a rotate or gather slid the
+  pile together and the area suddenly went dark.
+- **Rotate and gather lift as they move.** Turning or gathering a pile now lifts it into the motion
+  layer for the slide, exactly like flip and tidy, so the cards travel as one clean block and the
+  hover highlight can't flicker across them as they sweep under the cursor.
 - **Tidy turns every card face-up.** Pressing D (or the touch Tidy button) now also turns each
   card in your area to face you, so a laid-out hand reads at once instead of leaving some cards
   backs-up.
