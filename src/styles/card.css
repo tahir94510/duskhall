@@ -20,31 +20,6 @@
   will-change: transform;
 }
 
-/* Stack-count badge: how many cards sit AT-OR-BELOW this card in its pile (this card + the cards
-   under it), painted in the top-left corner and shown only when the card covers at least one other
-   (.has-stack, set by the render loop). Deliberately FRAMELESS — no box, background, or border —
-   just a clean numeral held legible over any artwork by a tight dark halo (matching the tooltip
-   text), so it reads as a quiet tag rather than a heavy pill. It sits OUTSIDE .card__inner so it
-   never flips with the face nor blurs with a concealed back, which is what keeps it visible on a
-   face-down card and on a rival's concealed card (under the blur). The size scales from --card-w
-   so it stays tidy and consistent on every screen from a small phone to a 4K TV. */
-.card__count {
-  position: absolute;
-  top: calc(var(--card-w) * 0.05);
-  left: calc(var(--card-w) * 0.07);
-  display: none;
-  line-height: 1;
-  font-size: clamp(7px, calc(var(--card-w) * 0.2), 17px);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: #fff;
-  /* No box — a tight dark halo (not a soft blur) keeps the glyph edges crisp over any card art. */
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.9), 0 0 1px rgba(0, 0, 0, 0.9);
-  pointer-events: none;
-  z-index: 3;
-}
-.card.has-stack .card__count { display: block; }
-
 /* The drop shadow lives on a FLAT underlay (::before), a sibling of the 3D
    .card__inner rather than its ancestor. A box-shadow on the perspective root
    flickers/vanishes while a preserve-3d child rotates (a known compositor

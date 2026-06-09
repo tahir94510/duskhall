@@ -256,7 +256,7 @@
         "title": "Tidy your hand, and a stack counter",
         "items": [
           "Press D (or, on touch, long-press one of your own cards and tap Tidy your area) to lay your hidden area out as a clean deck: matching cards stacked together, sorted by type, centred, and turned face-up so you can read them at a glance. It works for any number of cards, even a single one, and never spills into a neighbour's space.",
-          "New: a small number now sits in the top-left corner of any card that is covering another, so you can see at a glance how many cards are in a pile (your hand, the deck, a discard).",
+          "New: hover a stacked card (or tap Info on touch) and its info now shows, on its own line, how many cards are in that pile — counting any mix of card types correctly. A single card shows no line.",
           "Only you hear your area settle; everyone else simply sees your cards slide into place, still hidden behind their backs.",
           "Polish: dropping a deck now sounds just like dropping a single card, the play area no longer carries an extra frame on small phones, and Shortcuts lists D next to Gather and Shuffle."
         ]

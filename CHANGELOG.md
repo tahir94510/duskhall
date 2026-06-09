@@ -2,15 +2,23 @@
 
 ## 0.9.21: Stack counter, and a rounder tidy
 
-A polish pass on the hand-area tidy plus a new at-a-glance stack counter, with several
+A polish pass on the hand-area tidy plus a new at-a-glance stack count, with several
 small-device and sound fixes. The card sync, canonical frame and balance numbers are
-unchanged. 271 tests green.
+unchanged. 273 tests green.
 
-- **A count on every stack.** Any card that is covering at least one other now shows a small
-  number in its top-left corner: the size of that pile. So you read the deck count, a discard
-  pile, or how many copies sit in one of your tidied stacks at a glance. The badge sits outside
-  the card's flip layer, so it never blurs with a concealed back and is never flipped with the
-  face, and it scales from the card size to stay legible on every screen.
+- **A count on every stack, in the card info.** Hovering a stacked card (or tapping Info on
+  touch) now shows how many cards are in that pile on its own line, under a divider, in the card
+  info box. The count is purely positional — it counts only the cards genuinely stacked on the
+  same spot — so a pile of mixed card types reads correctly and two neighbouring stacks never
+  bleed into one number. A single, un-stacked card shows no line.
+- **A 2.5D turn.** Flipping a card (or a pile) now lifts it a touch toward the light as it
+  turns and settles it back, so the flip reads as a real card turning over rather than a flat
+  spin. It rides the shadow/light only, so the turn stays flawless in both directions and for
+  online onlookers, and respects reduced-motion.
+- **Tidy re-enables when a stack is disturbed.** Pressing D (or the Tidy button) lays your area
+  out as a clean, ordered deck; it now also notices when the stacking ORDER is broken — e.g. a
+  card flipped after a tidy jumps to the front — and re-enables so a fresh press restores the
+  order, then greys out again once everything (position, facing AND order) is back in place.
 - **Tidy turns every card face-up.** Pressing D (or the touch Tidy button) now also turns each
   card in your area to face you, so a laid-out hand reads at once instead of leaving some cards
   backs-up.

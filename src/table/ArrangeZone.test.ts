@@ -237,6 +237,18 @@ describe("isZoneArranged: re-enables when the layout changes", () => {
     ];
     expect(isZoneArranged(withNew, 0, optsFor(0))).toBe(false);
   });
+
+  it("re-enables when a card is bumped to the front (z-order broken) even though positions stay put", () => {
+    const arranged = applied(makeCards(MEDIUM), 0);
+    expect(isZoneArranged(arranged, 0, optsFor(0))).toBe(true);
+    // Lift a bottom card (a seal) to the very top WITHOUT moving it — exactly what a flip does, which
+    // jumps a card to the front of the area. Positions are still tidy, but the deck-like stacking is
+    // now broken, so a fresh tidy must be allowed (D / the Tidy button re-enables).
+    const maxZ = Math.max(...arranged.map((c) => c.z));
+    const bumped = arranged.map((c) => ({ ...c }));
+    bumped.find((c) => c.id === "timeRift-0")!.z = maxZ + 1;
+    expect(isZoneArranged(bumped, 0, optsFor(0))).toBe(false);
+  });
 });
 
 describe("arrangeZone: two-row fallback for many stacks", () => {

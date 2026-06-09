@@ -30,7 +30,7 @@ import { seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, shouldCl
 import {
   findStackOverlapping,
   findConnectedStack,
-  pileSizes,
+  coLocatedCounts,
   gatherStack,
   shuffleStack,
   turnStackOver,
@@ -178,8 +178,6 @@ export class Game {
   // Cache of card id -> DOM node so the render loop never has to query the DOM
   // (a per-card querySelector every frame was the main idle-CPU jank source).
   private cardEls = new Map<string, HTMLDivElement>();
-  // Lazily-cached stack-count badge element per card (cards are never destroyed, so no cleanup).
-  private countEls = new Map<string, HTMLElement>();
   // Dirty flag: the RAF loop only re-renders when something actually changed,
   // so a still table costs nothing instead of churning every frame.
   private renderRequested = true;
@@ -3666,9 +3664,9 @@ export class Game {
 
   private renderAllCards(): void {
     const { w: cardW, h: cardH } = this.cardMetrics();
-    // Per-card pile membership for the stack-count badge: how big each card's pile is and how many
-    // cards sit below it. Computed once per frame from the live positions (cheap union-find).
-    const piles = pileSizes(this.state, this.boardSize, { w: cardW, h: cardH });
+    // How many cards are stacked on each card's exact spot, for the hover info box's pile line.
+    // Positional (co-located), so neighbouring tidy stacks never bleed into one another's count.
+    const stackCounts = coLocatedCounts(this.state);
     for (const c of this.state.cards.values()) {
       const el = this.cardEls.get(c.id);
       if (!el) continue;
@@ -3730,29 +3728,15 @@ export class Game {
       // "locked" outline on top of our own grab/flip. The settle frame restores it.
       if (!busy) el.classList.toggle("is-locked", this.isLockedByOther(c.id));
       else el.classList.remove("is-locked");
-      // Stack-count badge: show how many cards sit AT-OR-BELOW this card (this card + the cards
-      // under it = below + 1) in its top-left corner, whenever it is covering at least one other
-      // (below >= 1). Cleared otherwise. So the TOP of a pile reads the full pile size, while a
-      // fanned-out lower card reads only its own sub-count rather than repeating the whole total.
-      // The same count is stashed on the element (data-stack-count) for the hover tooltip's pile
-      // line; it is removed when there is no stack so a stale value can never leak.
-      let badge = this.countEls.get(c.id);
-      if (!badge) {
-        const q = el.querySelector<HTMLElement>(".card__count");
-        if (q) { badge = q; this.countEls.set(c.id, q); }
-      }
-      if (badge) {
-        const info = piles.get(c.id);
-        if (info && info.below >= 1) {
-          const n = info.below + 1;
-          const txt = String(n);
-          if (badge.textContent !== txt) badge.textContent = txt;
-          if (el.dataset.stackCount !== txt) el.dataset.stackCount = txt;
-          if (!el.classList.contains("has-stack")) el.classList.add("has-stack");
-        } else {
-          if (el.dataset.stackCount) delete el.dataset.stackCount;
-          if (el.classList.contains("has-stack")) el.classList.remove("has-stack");
-        }
+      // Pile size for the hover info box: how many cards sit stacked on this card's spot. Stashed on
+      // the element (data-stack-count) for the tooltip to read; removed when this is not a stack of
+      // two or more, so a single card never shows a pile line and no stale value can leak.
+      const n = stackCounts.get(c.id) ?? 1;
+      if (n >= 2) {
+        const txt = String(n);
+        if (el.dataset.stackCount !== txt) el.dataset.stackCount = txt;
+      } else if (el.dataset.stackCount) {
+        delete el.dataset.stackCount;
       }
     }
   }
