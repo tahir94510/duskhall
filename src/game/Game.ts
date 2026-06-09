@@ -2403,7 +2403,15 @@ export class Game {
   // Collect every card back into a freshly shuffled face-down pile on the Deck
   // slot. A one-click "new game" without leaving the room.
   private resetDeck(): void {
-    const order = seededDeck(`${this.room}:${Date.now()}`);
+    // Fresh, fully-random shuffle every time. The seed mixes the room, the clock AND a crypto
+    // nonce, so two resets even in the SAME millisecond never repeat (Date.now() alone could).
+    // Determinism across peers is NOT needed here: the reset broadcasts a full snapshot, so every
+    // peer takes the exact resulting order rather than recomputing it.
+    const c = (globalThis as { crypto?: Crypto }).crypto;
+    const nonce = c && typeof c.getRandomValues === "function"
+      ? c.getRandomValues(new Uint32Array(1))[0]!
+      : Math.floor(Math.random() * 0x100000000);
+    const order = seededDeck(`${this.room}:${Date.now()}:${nonce}`);
     const baseNx = this.deckBaseNx();
     const baseNy = DECK_NY;
     // Stamp every card with one fresh winning clock + our id so the reset
