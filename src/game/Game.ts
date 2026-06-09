@@ -2021,7 +2021,6 @@ export class Game {
     // A card you just turned comes to the top and stays there (see flipCard).
     this.bringCardsToTop([id]);
     this.dirtyIds.add(id);
-    this.stampCards([id]); // claim the write now so a reconcile in the flush gap can't revert the turn
     this.scheduleFlush();
     void this.audio.play("flip");
   }
@@ -2053,7 +2052,6 @@ export class Game {
     // sweep under the cursor, and pairs with the buried-shadow rule so the turn never darkens.
     this.elevateDuringAnim(stack, STACK_TIDY_MS);
     this.animateCardTransforms(stack);
-    this.stampCards(stack); // claim the write now so a reconcile in the flush gap can't revert the turn
     this.scheduleFlush();
     void this.audio.play("flip");
   }
@@ -2439,7 +2437,6 @@ export class Game {
     // CSS transition the render loop would otherwise own. Cleared automatically after the slide.
     this.elevateDuringAnim(stack, STACK_TIDY_MS);
     this.animateCardTransforms(stack);
-    this.stampCards(stack); // claim the write now so a reconcile in the flush gap can't revert the gather
     this.scheduleFlush();
     void this.audio.play("gather");
     this.emitPublicSfx(id, "gather"); // peers hear a public gather; a hidden-zone one stays silent
@@ -2670,6 +2667,12 @@ export class Game {
     // Every local mutation routes through here, so this is the single place
     // that guarantees the layout gets repainted on the next frame.
     this.requestRender();
+    // Claim authorship of every currently-dirty card RIGHT NOW (fresh ts/by), not 40ms later when
+    // flush() finally runs. Otherwise a just-moved/rotated/gathered/tidied card keeps its OLD ts
+    // during that gap, so a host reconcile or peer patch carrying the same stored ts could win the
+    // equal-ts tiebreak and snap it back mid-animation. flush() re-stamps higher right before it
+    // broadcasts, so peers still receive exactly one authoritative write per card.
+    this.stampCards(Array.from(this.dirtyIds));
     if (this.flushHandle) return;
     this.flushHandle = window.setTimeout(() => {
       this.flushHandle = 0;
