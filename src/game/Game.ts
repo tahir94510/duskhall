@@ -12,6 +12,7 @@ import { openFeedbackModal, hasFeedbackChannel } from "../ui/FeedbackModal.js";
 import { openLegalModal } from "../ui/LegalModal.js";
 import { openUpdatesModal, latestUpdateVersion } from "../ui/UpdatesModal.js";
 import { openLeaveConfirm } from "../ui/LeaveConfirm.js";
+import { openRoomFull } from "../ui/RoomFullModal.js";
 import { openConfirm } from "../ui/ConfirmModal.js";
 import { openJoinByCode } from "../ui/JoinByCodeModal.js";
 import { openShortcutsModal } from "../ui/ShortcutsPanel.js";
@@ -183,7 +184,6 @@ export class Game {
   // tooltip on touch (where info is reached only via the ContextBar Info button).
   private lastPointerType = "mouse";
   private boardSize = { width: 1, height: 1 };
-  private spectator = false;
   private cursorHiddenSent = false;
   // True only during a deliberate room change (leave / hop): the periodic snapshot
   // save is suspended so it can't re-create the storage we just cleared for the room
@@ -208,6 +208,12 @@ export class Game {
   // "unreachable" so a player sees that they may be out of sync with the others; cleared the
   // instant realtime is back.
   private realtimeDown = false;
+  // Grace timer before a dropped connection is SURFACED. Supabase Realtime briefly flaps on a
+  // page refresh (online → a transient CHANNEL_ERROR/CLOSED → reconnect); without this debounce
+  // that momentary blip popped a scary "connection lost" on every refresh. We only show the
+  // warning if the link is still down after the grace, so a genuine sustained drop still reports.
+  private connLostTimer = 0;
+  private static readonly CONN_LOST_GRACE_MS = 2500;
   // Persistent seat ownership keyed by seat index. A claim survives a network
   // drop (the seat shows as "dropped"/dimmed) and is only cleared by an explicit
   // `left` broadcast, so a disconnected player never loses their seat or cards.
@@ -281,7 +287,7 @@ export class Game {
       onSupport: () => { void this.audio.play("ui-open"); openSupportModal(this.modal, { patreonUrl: this.config.patreonUrl, buyMeACoffeeUrl: this.config.buyMeACoffeeUrl, supportUrl: this.config.supportUrl }); },
       onFeedback: () => { void this.audio.play("ui-open"); openFeedbackModal(this.modal, this.config.issuesUrl, this.config.feedbackUrl); },
       onLegal: () => { void this.audio.play("ui-open"); openLegalModal(this.modal); },
-      onReset: () => { if (this.spectator) return; void this.audio.play("ui-open"); this.handleReset(); },
+      onReset: () => { if (!this.seated()) return; void this.audio.play("ui-open"); this.handleReset(); },
       onResetDeck: () => { if (!this.isHost()) return; this.confirmResetDeck(); },
       onOpenGuide: () => { if (!this.isHost()) return; void this.audio.play("ui-open"); this.openGuide(); },
       onSettings: () => { void this.audio.play("ui-open"); openSettingsModal(this.modal, this.audio, () => this.onLocale()); },
@@ -343,11 +349,10 @@ export class Game {
     this.selfJoinedAt = this.resolveSeniority(ident);
     this.selfConnAt = Date.now();
     // Entry always WANTS a seat: publish a concrete seat (a dropped player's own seat
-    // if known, else seat 0 = "any") so resolveSeating can seat us if one is free. We
-    // only become a spectator when the room is genuinely full (applyPresence then sets
-    // it and re-publishes -1). Never carry a stale spectator state into the first sync.
+    // if known, else seat 0 = "any") so resolveSeating can seat us if one is free. If the
+    // room turns out to be full, applyPresence shows the "room is full" gate and re-publishes
+    // -1. We start seated-by-intent so the first frame is interactive until proven full.
     this.self.seat = this.self.seat >= 0 ? this.self.seat : 0;
-    this.spectator = false;
     this.claimSeat = this.self.seat;
     this.viewSeat = this.self.seat as Seat; // camera starts at our own seat
     this.self.color = SEAT_COLORS[this.self.seat] ?? SEAT_COLORS[0]!;
@@ -501,10 +506,13 @@ export class Game {
     }
   }
 
-  // The seat we publish/claim to peers. -1 while spectating; otherwise our held
-  // seat. Distinct from self.seat, which is the perspective seat (a spectator
-  // still watches from seat 0's POV but must not claim it).
+  // The seat we publish/claim to peers. -1 when we got no seat (a full room — we are at the
+  // room-full gate); otherwise our held seat. Distinct from self.seat, the perspective seat: a
+  // seatless visitor still views from seat 0's POV but must not claim it. `seated()` reads this.
   private claimSeat = 0;
+  // True while the "room is full" gate is up (a visitor who got no seat). Stops the gate
+  // re-opening every presence sync; cleared once we hold a seat again.
+  private roomFullShown = false;
 
   // The seat whose ANGLE the board is currently drawn from — i.e. which corner sits
   // at the bottom of our screen. Normally equals self.seat, but the V key / mobile
@@ -734,7 +742,7 @@ export class Game {
 
   private bindHooks(): void {
     const hooks: DragHooks = {
-      canInteract: () => !this.spectator && !this.viewRotating,
+      canInteract: () => this.seated() && !this.viewRotating,
       // True while a V camera-turn animation is in flight. The drag stays alive but freezes
       // (the held pile rides the rotating table), then re-anchors to the finger when it ends.
       isViewTurning: () => this.viewRotating,
@@ -836,9 +844,9 @@ export class Game {
       showContextBar: (id, x, y) => this.contextBar.show(id, x, y),
       hideContextBar: () => this.contextBar.hide(),
       emitCursor: (x, y) => {
-        // Spectators are silent observers, never broadcast a cursor (that was
-        // the source of the seat-0 "impostor" ghost).
-        if (this.spectator) return;
+        // Not seated (a full-room visitor at the gate) means no cursor broadcast — a seatless
+        // client must never paint a "seat-0 impostor" ghost on peers.
+        if (!this.seated()) return;
         // The cursor listener is on window (so empty board space, no longer
         // captured by the cards layer, still shares the pointer). While a modal is
         // open the player is in a menu, not at the table: send the off-board
@@ -968,7 +976,7 @@ export class Game {
   // A seat owned by someone OTHER than us (and we are seated). Used to decide
   // whether dropping/interacting in that area is blocked as a rival's private zone.
   private seatIsRival(seat: number): boolean {
-    return seatIsRival(this.occupancy(), seat, this.self.seat, this.spectator);
+    return seatIsRival(this.occupancy(), seat, this.claimSeat);
   }
 
   // The seat whose private zone currently holds this card, or null (public). Delegates to the
@@ -986,17 +994,17 @@ export class Game {
   // card's LIVE position (the same 10% overlap rule), not a stale flag, so dragging a
   // card out of a zone reveals it, and dragging it in conceals it, as it crosses the
   // threshold. A zone whose owner left/kicked (or was never occupied) is NOT rival-owned,
-  // so the card is public. Spectators treat every owned-zone card as rival-owned.
+  // so the card is public. A not-seated viewer treats every owned-zone card as rival-owned.
   private isRivalOwnedCard(id: string): boolean {
     const c = this.state.cards.get(id);
     if (!c) return false;
-    return cardIsRivalOwned(this.occupancy(), this.cardZoneOwnerOf(c), this.self.seat, this.spectator);
+    return cardIsRivalOwned(this.occupancy(), this.cardZoneOwnerOf(c), this.claimSeat);
   }
 
   // Is this card resting in the LOCAL player's own hand area? Used purely for the
-  // "under glass" sheen, so it never affects a spectator (no own seat) or a rival's card.
+  // "under glass" sheen, so it never affects a not-seated viewer (no own seat) or a rival's card.
   private isOwnZoneCard(id: string): boolean {
-    if (this.spectator || this.self.seat < 0) return false;
+    if (!this.seated()) return false;
     const c = this.state.cards.get(id);
     if (!c) return false;
     return this.cardZoneOwnerOf(c) === this.self.seat;
@@ -1006,7 +1014,7 @@ export class Game {
   // We broadcast ONLY when the seed card is NOT inside our own hidden zone: a private
   // action stays silent for everyone else (the actor has already played it locally).
   // Gating on the ACTOR's true position is race-free — a receiver-side position check
-  // could misfire before the move's own patch lands. Spectators own no zone, so their
+  // could misfire before the move's own patch lands. A not-seated viewer owns no zone, so their
   // (public) actions always carry. (Flip/shuffle convey sound via their anim hint.)
   private emitPublicSfx(seedId: string, kind: SfxMsg["kind"]): void {
     if (this.isOwnZoneCard(seedId)) return;
@@ -1023,10 +1031,10 @@ export class Game {
   // own zone. Mirrors drag-drop ownership (DragController.setOwnerSeat) so that
   // flipping / rotating / gathering / shuffling a card in our area also makes it
   // ours — not only dragging it in. Uses the CANONICAL zone test so it is correct
-  // for every seat and board rotation. Returns true if ownership changed. A
-  // spectator owns no seat; a card already ours or a rival's is left alone.
+  // for every seat and board rotation. Returns true if ownership changed. A not-seated
+  // viewer owns no seat; a card already ours or a rival's is left alone.
   private claimIfInOwnZone(id: string): boolean {
-    if (this.spectator || this.self.seat < 0) return false;
+    if (!this.seated()) return false;
     const c = this.state.cards.get(id);
     if (!c || c.ownerSeat === this.self.seat) return false;
     // Never steal a rival's still-private card (guarded elsewhere too).
@@ -1159,11 +1167,10 @@ export class Game {
       }
       if (this.modal.isOpen()) return;
       const k = e.key.toLowerCase();
-      // V turns the local camera a quarter (see togglePerspective). Allowed even while
-      // spectating — it is a view-only aid that changes nothing for anyone else — so it
-      // sits BEFORE the spectator guard below. preventDefault stops any stray page action.
+      // V turns the local camera a quarter (see togglePerspective): a view-only aid, so it sits
+      // BEFORE the seated guard. preventDefault stops any stray page action.
       if (k === "v") { e.preventDefault(); this.togglePerspective(); return; }
-      if (this.spectator) return;
+      if (!this.seated()) return;
       if (this.viewRotating) return; // mid camera-turn: the cursor→card mapping is in flux
       // Desktop convenience: G gathers, M shuffles the stack under the cursor.
       // Both are multi-card actions, so a single card under the cursor triggers
@@ -1192,7 +1199,7 @@ export class Game {
     // identically, no "first three work then it breaks" inconsistency.
     window.addEventListener("wheel", (e) => {
       if (this.modal.isOpen()) return;
-      if (this.spectator) return;
+      if (!this.seated()) return;
       if (this.viewRotating) return; // mid camera-turn: pointer↔canonical is in flux
       if (this.drag && this.drag.isActive()) return;
       const pt = this.lastPointer;
@@ -1263,7 +1270,7 @@ export class Game {
         // Hidden: remember when, and push the cursor off-board so peers stop showing a
         // frozen ghost; it reappears on the next pointer move when we return.
         this.hiddenAt = Date.now();
-        if (!this.spectator) this.bus.sendCursor({ id: this.self.id, x: CURSOR_OFFBOARD, y: CURSOR_OFFBOARD, seat: this.claimSeat });
+        if (this.seated()) this.bus.sendCursor({ id: this.self.id, x: CURSOR_OFFBOARD, y: CURSOR_OFFBOARD, seat: this.claimSeat });
         return;
       }
       const awayMs = this.hiddenAt ? Date.now() - this.hiddenAt : 0;
@@ -1459,7 +1466,7 @@ export class Game {
   }
   private writeSeat(): void {
     try {
-      if (this.spectator) sessionStorage.removeItem(SS_SEAT_PREFIX + this.room);
+      if (!this.seated()) sessionStorage.removeItem(SS_SEAT_PREFIX + this.room);
       else sessionStorage.setItem(SS_SEAT_PREFIX + this.room, String(this.self.seat));
     } catch {}
     this.writeIdentity();
@@ -1565,11 +1572,10 @@ export class Game {
 
   private writeIdentity(): void {
     try {
-      // Spectators hold no seat to reclaim, so we don't pin one for them. joinedAt is
+      // A seatless visitor (claimSeat -1) has no seat to reclaim, so we persist -1. joinedAt is
       // our STABLE seniority (never bumped here); ts is the last-active touch that
       // gates seniority recovery, refreshed on every write (incl. the periodic save).
-      const seat = this.spectator ? -1 : this.self.seat;
-      const ident: RoomIdentity = { id: this.self.id, name: this.self.name, seat, joinedAt: this.selfJoinedAt, ts: Date.now() };
+      const ident: RoomIdentity = { id: this.self.id, name: this.self.name, seat: this.claimSeat, joinedAt: this.selfJoinedAt, ts: Date.now() };
       localStorage.setItem(this.identKey(this.room), JSON.stringify(ident));
     } catch {}
   }
@@ -1579,10 +1585,10 @@ export class Game {
   private confirmResetDeck(): void {
     // Any SEATED player may reset the shared deck (it is a collaborative table —
     // like shuffle, which is also open to everyone) — the confirmation dialog is the
-    // safety against an accidental reset. Only spectators (no seat, no deck to reset)
-    // are barred. (Previously host-only, which left every other player tapping a
+    // safety against an accidental reset. Only a not-seated viewer (no seat, no deck to
+    // reset) is barred. (Previously host-only, which left every other player tapping a
     // dead button: the confirm modal never opened for them.)
-    if (this.spectator) return;
+    if (!this.seated()) return;
     void this.audio.play("ui-open");
     openConfirm(this.modal, {
       title: t("resetDeckConfirm.title"),
@@ -1626,15 +1632,14 @@ export class Game {
     }
     // Suppress host-only guide controls (Start/close/restart) until the roster is
     // authoritative, so a joining client never flashes them before it is demoted.
-    return { state: this.guide, seats, selfSeat: this.claimSeat, spectator: this.spectator, isHost: this.rosterReady && this.isHost() };
+    return { state: this.guide, seats, selfSeat: this.claimSeat, isHost: this.rosterReady && this.isHost() };
   }
 
-  /** Apply every role-dependent piece of UI (host controls, spectator mode, guide panel)
-   *  from the current settled state. Routed through one method so it can be re-applied the
-   *  moment the roster becomes authoritative (resolveFirstSync) without duplicating logic,
-   *  and so host-only affordances stay gated on `rosterReady` everywhere. */
+  /** Apply every role-dependent piece of UI (host controls, guide panel) from the current
+   *  settled state. Routed through one method so it can be re-applied the moment the roster
+   *  becomes authoritative (resolveFirstSync) without duplicating logic, and so host-only
+   *  affordances stay gated on `rosterReady` everywhere. */
   private applyRoleUI(): void {
-    this.header.setSpectatorMode(this.spectator);
     this.header.setHostMode(this.rosterReady && this.isHost());
     // First time we settle as this room's host, pick the guide's initial open/closed state.
     this.seedGuideOpenIfHost();
@@ -1747,7 +1752,7 @@ export class Game {
    *  v > 0), so a restored walkthrough or a state the table is already sharing is never stomped.
    *  Gated on rosterReady so a joining client (briefly seat-0 host) never seeds wrongly. */
   private seedGuideOpenIfHost(): void {
-    if (!this.rosterReady || this.guideSeeded || this.spectator || !this.isHost()) return;
+    if (!this.rosterReady || this.guideSeeded || !this.isHost()) return;
     this.guideSeeded = true;
     if (this.guide.v !== 0) return; // a peer/host/restore already established the guide state
     this.applyGuideLocal(setGuideOpenState(this.guide, true), true);
@@ -1757,7 +1762,7 @@ export class Game {
    *  it directly (the gate checks setup-host vs turn-player); a non-host sends an
    *  advance intent that the host validates. */
   private onGuideAdvance(): void {
-    if (this.spectator) return;
+    if (!this.seated()) return;
     if (this.isHost()) {
       this.applyGuideLocal(advanceGuide(this.guide, this.claimSeat, this.guideSeatedSeats(), true), true);
     } else {
@@ -2644,7 +2649,7 @@ export class Game {
       const presentIds = new Set(sorted.map((q) => q.id));
       // Pure, tested seat resolution: dedupes one seat per id (kills the away-ghost
       // duplicate on return), reclaims a returning player's own free seat, never
-      // seats a tombstoned (kicked/left) id, and never auto-seats a pure spectator.
+      // seats a tombstoned (kicked/left) id, and never auto-seats a client that isn't asking.
       const byId = new Map(sorted.map((p) => [p.id, p]));
       const claimList: SeatClaimEntry[] = [...this.seatClaims].map(([seat, c]) => ({ seat, id: c.id }));
       const seating = resolveSeating(
@@ -2677,13 +2682,11 @@ export class Game {
 
       // 3) Publish the roster with resolved seats for labels/colours.
       this.players.clear();
-      let spectatorCount = 0;
       for (const p of sorted) {
         const seat = resolved.has(p.id) ? resolved.get(p.id)! : -1;
         p.seat = seat;
         p.color = seat >= 0 ? (SEAT_COLORS[seat] ?? SEAT_COLORS[0]!) : "#7a766f";
         this.players.set(p.id, p);
-        if (seat < 0) spectatorCount++;
       }
 
       // Track host transfer: when the role moves, remember the OUTGOING host briefly so
@@ -2713,11 +2716,9 @@ export class Game {
       this.ensureUniqueName(sorted);
 
       const mySeat = resolved.has(this.self.id) ? resolved.get(this.self.id)! : -1;
-      const wasSpectator = this.spectator;
       const prevClaim = this.claimSeat;
-      this.spectator = mySeat < 0;
-      this.claimSeat = mySeat; // -1 while spectating
-      const perspectiveSeat = mySeat < 0 ? 0 : mySeat; // spectators watch from seat 0
+      this.claimSeat = mySeat; // -1 if the room was full and we got no seat
+      const perspectiveSeat = mySeat < 0 ? 0 : mySeat; // a seatless visitor keeps seat 0's angle (the table sits behind the room-full gate anyway)
       const claimChanged = this.claimSeat !== prevClaim;
       if (perspectiveSeat !== this.self.seat) {
         this.self.seat = perspectiveSeat;
@@ -2728,38 +2729,37 @@ export class Game {
         this.applyBoardPerspective();
       } else if (claimChanged) {
         // The perspective-seat NUMBER is unchanged but our actual claim changed — e.g. a
-        // spectator (forced to seat 0's view) who had turned the camera is now seated at
+        // seatless visitor (forced to seat 0's view) who had turned the camera is now seated at
         // seat 0. Snap home so a turned view never persists past a seating change. Gated on
         // claimChanged (a rare seating event), so a deliberate turn during play is untouched.
         this.viewSeat = perspectiveSeat as Seat;
         this.applyBoardPerspective();
       }
       // Re-publish ONLY when our resolved claim changed (e.g. we were bumped to a
-      // different seat or became/ceased to be a spectator). Publishing every
-      // sync would re-track presence and spin a feedback loop.
+      // different seat or lost our seat to a full room). Publishing every sync would
+      // re-track presence and spin a feedback loop.
       if (this.claimSeat !== prevClaim) {
         this.bus.updateMe(this.presencePayload());
         this.writeSeat();
       }
-      if (this.spectator && !wasSpectator) toast(t("ui.roomFull"));
-
-      this.header.setSpectators(spectatorCount);
-      // Apply the role-dependent UI (host controls, guide, spectator mode) through one
-      // gate so it is suppressed until the roster is authoritative (no host-control flash).
+      // Room full: we could not get a seat. Open the "room is full" gate (once) so the visitor
+      // can start their own room. If we DO hold a seat, dismiss any leftover gate.
+      if (mySeat < 0) this.enterRoomFullGate(); else this.exitRoomFullGate();
+      // Apply the role-dependent UI (host controls, guide) through one gate so it is
+      // suppressed until the roster is authoritative (no host-control flash).
       this.applyRoleUI();
       if (this.debug) {
         this.debug.peers = this.activeSeats.size;
         this.debug.seat = this.claimSeat;
-        this.debug.spectator = this.spectator;
       }
 
       // Remove ghost cursors for players who are no longer present, so a
       // reconnecting peer never leaves a stale duplicate (e.g. two "P2").
       // (presentIds was computed above for seat reservation.)
       for (const [id, el] of this.cursorEls) {
-        // Remove a ghost when the peer is gone OR has become a spectator (seat < 0): a spectator
-        // stops sending cursor frames, so without this their last ghost would freeze on the board
-        // forever (it is still "present", just seatless).
+        // Remove a ghost when the peer is gone OR is seatless (seat < 0): a seatless client (a
+        // visitor at the full-room gate) stops sending cursor frames, so without this its last
+        // ghost would freeze on the board forever (it is still "present", just seatless).
         const seatNow = this.players.get(id)?.seat ?? -1;
         if (!presentIds.has(id) || seatNow < 0) {
           el.remove();
@@ -2876,7 +2876,7 @@ export class Game {
     // here: it was being fed this.lastRoster (a stale snapshot), which — with the
     // leaver already pruned from this.players — re-evaluated against an old roster
     // and flipped still-active players to "away". The next real presence sync
-    // (debounced) re-seats correctly; a spectator taking the freed seat one sync
+    // (debounced) re-seats correctly; a returning client taking the freed seat one sync
     // later is a fine trade for never showing a false "everyone is away".
     this.manageAwayTimers();
     this.refreshZones();
@@ -2963,6 +2963,9 @@ export class Game {
       // peer answers it (see respondToHello), which also recovers state after a
       // dropped channel.
       if (s === "online") {
+        // A (re)connect settled within the grace, so cancel any pending "connection lost" warning:
+        // a brief refresh/initial-sync flap never surfaces as an error.
+        if (this.connLostTimer) { window.clearTimeout(this.connLostTimer); this.connLostTimer = 0; }
         // On a genuine RECONNECT (not the first connect), stamp a fresh connAt and
         // re-publish, so peers who tombstoned us after the away grace see a newer
         // connAt and clear it — we reappear at once instead of staying hidden until
@@ -2970,7 +2973,9 @@ export class Game {
         if (this.hasBeenOnline) {
           this.selfConnAt = Date.now();
           this.bus.updateMe(this.presencePayload());
-          toast(t("ui.connRestored"));
+          // Only reassure "back online" if we actually told the player it dropped — otherwise a
+          // silent flap would announce a recovery from a loss they never saw.
+          if (this.realtimeDown) toast(t("ui.connRestored"));
         }
         this.hasBeenOnline = true;
         // Cross-device sync is back: clear the "unreachable" hint on rival seats.
@@ -2985,13 +2990,19 @@ export class Game {
         this.lastCursors.clear();
         // Locks held by departed peers clear; they re-broadcast on reconnect.
         if (this.heldByOther.size) { this.heldByOther.clear(); this.requestRender(); }
-        // A genuine drop (we were online): tell the player live sync is down, and reflect it
-        // on the rival seats so their areas read as "unreachable" until we reconnect. Never
-        // fires on the initial offline/solo state, and never claims to be "connecting".
-        if (this.hasBeenOnline && !this.realtimeDown) {
-          this.realtimeDown = true;
-          this.refreshZones();
-          toast(t("ui.connLost"));
+        // A genuine drop (we were online): tell the player live sync is down, and reflect it on the
+        // rival seats as "unreachable" — but only AFTER a short grace, so a transient flap on
+        // refresh/initial sync that recovers right away never surfaces a "connection lost". Never
+        // fires on the initial offline/solo state (hasBeenOnline gates it). If online returns
+        // first, the timer above is cancelled.
+        if (this.hasBeenOnline && !this.realtimeDown && !this.connLostTimer) {
+          this.connLostTimer = window.setTimeout(() => {
+            this.connLostTimer = 0;
+            // Reaching here means we never went back online during the grace (online clears it).
+            this.realtimeDown = true;
+            this.refreshZones();
+            toast(t("ui.connLost"));
+          }, Game.CONN_LOST_GRACE_MS);
         }
       }
     });
@@ -3001,7 +3012,7 @@ export class Game {
   // player OTHER than the asker), so a join/reconnect pulls one snapshot instead
   // of an N-peer storm, and the asker never answers itself.
   private respondToHello(askerId: string): void {
-    if (this.spectator) return;
+    if (!this.seated()) return;
     // The HOST re-broadcasts the authoritative guide state immediately on any sync request,
     // so a joiner converges to the EXACT current state (open/closed, step, first player) at
     // once instead of waiting up to the ~2s reconcile. Sent BEFORE the snapshot below, and the
@@ -3010,7 +3021,7 @@ export class Game {
     // the host has since CLOSED still converges (the periodic reconcile skips a closed guide).
     if (this.isHost()) this.broadcastGuideState();
     const others = Array.from(this.players.values()).filter((p) => p.id !== askerId && p.seat >= 0);
-    if (!others.length) return; // asker is alone (or only spectators present)
+    if (!others.length) return; // asker is alone (or only seatless visitors present)
     // Prefer the HOST as the responder: its seat claims / removed[] are the authoritative away
     // picture, so a joiner converges to the exact roster at once instead of learning possibly
     // stale claims from a non-host peer (which would only self-heal a reconcile later — a window
@@ -3038,7 +3049,7 @@ export class Game {
     }
     // Our own presence may not be in `players` yet on the very first paint; include
     // self when seated so isHost() is correct immediately.
-    if (!this.spectator && this.claimSeat >= 0 && !active.some((c) => c.id === this.self.id)) {
+    if (this.claimSeat >= 0 && !active.some((c) => c.id === this.self.id)) {
       active.push({ id: this.self.id, joinedAt: this.selfJoinedAt, seat: this.claimSeat });
     }
     // Host is the senior currently-ACTIVE player. An away host (dropped, not exited) yields
@@ -3052,7 +3063,12 @@ export class Game {
     return hostId(this.hostCandidates());
   }
   private isHost(): boolean {
-    return isHost(this.self.id, this.hostCandidates(), this.spectator);
+    return isHost(this.self.id, this.hostCandidates());
+  }
+  /** True when we hold a real seat (0-3). A seatless client (a visitor at the full-room gate,
+   *  claimSeat -1) cannot interact, claim ownership, broadcast a cursor, or host. */
+  private seated(): boolean {
+    return this.claimSeat >= 0;
   }
 
   // True if `id` is the host now OR was the host within the last few seconds (a
@@ -3205,7 +3221,7 @@ export class Game {
   private heldRefresh = 0;
   private myHeldIds: string[] = [];
   private broadcastHold(ids: string[], release: boolean): void {
-    if (this.spectator) return;
+    if (!this.seated()) return;
     if (release) {
       window.clearInterval(this.heldRefresh);
       this.heldRefresh = 0;
@@ -3235,7 +3251,7 @@ export class Game {
   // drag's cards early). Locking uses the same myHeldIds/heldByOther machinery as a
   // drag, so applyPatch leaves the actor's pile untouched while it animates too.
   private lockPileForAnim(stack: string[], totalMs: number): void {
-    if (this.spectator || stack.length < 2) return;
+    if (!this.seated() || stack.length < 2) return;
     if (this.myHeldIds.length) return; // a drag hold is active — don't clobber it
     this.broadcastHold(stack, false);
     const ids = stack.slice();
@@ -3396,7 +3412,7 @@ export class Game {
   // presence roster, leaving no one to answer the first request).
   private nudgeForSnapshotIfNeeded(peerCount: number): void {
     window.clearTimeout(this.syncNudgeTimer);
-    if (this.gotSnapshot || this.spectator || peerCount <= 1) { this.syncNudges = 0; return; }
+    if (this.gotSnapshot || !this.seated() || peerCount <= 1) { this.syncNudges = 0; return; }
     if (this.syncNudges >= 6) return;
     this.syncNudgeTimer = window.setTimeout(() => {
       if (this.gotSnapshot) return;
@@ -3411,8 +3427,8 @@ export class Game {
     // Trust the authoritative seat from presence, not the seat in the cursor
     // packet (which can lag a reseat and produce a duplicate "P2" label).
     const seat = this.players.get(c.id)?.seat ?? c.seat;
-    // A seated peer is required to draw a ghost; spectators (seat < 0) are
-    // silent and any stray spectator cursor is ignored.
+    // A seated peer is required to draw a ghost; a seatless client (seat < 0) is
+    // silent and any stray seatless cursor is ignored.
     if (seat < 0) {
       const stale = this.cursorEls.get(c.id);
       if (stale) stale.style.display = "none";
@@ -3438,7 +3454,7 @@ export class Game {
     // own private area. The sender hides its own ghost when inside its zone, and
     // this covers the reciprocal — a peer's pointer that, in our rotated view,
     // falls over our private zone would otherwise reveal where we're hovering.
-    if (!this.spectator && this.pointInZone(this.self.seat, px, py)) {
+    if (this.seated() && this.pointInZone(this.self.seat, px, py)) {
       el.style.display = "none";
       return;
     }
@@ -3472,7 +3488,7 @@ export class Game {
   // accepts it where its own copy is older — it can never clobber a newer local
   // or remote edit, and held cards are skipped. Sent as a patch (NOT a snapshot,
   // which would apply wholesale and could revert fresh edits). Guards keep it
-  // inert when alone, backgrounded, spectating, or not the host; sendPatch is
+  // inert when alone, backgrounded, seatless, or not the host; sendPatch is
   // itself a no-op while offline, so the timer can run for the whole session.
   private reconcileTimer = 0;
   private startReconcile(): void {
@@ -3486,11 +3502,11 @@ export class Game {
   // missed the one-shot `left` converge AT ONCE — the departed host stops showing as "away"
   // and nobody lingers — instead of waiting up to a full reconcile period.
   private sendReconcileNow(): void {
-    if (document.hidden || this.spectator) return;
+    if (document.hidden || !this.seated()) return;
     // Gate on the TOTAL roster, not just seated/active players: a host with one
-    // active seat but a spectator (or an away peer) still needs to broadcast the
+    // active seat but a seatless visitor (or an away peer) still needs to broadcast the
     // authoritative removed[] so a peer that missed a one-shot kick/left converges.
-    // Using activeSeats here let a kicked player linger forever on a spectator that
+    // Using activeSeats here let a kicked player linger forever on a seatless client that
     // dropped the kick packet, since the reconcile that would heal it went silent.
     if (this.players.size <= 1 || !this.isHost()) return;
     this.patchVersion++;
@@ -3540,7 +3556,7 @@ export class Game {
       }
       // A card owned by a rival seat that is STILL HELD by someone (active or away)
       // is shown to us as its blurred back, however the owner placed or flipped it.
-      // Only the owner sees their own card face. A spectator owns no seat, so every
+      // Only the owner sees their own card face. A seatless viewer owns no seat, so every
       // held-seat card is concealed from them. Crucially, a card whose owner seat is
       // now EMPTY (the player left/was kicked, or nobody ever sat there) is NOT
       // concealed — it has no private zone anymore, so it reads as a public table
@@ -3599,7 +3615,7 @@ export class Game {
       const z = this.physicalZoneForSeat(seat);
       if (!z) continue;
       const occupant = Array.from(this.players.values()).find((p) => p.seat === seat) || null;
-      const isSelfSeat = !this.spectator && seat === this.self.seat;
+      const isSelfSeat = this.seated() && seat === this.self.seat;
       const isActive = this.activeSeats.has(seat) || isSelfSeat;
       const claim = this.seatClaims.get(seat) || null;
       // Dropped: a seat whose owner has a persistent claim but is not currently
@@ -3692,14 +3708,11 @@ export class Game {
       // read this as a real (re)join, never a stale presence echo to suppress.
       this.selfJoinedAt = this.resolveSeniority(ident);
       this.selfConnAt = Date.now();
-      // Re-entry always WANTS a seat. CRITICAL: joinRoom reuses this Game instance, so
-      // a prior session that ended as a spectator left this.spectator=true and
-      // claimSeat=-1; without this reset the first presence payload would publish -1
-      // ("established spectator") and resolveSeating would keep us out even when a seat
-      // is free. Reset to a concrete wanted seat so a returning ex-spectator can play.
+      // Re-entry always WANTS a seat. CRITICAL: joinRoom reuses this Game instance, so a prior
+      // session that hit a full room left claimSeat=-1; without this reset the first presence
+      // payload would publish -1 (not asking) and resolveSeating would keep us out even when a
+      // seat is free. Reset to a concrete wanted seat so a returning visitor can play.
       this.self.seat = this.self.seat >= 0 ? this.self.seat : 0;
-      this.spectator = false;
-      this.header.setSpectatorMode(false);
       this.claimSeat = this.self.seat;
       this.viewSeat = this.self.seat as Seat; // a room hop snaps the camera home
       this.self.color = SEAT_COLORS[this.self.seat] ?? SEAT_COLORS[0]!;
@@ -3722,56 +3735,69 @@ export class Game {
   }
 
   private async handleReset(): Promise<void> {
-    openLeaveConfirm(this.modal, this.room, async () => {
-      void this.audio.play("ui-close");
-      // Behind the loader: leaving the old room, rotating our perspective back to
-      // seat 0 (we become the host of the fresh room) and dealing a new board all
-      // happen out of sight, so the table is final and upright the instant the
-      // loader lifts — no visible re-rotation or reshuffle.
-      showLoader();
-      this.leaving = true; // suspend the periodic save during the room switch (see joinRoom)
-      try {
-        // We're leaving on purpose: wipe ALL of our data for this room so we return
-        // as a brand-new presence and nothing stale lingers to cause a ghost.
-        this.clearRoomStorage(this.room);
-        // Tell peers we are LEAVING (not merely dropping): they free our seat and
-        // release every card we owned so the table is interactable again.
-        if (this.claimSeat >= 0) await this.bus.sendLeftAndWait({ id: this.self.id, seat: this.claimSeat });
-        this.seatClaims.clear();
-        // Fresh room → fresh handle. The next visit rolls a new Vaerum name.
-        resetName();
-        this.self.name = getOrAssignName();
-        // A deliberate leave → fresh seniority AND a fresh connection stamp: we open
-        // the new room as its host and can never reclaim the old room's host.
-        this.selfJoinedAt = Date.now();
-        this.selfConnAt = Date.now();
-        // We open the new room as its host: seat 0, first-player perspective.
-        this.self.seat = 0; this.claimSeat = 0; this.viewSeat = 0;
-        this.self.color = SEAT_COLORS[0]!;
-        this.spectator = false;
-        this.header.setSpectatorMode(false);
-        await this.bus.disconnect();
-        this.resetTable();
-        this.room = newRoom();
-        this.writeIdentity();
-        // Re-apply the (now seat-0) perspective and re-measure BEFORE laying the
-        // deck out, so the pile geometry is computed against the upright board.
-        this.applyBoardPerspective();
-        this.measureBoard();
-        this.header.setRoom(this.room);
-        this.header.resetTimer();
-        this.initialDealLocal();
-        this.refreshZones();
-        await this.preloadAssets();
-        this.armFirstSync();
-        void this.bus.connect(this.room, this.presencePayload());
-        await Promise.race([this.firstSync, delay(1800)]);
-        toast(t("ui.newRoom"));
-      } finally {
-        this.leaving = false;
-        hideLoader();
-      }
-    });
+    openLeaveConfirm(this.modal, this.room, () => { void this.openOwnRoom(); });
+  }
+
+  // Leave the current table and open a FRESH room as its host. Shared by the "Exit room" control
+  // and the "room is full" gate (a visitor who could not get a seat). Behind the loader: leaving
+  // the old room, rotating our perspective back to seat 0 and dealing a new board all happen out
+  // of sight, so the table is final and upright the instant the loader lifts.
+  private async openOwnRoom(): Promise<void> {
+    this.roomFullShown = false;
+    void this.audio.play("ui-close");
+    showLoader();
+    this.leaving = true; // suspend the periodic save during the room switch (see joinRoom)
+    try {
+      // We're leaving on purpose: wipe ALL of our data for this room so we return
+      // as a brand-new presence and nothing stale lingers to cause a ghost.
+      this.clearRoomStorage(this.room);
+      // Tell peers we are LEAVING (not merely dropping): they free our seat and release every
+      // card we owned. Skipped when we never held a seat (a full-room visitor, claimSeat -1).
+      if (this.claimSeat >= 0) await this.bus.sendLeftAndWait({ id: this.self.id, seat: this.claimSeat });
+      this.seatClaims.clear();
+      // Fresh room → fresh handle. The next visit rolls a new Vaerum name.
+      resetName();
+      this.self.name = getOrAssignName();
+      // A deliberate leave → fresh seniority AND a fresh connection stamp: we open
+      // the new room as its host and can never reclaim the old room's host.
+      this.selfJoinedAt = Date.now();
+      this.selfConnAt = Date.now();
+      // We open the new room as its host: seat 0, first-player perspective.
+      this.self.seat = 0; this.claimSeat = 0; this.viewSeat = 0;
+      this.self.color = SEAT_COLORS[0]!;
+      await this.bus.disconnect();
+      this.resetTable();
+      this.room = newRoom();
+      this.writeIdentity();
+      // Re-apply the (now seat-0) perspective and re-measure BEFORE laying the
+      // deck out, so the pile geometry is computed against the upright board.
+      this.applyBoardPerspective();
+      this.measureBoard();
+      this.header.setRoom(this.room);
+      this.header.resetTimer();
+      this.initialDealLocal();
+      this.refreshZones();
+      await this.preloadAssets();
+      this.armFirstSync();
+      void this.bus.connect(this.room, this.presencePayload());
+      await Promise.race([this.firstSync, delay(1800)]);
+      toast(t("ui.newRoom"));
+    } finally {
+      this.leaving = false;
+      hideLoader();
+    }
+  }
+
+  // A visitor opened a FULL room (4/4): there is no seat and no spectating. Show the room-full
+  // gate ONCE; its only action (and any dismissal) opens them their own room, so they are never
+  // stranded on a hidden table. Re-armed once we hold a seat again (exitRoomFullGate).
+  private enterRoomFullGate(): void {
+    if (this.roomFullShown || this.leaving) return;
+    this.roomFullShown = true;
+    openRoomFull(this.modal, () => { void this.openOwnRoom(); });
+  }
+  private exitRoomFullGate(): void {
+    this.roomFullShown = false;
   }
 
   private resetTable(): void {

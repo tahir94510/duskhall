@@ -41,7 +41,7 @@ Every broadcast message is treated as untrusted.
   Clamping `ts` to the coordinate range was the bug that silently dropped every
   card update between players.
 - Schema check: every field must be the right primitive; unknown fields are dropped.
-- Seat index clamped to `[-1, 3]` (`-1` = spectator).
+- Seat index clamped to `[-1, 3]` (`-1` = no seat).
 
 ### The Supabase anon / publishable key is public by design
 

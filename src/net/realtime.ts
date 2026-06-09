@@ -953,7 +953,7 @@ export class RealtimeBus {
       id,
       x: safeNumber(c.x),
       y: safeNumber(c.y),
-      // Allow -1 (spectator) through; render trusts the presence seat anyway.
+      // Allow -1 (no seat) through; render trusts the presence seat anyway.
       seat: typeof c.seat === "number" ? Math.max(-1, Math.min(3, Math.round(c.seat))) : -1
     };
     for (const l of this.cursorListeners) l(safe);

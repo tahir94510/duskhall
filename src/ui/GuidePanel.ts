@@ -24,9 +24,8 @@ export interface GuideVM {
   state: GuideState;
   /** Seated players (active). */
   seats: GuideSeatInfo[];
-  /** This client's seat, or -1 if spectating. */
+  /** This client's seat, or -1 if not seated (a full-room visitor at the gate). */
   selfSeat: number;
-  spectator: boolean;
   isHost: boolean;
 }
 
@@ -233,8 +232,7 @@ export class GuidePanel {
     // keep the body focused on the current phase.
     const first = view.round === 1 && vm.state.firstSeat >= 0 ? this.seatNameMaybeYou(vm.state.firstSeat) : null;
     const firstLine = first ? `<p class="guide__hint">${esc(t("guide.firstChosen", { name: first }))} ${esc(t("guide.roundLabel", { n: view.round }))}</p>` : "";
-    const turnHint = vm.spectator ? `<p class="guide__muted">${esc(t("guide.spectatorNote"))}</p>`
-      : yours ? `<p class="guide__hint">${esc(t("guide.yourTurn"))}</p>`
+    const turnHint = yours ? `<p class="guide__hint">${esc(t("guide.yourTurn"))}</p>`
       : `<p class="guide__muted">${esc(t("guide.waitYourTurn"))}</p>`;
     // Restart now lives in the header as a host-only control (it re-runs the guide
     // without touching the cards), so the body carries no restart button.

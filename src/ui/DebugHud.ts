@@ -7,7 +7,6 @@ export class DebugHud {
   status: "online" | "connecting" | "offline" = "connecting";
   peers = 0;
   seat = -1;
-  spectator = false;
   sent = 0;        // patches/snapshots we broadcast
   recvPatch = 0;   // patches received from peers
   recvSnap = 0;    // snapshots received
@@ -38,7 +37,7 @@ export class DebugHud {
 
   private render(): void {
     const ago = this.lastIn ? ((performance.now() - this.lastIn) / 1000).toFixed(1) + "s" : "-";
-    const role = this.spectator ? "spectator" : this.seat >= 0 ? `seat ${this.seat}` : "-";
+    const role = this.seat >= 0 ? `seat ${this.seat}` : "no seat";
     this.el.innerHTML =
       `<b>${this.status.toUpperCase()}</b> · ${role} · peers ${this.peers}` +
       `<br>out ${this.sent} · in p${this.recvPatch}/s${this.recvSnap}/c${this.recvCursor}` +

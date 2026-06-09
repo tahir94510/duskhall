@@ -26,25 +26,24 @@ export function seatIsOwned(o: Occupancy, seat: number): boolean {
   return o.activeSeats.has(seat) || o.claimedSeats.has(seat);
 }
 
-/** A seat owned by someone other than the viewer (viewer must be seated, not a
- *  spectator). Used to block drops/interactions in a rival's private area. */
-export function seatIsRival(o: Occupancy, seat: number, selfSeat: number, spectator: boolean): boolean {
-  if (spectator) return false; // spectators have no "self" rival relationship
+/** A seat owned by someone other than the viewer. `selfSeat` is the viewer's own seat, or -1 if
+ *  they are not seated (a full-room visitor before they open their own room): with -1 no seat is
+ *  "self", so every owned seat reads as a rival. Used to block drops/interactions in a rival area. */
+export function seatIsRival(o: Occupancy, seat: number, selfSeat: number): boolean {
   return seat !== selfSeat && seatIsOwned(o, seat);
 }
 
-/** Is a card (with the given owner seat) in a rival's still-held private area?
- *  A spectator sees every owned card as untouchable; a card owned by an empty seat
- *  is public (grabbable, visible). ownerSeat null = public table card. */
+/** Is a card (with the given owner seat) in a rival's still-held private area? A card owned by an
+ *  empty seat is public (grabbable, visible); ownerSeat null = public table card. With selfSeat -1
+ *  (viewer not seated) every owned card reads as a rival's, so nothing leaks before they leave. */
 export function cardIsRivalOwned(
   o: Occupancy,
   ownerSeat: number | null,
-  selfSeat: number,
-  spectator: boolean
+  selfSeat: number
 ): boolean {
   if (ownerSeat === null) return false;
   if (!seatIsOwned(o, ownerSeat)) return false; // owner gone → public
-  return spectator || ownerSeat !== selfSeat;
+  return ownerSeat !== selfSeat;
 }
 
 /** A present, seated player for host selection. `joinedAt` is the epoch-ms when this
@@ -65,7 +64,7 @@ export interface HostCandidate {
 export function hostId(active: Iterable<HostCandidate>): string {
   let best: HostCandidate | null = null;
   for (const c of active) {
-    if (c.seat < 0) continue; // spectators never host
+    if (c.seat < 0) continue; // a seatless client never hosts
     if (!best || c.joinedAt < best.joinedAt || (c.joinedAt === best.joinedAt && c.id < best.id)) {
       best = c;
     }
@@ -73,10 +72,9 @@ export function hostId(active: Iterable<HostCandidate>): string {
   return best ? best.id : "";
 }
 
-/** Is `selfId` the host? They must be a seated (non-spectator) present player and be
- *  the earliest joiner. */
-export function isHost(selfId: string, active: Iterable<HostCandidate>, spectator: boolean): boolean {
-  if (spectator) return false;
+/** Is `selfId` the host? They must be a present, seated player (so a not-seated viewer is never
+ *  host — they are not in `active`) and the earliest joiner. */
+export function isHost(selfId: string, active: Iterable<HostCandidate>): boolean {
   return selfId !== "" && hostId(active) === selfId;
 }
 
@@ -152,12 +150,13 @@ export function seniorityOnReturn(
 // The single, pure, testable rule for "who sits where" each presence sync. It
 // fixes the duplicate-on-return and lingering-away bugs and honours the product
 // rules: a returning player reclaims their own seat if free else any free seat; a
-// kicked/left (tombstoned) id is never seated; an existing spectator is NOT pulled
-// into a freed seat (only someone who actually wants a seat takes one).
+// kicked/left (tombstoned) id is never seated. A client that gets no seat (a full
+// room) resolves to -1 — the caller turns that into the "room is full" gate, NOT a
+// persistent watcher; there is no spectator role.
 
 export interface RosterEntry {
   id: string;
-  /** The seat this client published it wants/holds (-1 = none / spectator). */
+  /** The seat this client published it wants/holds (-1 = none / not asking). */
   seat: number;
   joinedAt: number;
 }
@@ -166,7 +165,7 @@ export interface SeatClaimEntry { seat: number; id: string; }
 export interface SeatingResult {
   /** seat -> id, for the present players who hold a seat this sync. */
   bySeat: Map<number, string>;
-  /** id -> seat for everyone present (seat -1 = spectator). */
+  /** id -> seat for everyone present (seat -1 = got no seat / room full). */
   resolved: Map<string, number>;
 }
 
@@ -179,8 +178,8 @@ export interface SeatingResult {
  *  - Priority per present, non-tombstoned client: (1) the seat it published if free;
  *    (2) its OWN existing claimed seat if free (so a returning dropped player gets
  *    its old spot back); (3) for a client that WANTS a seat (published seat>=0 but it
- *    was taken) the lowest free seat; (4) else spectator. A client that published
- *    seat -1 AND holds no claim stays a spectator (never auto-seated).
+ *    was taken) the lowest free seat; (4) else -1 (no seat — a full room). A client
+ *    that published seat -1 AND holds no claim is not asking for a seat and stays -1.
  */
 export function resolveSeating(
   roster: RosterEntry[],
@@ -216,11 +215,11 @@ export function resolveSeating(
     else deferred.push(p);
   }
   // Pass 2: a deferred client takes its OWN claimed seat if free, else (only if it
-  // actually wanted a seat) the lowest free seat. A pure spectator (no wanted seat,
-  // no claim) is left unseated.
+  // actually wanted a seat) the lowest free seat. A client that asked for no seat (no
+  // wanted seat, no claim) is left unseated (-1).
   for (const p of deferred) {
-    // A client that did NOT publish a seat is a spectator and stays one — even if a
-    // stale claim lingers, we never pull a watcher back into a seat.
+    // A client that did NOT publish a seat is not asking for one — even if a stale claim
+    // lingers, we never pull it back into a seat.
     if (p.seat < 0) continue;
     const ownClaim = claimOf.get(p.id);
     if (ownClaim !== undefined && ownClaim >= 0 && ownClaim < seatCount && !bySeat.has(ownClaim)) {
