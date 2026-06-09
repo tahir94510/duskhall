@@ -138,7 +138,7 @@ export interface KickMsg {
 }
 
 /** A tiny cosmetic sound cue for a PUBLIC (shared-table) interaction — pickup,
- *  place, place-stack or gather — so peers hear it too. It carries NO state (the
+ *  place or gather — so peers hear it too. It carries NO state (the
  *  authoritative move rides on its own patch); it is purely a sound trigger.
  *  Privacy is decided by the ACTOR: an interaction inside the actor's OWN hidden
  *  zone is simply never broadcast, so it stays silent for everyone else, while a
@@ -183,7 +183,7 @@ export type GameMsg =
 
 /** The interaction sounds that may be broadcast to peers (a closed set so a hostile
  *  peer cannot trigger an arbitrary/UI sound). Flip/shuffle ride the anim hint, not this. */
-const BROADCAST_SFX = new Set(["pickup", "place", "place-stack", "gather"]);
+const BROADCAST_SFX = new Set(["pickup", "place", "gather"]);
 
 type Listener<T> = (msg: T) => void;
 type Status = "offline" | "connecting" | "online";

@@ -163,7 +163,7 @@ function placeRow(
  * returns []. Deterministic: identical inputs (in any order) yield identical targets.
  */
 export function arrangeZone(cards: CardState[], seat: Seat, opts: ArrangeOpts): ArrangeTarget[] {
-  if (cards.length < 2) return [];
+  if (cards.length < 1) return [];
   const w = opts.cardW ?? CARD_CANON_W;
   const h = opts.cardH ?? CARD_CANON_H;
   const piles = buildPiles(cards);
@@ -175,15 +175,18 @@ export function arrangeZone(cards: CardState[], seat: Seat, opts: ArrangeOpts): 
     placeRow(piles, seat, ZONE_DEPTH / 2, w, h, opts.uprightRot, byId, zCounter, out);
   } else {
     // Two depth-staggered rows (two upright rows can't fit stacked, so they overlap in depth like a
-    // real two-row fan): the back row sits nearer the board edge, the front nearer the centre. Each
-    // row lays out half the stacks with its own safe width, halving the overlap of a single row.
+    // real two-row fan). The back row sits nearer the board edge (nearer the player), the front row
+    // nearer the centre. The FRONT row is placed FIRST so it gets the lower z and sits UNDERNEATH;
+    // the BACK row (nearer the player) is placed LAST so it gets the higher z and overlaps ON TOP —
+    // the way a hand fans, with the row closest to you in front. Each row lays out half the stacks
+    // with its own safe width, halving the overlap of a single row.
     const half = Math.ceil(piles.length / 2);
-    const back = piles.slice(0, half);   // nearer the board edge (shallower depth)
+    const back = piles.slice(0, half);   // nearer the board edge (shallower depth, nearer the player)
     const front = piles.slice(half);     // nearer the centre (deeper)
     const dBack = ZONE_DEPTH / 2 - 0.025;
     const dFront = ZONE_DEPTH / 2 + 0.025;
-    placeRow(back, seat, dBack, w, h, opts.uprightRot, byId, zCounter, out);
-    placeRow(front, seat, dFront, w, h, opts.uprightRot, byId, zCounter, out);
+    placeRow(front, seat, dFront, w, h, opts.uprightRot, byId, zCounter, out); // behind (lower z)
+    placeRow(back, seat, dBack, w, h, opts.uprightRot, byId, zCounter, out);   // on top (higher z)
   }
   return out;
 }
@@ -194,7 +197,7 @@ export function arrangeZone(cards: CardState[], seat: Seat, opts: ArrangeOpts): 
  * on an already-arranged zone is a silent no-op. Mirrors StackOps.isTidyStack.
  */
 export function isZoneArranged(cards: CardState[], seat: Seat, opts: ArrangeOpts, eps = 1e-3): boolean {
-  if (cards.length < 2) return true;
+  if (cards.length < 1) return true;
   const targets = arrangeZone(cards, seat, opts);
   if (targets.length !== cards.length) return false;
   const byId = new Map(cards.map((c) => [c.id, c] as const));

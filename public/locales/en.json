@@ -252,11 +252,12 @@
       {
         "v": "2026-06-09",
         "date": "June 9, 2026",
-        "title": "Tidy your whole area in one press",
+        "title": "Tidy your hand, and a stack counter",
         "items": [
-          "Press D (or, on touch, long-press one of your own cards and tap Tidy your area) to lay your hidden area out as a clean deck: matching cards stacked together, sorted by type and centred, however many you are holding. It never spills into a neighbour's space.",
-          "Only you hear it settle; everyone else simply sees your cards slide into place, still hidden behind their backs.",
-          "Clearer help text along the way: Shortcuts now lists D next to Gather and Shuffle, and the touch action bar reads in one natural voice instead of singling out a single key."
+          "Press D (or, on touch, long-press one of your own cards and tap Tidy your area) to lay your hidden area out as a clean deck: matching cards stacked together, sorted by type, centred, and turned face-up so you can read them at a glance. It works for any number of cards, even a single one, and never spills into a neighbour's space.",
+          "New: a small number now sits in the top-left corner of any card that is covering another, so you can see at a glance how many cards are in a pile (your hand, the deck, a discard).",
+          "Only you hear your area settle; everyone else simply sees your cards slide into place, still hidden behind their backs.",
+          "Polish: dropping a deck now sounds just like dropping a single card, the play area no longer carries an extra frame on small phones, and Shortcuts lists D next to Gather and Shuffle."
         ]
       },
       {

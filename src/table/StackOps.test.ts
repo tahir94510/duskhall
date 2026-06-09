@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { BoardState, CardState } from "./types.js";
-import { findStackOverlapping, findConnectedStack, flipStackOver, gatherStack, shuffleStack, alignRotation, rotationsDiffer, flipVisibleCardId, isTidyStack, nearestCongruentRot, setStackFace, topVisibleId, turnStackOver } from "./StackOps.js";
+import { findStackOverlapping, findConnectedStack, pileSizes, flipStackOver, gatherStack, shuffleStack, alignRotation, rotationsDiffer, flipVisibleCardId, isTidyStack, nearestCongruentRot, setStackFace, topVisibleId, turnStackOver } from "./StackOps.js";
 
 // A 1000 x 1450 board so one card-width (96) maps cleanly; card is 96 x 139.2.
 const BOARD = { width: 1000, height: 1450 };
@@ -15,6 +15,30 @@ function board(cards: CardState[]): BoardState {
   for (const c of cards) m.set(c.id, c);
   return { cards: m, topZ: cards.length };
 }
+
+describe("pileSizes (stack-count badge data)", () => {
+  it("counts a tight pile and reports how many sit below each card", () => {
+    const st = board([card("a", 0.5, 0.5, 1), card("b", 0.5, 0.5, 2), card("c", 0.5, 0.5, 3)]);
+    const m = pileSizes(st, BOARD, SIZE);
+    expect(m.get("a")).toEqual({ size: 3, below: 0 }); // bottom: nothing below
+    expect(m.get("b")).toEqual({ size: 3, below: 1 });
+    expect(m.get("c")).toEqual({ size: 3, below: 2 }); // top: two below
+  });
+
+  it("a far-apart card is a pile of one (no card below, so no badge)", () => {
+    const st = board([card("a", 0.2, 0.2, 1), card("b", 0.8, 0.8, 2)]);
+    const m = pileSizes(st, BOARD, SIZE);
+    expect(m.get("a")).toEqual({ size: 1, below: 0 });
+    expect(m.get("b")).toEqual({ size: 1, below: 0 });
+  });
+
+  it("pairs an upright card with a 90°-rotated card on the same spot", () => {
+    const st = board([card("up", 0.5, 0.5, 1, 0), card("rot", 0.5, 0.5, 2, 1)]);
+    const m = pileSizes(st, BOARD, SIZE);
+    expect(m.get("up")!.size).toBe(2);
+    expect(m.get("rot")!.size).toBe(2);
+  });
+});
 
 describe("findStackOverlapping (rotation-aware)", () => {
   it("groups cards sitting on the same point", () => {

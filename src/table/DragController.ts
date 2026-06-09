@@ -538,11 +538,10 @@ export class DragController {
     }
 
     this.hooks.onCardMoved(s.ids);
-    // A whole pile lands with a weightier "place-stack" thud; a single card keeps
-    // the crisp "place" tap. Sound variety so dropping a deck feels different from
-    // dropping one card.
+    // Every drop — a single card or a whole pile/deck — plays the same crisp "place" tap, so the
+    // table sounds consistent however many cards land.
     if (didSnapBack) this.hooks.playSfx("snap");
-    else if (didPlace) this.hooks.emitSfx(s.ids.length > 1 ? "place-stack" : "place", s.ids[0]!);
+    else if (didPlace) this.hooks.emitSfx("place", s.ids[0]!);
     // Re-arm the hover tooltip at the drop point so a face-up card shows its info
     // immediately, without the pointer having to leave and re-enter.
     this.hooks.onReleased(e.clientX, e.clientY, e.pointerType);
