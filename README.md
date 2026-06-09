@@ -2,7 +2,7 @@
 
 A digital card table for friends, 2 to 4 players. Free movement, no enforced rules; players follow the official rulebook themselves. Built with Vite, TypeScript, and Supabase Realtime.
 
-Vaerumun dijital kart masası. 2 ila 4 oyuncu. Kurallar oyuncular tarafından uygulanır; site yalnızca masayı sağlar.
+Vaerum'un arkadaşlarla oynanan dijital kart masası, 2 ila 4 oyuncu. Kartlar serbestçe oynanır, kural dayatması yoktur; oyuncular resmi kural kitabını kendileri uygular. Vite, TypeScript ve Supabase Realtime ile yazıldı.
 
 ## Stack
 

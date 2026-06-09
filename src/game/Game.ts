@@ -464,6 +464,12 @@ export class Game {
     this.rosterReady = false;
     this.syncNudges = 0;
     window.clearTimeout(this.syncNudgeTimer);
+    // Drop any presence still debouncing from the OLD room: letting it fire 200ms into the
+    // new room would seat the previous room's roster as phantom claims until the first real
+    // presence sync corrected it.
+    window.clearTimeout(this.presenceDebounce);
+    this.presenceDebounce = 0;
+    this.pendingPresence = [];
   }
   private resolveFirstSync(): void {
     if (this.firstSyncResolve) { this.firstSyncResolve(); this.firstSyncResolve = null; }
