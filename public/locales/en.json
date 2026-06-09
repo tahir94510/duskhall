@@ -799,7 +799,7 @@
     "yourTurn": "It is your turn. Tap the check when you are done.",
     "aPlayer": "a player",
     "youTag": "(you)",
-    "introBody": "This guide walks the whole table through a game, one step at a time. It only suggests what to do next and never moves your cards, so you stay free to move, flip and shuffle them however you like. Tip: to begin from a freshly shuffled deck, use Reset deck from the menu first, then press Start.",
+    "introBody": "This guide walks the whole table through a game, one step at a time. It only suggests what to do next and never moves your cards, so you stay free to move, flip, shuffle and tidy them however you like. Tip: to begin from a freshly shuffled deck, use Reset deck from the menu first, then press Start.",
     "introWaiting": "Waiting for the host to start the game.",
     "start": "Start",
     "restart": "Restart",

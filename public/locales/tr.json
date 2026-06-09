@@ -799,7 +799,7 @@
     "yourTurn": "Sıra sende. Bitirince onay işaretine bas.",
     "aPlayer": "bir oyuncu",
     "youTag": "(sen)",
-    "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir, kartlarına asla dokunmaz; böylece kartları dilediğin gibi taşıyabilir, çevirebilir ve karıştırabilirsin. İpucu: yeni karıştırılmış bir desteyle başlamak istersen önce menüden Desteyi sıfırla'yı kullan, sonra Başlat'a bas.",
+    "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir, kartlarına asla dokunmaz; böylece kartları dilediğin gibi taşıyabilir, çevirebilir, karıştırabilir ve derleyip toplayabilirsin. İpucu: yeni karıştırılmış bir desteyle başlamak istersen önce menüden Desteyi sıfırla'yı kullan, sonra Başlat'a bas.",
     "introWaiting": "Oyunun başlaması için ev sahibi bekleniyor.",
     "start": "Başlat",
     "restart": "Yeniden başlat",
