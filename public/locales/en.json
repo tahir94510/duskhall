@@ -97,7 +97,7 @@
     },
     "tableau": {
       "term": "Tableau",
-      "def": "Your face-up zone holding your Seals and Servants, at most 4 Seals and 3 Servants. Seal and Servant effects work only here, never from the hand."
+      "def": "Your face-up zone for Seals and Servants: at most 4 Seals and 3 Servants (separate limits). Their effects work only here, never from the hand. A card you place is committed: it stays until it is destroyed, sacrificed, discarded to make room, or stolen, and never returns to your hand."
     },
     "deck": {
       "term": "Deck",
@@ -121,7 +121,7 @@
     },
     "create": {
       "term": "Create",
-      "def": "An Action (1 HP): cast 1 Spell from your hand, or place 1 Seal or 1 Servant onto your tableau."
+      "def": "An Action (1 HP): cast 1 Spell from your hand, or place 1 Seal or 1 Servant onto your tableau. If that tableau row is full, you may discard one of your own of the same type to make room, at no extra HP."
     },
     "study": {
       "term": "Study",
@@ -493,7 +493,7 @@
     "necromancersEye": {
       "name": "Necromancer's Eye",
       "type": "Seal",
-      "effect": "At the start of your Closing phase, before the hand-limit check, take the top card of the Discard into your hand (each extra copy takes one more). Because this happens before the limit check, if your hand goes over 7 you simply discard down as usual and may discard the card you just took, so it never costs you a card you wanted to keep. If the Discard is empty, nothing happens. It works the turn it is placed.",
+      "effect": "At the start of your Closing phase, take the top card of the Discard into your hand (one more per extra copy). It works the turn it is placed; if the Discard is empty, nothing happens. (It draws before the hand-limit check, so it never costs you a card you wanted; see the rulebook.)",
       "flavor": "The dead keep their accounts in long, patient ledgers."
     },
     "etherStrike": {
@@ -517,7 +517,7 @@
     "mindParasite": {
       "name": "Mind Parasite",
       "type": "Spell",
-      "effect": "Spend 1 HP. Take control of one Servant on a rival's tableau and move it to yours. It counts toward your 3-Servant limit and keeps all of its ongoing effects, now under your control. Taking control is not the same as destroying, so stealing a Glacial Aberration does not trigger its skip-a-turn penalty. If you already have 3 Servants, or the target has none, this spell cannot be cast and no HP is spent.",
+      "effect": "Spend 1 HP. Move one Servant from a rival's tableau to yours; it keeps its ongoing effects, now under your control, and counts toward your 3-Servant limit. You need a free Servant slot: with 3 already, or if the target has no Servant, it cannot be cast and no HP is spent.",
       "flavor": "Loyalty is a door, and you have the key."
     },
     "twistOfFate": {
@@ -604,7 +604,7 @@
         "body": [
           "Each player owns three personal zones; two are shared.",
           "HAND: hidden cards. Rivals see the count, not the contents. Hand limit is 7; excess is discarded at Closing. Seals and Servants do nothing while in the hand.",
-          "TABLEAU: face-up zone holding your Seals and Servants. Maximum 4 Seals and 3 Servants. If your tableau is full and you wish to play another, choose one of your existing cards and Discard it first; this does not cost an extra action.",
+          "TABLEAU: face-up zone holding your Seals and Servants. Maximum 4 Seals and 3 Servants (the two limits are separate). When you CREATE a Seal or Servant from your hand and that row is already full, you may first Discard one of your own of the SAME type to make room. That is your choice and part of the same Create, at no extra HP. A placed card is committed: it leaves your tableau only by being destroyed, sacrificed (Ether Resonance), discarded to make room, or stolen, and never returns to your hand.",
           "DECK (shared): face-down central pile. When it empties, Ether Resonance is triggered (see section 9).",
           "DISCARD (shared): face-up pile of spent Spells, cancelled cards, destroyed Seals and Servants."
         ]
@@ -702,7 +702,7 @@
           "Ether Strike: 1 HP. Destroy 1 card on a rival's tableau. Servant Shield applies.",
           "Shadow Theft: 1 HP. Choose a rival; their hand is shuffled face-down (hidden from everyone) and 1 card is taken from it at random into your hand. Neither player chooses which. Blocked by Veil of Void.",
           "Ancient Sight: 1 HP. Draw 3 cards from the deck. Self-targeted only; no opponent involved.",
-          "Mind Parasite: 1 HP. Take control of one Servant on a rival's tableau; it keeps its effects and counts toward your 3-Servant limit. Taking control is not destroying, so a stolen Glacial Aberration does not trigger its skip penalty.",
+          "Mind Parasite: 1 HP. Move one Servant from a rival's tableau to yours; it keeps its ONGOING effects and counts toward your 3-Servant limit (a one-time on-entry effect, like Shadow Slayer's, does not re-fire on a move). It needs a free Servant slot: with 3 already it cannot be cast, because a steal is never allowed to discard your own to make room (that voluntary swap is only for a Create from your hand). Taking control is not destroying, so a stolen Glacial Aberration does not trigger its skip penalty.",
           "Twist of Fate: 1 HP. Swap every card in your hand with every card in a chosen rival's hand. Blocked by Veil of Void.",
           "INTERVENTIONS (16 total):",
           "Silence!: 0 HP. Cancel a freshly cast Spell or Intervention. Both cards go to the Discard. Universal target.",
@@ -729,7 +729,8 @@
           "Q. When Karmic Reflection rebounds an attack, does the attacker's Servant Shield apply? A. Yes. The rebounding attack must respect the attacker's Servant Shield, so it has to clear their Servants before it can reach their Seals.",
           "Q. Blood Atonement needs how many cards in hand? A. At least 2. With fewer, it cannot be played.",
           "Q. Who picks the 2 cards Blood Atonement discards? A. Nobody. They leave your hand at random, so paying the cost is always a gamble.",
-          "Q. Mind Parasite when your tableau already has 3 Servants? A. Cannot be cast; no HP spent.",
+          "Q. Mind Parasite when your tableau already has 3 Servants? A. It cannot be cast (no HP spent): a steal needs a free Servant slot and is never allowed to discard your own to make room. That discard-to-make-room swap is only for a Create from your hand.",
+          "Q. My Servant row is full (3) and I want to play another from my hand? A. As part of that Create, first Discard one of your own Servants to make room (your choice; no extra HP). A card already on your tableau can never be taken back into your hand; it leaves only by being destroyed, sacrificed, discarded to make room, or stolen.",
           "Q. If I take a Glacial Aberration with Mind Parasite, do I skip a turn? A. No. Taking control is not destroying, so its skip-a-turn penalty does not trigger; it only fires when the Aberration is destroyed.",
           "Q. Shadow Theft against a hand protected by Veil of Void? A. Not legal; cannot be cast.",
           "Q. Twist of Fate against Veil of Void? A. Not legal; the targeted player's hand is shielded.",
