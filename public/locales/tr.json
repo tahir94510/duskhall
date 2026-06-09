@@ -31,14 +31,12 @@
     "copyLink": "Davet bağlantısını kopyala",
     "linkCopied": "Davet bağlantısı kopyalandı",
     "newRoom": "Yeni bir oda açıldı.",
-    "roomFull": "Oda dolu olduğu için izleyici olarak bakıyorsun.",
     "timer": "Süre",
     "waiting": "Şu an tek başınasın. Arkadaşlarınla oynamak için oda bağlantısını paylaş.",
     "pasteJoin": "Katılmak için kodu veya bağlantıyı yapıştır",
     "joined": "Odaya katıldın",
     "alreadyInRoom": "Zaten bu odadasın.",
     "invalidCode": "Panoda geçerli bir oda kodu yok",
-    "spectators": "İzleyiciler",
     "connection": "Bağlantı",
     "connOnline": "Çevrimiçi",
     "connConnecting": "Bağlanıyor...",
@@ -201,6 +199,11 @@
     "title": "Odadan çık?",
     "body": "Bu odadan ayrılırsın ve yeni bağlantıyla taze bir oda açılır; oranın ev sahibi sen olursun. Burada sana ait kartlar diğer oyunculara serbest bırakılır.",
     "leave": "Çık"
+  },
+  "roomFull": {
+    "title": "Bu oda dolu",
+    "body": "Dört koltuk da dolu. Kendi odanı aç ve arkadaşlarını orada oynamaya davet et.",
+    "newRoom": "Yeni oda aç"
   },
   "joinByCode": {
     "title": "Bir odaya katıl",
@@ -784,7 +787,6 @@
     "introWaiting": "Oyunun başlaması için ev sahibi bekleniyor.",
     "start": "Başlat",
     "restart": "Yeniden başlat",
-    "spectatorNote": "Bu oyunu izliyorsun.",
     "pickWait": "İlk oyuncuyu ev sahibi seçiyor.",
     "turnHeading": "Sıra: {name}",
     "roundLabel": "Tur {n}.",

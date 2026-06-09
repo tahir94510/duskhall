@@ -2,7 +2,7 @@ import type { BoardState } from "./types.js";
 import type { ClampCard } from "./playfield.js";
 
 export interface DragHooks {
-  /** False for spectators (room full), blocks all card manipulation. */
+  /** False when not seated (a full-room visitor at the gate); blocks all card manipulation. */
   canInteract(): boolean;
   /** True while a V camera-turn is animating. While it is, the held pile is re-placed every frame
    *  at the board's live angle (canonicalAtDeg + clampSeedAtDeg) so it stays pinned under the cursor

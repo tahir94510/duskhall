@@ -1,4 +1,4 @@
-import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EYE, ICON_EXIT, ICON_FEEDBACK, ICON_INFO, ICON_SPARK, ICON_GUIDE } from "./icons.js";
+import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EXIT, ICON_FEEDBACK, ICON_INFO, ICON_SPARK, ICON_GUIDE } from "./icons.js";
 import { t } from "../i18n/index.js";
 import { inviteUrl } from "../net/room.js";
 import { flashConfirm } from "./feedback.js";
@@ -34,8 +34,6 @@ export class Header {
   private menu: HTMLDivElement;
   private timerVal: HTMLElement;
   private roomVal: HTMLElement;
-  private spectatorRow: HTMLElement;
-  private spectatorVal: HTMLElement;
   private connRow: HTMLElement;
   private connVal: HTMLElement;
   private conn: "online" | "connecting" | "offline" = "connecting";
@@ -43,7 +41,6 @@ export class Header {
   private roomSlug = "";
   private timerHandle = 0;
   private menuOpen = false;
-  private spectator = false;
   private host = false;
 
   constructor(private hooks: HeaderHooks) {
@@ -69,11 +66,6 @@ export class Header {
           <span class="header__menu-icon">${ICON_TIMER}</span>
           <span class="header__menu-label">${esc(t("ui.timer"))}</span>
           <span class="header__code" data-role="timer">00:00</span>
-        </div>
-        <div class="header__menu-row header__menu-row--static header__menu-spectators" data-role="spectator-row" hidden>
-          <span class="header__menu-icon">${ICON_EYE}</span>
-          <span class="header__menu-label" data-i18n="ui.spectators">${esc(t("ui.spectators"))}</span>
-          <span class="header__code" data-role="spectators">0</span>
         </div>
         <button type="button" class="header__menu-row header__menu-row--conn" data-role="conn-row" data-action="diagnose" data-conn="connecting" title="${esc(t("diag.run"))}">
           <span class="header__menu-icon"><span class="conn-dot" aria-hidden="true"></span></span>
@@ -133,8 +125,6 @@ export class Header {
     this.menu.inert = true;
     this.timerVal = this.menu.querySelector<HTMLElement>('[data-role="timer"]')!;
     this.roomVal = this.menu.querySelector<HTMLElement>('[data-role="room"]')!;
-    this.spectatorRow = this.menu.querySelector<HTMLElement>('[data-role="spectator-row"]')!;
-    this.spectatorVal = this.menu.querySelector<HTMLElement>('[data-role="spectators"]')!;
     this.connRow = this.menu.querySelector<HTMLElement>('[data-role="conn-row"]')!;
     this.connVal = this.menu.querySelector<HTMLElement>('[data-role="conn"]')!;
     this.bind();
@@ -295,22 +285,6 @@ export class Header {
     if (badge) badge.hidden = !on;
   }
 
-  /** Update the live spectator count shown in the menu (row hidden at zero for
-   *  seated players; spectators always see it). */
-  setSpectators(n: number): void {
-    this.spectatorVal.textContent = String(Math.max(0, n));
-    this.spectatorRow.hidden = n <= 0 && !this.spectator;
-  }
-
-  /** Mark this client as a spectator so the menu hides controls it must not use
-   *  (reset deck / reset room) and always shows the spectator row. */
-  setSpectatorMode(on: boolean): void {
-    this.spectator = on;
-    this.el.classList.toggle("is-spectator", on);
-    this.applyPlayControls();
-    this.spectatorRow.hidden = !on && this.spectatorVal.textContent === "0";
-  }
-
   /** Reflect host status. The shared "table master" controls — Start/Restart the
    *  walkthrough and Reset the deck — are HOST-ONLY, so they appear for the host alone.
    *  Non-hosts simply don't see them (no dead buttons). */
@@ -330,19 +304,18 @@ export class Header {
     guide.setAttribute("aria-disabled", open ? "true" : "false");
   }
 
-  // Open guide and Reset deck are host-only (and never shown to a spectator). Exit room
-  // stays available to every seated player. The play divider shows whenever any control
-  // below it is visible.
+  // Open guide and Reset deck are host-only. Exit room stays available to every seated player.
+  // The play divider shows whenever any control below it is visible.
   private applyPlayControls(): void {
     const guide = this.menu.querySelector<HTMLElement>('[data-role="guide"]');
     const resetDeck = this.menu.querySelector<HTMLElement>('[data-role="reset-deck"]');
     const resetRoom = this.menu.querySelector<HTMLElement>('[data-role="reset-room"]');
     const divider = this.menu.querySelector<HTMLElement>('[data-role="play-divider"]');
-    const hostOnly = this.host && !this.spectator;
+    const hostOnly = this.host;
     if (guide) guide.hidden = !hostOnly;
     if (resetDeck) resetDeck.hidden = !hostOnly;
-    if (resetRoom) resetRoom.hidden = this.spectator;
-    if (divider) divider.hidden = this.spectator;
+    if (resetRoom) resetRoom.hidden = false;
+    if (divider) divider.hidden = false;
   }
 
   resetTimer(): void { this.roomStart = performance.now(); this.tick(); }

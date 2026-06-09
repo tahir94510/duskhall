@@ -203,12 +203,11 @@
 }
 .header__menu-row--static:hover { background: rgba(255, 255, 255, 0.02); }
 
-/* The room row carries five columns (icon, label, code, copy, paste). The timer
-   and spectator rows have only three children, so they get a plain 3-column
-   grid; their value chip then lands flush against the SAME right edge as the
-   paste button above, instead of being pushed inward by two empty columns. */
-.header__menu-timer,
-.header__menu-spectators {
+/* The room row carries five columns (icon, label, code, copy, paste). The timer row has
+   only three children, so it gets a plain 3-column grid; its value chip then lands flush
+   against the SAME right edge as the paste button above, instead of being pushed inward by
+   two empty columns. */
+.header__menu-timer {
   grid-template-columns: 22px 1fr auto;
   cursor: default;
 }
@@ -226,7 +225,7 @@
 }
 .header__menu-row--conn:hover { background: rgba(255, 255, 255, 0.05); }
 
-/* Read-only value chip (room code, timer, spectator count). Always visible, and
+/* Read-only value chip (room code, timer). Always visible, and
    deliberately NOT selectable — the room is shared via the copy button. */
 .header__code {
   justify-self: end;
