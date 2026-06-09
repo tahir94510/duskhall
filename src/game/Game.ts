@@ -42,6 +42,7 @@ import {
 import { rotateVec, seatRotationDeg, seatForLocalSlot, localSlotForSeat, SLOT_INDEX, screenToCanonical, screenToCanonicalDeg, canonicalToScreen, type Seat, type BoardBox } from "../table/rotation.js";
 import { DECK_NX, DECK_NY, DISCARD_NX } from "../table/constants.js";
 import { cardZoneOwner, pointInZoneCanonical, CARD_CANON_W, CARD_CANON_H } from "../table/SlotGrid.js";
+import { arrangeZone, isZoneArranged } from "../table/ArrangeZone.js";
 import { clampSeedToPage, type ClampCard } from "../table/playfield.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry, GuideWire, SfxMsg } from "../net/realtime.js";
 import { initialGuide, startGuide, setOpen as setGuideOpenState, advance as advanceGuide, chooseFirst as chooseFirstGuide, adoptGuide, type GuideState } from "./guide.js";
@@ -278,7 +279,22 @@ export class Game {
       onRotate: (id) => this.rotateSmart(id),
       onPerspective: () => this.togglePerspective(),
       onInfo: (id) => this.showCardInfo(id),
+      onArrange: () => this.arrangeOwnZone(), // zone-wide; the tapped id only gates visibility
       canShowInfo: (id) => this.canShowCardInfo(id),
+      // Show the Arrange button ONLY on a card that sits in our OWN zone, so it never appears on a
+      // public/centre or rival card. Greying when there is nothing to do is handled by isAreaTidy.
+      canArrange: (id) => {
+        if (!this.seated()) return false;
+        const c = this.state.cards.get(id);
+        return !!c && this.cardZoneOwnerOf(c) === this.self.seat;
+      },
+      // Grey the Arrange button out (like Gather on a tidy pile) when there is nothing to tidy:
+      // fewer than two of our own cards, or the area is already laid out. It re-enables the moment
+      // the layout is disturbed or a new card enters, so a tidy is never offered as a dead tap.
+      isAreaTidy: () => {
+        const ids = this.ownZoneArrangeableIds();
+        return ids.length < 2 || this.ownZoneArranged(ids);
+      },
       stackFor: (id) => findConnectedStack(this.state, this.boardSize, id, this.cardMetrics()),
       isPileTidy: (id) => this.pileIsTidy(id)
     });
@@ -1172,6 +1188,9 @@ export class Game {
       if (k === "v") { e.preventDefault(); this.togglePerspective(); return; }
       if (!this.seated()) return;
       if (this.viewRotating) return; // mid camera-turn: the cursor→card mapping is in flux
+      // D tidies OUR OWN hand area into a deck-like, grouped layout. Unlike G/M it is zone-wide,
+      // not aimed at the card under the cursor, so it needs no pointer.
+      if (k === "d") { e.preventDefault(); this.arrangeOwnZone(); return; }
       // Desktop convenience: G gathers, M shuffles the stack under the cursor.
       // Both are multi-card actions, so a single card under the cursor triggers
       // nothing at all (no sound, no effect) — the same rule the touch bar applies
@@ -2364,6 +2383,75 @@ export class Game {
     this.scheduleFlush();
     void this.audio.play("gather");
     this.emitPublicSfx(id, "gather"); // peers hear a public gather; a hidden-zone one stays silent
+  }
+
+  // The ids of the cards we may tidy in our own hand area: those whose body genuinely sits in
+  // OUR trapezoid (the live, position-based owner — never the cached ownerSeat flag), and which
+  // no one else is touching. This is deliberately strict so "arrange" only ever moves the
+  // player's OWN cards: a card a rival is dragging across our corner is held/locked (and not yet
+  // ours by position) and is excluded, never yanked into our layout.
+  private ownZoneArrangeableIds(): string[] {
+    if (!this.seated()) return [];
+    const seat = this.self.seat;
+    const out: string[] = [];
+    for (const c of this.state.cards.values()) {
+      if (this.cardZoneOwnerOf(c) !== seat) continue; // not in MY zone (public/centre/rival → skip)
+      if (this.isLockedByOther(c.id)) continue;       // a peer is holding/dragging it
+      if (this.myHeldIds.includes(c.id)) continue;    // I'm dragging it right now
+      if (this.animTimers.has(c.id)) continue;        // mid flip/gather settle — leave it be
+      out.push(c.id);
+    }
+    return out;
+  }
+
+  // Tidy our own hidden-zone cards into a clean, deck-like layout: identical cards collected into
+  // one stack, stacks grouped by category, the whole set centred inside our trapezoid and never
+  // spilling into a neighbour's area, for any count. Mirrors gatherAt: a multi-card action that
+  // stays SILENT for peers (own-zone seed → emitPublicSfx no-ops) while the motion rides the
+  // normal patch + CSS transition, so everyone SEES the cards slide (blurred, as our area always
+  // is) but only WE hear it. Already-tidy → silent no-op, so mashing the key never spams.
+  // True when our own hand area is already laid out exactly as arrangeOwnZone would leave it (or has
+  // nothing to lay out): fewer than two of our own cards, or every card already on its target spot
+  // and angle. Used so a repeat press/tap is a silent no-op instead of replaying the sound and
+  // motion. It compares the LIVE cards against a freshly computed layout, so any disturbance — a
+  // card nudged, a new card entering the zone, one leaving — makes the target differ and a fresh
+  // tidy is allowed again.
+  private ownZoneArranged(ids: string[]): boolean {
+    const cards = ids.map((id) => this.state.cards.get(id)).filter((c): c is CardState => !!c);
+    if (cards.length < 2) return true;
+    const opts = { uprightRot: this.viewerUprightRot(cards[0]!.rot), cardW: CARD_CANON_W, cardH: CARD_CANON_H };
+    return isZoneArranged(cards, this.self.seat as Seat, opts);
+  }
+
+  private arrangeOwnZone(): void {
+    if (!this.seated() || this.viewRotating) return;
+    const ids = this.ownZoneArrangeableIds();
+    if (ids.length < 2) return;            // a lone card is already "arranged"
+    if (this.anyAnimating(ids)) return;    // don't fight an in-flight settle
+    if (this.ownZoneArranged(ids)) return; // already laid out → no sound, no patch (never spams)
+    const cards = ids.map((id) => this.state.cards.get(id)).filter((c): c is CardState => !!c);
+    if (cards.length < 2) return;
+    const seat = this.self.seat as Seat;
+    // Square to the angle that reads upright for THIS viewer's camera (same rule as gather/shuffle).
+    const uprightRot = this.viewerUprightRot(cards[0]!.rot);
+    const opts = { uprightRot, cardW: CARD_CANON_W, cardH: CARD_CANON_H };
+    const targets = arrangeZone(cards, seat, opts);
+    if (!targets.length) return;
+    this.syncTopZ(); // lift the arranged set above the board (compacts z if it had drifted up)
+    for (const tgt of targets) {
+      const c = this.state.cards.get(tgt.id);
+      if (!c) continue;
+      c.x = tgt.x;
+      c.y = tgt.y;
+      c.rot = tgt.rot;
+      this.state.topZ++;
+      c.z = this.state.topZ; // rebase the module's relative z onto the live top of the board
+      this.claimIfInOwnZone(c.id);
+      this.dirtyIds.add(c.id);
+    }
+    this.scheduleFlush();                 // stamps ts/by and broadcasts; peers slide via CSS transition
+    void this.audio.play("gather");       // the actor hears the tidy; peers stay silent (own zone)
+    this.emitPublicSfx(cards[0]!.id, "gather"); // no-op for an own-zone seed — structural parity
   }
 
   private shuffleAt(id: string): void {

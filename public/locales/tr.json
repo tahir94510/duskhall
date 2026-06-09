@@ -68,7 +68,8 @@
     "gather": "Topla",
     "shuffle": "Karıştır",
     "info": "Kart bilgisi",
-    "perspective": "Görünümü çevir"
+    "perspective": "Görünümü çevir",
+    "arrange": "Alanını düzenle"
   },
   "table": {
     "deck": "Deste",
@@ -154,7 +155,7 @@
   },
   "shortcutsList": {
     "title": "Kısayollar",
-    "subtitle": "Her işlem imlecin altındaki kart için geçerlidir. Boş alanda hiçbir şey olmaz.",
+    "subtitle": "Çoğu işlem imlecin altındaki kart için geçerlidir; alanını düzenlemek gibi birkaçı ise kendi elin için çalışır. Boş alanda hiçbir şey olmaz.",
     "items": [
       {
         "keys": "Sol tık, sürükle",
@@ -190,10 +191,14 @@
       },
       {
         "keys": "V",
-        "desc": "Masayı solundaki oyuncunun açısından görürsün; tekrar basınca kendi açına dönersin. Bu yalnızca senin görünümünü değiştirir, başka kimse için bir şey değişmez. Açtığın Mühür ve Hizmetkârları dizeceğin boş alanı önüne getirmek için kullan."
+        "desc": "Masayı solundaki oyuncunun açısından görürsün; tekrar basınca kendi açına dönersin. Bu yalnızca senin görünümünü değiştirir, başka kimse için bir şey değişmez. Kendi alanını tam karşına almak için elverişlidir."
+      },
+      {
+        "keys": "D",
+        "desc": "Kendi alanını derleyip toplar. Oradaki kartların düzgün, deste gibi bir düzene oturur: aynı kartlar üst üste, türüne göre sıralı ve ortalanmış, komşunun alanına hiç taşmadan. Sesini yalnız sen duyarsın; kartlarının yerine süzülüşünü herkes görür."
       }
     ],
-    "mobileNote": "Dokunmatikte fare ya da klavye yoktur. Bir karta uzun basınca eylem çubuğu açılır; oradan kartı çevirebilir, yana döndürebilir, destesini toplayabilir ya da karıştırabilir, bilgilerini görebilir veya görünümü çevirebilirsin (V tuşuyla aynı)."
+    "mobileNote": "Dokunmatikte fare ya da klavye yoktur. Bir karta uzun bas, eylem çubuğu açılsın: oradan kartı çevirebilir, yana döndürebilir, destesini toplayabilir ya da karıştırabilir, bilgilerini görebilir ya da masaya bakışını çevirebilirsin. Kendi kartlarından birine uzun basarsan tüm alanını derli toplu bir düzene de sokabilirsin."
   },
   "leaveConfirm": {
     "title": "Odadan çık?",
@@ -244,6 +249,16 @@
     "badge": "Yeni",
     "empty": "Henüz güncelleme yok.",
     "entries": [
+      {
+        "v": "2026-06-09",
+        "date": "9 Haziran 2026",
+        "title": "Tüm alanını tek dokunuşla derle topla",
+        "items": [
+          "D'ye bas (ya da dokunmatikte kendi kartlarından birine uzun basıp Alanını düzenle'ye dokun); gizli alanın tertemiz bir deste gibi dizilsin: aynı kartlar üst üste, türüne göre sıralı ve ortalanmış, kaç tane olursa olsun. Komşunun alanına asla taşmaz.",
+          "Yerleşme sesini yalnız sen duyarsın; diğerleri kartlarının yerine süzülüşünü görür, içerik yine arkalarının ardında gizli kalır.",
+          "Yol boyunca daha açık yardım metni: Kısayollar artık D'yi Topla ve Karıştır'ın yanında gösteriyor, dokunmatik eylem çubuğu da tek bir tuşu öne çıkarmak yerine tek ve doğal bir dille okunuyor."
+        ]
+      },
       {
         "v": "2026-06-08",
         "date": "8 Haziran 2026",
@@ -403,7 +418,7 @@
         "body": [
           "Vaerum sana ve arkadaşlarına ortak bir masa sunar. Kartları gerçek zamanlı olarak birlikte dağıtır, taşır, çevirir, toplar, karıştırır ve döndürürsünüz. Kuralları kendiliğinden uygulamaz; tıpkı yüz yüze oynar gibi kuralları kendiniz işletirsiniz.",
           "Her oyuncunun, masanın kendi kenarında özel bir alanı vardır. Bu alana koyduğun kartlar diğerlerinden gizlenir; onlar kartın yüzünü değil, yalnızca bulanık bir arkasını görür. Bir kartı alanından dışarı sürükleyince herkese görünür olur, geri sürükleyince yeniden gizlenir. Kart, alanının kenarını geçtiği anda gizliyle görünür arasında geçiş yapar ve bu, her oyuncuda ve her ekranda aynı görünür.",
-          "Temel hareketler: kartı sürükleyerek taşı, tüm yığını taşımak için Ctrl'ye basılı tutarak sürükle. Bir kartı çevirmek için üzerinde tekerleği kaydır, tüm desteyi çevirmek için sağ tıkla (ya da Ctrl+tekerlek). Dağınık bir desteyi derli toplu yapmak için G, karıştırmak için M, yana döndürmek için Shift+tekerlek. Telefonda kartı basılı tutarak hızlı eylemleri aç. Tüm listeyi menüdeki Kısayollar bölümünde bulabilirsin.",
+          "Temel hareketler: kartı sürükleyerek taşı, tüm yığını taşımak için Ctrl'ye basılı tutarak sürükle. Bir kartı çevirmek için üzerinde tekerleği kaydır, tüm desteyi çevirmek için sağ tıkla (ya da Ctrl+tekerlek). Dağınık bir desteyi derli toplu yapmak için G, karıştırmak için M, yana döndürmek için Shift+tekerlek, tüm alanını düzgün ve gruplu bir deste hâline getirmek için D. Telefonda kartı basılı tutarak hızlı eylemleri aç. Tüm listeyi menüdeki Kısayollar bölümünde bulabilirsin.",
           "Menüde ev sahibine özel iki kontrol daha var. Rehberi aç, kural rehberini tüm masaya gösterir: hazırlığı, kimin başlayacağını ve her oyuncunun sırasını anlatır; adımı, sırası gelen oyuncu onay işaretine basarak ilerletir. Hazırlık adımlarını ev sahibi yürütür ve panelin içinden oyunu Başlat ya da Yeniden başlat ile başlatabilir; bu, deste toplanıp karıştırılarak temiz bir başlangıç sağlar. Desteyi sıfırla ise tüm kartları karışık tek desteye döndürür. Rehber yalnızca önerir. Oyununu asla kısıtlamaz."
         ]
       },
@@ -754,7 +769,7 @@
         "title": "14. Dijital masa",
         "body": [
           "Vaerum web sürümü serbest bir masadır. Otomatik kural motoru yoktur; oyuncular kuralları bu kitaba göre kendileri uygular.",
-          "Sol tıkla basılı tutup kartı sürükle. Sağ tık imlecin altındaki yığını toplu çevirir. Ctrl + sol tık yığının tamamını taşır. Tekerlek tek kartı çevirir; Ctrl + tekerlek yığını toplu çevirir. Shift + tekerlek 90° yana döndürür; yığının üzerindeyken tüm desteyi döndürüp hizalar. Yığını toplamak için G'ye, karıştırmak için M'ye bas.",
+          "Sol tıkla basılı tutup kartı sürükle. Sağ tık imlecin altındaki yığını toplu çevirir. Ctrl + sol tık yığının tamamını taşır. Tekerlek tek kartı çevirir; Ctrl + tekerlek yığını toplu çevirir. Shift + tekerlek 90° yana döndürür; yığının üzerindeyken tüm desteyi döndürüp hizalar. Yığını toplamak için G'ye, karıştırmak için M'ye, kendi alanını gruplu ve deste gibi bir düzene sokmak için D'ye bas.",
           "Kendi alanın, ekranının altındaki bulanık şerittir. Oradaki kartlar sana özeldir; rakipler yalnızca kartların arkasını görür ve sayısını tahmin edebilir. Rakibin alanına kart bırakamazsın; kenarda bırak, sahibi içeri kendisi çeker.",
           "Herkes ayrıldığında oda kapanır. Odadan ayrılmak, seni ev sahibi yapan yeni bağlantılı taze bir oda açar."
         ]

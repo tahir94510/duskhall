@@ -17,6 +17,10 @@ const ICON_INFO = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" a
 // Perspective (camera-turn): the touch path to the V shortcut. A table (rounded square) with a
 // circular arrow sweeping around it — "turn the view". Mirrors the icon in Game.installPerspectiveButton.
 const ICON_PERSPECTIVE = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="8" y="8" width="8" height="8" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 9 A 8 8 0 0 1 19 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M19 15 A 8 8 0 0 1 5 17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M19 3 V7 H15 M5 21 V17 H9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+// Arrange (tidy your hand): three cards squared into a neat, grouped row — "lay my area out as a
+// deck". Only ever shown on a card sitting in YOUR own zone (see canArrange), so it reads as the
+// hand-area action it is. Mirrors the perspective/info stroke style.
+const ICON_ARRANGE = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3.5" y="7" width="6" height="10" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="11.5" y="7" width="6" height="10" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M20.5 8 V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`;
 
 export interface ContextHooks {
   /** Flip the whole pile under the finger, or a lone card if that's all there is. */
@@ -26,6 +30,9 @@ export interface ContextHooks {
   onRotate(id: string): void;
   /** Turn the local camera a quarter (the touch path to the V key). Card-independent. */
   onPerspective(): void;
+  /** Tidy the local player's own hidden-zone cards into a grouped, deck-like layout. Zone-wide;
+   *  `id` is the tapped card, only used to confirm the gesture started in our own area. */
+  onArrange(id: string): void;
   /** Show the card's details (touch has no hover); only when it reads face-up. */
   onInfo(id: string): void;
   /** Returns the stack containing `id` so the bar can disable irrelevant actions. */
@@ -36,6 +43,14 @@ export interface ContextHooks {
   /** True when the card currently reads face-up to the local player, so the
    *  Info button can disable itself on a face-down card (nothing to show). */
   canShowInfo(id: string): boolean;
+  /** True when the tapped card is in the local player's OWN zone. Gates the Arrange button's
+   *  VISIBILITY (it is hidden on any other card), so the action only ever offers itself on your
+   *  own hand area. */
+  canArrange(id: string): boolean;
+  /** True when there is nothing to tidy (fewer than two of your own cards, or the area is already
+   *  laid out), so the Arrange button greys out like Gather on an already-collected pile instead
+   *  of sitting there as a dead tap. Re-enables once the layout is disturbed or a card is added. */
+  isAreaTidy(id: string): boolean;
 }
 
 export class ContextBar {
@@ -50,6 +65,7 @@ export class ContextBar {
       <button type="button" class="context-bar__btn" data-act="rotate" aria-label="${esc(t("actions.rotate"))}">${ICON_ROTATE}</button>
       <button type="button" class="context-bar__btn" data-act="gather" aria-label="${esc(t("actions.gather"))}">${ICON_GATHER}</button>
       <button type="button" class="context-bar__btn" data-act="mix" aria-label="${esc(t("actions.shuffle"))}">${ICON_MIX}</button>
+      <button type="button" class="context-bar__btn" data-act="arrange" aria-label="${esc(t("actions.arrange"))}">${ICON_ARRANGE}</button>
       <button type="button" class="context-bar__btn" data-act="info" aria-label="${esc(t("actions.info"))}">${ICON_INFO}</button>
       <button type="button" class="context-bar__btn" data-act="perspective" aria-label="${esc(t("actions.perspective"))}">${ICON_PERSPECTIVE}</button>
     `;
@@ -70,6 +86,7 @@ export class ContextBar {
         else if (act === "rotate") this.hooks.onRotate(id);
         else if (act === "gather") this.hooks.onGather(id);
         else if (act === "mix") this.hooks.onMix(id);
+        else if (act === "arrange") this.hooks.onArrange(id);
         else if (act === "info") this.hooks.onInfo(id);
         else if (act === "perspective") this.hooks.onPerspective();
         this.hide();
@@ -101,6 +118,15 @@ export class ContextBar {
     setDisabled("mix", !isStack);
     // Info only makes sense for a card that currently reads face-up.
     setDisabled("info", !this.hooks.canShowInfo(id));
+    // Arrange is HIDDEN on any card outside our own zone (a whole-zone action would be misleading
+    // on a public or rival card), and on our own cards it greys out when there is nothing to tidy —
+    // so it is never a dead tap and the common tap on a shared card keeps the original six buttons.
+    const arrangeBtn = this.el.querySelector<HTMLButtonElement>(`[data-act="arrange"]`);
+    if (arrangeBtn) {
+      const showArrange = this.hooks.canArrange(id);
+      arrangeBtn.style.display = showArrange ? "" : "none";
+      if (showArrange) setDisabled("arrange", this.hooks.isAreaTidy(id));
+    }
   }
 
   show(id: string, clientX: number, clientY: number): void {
