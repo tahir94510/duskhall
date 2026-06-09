@@ -155,6 +155,21 @@ credentials, branding merges across all:
 Known keys include the Supabase URL and anon key, the support and feedback links, the app
 name, the site URL, and the social image. See `RuntimeConfig` for the full list.
 
+### Keeping Supabase awake
+
+Supabase Free-plan projects pause after ~7 days with no activity, which takes realtime sync
+offline until the project is manually restored. `.github/workflows/keep-supabase-awake.yml`
+pings the project once a day (PostgREST root + auth health) so the idle timer never reaches
+7 days. It needs two repo secrets (Settings -> Secrets and variables -> Actions):
+
+- `SUPABASE_URL` — same as `VITE_SUPABASE_URL` (`https://<project-ref>.supabase.co`)
+- `SUPABASE_ANON_KEY` — same as `VITE_SUPABASE_ANON_KEY`
+
+Both are public values (they ship in the web client), so storing them as Actions secrets is
+safe. You can also trigger the workflow by hand from the Actions tab. GitHub disables
+scheduled workflows after ~60 days with no repo activity, so if the repo goes idle too,
+re-enable it (or just push) to resume the pings.
+
 ## Architecture map
 
 - `src/game/Game.ts` orchestrates state, input, rendering, and networking glue.

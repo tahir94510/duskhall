@@ -216,6 +216,10 @@ export class Game {
   // warning if the link is still down after the grace, so a genuine sustained drop still reports.
   private connLostTimer = 0;
   private static readonly CONN_LOST_GRACE_MS = 2500;
+  // A persistent on-screen offline banner element (lazily created). Unlike a toast it STAYS up the
+  // whole time the link is down, so the player always knows live sync is off — yet it is only ever
+  // shown once realtimeDown is set (after the debounce grace), so a refresh flap never flashes it.
+  private offlineBanner: HTMLDivElement | null = null;
   // Persistent seat ownership keyed by seat index. A claim survives a network
   // drop (the seat shows as "dropped"/dimmed) and is only cleared by an explicit
   // `left` broadcast, so a disconnected player never loses their seat or cards.
@@ -2496,6 +2500,24 @@ export class Game {
   // Cancel any in-flight flip/gather/shuffle animation on a card and clear its animation classes, so
   // the render loop immediately applies its authoritative transform/face. Lets a tidy take over a
   // card that is still mid-animation without leaving it half-finished and out of place.
+  // Show/hide the persistent offline banner. Created on first need. The text is re-read from i18n on
+  // each show so it follows a language change. Gated entirely by the caller (only shown after the
+  // dropped-connection grace confirms a real, sustained drop), so it never appears on a brief flap.
+  private setOfflineBanner(show: boolean): void {
+    if (show && !this.offlineBanner) {
+      const b = document.createElement("div");
+      b.className = "conn-banner";
+      b.setAttribute("role", "status");
+      b.setAttribute("aria-live", "polite");
+      this.offlineBanner = b;
+      document.body.appendChild(b);
+    }
+    const el = this.offlineBanner;
+    if (!el) return;
+    if (show) el.textContent = t("ui.connLost");
+    el.classList.toggle("is-visible", show);
+  }
+
   private clearCardAnim(id: string): void {
     const handle = this.animTimers.get(id);
     if (handle !== undefined) { window.clearTimeout(handle); this.animTimers.delete(id); }
@@ -3185,8 +3207,9 @@ export class Game {
           if (this.realtimeDown) toast(t("ui.connRestored"));
         }
         this.hasBeenOnline = true;
-        // Cross-device sync is back: clear the "unreachable" hint on rival seats.
+        // Cross-device sync is back: clear the "unreachable" hint on rival seats and drop the banner.
         if (this.realtimeDown) { this.realtimeDown = false; this.refreshZones(); }
+        this.setOfflineBanner(false);
       }
       if (s === "offline") {
         // Can't reach peers: never keep the loader waiting on the network. The
@@ -3208,7 +3231,9 @@ export class Game {
             // Reaching here means we never went back online during the grace (online clears it).
             this.realtimeDown = true;
             this.refreshZones();
-            toast(t("ui.connLost"));
+            // A persistent banner (not a transient toast) so the player keeps seeing that live sync
+            // is down the whole time it is, instead of a one-off message that scrolls away.
+            this.setOfflineBanner(true);
           }, Game.CONN_LOST_GRACE_MS);
         }
       }

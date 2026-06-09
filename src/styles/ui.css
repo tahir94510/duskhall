@@ -289,6 +289,45 @@
 }
 .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 
+/* Persistent offline banner: pinned at the top centre, it stays up the whole time live sync is down
+   (set only after the dropped-connection grace, so a refresh flap never flashes it). A small amber
+   dot + ivory text on a dark pill — clear without being alarming, and inert to pointer input. */
+.conn-banner {
+  position: fixed;
+  left: 50%;
+  top: max(env(safe-area-inset-top), 10px);
+  transform: translate(-50%, -10px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(92vw, 460px);
+  background: rgba(18, 18, 18, 0.94);
+  border: 1px solid rgba(210, 96, 63, 0.5);
+  color: var(--ivory);
+  padding: 9px 16px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: center;
+  z-index: var(--z-toast);
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: var(--shadow-panel);
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.conn-banner::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d2603f;
+  box-shadow: 0 0 6px rgba(210, 96, 63, 0.6);
+}
+.conn-banner.is-visible { opacity: 1; transform: translate(-50%, 0); }
+
 .cursor-ghost {
   position: fixed;
   top: 0;
