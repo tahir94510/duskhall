@@ -68,7 +68,8 @@
     "gather": "Gather",
     "shuffle": "Shuffle",
     "info": "Card info",
-    "perspective": "Turn the view"
+    "perspective": "Turn the view",
+    "arrange": "Tidy your area"
   },
   "table": {
     "deck": "Deck",
@@ -154,7 +155,7 @@
   },
   "shortcutsList": {
     "title": "Shortcuts",
-    "subtitle": "Every action works on the card under your cursor. Empty space does nothing.",
+    "subtitle": "Most actions work on the card under your cursor; a few, like tidying your area, act on your own hand. Empty space does nothing.",
     "items": [
       {
         "keys": "Left-press, drag",
@@ -190,10 +191,14 @@
       },
       {
         "keys": "V",
-        "desc": "View the table from your left-hand neighbour's side; press again to return to your own. This changes only your own view, nothing for anyone else. Use it to bring your open space in front of you, then lay out the Seals and Servants you reveal there."
+        "desc": "View the table from your left-hand neighbour's side; press again to return to your own. This changes only your own view, nothing for anyone else — handy for bringing your own area square in front of you."
+      },
+      {
+        "keys": "D",
+        "desc": "Tidy your own area. Every card you hold there settles into a neat, deck-like layout: matching cards stacked together, sorted by type and centred, never crossing into a neighbour's space. Only you hear it; everyone sees your cards slide into place."
       }
     ],
-    "mobileNote": "On touch there is no mouse or keyboard. Long-press a card to open its action bar, then tap to flip it, turn it sideways, gather or shuffle its stack, read its details, or turn the view (the same as the V key)."
+    "mobileNote": "On touch there is no mouse or keyboard. Long-press a card to open its action bar: from there you can flip it, turn it sideways, gather or shuffle its stack, read its details, or turn your view of the table. Long-press one of your own cards and you can also tidy your whole area into a clean layout."
   },
   "leaveConfirm": {
     "title": "Exit room?",
@@ -244,6 +249,16 @@
     "badge": "New",
     "empty": "No updates yet.",
     "entries": [
+      {
+        "v": "2026-06-09",
+        "date": "June 9, 2026",
+        "title": "Tidy your whole area in one press",
+        "items": [
+          "Press D — or, on touch, long-press one of your own cards and tap Tidy your area — to lay your hidden area out as a clean deck: matching cards stacked together, sorted by type and centred, however many you are holding. It never spills into a neighbour's space.",
+          "Only you hear it settle; everyone else simply sees your cards slide into place, still hidden behind their backs.",
+          "Clearer help text along the way: Shortcuts now lists D next to Gather and Shuffle, and the touch action bar reads in one natural voice instead of singling out a single key."
+        ]
+      },
       {
         "v": "2026-06-08",
         "date": "June 8, 2026",
@@ -403,7 +418,7 @@
         "body": [
           "Vaerum gives you and your friends a shared table. You deal, move, flip, gather, shuffle and rotate the cards together in real time. It never enforces the rules, so you play by the rulebook yourselves, just as you would in person.",
           "Each player has a private area along their own edge of the table. Any card you place in your area is hidden from the others, who see only a blurred card back. Drag a card out of your area to reveal it to everyone, and back in to hide it again. A card switches between hidden and visible as it crosses the edge of your area, and it looks the same to every player on any screen.",
-          "The basics: drag a card to move it, or hold Ctrl while dragging to move a whole stack. Scroll over a card to flip it, or right-click (Ctrl-scroll) to flip a whole pile. Press G to gather a loose pile into a tidy stack, M to shuffle it, and Shift-scroll to turn it sideways. On a phone, press and hold a card to open its quick actions. You can find the full list under Shortcuts in the menu.",
+          "The basics: drag a card to move it, or hold Ctrl while dragging to move a whole stack. Scroll over a card to flip it, or right-click (Ctrl-scroll) to flip a whole pile. Press G to gather a loose pile into a tidy stack, M to shuffle it, Shift-scroll to turn it sideways, and D to lay your whole area out in a neat, grouped deck. On a phone, press and hold a card to open its quick actions. You can find the full list under Shortcuts in the menu.",
           "The menu also has two host controls. Open guide shows the rulebook walkthrough to the whole table: it explains setup, who goes first, and each player's turn, and the player whose turn it is taps the check to move the step on. The host runs the setup steps and can Start or Restart the game from inside the panel, which gathers and shuffles the deck for a fresh start. Reset deck simply returns every card to one shuffled pile. The guide only suggests. It never restricts your play."
         ]
       },
@@ -754,7 +769,7 @@
         "title": "14. The digital table",
         "body": [
           "Vaerum on the web is a sandbox. There is no automated rules engine; players follow this rulebook themselves.",
-          "Left-press drags a card. Right-click flips the stack under the cursor. Ctrl plus left-press drags the whole stack. Scroll flips a single card; Ctrl plus scroll flips the whole stack. Shift plus scroll rotates 90° sideways; over a pile it turns and squares up the whole stack. Press G to gather the stack, M to shuffle it.",
+          "Left-press drags a card. Right-click flips the stack under the cursor. Ctrl plus left-press drags the whole stack. Scroll flips a single card; Ctrl plus scroll flips the whole stack. Shift plus scroll rotates 90° sideways; over a pile it turns and squares up the whole stack. Press G to gather the stack, M to shuffle it, and D to tidy your own area into a grouped, deck-like layout.",
           "Your zone is the blurred strip along the bottom of your screen. Cards there are private to you; rivals see only their backs and can infer the count. You cannot drop a card inside an opponent's zone; leave it on the rim and the owner draws it in.",
           "When everyone leaves, the room closes. Leaving the room opens a fresh one with a new link, with you as its host."
         ]

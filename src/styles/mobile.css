@@ -182,9 +182,10 @@
 
 @media (pointer: coarse) {
   /* Comfortable ≥44px touch targets for the long-press action bar, and cap its
-     width so the five buttons wrap to a tidy second row near a screen edge
-     instead of overflowing off-screen. */
-  .context-bar { max-width: min(92vw, 300px); justify-content: center; }
+     width so the buttons wrap to a tidy second row near a screen edge instead of
+     overflowing off-screen. Sized to keep all seven (the extra Arrange button shows
+     only on your own cards) on one row on mid-size phones; narrower screens wrap. */
+  .context-bar { max-width: min(94vw, 348px); justify-content: center; }
   .context-bar__btn { width: 44px; height: 44px; }
   .context-bar__btn svg { width: 18px; height: 18px; }
   /* Comfortable touch targets: header buttons AND the minimized Guide bar grow together via --ctrl. */
