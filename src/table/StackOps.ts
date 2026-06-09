@@ -141,6 +141,57 @@ export function findConnectedStack(
 }
 
 /**
+ * For every card, the size of the connected pile it belongs to and how many cards sit BELOW it
+ * (lower z) within that pile. A pile is a set of cards overlapping one another by at least
+ * OVERLAP_RATIO of the smaller footprint — the same rule the stack ops use — found in one union-find
+ * pass. Used to paint a count badge on any card that covers at least one other (below >= 1). O(n^2)
+ * in the card count: cheap for a table deck, and only run on dirty render frames.
+ */
+export function pileSizes(
+  state: BoardState,
+  board: BoardSize,
+  size?: { w: number; h: number }
+): Map<string, { size: number; below: number }> {
+  const { w, h } = size && size.w > 0 ? size : cardSizeFallback();
+  const cards = Array.from(state.cards.values());
+  const n = cards.length;
+  const out = new Map<string, { size: number; below: number }>();
+  if (n === 0) return out;
+  const boxes = cards.map((c) => cardPixelBox(c, board, w, h));
+  const parent = cards.map((_, i) => i);
+  const find = (i: number): number => {
+    while (parent[i] !== i) { parent[i] = parent[parent[i]!]!; i = parent[i]!; }
+    return i;
+  };
+  for (let i = 0; i < n; i++) {
+    const bi = boxes[i]!;
+    for (let j = i + 1; j < n; j++) {
+      const bj = boxes[j]!;
+      const inter = intersectionArea(bi, bj);
+      if (inter <= 0) continue;
+      // Measure against the SMALLER footprint so a rotated card still pairs with an upright one.
+      const minArea = Math.min(bi.w * bi.h, bj.w * bj.h);
+      if (inter / minArea < OVERLAP_RATIO) continue;
+      const ri = find(i), rj = find(j);
+      if (ri !== rj) parent[ri] = rj;
+    }
+  }
+  const groups = new Map<number, number[]>();
+  for (let i = 0; i < n; i++) {
+    const r = find(i);
+    const g = groups.get(r);
+    if (g) g.push(i); else groups.set(r, [i]);
+  }
+  for (const members of groups.values()) {
+    const sz = members.length;
+    // Ascending z so each card's "below" count is its rank from the bottom of the pile.
+    members.sort((a, b) => cards[a]!.z - cards[b]!.z);
+    members.forEach((idx, rank) => out.set(cards[idx]!.id, { size: sz, below: rank }));
+  }
+  return out;
+}
+
+/**
  * Square every card's ORIENTATION to one angle, without moving or restacking
  * them. This is the first phase of a tidy: straighten a fanned/cross-laid pile so
  * the cards all face the same way, before they are gathered into one spot. Each

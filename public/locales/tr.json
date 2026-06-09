@@ -252,11 +252,12 @@
       {
         "v": "2026-06-09",
         "date": "9 Haziran 2026",
-        "title": "Tüm alanını tek dokunuşla derle topla",
+        "title": "Elini derle topla, bir de üst üste sayacı",
         "items": [
-          "D'ye bas (ya da dokunmatikte kendi kartlarından birine uzun basıp Alanını düzenle'ye dokun); gizli alanın tertemiz bir deste gibi dizilsin: aynı kartlar üst üste, türüne göre sıralı ve ortalanmış, kaç tane olursa olsun. Komşunun alanına asla taşmaz.",
-          "Yerleşme sesini yalnız sen duyarsın; diğerleri kartlarının yerine süzülüşünü görür, içerik yine arkalarının ardında gizli kalır.",
-          "Yol boyunca daha açık yardım metni: Kısayollar artık D'yi Topla ve Karıştır'ın yanında gösteriyor, dokunmatik eylem çubuğu da tek bir tuşu öne çıkarmak yerine tek ve doğal bir dille okunuyor."
+          "D'ye bas (ya da dokunmatikte kendi kartlarından birine uzun basıp Alanını düzenle'ye dokun); gizli alanın tertemiz bir deste gibi dizilsin: aynı kartlar üst üste, türüne göre sıralı, ortalanmış ve okuyabilmen için yüzü sana dönük. Sayısı kaç olursa olsun, tek kart bile olsa çalışır ve komşunun alanına asla taşmaz.",
+          "Yeni: başka bir kartın üstünde duran her kartın sol üst köşesinde artık küçük bir sayı var; böylece bir yığında (elinde, destede ya da çöplükte) kaç kart olduğunu bir bakışta görürsün.",
+          "Alanının yerleşme sesini yalnız sen duyarsın; diğerleri kartlarının yerine süzülüşünü görür, içerik yine arkalarının ardında gizli kalır.",
+          "İnce ayarlar: desteyi bırakmak artık tek kart bırakmakla aynı sesi çıkarıyor, küçük telefonlarda oyun alanının çevresindeki fazladan çerçeve kalktı ve Kısayollar D'yi Topla ile Karıştır'ın yanında gösteriyor."
         ]
       },
       {

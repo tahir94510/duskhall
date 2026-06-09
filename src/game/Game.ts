@@ -30,6 +30,7 @@ import { seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, shouldCl
 import {
   findStackOverlapping,
   findConnectedStack,
+  pileSizes,
   gatherStack,
   shuffleStack,
   turnStackOver,
@@ -177,6 +178,8 @@ export class Game {
   // Cache of card id -> DOM node so the render loop never has to query the DOM
   // (a per-card querySelector every frame was the main idle-CPU jank source).
   private cardEls = new Map<string, HTMLDivElement>();
+  // Lazily-cached stack-count badge element per card (cards are never destroyed, so no cleanup).
+  private countEls = new Map<string, HTMLElement>();
   // Dirty flag: the RAF loop only re-renders when something actually changed,
   // so a still table costs nothing instead of churning every frame.
   private renderRequested = true;
@@ -281,19 +284,20 @@ export class Game {
       onInfo: (id) => this.showCardInfo(id),
       onArrange: () => this.arrangeOwnZone(), // zone-wide; the tapped id only gates visibility
       canShowInfo: (id) => this.canShowCardInfo(id),
-      // Show the Arrange button ONLY on a card that sits in our OWN zone, so it never appears on a
-      // public/centre or rival card. Greying when there is nothing to do is handled by isAreaTidy.
+      // Show the Arrange button on ANY card resting in our OWN hand area (centre-in-zone), so it
+      // offers on every one of our cards — even a single one — and never on a public/centre or rival
+      // card. Greying when there is nothing to do is handled by isAreaTidy.
       canArrange: (id) => {
         if (!this.seated()) return false;
         const c = this.state.cards.get(id);
-        return !!c && this.cardZoneOwnerOf(c) === this.self.seat;
+        return !!c && pointInZoneCanonical(this.self.seat as Seat, c.x, c.y);
       },
-      // Grey the Arrange button out (like Gather on a tidy pile) when there is nothing to tidy:
-      // fewer than two of our own cards, or the area is already laid out. It re-enables the moment
-      // the layout is disturbed or a new card enters, so a tidy is never offered as a dead tap.
+      // Grey the Arrange button out (like Gather on a tidy pile) when there is nothing to tidy: no
+      // cards of ours in the zone, or the area is already laid out and face-up. It re-enables the
+      // moment the layout is disturbed, a card is flipped, or a new card enters — never a dead tap.
       isAreaTidy: () => {
         const ids = this.ownZoneArrangeableIds();
-        return ids.length < 2 || this.ownZoneArranged(ids);
+        return ids.length < 1 || this.ownZoneArranged(ids);
       },
       stackFor: (id) => findConnectedStack(this.state, this.boardSize, id, this.cardMetrics()),
       isPileTidy: (id) => this.pileIsTidy(id)
@@ -2287,9 +2291,15 @@ export class Game {
     // Commit the staged face with no transition (one reflow), then re-enable transitions.
     if (probe) void probe.offsetWidth;
     for (const id of ids) this.cardEls.get(id)?.classList.remove("is-flip-staging");
-    // Next frame: flip every card to the shared target face so the transition runs.
+    // Next frame: flip every card to the shared target face so the transition runs. Skip any card
+    // whose animation was taken over in the meantime (e.g. a tidy cleared is-animating to reposition
+    // and face it): writing the stale captured face there would fight the tidy's authoritative face.
     requestAnimationFrame(() => {
-      for (const id of ids) this.cardEls.get(id)?.classList.toggle("is-faceup", targetFaceUp);
+      for (const id of ids) {
+        const el = this.cardEls.get(id);
+        if (!el || !el.classList.contains("is-animating")) continue;
+        el.classList.toggle("is-faceup", targetFaceUp);
+      }
     });
     window.setTimeout(() => {
       for (const id of ids) this.cardEls.get(id)?.classList.remove("is-flip-quiet");
@@ -2392,45 +2402,62 @@ export class Game {
   // ours by position) and is excluded, never yanked into our layout.
   private ownZoneArrangeableIds(): string[] {
     if (!this.seated()) return [];
-    const seat = this.self.seat;
+    const seat = this.self.seat as Seat;
     const out: string[] = [];
     for (const c of this.state.cards.values()) {
-      if (this.cardZoneOwnerOf(c) !== seat) continue; // not in MY zone (public/centre/rival → skip)
-      if (this.isLockedByOther(c.id)) continue;       // a peer is holding/dragging it
-      if (this.myHeldIds.includes(c.id)) continue;    // I'm dragging it right now
-      if (this.animTimers.has(c.id)) continue;        // mid flip/gather settle — leave it be
+      // A card is ours to tidy when its CENTRE sits in our own trapezoid — an inclusive,
+      // position-only test so EVERY card resting in our hand area qualifies (even one slightly
+      // overhanging the zone edge, which the tidy pulls fully back in), while public, centre and
+      // rival-zone cards are excluded.
+      if (!pointInZoneCanonical(seat, c.x, c.y)) continue;
+      if (this.isLockedByOther(c.id)) continue;    // a peer is holding/dragging it
+      if (this.myHeldIds.includes(c.id)) continue; // I'm dragging it right now
+      // A card mid flip/settle is INTENTIONALLY included: a tidy takes authoritative control of
+      // its own-zone cards (arrangeOwnZone cancels any in-flight anim), so pressing D right after a
+      // flip lays everything out in one pass instead of skipping the still-animating card.
       out.push(c.id);
     }
     return out;
   }
 
-  // Tidy our own hidden-zone cards into a clean, deck-like layout: identical cards collected into
-  // one stack, stacks grouped by category, the whole set centred inside our trapezoid and never
-  // spilling into a neighbour's area, for any count. Mirrors gatherAt: a multi-card action that
-  // stays SILENT for peers (own-zone seed → emitPublicSfx no-ops) while the motion rides the
-  // normal patch + CSS transition, so everyone SEES the cards slide (blurred, as our area always
-  // is) but only WE hear it. Already-tidy → silent no-op, so mashing the key never spams.
   // True when our own hand area is already laid out exactly as arrangeOwnZone would leave it (or has
-  // nothing to lay out): fewer than two of our own cards, or every card already on its target spot
-  // and angle. Used so a repeat press/tap is a silent no-op instead of replaying the sound and
-  // motion. It compares the LIVE cards against a freshly computed layout, so any disturbance — a
-  // card nudged, a new card entering the zone, one leaving — makes the target differ and a fresh
-  // tidy is allowed again.
+  // nothing to lay out). Used so a repeat press/tap is a silent no-op instead of replaying the sound
+  // and motion. It compares the LIVE cards against a freshly computed layout, so any disturbance — a
+  // card nudged, one moved on top of another, a new card entering, one leaving, or a card flipped
+  // face-down — makes the target differ and a fresh tidy is allowed again.
   private ownZoneArranged(ids: string[]): boolean {
     const cards = ids.map((id) => this.state.cards.get(id)).filter((c): c is CardState => !!c);
-    if (cards.length < 2) return true;
+    if (cards.length < 1) return true;
+    // A tidy also turns every card face-up (so you can read your laid-out hand), so a face-down
+    // card means the area is NOT arranged yet.
+    if (cards.some((c) => !c.faceUp)) return false;
     const opts = { uprightRot: this.viewerUprightRot(cards[0]!.rot), cardW: CARD_CANON_W, cardH: CARD_CANON_H };
     return isZoneArranged(cards, this.self.seat as Seat, opts);
   }
 
+  // Cancel any in-flight flip/gather/shuffle animation on a card and clear its animation classes, so
+  // the render loop immediately applies its authoritative transform/face. Lets a tidy take over a
+  // card that is still mid-animation without leaving it half-finished and out of place.
+  private clearCardAnim(id: string): void {
+    const handle = this.animTimers.get(id);
+    if (handle !== undefined) { window.clearTimeout(handle); this.animTimers.delete(id); }
+    const el = this.cardEls.get(id);
+    if (el) el.classList.remove("is-animating", "is-shuffling", "is-flip-quiet", "is-flip-staging");
+  }
+
+  // Tidy our own hidden-zone cards into a clean, deck-like layout: identical cards collected into one
+  // stack, stacks grouped by category, every card turned face-up to read at a glance, the whole set
+  // centred inside our trapezoid and never spilling into a neighbour's area, for ANY count (a lone
+  // card simply centres). Mirrors gatherAt: the motion rides the normal patch + CSS transition so
+  // everyone SEES the cards slide (blurred, as our area always is) but only WE hear it. Already
+  // laid out → silent no-op, so mashing the key never spams.
   private arrangeOwnZone(): void {
     if (!this.seated() || this.viewRotating) return;
     const ids = this.ownZoneArrangeableIds();
-    if (ids.length < 2) return;            // a lone card is already "arranged"
-    if (this.anyAnimating(ids)) return;    // don't fight an in-flight settle
-    if (this.ownZoneArranged(ids)) return; // already laid out → no sound, no patch (never spams)
+    if (ids.length < 1) return;            // nothing of ours in the zone
+    if (this.ownZoneArranged(ids)) return; // already laid out & face-up → no sound, no patch
     const cards = ids.map((id) => this.state.cards.get(id)).filter((c): c is CardState => !!c);
-    if (cards.length < 2) return;
+    if (cards.length < 1) return;
     const seat = this.self.seat as Seat;
     // Square to the angle that reads upright for THIS viewer's camera (same rule as gather/shuffle).
     const uprightRot = this.viewerUprightRot(cards[0]!.rot);
@@ -2441,14 +2468,20 @@ export class Game {
     for (const tgt of targets) {
       const c = this.state.cards.get(tgt.id);
       if (!c) continue;
+      // Take authoritative control: cancel any in-flight flip/settle so the render loop applies the
+      // new transform/face at once (the "press D right after flipping" bug, where a still-animating
+      // card was skipped and left out of place).
+      this.clearCardAnim(tgt.id);
       c.x = tgt.x;
       c.y = tgt.y;
       c.rot = tgt.rot;
+      c.faceUp = true; // turn every card to face you, so the laid-out hand reads at a glance
       this.state.topZ++;
       c.z = this.state.topZ; // rebase the module's relative z onto the live top of the board
       this.claimIfInOwnZone(c.id);
       this.dirtyIds.add(c.id);
     }
+    this.requestRender();
     this.scheduleFlush();                 // stamps ts/by and broadcasts; peers slide via CSS transition
     void this.audio.play("gather");       // the actor hears the tidy; peers stay silent (own zone)
     this.emitPublicSfx(cards[0]!.id, "gather"); // no-op for an own-zone seed — structural parity
@@ -3620,6 +3653,9 @@ export class Game {
 
   private renderAllCards(): void {
     const { w: cardW, h: cardH } = this.cardMetrics();
+    // Per-card pile membership for the stack-count badge: how big each card's pile is and how many
+    // cards sit below it. Computed once per frame from the live positions (cheap union-find).
+    const piles = pileSizes(this.state, this.boardSize, { w: cardW, h: cardH });
     for (const c of this.state.cards.values()) {
       const el = this.cardEls.get(c.id);
       if (!el) continue;
@@ -3681,6 +3717,24 @@ export class Game {
       // "locked" outline on top of our own grab/flip. The settle frame restores it.
       if (!busy) el.classList.toggle("is-locked", this.isLockedByOther(c.id));
       else el.classList.remove("is-locked");
+      // Stack-count badge: show this card's pile size in its top-left corner when it is covering at
+      // least one other card (below >= 1). Cleared otherwise. The number is the WHOLE pile count, so
+      // the top of a deck reads the deck size at a glance.
+      let badge = this.countEls.get(c.id);
+      if (!badge) {
+        const q = el.querySelector<HTMLElement>(".card__count");
+        if (q) { badge = q; this.countEls.set(c.id, q); }
+      }
+      if (badge) {
+        const info = piles.get(c.id);
+        if (info && info.below >= 1) {
+          const txt = String(info.size);
+          if (badge.textContent !== txt) badge.textContent = txt;
+          if (!el.classList.contains("has-stack")) el.classList.add("has-stack");
+        } else if (el.classList.contains("has-stack")) {
+          el.classList.remove("has-stack");
+        }
+      }
     }
   }
 

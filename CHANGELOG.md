@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.9.21: Stack counter, and a rounder tidy
+
+A polish pass on the hand-area tidy plus a new at-a-glance stack counter, with several
+small-device and sound fixes. The card sync, canonical frame and balance numbers are
+unchanged. 271 tests green.
+
+- **A count on every stack.** Any card that is covering at least one other now shows a small
+  number in its top-left corner: the size of that pile. So you read the deck count, a discard
+  pile, or how many copies sit in one of your tidied stacks at a glance. The badge sits outside
+  the card's flip layer, so it never blurs with a concealed back and is never flipped with the
+  face, and it scales from the card size to stay legible on every screen.
+- **Tidy turns every card face-up.** Pressing D (or the touch Tidy button) now also turns each
+  card in your area to face you, so a laid-out hand reads at once instead of leaving some cards
+  backs-up.
+- **Tidy works on a single card, and on every card in your area.** The minimum is now one card
+  (a lone card simply centres), and the action offers itself on any card whose centre rests in
+  your hand area, not only ones past the privacy threshold. Pressing D right after flipping a
+  card no longer skips that card: a tidy now takes authoritative control of an in-flight
+  animation instead of leaving the still-flipping card out of place.
+- **Multi-row layouts stack the right way.** When a tidy spills into two rows, the row nearer
+  you now sits on top of the row behind it, the way a real hand fans, instead of the reverse.
+- **A deck drops like a card.** Dropping a whole pile onto the table now plays the same crisp
+  "place" sound as dropping a single card, instead of a separate, heavier thud.
+- **No extra frame on small phones.** The play area no longer drew a surrounding margin/frame on
+  small screens: the safe-area inset was being counted twice (once in the field size, once as
+  padding). The mobile table now fills its space the same way the desktop layout does.
+- **Tidy-up under the hood.** Removed the now-unused "place-stack" sound (synth voice, broadcast
+  entry and ducking entry) along with its dead references.
+
 ## 0.9.20: Tidy your whole area in one press
 
 A hand-area quality-of-life pass plus a text polish. The card sync, canonical frame and balance

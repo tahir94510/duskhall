@@ -1,10 +1,10 @@
 // Lightweight audio: try /audio/<name>.mp3, otherwise synthesise a placeholder
 // tone with the Web Audio API. Users replace the MP3s under public/audio/.
 
-export type SfxName = "flip" | "pickup" | "place" | "place-stack" | "shuffle" | "gather" | "snap" | "ui-click" | "ui-open" | "ui-close";
+export type SfxName = "flip" | "pickup" | "place" | "shuffle" | "gather" | "snap" | "ui-click" | "ui-open" | "ui-close";
 
 interface ProceduralSpec {
-  type: "click" | "swoosh" | "thud" | "riffle" | "chime" | "snap" | "stack";
+  type: "click" | "swoosh" | "thud" | "riffle" | "chime" | "snap";
   freq?: number;
 }
 
@@ -12,10 +12,6 @@ const PROCEDURAL: Record<SfxName, ProceduralSpec> = {
   "flip": { type: "click", freq: 1100 },
   "pickup": { type: "click", freq: 720 },
   "place": { type: "thud", freq: 220 },
-  // A whole pile lands heavier than one card: a deeper thud with a soft papery
-  // settle (a few cards shuffling into place) so dropping a deck feels weighty
-  // and reads differently from a single card's crisp tap.
-  "place-stack": { type: "stack", freq: 170 },
   "shuffle": { type: "riffle" },
   "gather": { type: "swoosh", freq: 540 },
   "snap": { type: "snap", freq: 320 },
@@ -51,7 +47,7 @@ const LS_MUSIC_BAG = "vaerum:music:bag";
 // flips never touch the music. Depth is shallow and the release is smooth.
 const DUCK_DEPTH = 0.85;   // music eases to 85% (not the old, pumpy 55%)
 const DUCK_HOLD_MS = 200;  // how long it stays dipped before easing back
-const DUCKING_SFX: ReadonlySet<SfxName> = new Set(["place", "place-stack", "shuffle", "gather", "snap"]);
+const DUCKING_SFX: ReadonlySet<SfxName> = new Set(["place", "shuffle", "gather", "snap"]);
 // Time constant for click-free gain ramps (master/music/sfx/mute). Short enough
 // to feel instant, long enough that no step-change clicks or zippers occur.
 const RAMP_TAU = 0.025;
@@ -364,42 +360,6 @@ export class AudioEngine {
         o.connect(g);
         o.start(now);
         o.stop(now + 0.24);
-        break;
-      }
-      case "stack": {
-        // A weighty pile drop: a deep sine thud (the body of the deck hitting
-        // the table) layered with a brief band-passed noise "settle" — the soft
-        // papery rustle of several cards squaring up. Heavier and rounder than the
-        // single-card "thud", so a deck reads distinctly from one card.
-        const o = ctx.createOscillator();
-        o.type = "sine";
-        o.frequency.setValueAtTime(spec.freq || 170, now);
-        o.frequency.exponentialRampToValueAtTime(64, now + 0.2);
-        g.gain.setValueAtTime(0.001, now);
-        g.gain.exponentialRampToValueAtTime(0.32, now + 0.014);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
-        o.connect(g);
-        o.start(now);
-        o.stop(now + 0.28);
-        // Papery settle tail, slightly delayed so it reads as the cards landing
-        // a hair after the thud's impact.
-        const settle = noiseBuffer(ctx, 0.18);
-        const ssrc = ctx.createBufferSource();
-        ssrc.buffer = settle;
-        const sfilter = ctx.createBiquadFilter();
-        sfilter.type = "bandpass";
-        sfilter.frequency.setValueAtTime(2400, now);
-        sfilter.frequency.exponentialRampToValueAtTime(900, now + 0.16);
-        sfilter.Q.value = 3;
-        const sgain = ctx.createGain();
-        sgain.gain.setValueAtTime(0.0001, now + 0.02);
-        sgain.gain.linearRampToValueAtTime(0.1, now + 0.05);
-        sgain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
-        ssrc.connect(sfilter);
-        sfilter.connect(sgain);
-        sgain.connect(this.sfxGain);
-        ssrc.start(now + 0.02);
-        ssrc.stop(now + 0.22);
         break;
       }
       case "swoosh": {

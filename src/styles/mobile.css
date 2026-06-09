@@ -167,7 +167,9 @@
     --grid-gap: 6px;
     --card-w: clamp(42px, calc(var(--field) * 0.125), 100px);
     --card-h: calc(var(--card-w) * 1.45);
-    padding: max(env(safe-area-inset-top), 8px) 8px max(env(safe-area-inset-bottom), 8px) 8px;
+    /* No extra padding here: --field already subtracts the safe-area insets (board.css), so adding
+       them again as padding double-counted the inset and drew a visible frame/margin around the
+       table on small phones that the desktop layout never had. Inherit padding: 0 from board.css. */
   }
 }
 

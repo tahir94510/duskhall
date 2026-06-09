@@ -144,9 +144,17 @@ describe("arrangeZone: idempotency & determinism", () => {
     }
   });
 
-  it("returns nothing for fewer than two cards", () => {
-    expect(arrangeZone(makeCards([["timeRift", 1]]), 0, optsFor(0))).toEqual([]);
-    expect(isZoneArranged(makeCards([["timeRift", 1]]), 0, optsFor(0))).toBe(true);
+  it("arranges a single card to the centred spot; an empty zone yields nothing", () => {
+    expect(arrangeZone([], 0, optsFor(0))).toEqual([]);
+    const one = makeCards([["timeRift", 1]]); // starts loose at (0.5, 0.5)
+    const targets = arrangeZone(one, 0, optsFor(0));
+    expect(targets.length).toBe(1);
+    expect(targets[0]!.x).toBeCloseTo(0.5, 9); // centred along the edge
+    expect(cardZoneOwner(targets[0]!.x, targets[0]!.y, targets[0]!.rot, W, H)).toBe(0); // in bounds
+    // The loose card is not yet at its target, so the zone is not arranged; once placed, it is.
+    expect(isZoneArranged(one, 0, optsFor(0))).toBe(false);
+    const placed = one.map((c) => ({ ...c, x: targets[0]!.x, y: targets[0]!.y, rot: targets[0]!.rot }));
+    expect(isZoneArranged(placed, 0, optsFor(0))).toBe(true);
   });
 });
 
@@ -194,12 +202,20 @@ describe("arrangeZone: row count tracks the stack count", () => {
     expect(depthsFor(0, EIGHT).length).toBe(1);
   });
 
-  it("splits nine stacks (over the threshold) into two rows, still in-bounds", () => {
+  it("splits nine stacks into two rows, nearer-edge row on top, all in-bounds", () => {
+    const depthOf = (seat: Seat, t: { x: number; y: number }): number =>
+      seat === 0 ? 1 - t.y : seat === 1 ? t.y : seat === 2 ? t.x : 1 - t.x;
     for (const seat of SEATS) {
-      expect(depthsFor(seat, NINE).length).toBe(2);
-      for (const t of arrangeZone(makeCards(NINE), seat, optsFor(seat))) {
-        expect(cardZoneOwner(t.x, t.y, t.rot, W, H)).toBe(seat);
-      }
+      const targets = arrangeZone(makeCards(NINE), seat, optsFor(seat));
+      const depths = [...new Set(targets.map((t) => +depthOf(seat, t).toFixed(4)))].sort((a, b) => a - b);
+      expect(depths.length).toBe(2);
+      const shallow = depths[0]!; // nearer the player's edge → the back row, which sits ON TOP
+      const deep = depths[1]!;
+      const shallowZ = targets.filter((t) => +depthOf(seat, t).toFixed(4) === shallow).map((t) => t.z);
+      const deepZ = targets.filter((t) => +depthOf(seat, t).toFixed(4) === deep).map((t) => t.z);
+      // The row nearer the player overlaps on top: every one of its z is above the far row's.
+      expect(Math.min(...shallowZ)).toBeGreaterThan(Math.max(...deepZ));
+      for (const t of targets) expect(cardZoneOwner(t.x, t.y, t.rot, W, H)).toBe(seat);
     }
   });
 });

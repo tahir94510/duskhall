@@ -116,6 +116,15 @@ export function createCardElement(instanceId: string, defId: string): { el: HTML
   inner.appendChild(front);
   card.appendChild(inner);
 
+  // Stack-count badge: a small number in the card's top-left corner shown only when this card is
+  // covering at least one other (its pile has more than one card). It lives OUTSIDE .card__inner so
+  // it never flips with the face and is never blurred with a concealed back; the render loop sets
+  // its text and toggles .has-stack. aria-hidden: it is a visual aid, not announced.
+  const count = document.createElement("div");
+  count.className = "card__count";
+  count.setAttribute("aria-hidden", "true");
+  card.appendChild(count);
+
   refreshCardLabel(card, defId);
   return { el: card };
 }
