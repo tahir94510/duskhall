@@ -1871,6 +1871,19 @@ export class Game {
   // change made while they are elevated (is-animating, where the render loop skips
   // transform writes) still ANIMATES via the .card CSS transition instead of only
   // jumping into place at settle. Used by the straighten/gather tidy phases.
+  // Re-apply the buried-shadow class for these cards from the live positions, RIGHT NOW (synchronous).
+  // The render loop normally owns is-buried, but it runs a frame later; a stack flip restores its
+  // buried cards' opacity at settle, so without setting is-buried in the SAME frame they would paint
+  // opaque-with-shadow for one frame — N overlapping casts flashing dark. Calling this just before the
+  // opacity is restored closes that gap. Cheap O(n^2), only at a flip settle.
+  private syncBuriedClasses(ids: string[]): void {
+    const stacks = coLocatedStacks(this.state);
+    for (const id of ids) {
+      const el = this.cardEls.get(id);
+      if (el) el.classList.toggle("is-buried", !!stacks.get(id)?.covered);
+    }
+  }
+
   private animateCardTransforms(ids: string[]): void {
     const { w: cardW, h: cardH } = this.cardMetrics();
     for (const id of ids) {
@@ -2241,6 +2254,9 @@ export class Game {
       }
     });
     window.setTimeout(() => {
+      // Set is-buried in the SAME frame the buried cards' opacity is restored, so a deep pile never
+      // flashes its stacked shadows for a frame before the render loop catches up.
+      this.syncBuriedClasses(ids);
       for (const id of ids) {
         const el = this.cardEls.get(id);
         el?.classList.remove("is-flip-quiet");
@@ -2317,6 +2333,9 @@ export class Game {
       }
     });
     window.setTimeout(() => {
+      // Set is-buried with the opacity restore (see runFlipVisual) so a deep pile never flashes its
+      // stacked shadows for a frame at the turn's settle.
+      this.syncBuriedClasses(ids);
       for (const id of ids) {
         const el = this.cardEls.get(id);
         el?.classList.remove("is-flip-quiet");

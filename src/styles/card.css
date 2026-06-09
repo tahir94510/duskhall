@@ -100,26 +100,31 @@
    stays on the card. On the public table the full lift still applies. */
 .card.is-held.is-held-lead.is-own-zone::before { box-shadow: var(--shadow-card-raised); }
 
-/* Buried card: another card sits directly on top of it on the same spot, so it casts NO drop shadow.
-   Only the top of a co-located pile carries a shadow — otherwise N stacked semi-transparent casts
-   pile into a dark smear (worst while a rotate or gather slides the pile together, and on a thick
-   resting deck). Placed after the held rules so a buried card in a held pile also stays shadowless;
-   the lifted lead card is the top, never buried, so it keeps its float shadow. The ::before keeps
-   its box-shadow transition, so a card's shadow fades out as it tucks under and back in as it lifts
-   clear — no pop. */
-.card.is-buried::before { box-shadow: none; }
-
 /* 2.5D turn lift: while a card is mid-flip it rises a touch toward the light and its cast swells
    to the same 'raised' depth as a hover/hold, then settles — so the turn reads as the card lifting
    off the felt to flip and laying back down, not a flat in-plane spin. The lift rides the flat
    shadow underlay (::before, a sibling of the 3D inner with no inline transform) plus a faint
    brighten, so it NEVER touches the rotateY geometry and so can't fight the staged turn or its
-   peer replay. The class is added/removed by runFlipVisual / runSameFaceTurn around the turn. */
+   peer replay. The class is added/removed by runFlipVisual / runSameFaceTurn around the turn.
+   NOTE: the .is-buried rule below is intentionally placed AFTER this so a buried card never takes
+   this raised shadow (which would flash dark as it transitions away at the flip's settle). */
 .card.is-flipping { filter: brightness(1.03); }
 .card.is-flipping::before {
   box-shadow: var(--shadow-card-raised);
   transform: scale(1.03) translateY(-1px);
 }
+
+/* Buried card: another card sits directly on top of it on the same spot, so it casts NO drop shadow.
+   Only the top of a co-located pile carries a shadow — otherwise N stacked semi-transparent casts
+   pile into a dark smear (worst while a rotate or gather slides the pile together, on a thick resting
+   deck, and at the END of a STACK flip, where the buried cards' opacity is restored while their
+   raised flip-shadow fades out, flashing dark). This rule is placed LAST of all ::before box-shadow
+   rules ON PURPOSE: it must win over .is-held and .is-flipping (equal specificity) so a buried card
+   is shadowless the WHOLE time — never gaining a shadow that then has to transition away. The lifted
+   held lead and the hovered card are always the TOP of their pile (never buried), so their richer
+   shadows are unaffected. The ::before keeps its box-shadow transition, so a card's shadow fades out
+   smoothly as it tucks under and back in as it lifts clear — no pop. */
+.card.is-buried::before { box-shadow: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .card::before,
