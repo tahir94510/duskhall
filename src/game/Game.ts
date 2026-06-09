@@ -721,8 +721,12 @@ export class Game {
   // spin — it just squares up by the shortest path. Because rot is shared, peers
   // see the pile at whatever angle their own seat implies, which is exactly the
   // intended per-viewer ("relative") behaviour.
-  private viewerUprightRot(currentRot: number): number {
-    const boardRot = seatRotationDeg(this.viewSeat); // 0 / 180 / -90 / 90 — follows the camera
+  private viewerUprightRot(currentRot: number, seat?: Seat): number {
+    // Defaults to the camera (viewSeat), which is what gather/shuffle/rotate of a PUBLIC pile want —
+    // square it upright for the angle you are currently looking from. Tidy passes the player's HOME
+    // seat instead, so laying out your own hand always orients to YOUR side, never to a temporary V
+    // look-around (which would leave your hand squared to a stranger's angle once you turned back).
+    const boardRot = seatRotationDeg(seat ?? this.viewSeat); // 0 / 180 / -90 / 90
     const residue = (((-boardRot / 90) % 4) + 4) % 4; // 0..3
     let delta = (((residue - currentRot) % 4) + 4) % 4; // 0..3 forward
     if (delta > 2) delta -= 4; // take the shortest direction (−1 instead of +3)
@@ -2483,7 +2487,9 @@ export class Game {
     // A tidy also turns every card face-up (so you can read your laid-out hand), so a face-down
     // card means the area is NOT arranged yet.
     if (cards.some((c) => !c.faceUp)) return false;
-    const opts = { uprightRot: this.viewerUprightRot(cards[0]!.rot), cardW: CARD_CANON_W, cardH: CARD_CANON_H };
+    // Tidy always squares to YOUR home seat, not the V camera — so this "already arranged?" check
+    // matches what arrangeOwnZone lays out regardless of the current view angle.
+    const opts = { uprightRot: this.viewerUprightRot(cards[0]!.rot, this.self.seat as Seat), cardW: CARD_CANON_W, cardH: CARD_CANON_H };
     return isZoneArranged(cards, this.self.seat as Seat, opts);
   }
 
@@ -2511,8 +2517,9 @@ export class Game {
     const cards = ids.map((id) => this.state.cards.get(id)).filter((c): c is CardState => !!c);
     if (cards.length < 1) return;
     const seat = this.self.seat as Seat;
-    // Square to the angle that reads upright for THIS viewer's camera (same rule as gather/shuffle).
-    const uprightRot = this.viewerUprightRot(cards[0]!.rot);
+    // Square to YOUR home seat's upright, NOT the V camera: your hand area is yours, so tidying it
+    // always orients the cards to your own side even if you are currently looking from another angle.
+    const uprightRot = this.viewerUprightRot(cards[0]!.rot, seat);
     const opts = { uprightRot, cardW: CARD_CANON_W, cardH: CARD_CANON_H };
     const targets = arrangeZone(cards, seat, opts);
     if (!targets.length) return;
