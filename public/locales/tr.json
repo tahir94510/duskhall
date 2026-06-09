@@ -97,7 +97,7 @@
     },
     "tableau": {
       "term": "Masa",
-      "def": "Mühürlerinizi ve Hizmetkârlarınızı açık dizdiğiniz alan; en fazla 4 Mühür ve 3 Hizmetkâr. Mühür ve Hizmetkâr etkileri yalnızca burada işler, elde değil."
+      "def": "Mühür ve Hizmetkârlarınızı açık dizdiğiniz alan — en fazla 4 Mühür ve 3 Hizmetkâr (ayrı sınırlar). Etkileri yalnızca burada işler, elde değil. Yerleştirdiğiniz bir kart bağlanmıştır: yok edilene, feda edilene, yer açmak için atılana ya da çalınana dek kalır ve asla elinize dönmez."
     },
     "deck": {
       "term": "Deste",
@@ -121,7 +121,7 @@
     },
     "create": {
       "term": "Oluştur",
-      "def": "Bir Aksiyon (1 HP): elden 1 Büyü oynayın ya da masanıza 1 Mühür veya 1 Hizmetkâr koyun."
+      "def": "Bir Aksiyon (1 HP): elden 1 Büyü oynayın ya da masanıza 1 Mühür veya 1 Hizmetkâr koyun. O masa sırası doluysa, yer açmak için kendi kartlarınızdan aynı türden birini atabilirsiniz — ekstra HP yok."
     },
     "study": {
       "term": "Araştır",
@@ -493,7 +493,7 @@
     "necromancersEye": {
       "name": "Ölüçağıranın Gözü",
       "type": "Mühür",
-      "effect": "Kapanış aşamanızın başında, el sınırı kontrolünden önce, Çöplüğün en üstündeki kartı elinize alırsınız (her ek kopya bir kart daha alır). Bu, sınır kontrolünden önce gerçekleştiği için eliniz 7'yi aşarsa her zamanki gibi 7'ye inersiniz ve az önce aldığınız kartı atabilirsiniz; yani bu kart, tutmak istediğiniz bir kartı feda etmenize asla yol açmaz. Çöplük boşsa hiçbir şey olmaz. Konulduğu turda da işler.",
+      "effect": "Kapanış aşamanızın başında Çöplüğün en üstteki kartını elinize alırsınız (her ek kopya bir kart daha alır). Konulduğu turda işler; Çöplük boşsa hiçbir şey olmaz. (El limiti kontrolünden ÖNCE çeker, bu yüzden tutmak istediğiniz bir kartı asla feda ettirmez — bkz. kurallar kitapçığı.)",
       "flavor": "Ölüler hesaplarını sabırlı defterlerde tutar."
     },
     "etherStrike": {
@@ -517,7 +517,7 @@
     "mindParasite": {
       "name": "Zihin Paraziti",
       "type": "Büyü",
-      "effect": "1 HP harcayın. Bir rakibin masasındaki 1 Hizmetkârı ele geçirip kendi masanıza taşıyın. Sizin 3 Hizmetkâr sınırınıza dahil olur ve tüm sürekli etkileri artık sizin kontrolünüzde sürer. Ele geçirmek yok etmek değildir; bu yüzden bir Buzul Ucube'yi çalmak onun tur atlatma cezasını tetiklemez. Masanızda zaten 3 Hizmetkâr varsa ya da hedefin Hizmetkârı yoksa büyü oynanamaz ve HP harcanmaz.",
+      "effect": "1 HP harcayın. Bir rakibin masasındaki bir Hizmetkârı kendi masanıza taşıyın; sürekli etkileri artık sizin kontrolünüzde sürer ve 3 Hizmetkâr sınırınıza dahil olur. Boş bir Hizmetkâr yuvası gerekir: zaten 3 Hizmetkârınız varsa ya da hedefin Hizmetkârı yoksa oynanamaz ve HP harcanmaz.",
       "flavor": "Sadakat bir kapıdır; anahtar sende."
     },
     "twistOfFate": {
@@ -604,7 +604,7 @@
         "body": [
           "Her oyuncunun 3 kişisel alanı vardır; 2 alan ortaktır.",
           "EL: gizli kartlar. Rakipler sayıyı görür, içeriği göremez. El limiti 7'dir; fazlası Kapanış'ta çöpe gider. Mühürler ve Hizmetkârlar elde hiçbir etki göstermez.",
-          "MASA: Mühürlerinizi ve Hizmetkârlarınızı açık dizdiğiniz alan. En fazla 4 Mühür ve 3 Hizmetkâr. Masa doluysa, yeni kartı oynamadan önce mevcut kartlarınızdan birini seçip Çöplüğe atın; bu ekstra eylem maliyeti gerektirmez.",
+          "MASA: Mühürlerinizi ve Hizmetkârlarınızı açık dizdiğiniz alan. En fazla 4 Mühür ve 3 Hizmetkâr (iki sınır ayrıdır). Elinizden bir Mühür veya Hizmetkâr OLUŞTURURKEN o sıra zaten doluysa, yer açmak için önce kendi kartlarınızdan AYNI türden birini Çöplüğe atabilirsiniz — seçim sizin ve aynı Oluştur'un parçası (ekstra HP yok). Yerleştirilen kart bağlanmıştır: masadan yalnızca yok edilerek, feda edilerek (Eter Dalgalanması), yer açmak için atılarak ya da çalınarak ayrılır; asla elinize dönmez.",
           "DESTE (ortak): ortadaki kapalı yığın. Bittiğinde Eter Dalgalanması tetiklenir (bkz. bölüm 9).",
           "ÇÖPLÜK (ortak): harcanmış Büyüler, iptal kartları, yok edilmiş Mühürler ve Hizmetkârlar; açık yığılır."
         ]
@@ -702,7 +702,7 @@
           "Eterik Çarpma: 1 HP. Bir rakibin masasındaki 1 kartı yok edin. Hizmetkâr Kalkanı uygulanır.",
           "Gölge Hırsızlığı: 1 HP. Rakibin eli kimse göremeyecek şekilde kapalı karıştırılır ve içinden rastgele 1 kart elinize geçer; hangisi olduğunu kimse seçmez. Hiçlik Örtüsü engeller.",
           "Kadim Görü: 1 HP. Desteden 3 kart çekin. Yalnızca kendinize oynanır; hiçbir rakibi hedeflemez.",
-          "Zihin Paraziti: 1 HP. Bir rakibin Hizmetkârını ele geçirip kendi masanıza alırsınız; etkilerini korur ve 3 Hizmetkâr sınırınıza dahil olur. Ele geçirmek yok etmek değildir; çalınan bir Buzul Ucube tur atlatma cezasını tetiklemez.",
+          "Zihin Paraziti: 1 HP. Bir rakibin Hizmetkârını kendi masanıza taşıyın; SÜREKLI etkilerini korur ve 3 Hizmetkâr sınırınıza dahil olur (Gölge Katili'ninki gibi tek seferlik bir giriş etkisi, taşımayla yeniden tetiklenmez). Boş bir Hizmetkâr yuvası gerekir — zaten 3 varsa oynanamaz: çalma, yer açmak için kendi kartınızı attırmaz (o gönüllü takas yalnızca elinizden Oluştur içindir). Ele geçirmek yok etmek değildir; çalınan bir Buzul Ucube tur atlatma cezasını tetiklemez.",
           "Kaderin Cilvesi: 1 HP. Kendi elinizdeki tüm kartları seçilen bir rakibin elindeki tüm kartlarla takas edin. Hiçlik Örtüsü engeller.",
           "MÜDAHALELER (16 toplam):",
           "Sustur!: 0 HP. Taze atılmış bir Büyü veya Müdahaleyi iptal et. İptal edilen kart ve Sustur! Çöplüğe gider. Evrensel hedef.",
@@ -729,7 +729,8 @@
           "S. Karmik Yansıma saldırıyı geri döndürdüğünde saldırganın Hizmetkâr Kalkanı uygulanır mı? C. Evet. Geri dönen saldırı saldırganın Hizmetkâr Kalkanı'na tabidir; Mühürlerine ulaşmadan önce Hizmetkârlarını temizlemek zorundadır.",
           "S. Kan Kefareti için elimde kaç kart olmalı? C. En az 2. Daha azıyla oynanamaz.",
           "S. Kan Kefareti'nin attığı 2 kartı kim seçer? C. Kimse. Kartlar elinden rastgele çıkar, bu yüzden bedeli ödemek her zaman bir risktir.",
-          "S. Zihin Paraziti'ni masamda 3 Hizmetkâr varken oynayabilir miyim? C. Hayır. Ele geçirilen Hizmetkâr sınırınızı doldurur; oynanamaz, HP harcanmaz.",
+          "S. Zihin Paraziti'ni masamda zaten 3 Hizmetkâr varken oynayabilir miyim? C. Hayır (HP harcanmaz): çalma için boş bir Hizmetkâr yuvası gerekir ve yer açmak için kendi kartınızı attırmaz. Yer açmak için atma takası yalnızca elinizden Oluştur içindir.",
+          "S. Hizmetkâr sıram dolu (3) ve elimden bir tane daha oynamak istiyorum? C. O Oluştur'un parçası olarak önce kendi Hizmetkârlarınızdan birini yer açmak için Çöplüğe atın (seçim sizin; ekstra HP yok). Masadaki bir kart asla elinize geri alınamaz — yalnızca yok edilerek, feda edilerek, yer açmak için atılarak ya da çalınarak ayrılır.",
           "S. Zihin Paraziti ile bir Buzul Ucube'yi ele geçirirsem tur atlar mıyım? C. Hayır. Ele geçirmek yok etmek değildir; tur atlatma cezası tetiklenmez, yalnız Buzul Ucube yok edildiğinde işler.",
           "S. Gölge Hırsızlığı Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. El koruma altındadır.",
           "S. Kaderin Cilvesi Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. Hedef oyuncunun eli koruma altında.",
