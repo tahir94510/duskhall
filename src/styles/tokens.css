@@ -24,13 +24,17 @@
   --accent: #f3efe5;
   --accent-dim: #b3afa5;
 
-  /* Seat accents: four ivory-to-graphite tones forming a clear ladder. The ramp is widened at
-     the dark end so seat 2 and seat 3 stay tellable apart on small / dim OLED screens (they used
-     to read nearly identical). Still pure neutral greys — the monochrome nobility holds. */
+  /* Seat accents: four ivory-to-warm-grey tones forming a clear ladder. Tuned so even the
+     DARKEST step stays clearly readable as label text on the near-black table (≥ AA contrast)
+     — the old graphite tail (#6a665d) made seat 2/3 names read as "faded/disconnected" and
+     their 12% zone tints vanish entirely. Adjacent steps keep a ~10-12% lightness gap so the
+     four seats stay tellable apart, and zones.css compensates the compressed ramp with a
+     slightly stronger tint. Still pure neutral greys — the monochrome nobility holds.
+     Game.ts SEAT_COLORS mirrors these values for cursors/presence; keep the two in step. */
   --seat-0: #f3efe5;
-  --seat-1: #d4cfc3;
-  --seat-2: #9d998e;
-  --seat-3: #6a665d;
+  --seat-1: #d8d3c7;
+  --seat-2: #b9b4a8;
+  --seat-3: #948f83;
 
   /* Shared control unit: the height of the header icon buttons AND the minimized Guide bar, so the
      two always stand the SAME height side by side at every breakpoint. Overridden per device in

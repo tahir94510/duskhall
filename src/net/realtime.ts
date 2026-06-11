@@ -974,7 +974,9 @@ export class RealtimeBus {
         id,
         name: safeString(entry.name, 24) || "Player",
         seat: typeof entry.seat === "number" ? Math.max(-1, Math.min(3, Math.round(entry.seat))) : 0,
-        color: safeString(entry.color, 16) || "#c8a45a",
+        // Fallback matches --ivory-dim: a peer with no colour yet stays inside the
+        // monochrome palette instead of flashing a stray gold accent.
+        color: safeString(entry.color, 16) || "#b8b4aa",
         joinedAt,
         // Old clients send no connAt; fall back to joinedAt so the tombstone
         // discriminator degrades cleanly to the prior joinedAt-based behaviour.

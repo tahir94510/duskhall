@@ -251,6 +251,17 @@
     "empty": "Henüz güncelleme yok.",
     "entries": [
       {
+        "v": "2026-06-09.2",
+        "date": "9 Haziran 2026",
+        "title": "Her isim okunaklı, kamera dönüşü daha temiz",
+        "items": [
+          "Artık her oyuncunun ismi net okunuyor. Dört koltuk tonu o kadar koyulaşıyordu ki üçüncü ve dördüncü koltuktakiler soluk, sanki bağlantısı kopmuş gibi görünüyordu; ton merdiveni yeniden ayarlandı, her koltuk kendi tonunu koruyor ve her isim karanlık masada parlak kalıyor.",
+          "Koltuk renkleri artık her yerde aynı: bir oyuncunun ismi, el alanının tonu ve imleci birebir aynı rengi taşıyor; kimin nerede olduğu tek bakışta belli.",
+          "V ile bakışı döndürürken renkler artık bir anlığına karışmıyor. Alanlar ve isimler temiz bir karartmanın arkasında yer değiştirip doğru koltuklarla geri geliyor; 'senin alanın' parıltısı da dönüş sırasında alt kenara yapışıp kalmak yerine koltuğunla birlikte taşınıyor.",
+          "Her el alanının yumuşak ışıltısı artık kendi masa kenarı boyunca akıyor; yan ve üst alanlar alttaki alanın ışığını ödünç alıyordu, bu da bazı alanları diğerlerinden parlak gösteriyordu."
+        ]
+      },
+      {
         "v": "2026-06-09",
         "date": "9 Haziran 2026",
         "title": "Elini derle topla, bir de üst üste sayacı",

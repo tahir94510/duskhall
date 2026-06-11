@@ -1,5 +1,45 @@
 # Changelog
 
+## 0.9.22: Readable seat colours, and a clean camera turn
+
+A colour and camera-turn fix pass. The card sync, canonical frame and balance numbers are
+unchanged. 273 tests green.
+
+- **Readable seat ladder.** The four seat tones (`--seat-0..3` in tokens.css) ran from ivory
+  down to a graphite (#6a665d) that fell below AA contrast on the dark table, so seat 2/3
+  names read as faded or disconnected and their 12% zone tints vanished. The ladder is
+  retuned (#f3efe5, #d8d3c7, #b9b4a8, #948f83) so the darkest step still reads clearly while
+  the four stay tellable apart; the rival-zone tint is bumped to 14% to compensate the
+  compressed ramp.
+- **Cursor colours re-synced.** SEAT_COLORS in Game.ts had drifted from the CSS seat tokens
+  (the tokens were retuned earlier without it), so a player's cursor and their tray carried
+  slightly different tones. The two now mirror each other, with a comment binding them. The
+  presence fallback colour also drops a leftover gold (#c8a45a) for the palette's muted ivory.
+- **The self highlight follows your seat.** zone--self (your area's ivory wash and readable
+  boundary) was baked onto the bottom zone div at build, so during a V camera turn the bottom
+  tray, now showing your neighbour, still glowed as "yours" while your real area was styled
+  as a rival's. refreshZones now binds zone--self to whichever physical slot your seat renders
+  in, and all of its directional styling (wash, edge mask, door catch-light) reads a per-slot
+  --edge axis so it stays correct in any slot.
+- **Directional tray lighting.** Every tray's frost wash used the bottom tray's "to top"
+  gradient, so the top and side areas were lit along the wrong axis and read brighter or
+  dimmer than each other. The wash and the door fade now follow each tray's own --edge.
+- **No colour flash on a V turn.** The zone/label remap used to apply instantly at the start
+  of the turn under a light 0.25 fade, with the zone background transition crossfading through
+  in-between colours. The fade now dips fully out, the remap is deferred into that invisible
+  window (about 35% of the turn), and zone/label transitions are suspended for the turn.
+  Reduced motion applies the remap immediately, as before.
+- **Stale animation timers cleared on room switch.** Card ids repeat across rooms, so an old
+  room's flip/shuffle settle timer firing after a hop could delete the new room's timer entry
+  for the same id. resetTable now cancels all pending card-animation timers.
+- **Stale presence dropped on room switch.** A presence update still debouncing from the old
+  room could fire 200ms into the new one and briefly seat the previous room's roster as
+  phantom claims. armFirstSync now clears the debounce and the pending roster.
+- **Writing-style sweep.** Removed every em dash from the player copy and docs per the
+  MAINTAINING.md style rule (CHANGELOG, DESIGN, MAINTAINING, one What's-new item), synced the
+  DESIGN.md palette snapshot with tokens.css (it listed pre-retune values), and fixed the
+  Turkish intro line in the README.
+
 ## 0.9.21: Stack counter, and a rounder tidy
 
 A polish pass on the hand-area tidy plus a new at-a-glance stack count, with several
@@ -8,26 +48,26 @@ unchanged. 273 tests green.
 
 - **A count on every stack, in the card info.** Hovering a stacked card (or tapping Info on
   touch) now shows how many cards are in that pile on its own line, under a divider, in the card
-  info box. The count is purely positional — it counts only the cards genuinely stacked on the
-  same spot — so a pile of mixed card types reads correctly and two neighbouring stacks never
+  info box. The count is purely positional (it counts only the cards genuinely stacked on the
+  same spot), so a pile of mixed card types reads correctly and two neighbouring stacks never
   bleed into one number. A single, un-stacked card shows no line.
 - **A 2.5D turn.** Flipping a card (or a pile) now lifts it a touch toward the light as it
   turns and settles it back, so the flip reads as a real card turning over rather than a flat
   spin. It rides the shadow/light only, so the turn stays flawless in both directions and for
   online onlookers, and respects reduced-motion.
 - **Tidy re-enables when a stack is disturbed.** Pressing D (or the Tidy button) lays your area
-  out as a clean, ordered deck; it now also notices when the stacking ORDER is broken — e.g. a
-  card flipped after a tidy jumps to the front — and re-enables so a fresh press restores the
+  out as a clean, ordered deck; it now also notices when the stacking ORDER is broken (e.g. a
+  card flipped after a tidy jumps to the front) and re-enables so a fresh press restores the
   order, then greys out again once everything (position, facing AND order) is back in place.
 - **The action bar stays live.** The touch action bar now re-checks its buttons every frame it is
   open, so a card settling into your area or a new card arriving enables Gather / Tidy / Info at
   once, instead of the bar showing a stale, lagging state until it is closed and reopened.
 - **Tidy never touches a rival's card.** A card that belongs to an occupied rival's zone is left
-  alone by your tidy even when its tip overhangs your corner — ownership is live and position-based,
+  alone by your tidy even when its tip overhangs your corner; ownership is live and position-based,
   so a rival's overhanging card is theirs, never pulled into your layout.
 - **No more shadow smear under a pile.** Only the top card of a stack on one spot casts a drop
   shadow now; the cards buried under it drop theirs. A thick deck reads as one clean shadow instead
-  of dozens of overlapping casts darkening the felt — most visible while a rotate or gather slid the
+  of dozens of overlapping casts darkening the felt, most visible while a rotate or gather slid the
   pile together and the area suddenly went dark.
 - **Rotate and gather lift as they move.** Turning or gathering a pile now lifts it into the motion
   layer for the slide, exactly like flip and tidy, so the cards travel as one clean block and the
@@ -121,8 +161,8 @@ The card sync, canonical frame and balance numbers are unchanged. 219 tests gree
   boundary a single clean crossing. A card crossing toward a neighbour's area always renders above
   it and can never be dropped inside it.
 - **Leaving is instant for everyone.** When a player (host included) deliberately leaves or hops
-  rooms, the departure now reaches the other players reliably — the "left" message is flushed
-  before the socket closes — so they see the seat free up at once instead of the leaver lingering
+  rooms, the departure now reaches the other players reliably (the "left" message is flushed
+  before the socket closes), so they see the seat free up at once instead of the leaver lingering
   as "away". When the host leaves, the new host immediately re-broadcasts the authoritative board
   and roster, so nobody is briefly shown "away" during the handover. A genuine drop (closed tab /
   lost network) still correctly reads as a reconnectable "away" seat.
@@ -190,7 +230,7 @@ No user-facing behaviour changes. 215 tests green.
 
 Note: because the storage keys and the realtime channel name changed, this update resets
 per-device preferences once (language, volume, name) and only syncs between clients once both
-are on this version — expected for a one-time rename.
+are on this version (expected for a one-time rename).
 
 ## 0.9.15: Layering, loader and responsive correctness
 
@@ -237,14 +277,14 @@ sync, the canonical frame and the balance numbers are unchanged. 214 tests green
   is remembered for the room and restored across a refresh.
 - **Reset deck shuffles for real, with no dead time.** Resetting the deck gathers every
   card to the slot and riffles the squared pile, for the host and every peer alike. The
-  wait before the riffle is now sized to exactly what has to happen first — nothing for a
+  wait before the riffle is now sized to exactly what has to happen first (nothing for a
   deck already squared and face-down, the gather slide if cards must travel, or the face
-  turn if any card shows its front — so it never stalls. The gather and shuffle cues are
+  turn if any card shows its front), so it never stalls. The gather and shuffle cues are
   timed to the motion, so the audio no longer leads it. Reduced motion applies instantly.
 - **Start begins the guide only; it no longer reshuffles your cards.** Pressing Start just
   begins the narration, leaving the table as it is. The intro suggests Reset deck first
   for a fresh shuffled deck. Restart is now a host-only button in the Guide's own bar: it
-  asks for confirmation and resets only the Guide — never the cards.
+  asks for confirmation and resets only the Guide, never the cards.
 - **Minimize is a turn-loop control, for everyone.** The guide stays fully visible through
   the intro and setup (where the guidance matters); each player's own minimize button is
   shown but inactive until the turns begin, then collapses the panel to its bar.
@@ -290,19 +330,19 @@ numbers are unchanged. 187 tests green.
 - **Privacy is exact on every zone exit, including diagonals.** A card now stays concealed until
   it is FULLY out of every private band. The overlap test is union-aware (it checks all four
   bands and keeps the largest), so when a card slides diagonally across a corner where two zones
-  meet — where the nearest seat flips — it no longer flashes visible while a sliver is still
+  meet (where the nearest seat flips), it no longer flashes visible while a sliver is still
   inside. Holds via the existing eager-hide / late-reveal hysteresis. Regression-tested.
 - **A hovered card lifts above its neighbours.** Hovering raises the card into a dedicated z band
   (450, above resting cards but below the held/animation and cursor layers) so it is fully
   readable even under a pile, with the existing 2.5D shadow + brightness "picked up" read.
 - **Rulebook: every term is explained.** Added glossary entries for the zones (Hand, Tableau,
   Deck, Discard), the turn phases (Focus, Action, Closing), the actions (Create, Study, Cleanse),
-  HP, the Ascension Trial and Untargetable status — in both languages — so every rules term opens
+  HP, the Ascension Trial and Untargetable status, in both languages, so every rules term opens
   the same hover/tap info panel. Matching is case-insensitive and covers plural and leading-label
   forms. The info panel is capped to the viewport so it never runs off the page or breaks the
   layout on small screens.
 - **Multiplayer: no stranded hold-locks.** A peer's card locks are now cleared by holder id (not
-  only by seat) when they leave, are kicked, or their seat expires — so a card can never stay
+  only by seat) when they leave, are kicked, or their seat expires, so a card can never stay
   ungrabbable after a peer drops, even across a seat-reassignment race (the 6s TTL was the only
   safety net before).
 - **Peer cursors land exactly on the point.** The ghost cursor now centres its dot on the peer's
@@ -311,7 +351,7 @@ numbers are unchanged. 187 tests green.
   each other's cursors in real time, smooth and pixel-accurate, re-projected into their own view.
 - **Rivals' private cards sit UNDER the glass.** An occupied rival's hand tray now lifts just
   above the card layer, so that seat's concealed cards read as soft shapes beneath the frosted
-  zone — a rival arranging or dragging in their hidden area no longer shows sharp on top of the
+  zone; a rival arranging or dragging in their hidden area no longer shows sharp on top of the
   tray. Your own hand and the public centre stay perfectly sharp (your tray and empty seats stay
   below the cards).
 - **Longer away grace.** A dropped player (refresh, network blip, phone lock, app switch) keeps
@@ -324,16 +364,16 @@ numbers are unchanged. 187 tests green.
   0.28, a 0.44 public centre) and card sizing restored. Players lay their face-up Seals and
   Servants by hand anywhere in their own area.
 - **Drag is page-bound, not board-bound.** A card can now be dragged off the board into the
-  surrounding margin — only the PAGE limits it; it can never go off-screen. The clamp runs in
+  surrounding margin: only the PAGE limits it; it can never go off-screen. The clamp runs in
   screen pixels (`clampSeedToPage`, `src/table/playfield.ts`), so it is exact for every device,
   aspect ratio and seat rotation, and the off-board margins are public (droppable). This also
   fixes the old bug where cards stuck short of the edges/corners.
-- **Rulebook: consistent, complete hover terms.** Every hover term — a card name, a glossary
-  term, or a card-type name (Seal/Spell/Intervention/Servant) — now reads IDENTICALLY (same
+- **Rulebook: consistent, complete hover terms.** Every hover term, whether a card name, a glossary
+  term, or a card-type name (Seal/Spell/Intervention/Servant), now reads IDENTICALLY (same
   weight and quiet dotted underline, no more some-bold/some-italic) and opens the same info
   panel. Matching is case-insensitive and covers plural forms, so "Seal", "Seals" and the
   uppercase colour-key "SEAL" are all hover-able, including a leading definition label. The
-  terms use the normal cursor (not a pointer/help cursor) — the panel opens on hover, so the
+  terms use the normal cursor (not a pointer/help cursor); the panel opens on hover, so the
   underline alone is the affordance.
 
 ## 0.9.11: Symmetric table, tableau shelves, safer drag, clearer text, robust restore
@@ -439,14 +479,14 @@ constant; no change to sync, privacy logic, stack detection, or the coordinate f
 Two user-reported issues.
 
 - **Reset deck now opens its confirm dialog for any seated player.** It was
-  host-only, so for every other player the menu item did nothing — the confirmation
+  host-only, so for every other player the menu item did nothing: the confirmation
   modal never opened, which read as "reset is broken." Resetting is collaborative
   (like shuffle), so any seated player may now trigger it; the confirm dialog is the
   safeguard, and spectators (no deck) still cannot. `resetDeck` now also stamps every
   card with a fresh winning clock + writer id, so the reset reliably wins on every
   peer (the authoritative snapshot bypasses LWW, but the follow-up reconcile must win
   too). Reset returns all 72 cards to a freshly shuffled, face-down, canonical
-  (`rot 0`) pile on the deck spot — the start-of-game setup. Removed the now-unused
+  (`rot 0`) pile on the deck spot: the start-of-game setup. Removed the now-unused
   `Header.setHostMode`/`host` plumbing (kept the per-zone kick gate).
 - **Reverted 0.9.8: pile squaring is per-viewer again.** Gathering, shuffling or
   turning a pile (including the central deck) once more squares it to the ACTING
@@ -454,14 +494,14 @@ Two user-reported issues.
   per the user's preference. (0.9.8 had made the central deck a fixed canonical angle
   for all seats; that is removed, along with its `docs/DESIGN.md` note, which now
   documents the per-viewer rule.) Note: because `rot` is shared, a pile reads upright
-  for whoever last tidied it and at each other seat's own angle — a single shared
+  for whoever last tidied it and at each other seat's own angle; a single shared
   rotation cannot read upright for all four seats at once.
 
 ## 0.9.8: The shared deck rests at one angle for everyone
 
 Side-seat players (left/right) squaring the central deck used to rotate the SHARED
 `rot` to their own viewport, so the deck flipped sideways for the other seats and
-changed each time a different player tidied it — an inconsistency between viewers.
+changed each time a different player tidied it: an inconsistency between viewers.
 
 - **Central deck/discard square to the canonical upright for all seats.** New
   `Game.uprightTargetFor` returns `rot ≡ 0` (shortest path) for a pile sitting on the
@@ -481,11 +521,11 @@ end-to-end audit confirmed no host gate and no silent no-op in `shuffleAt`. The
 culprit was the lock protocol, not shuffle itself.
 
 - **Hold RELEASE frames are no longer rate-limited.** `RealtimeBus.sendHold` routed
-  every hold frame — locks, refreshes AND releases — through the same `holdBucket`
+  every hold frame (locks, refreshes AND releases) through the same `holdBucket`
   token bucket. A burst of grabs/locks could drain the bucket and drop the one frame
   that frees a pile, so peers kept the cards shown as locked until the 6s hold-TTL
   expired. During that window the other player genuinely could not grab, flip or
-  shuffle those cards — a pile that "does nothing." Releases (`h.release === true`)
+  shuffle those cards: a pile that "does nothing." Releases (`h.release === true`)
   now always send; only lock/refresh frames are throttled. (`src/net/realtime.ts`)
 - **No stale "locked" outline over your own grab.** `renderAllCards` toggled
   `is-locked` every frame even on a card you are actively dragging or animating, so a

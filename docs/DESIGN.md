@@ -41,7 +41,7 @@ Card positions store the card CENTRE as a canonical fraction; the render loop tu
 
 `board.css` paints the two dock markers at these same percentages (`left: 40%` / `60%`, centred with `translate(-50%, -50%)`), and the initial deal pile is anchored to the same numbers, so the markers and the dealt pile can never drift apart. Their `0.20` separation clears the widest card fraction at every breakpoint (mobile bumps cards to ~`0.145` of the field), so the deck and discard never touch.
 
-The table is a clean full-size square with main's proportions (private hand bands `ZONE_DEPTH = 0.28` deep, a `0.44 x 0.44` public centre); there is no dedicated Seal/Servant area, so players lay their face-up tableau out by hand in their own zone. A dragged card (or pile) is clamped to the PAGE, not the board (`clampSeedToPage`, `src/table/playfield.ts`): a card may be dragged off the board into the surrounding viewport margin but never off-screen. The clamp runs in screen-pixel space (via `canonicalToScreen`/`screenToCanonical`), so it is exact for every device, aspect ratio and seat rotation, and a card's width/height swap when the card + board rotation lands it sideways. Pure and unit-tested (`playfield.test.ts`). `seatForCanonicalPoint` only counts the ON-board band (`0 <= edgeDist < ZONE_DEPTH`), so the off-board margins are public — cards can be dropped there freely. Magnet snap is inert; the dock markers are visual targets only.
+The table is a clean full-size square with main's proportions (private hand bands `ZONE_DEPTH = 0.28` deep, a `0.44 x 0.44` public centre); there is no dedicated Seal/Servant area, so players lay their face-up tableau out by hand in their own zone. A dragged card (or pile) is clamped to the PAGE, not the board (`clampSeedToPage`, `src/table/playfield.ts`): a card may be dragged off the board into the surrounding viewport margin but never off-screen. The clamp runs in screen-pixel space (via `canonicalToScreen`/`screenToCanonical`), so it is exact for every device, aspect ratio and seat rotation, and a card's width/height swap when the card + board rotation lands it sideways. Pure and unit-tested (`playfield.test.ts`). `seatForCanonicalPoint` only counts the ON-board band (`0 <= edgeDist < ZONE_DEPTH`), so the off-board margins are public: cards can be dropped there freely. Magnet snap is inert; the dock markers are visual targets only.
 
 ## Stack interactions
 
@@ -66,19 +66,23 @@ Helpers live in `src/table/StackOps.ts`; `Game.ts` wires them to gestures.
 squares to the ACTING player's own upright (`viewerUprightRot`): the angle that
 reads straight from their seat. Because `rot` is shared, peers then see the pile at
 whatever angle their own seat implies (a side seat sees a just-tidied central deck
-edge-on). This keeps every interaction consistent with the rest of the table — a
-player always squares a pile straight to their own view — and matches how the four
+edge-on). This keeps every interaction consistent with the rest of the table (a
+player always squares a pile straight to their own view) and matches how the four
 zones are bound per viewer. `rotateStack` (explicit Shift+scroll / rotate) is
 unaffected and turns the pile exactly as the actor asked.
 
 ## Palette (v3.7)
 
-Pure neutral greys plus ivory; no blue / purple / olive cast.
+Pure neutral greys plus ivory; no blue / purple / olive cast. `src/styles/tokens.css` is the
+source of truth; the values here are a snapshot for orientation.
 
 - `--ink` `#000000`, `--ink-2` `#060606`
 - `--ash` `#111111`, `--ash-2` `#1a1a1a`
-- `--ivory` `#f3efe5`, `--ivory-dim` `#b3afa5`, `--ivory-mute` `#6e6a63`
-- Seat accents `--seat-0..3` are four ivory tones for cursors / zone borders.
+- `--ivory` `#f3efe5`, `--ivory-dim` `#b8b4aa`, `--ivory-mute` `#9b968b`
+- Seat accents `--seat-0..3` (`#f3efe5`, `#d8d3c7`, `#b9b4a8`, `#948f83`): an ivory-to-warm-grey
+  ladder for names, zone tints and cursors. Tuned so the darkest step still reads at AA contrast
+  on the dark table (a player's name must never look "faded out") while adjacent steps stay
+  tellable apart. `SEAT_COLORS` in `src/game/Game.ts` mirrors these values; change both together.
 
 Category hues (`--cat-seal`, `--cat-spell`, `--cat-intervention`, `--cat-servant`) are kept in tokens.css purely so the rulebook can describe the four canonical colours; the live UI does not paint with them.
 

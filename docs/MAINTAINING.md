@@ -162,8 +162,8 @@ offline until the project is manually restored. `.github/workflows/keep-supabase
 pings the project once a day (PostgREST root + auth health) so the idle timer never reaches
 7 days. It needs two repo secrets (Settings -> Secrets and variables -> Actions):
 
-- `SUPABASE_URL` — same as `VITE_SUPABASE_URL` (`https://<project-ref>.supabase.co`)
-- `SUPABASE_ANON_KEY` — same as `VITE_SUPABASE_ANON_KEY`
+- `SUPABASE_URL`: same as `VITE_SUPABASE_URL` (`https://<project-ref>.supabase.co`)
+- `SUPABASE_ANON_KEY`: same as `VITE_SUPABASE_ANON_KEY`
 
 Both are public values (they ship in the web client), so storing them as Actions secrets is
 safe. You can also trigger the workflow by hand from the Actions tab. GitHub disables

@@ -24,11 +24,14 @@
   position: relative;
   /* A quiet, quality frosted tray. The four hand trays + the open centre still read as ONE
      connected surface, but each tray is now clearly PRESENT (not a vague wash): a soft frost, a
-     faint top wash, and a felt — never sharp — edge. The trapezoid clip keeps the geometry exact
-     (what looks private IS private); the edge mask below dissolves only the inner "door" so the
-     tray melts into the shared centre while its outer + diagonal edges stay perceptible. */
+     faint wash along its own board edge, and a felt — never sharp — edge. The trapezoid clip
+     keeps the geometry exact (what looks private IS private); the edge mask below dissolves only
+     the inner "door" so the tray melts into the shared centre while its outer + diagonal edges
+     stay perceptible. --edge (set per physical slot below) points from the tray's OUTER board
+     edge toward the table centre, so the wash and the door fade run along the correct axis for
+     all four trays — top/left/right used to reuse the bottom tray's vertical wash. */
   background:
-    linear-gradient(to top, rgba(243, 239, 229, 0.05) 0%, rgba(243, 239, 229, 0.015) 46%, rgba(243, 239, 229, 0) 78%),
+    linear-gradient(var(--edge, to top), rgba(243, 239, 229, 0.05) 0%, rgba(243, 239, 229, 0.015) 46%, rgba(243, 239, 229, 0) 78%),
     rgba(243, 239, 229, 0.014);
   backdrop-filter: blur(8px) saturate(108%);
   -webkit-backdrop-filter: blur(8px) saturate(108%);
@@ -36,6 +39,12 @@
   isolation: isolate;
   z-index: var(--z-zone);
   pointer-events: none;
+  /* Edge fade: each tray is strongest along its own board edge and dissolves toward the centre,
+     so the inner ("door") edge melts into the open shared area instead of ending on a hard line,
+     and the narrow trapezoid tip + its sharp corners simply fade out. The bulk of the tray stays
+     present (the fade only bites in the inner third) so the area never reads as vague. */
+  -webkit-mask-image: linear-gradient(var(--edge, to top), #000 0%, #000 56%, transparent 100%);
+  mask-image: linear-gradient(var(--edge, to top), #000 0%, #000 56%, transparent 100%);
 }
 
 /* Every tray rests BELOW the card layer (--z-board), so cards always paint cleanly on top of the
@@ -44,10 +53,14 @@
 
 /* Your own hand tray: the most defined surface so "this is your area" reads at a glance, yet still
    soft-edged. A clearer ivory wash, strongest along YOUR board edge and fading toward the centre
-   (paired with the edge mask), so the area is felt without any hard frame, inset box or halo. */
+   (paired with the edge mask), so the area is felt without any hard frame, inset box or halo.
+   zone--self is toggled per refresh (Game.refreshZones) onto whichever PHYSICAL slot your seat
+   currently renders in, so a V camera turn carries your highlight with your seat instead of
+   leaving it glued to the bottom tray (which then shows a rival). All directional styling reads
+   the slot's own --edge, so the wash stays anchored to your true board edge at any angle. */
 .zone--self {
   background:
-    linear-gradient(to top, rgba(243, 239, 229, 0.11) 0%, rgba(243, 239, 229, 0.035) 42%, rgba(243, 239, 229, 0) 76%),
+    linear-gradient(var(--edge, to top), rgba(243, 239, 229, 0.11) 0%, rgba(243, 239, 229, 0.035) 42%, rgba(243, 239, 229, 0) 76%),
     rgba(243, 239, 229, 0.02);
   backdrop-filter: blur(8px) saturate(114%);
   -webkit-backdrop-filter: blur(8px) saturate(114%);
@@ -68,8 +81,9 @@
 .zone--active:not(.zone--self) {
   color: var(--seat-color);
   /* A touch more seat tint so an occupied rival area reads its full extent (which edge is whose)
-     at a glance — still soft and edge-faded toward the centre, never a hard frame. */
-  background-color: color-mix(in oklab, var(--seat-color) 12%, transparent);
+     at a glance — still soft and edge-faded toward the centre, never a hard frame. 14% (up from
+     12%) keeps the darkest seat tone in the readable ladder (tokens.css) visible over the frost. */
+  background-color: color-mix(in oklab, var(--seat-color) 14%, transparent);
 }
 /* Dropped: the player lost connection / closed the tab but did NOT leave. Their area stays reserved
    and clearly "asleep" (dimmed) — their cards remain private — until they rejoin or leave. The amber
@@ -94,7 +108,15 @@
 .zone--top { grid-column: 1 / 4; grid-row: 1; clip-path: polygon(0% 0%, 100% 0%, 72% 100%, 28% 100%); }
 .zone--left { grid-column: 1; grid-row: 1 / 4; clip-path: polygon(0% 0%, 100% 28%, 100% 72%, 0% 100%); }
 .zone--right { grid-column: 3; grid-row: 1 / 4; clip-path: polygon(100% 0%, 100% 100%, 0% 72%, 0% 28%); }
-.zone--self, .zone--bottom { grid-column: 1 / 4; grid-row: 3; clip-path: polygon(28% 0%, 72% 0%, 100% 100%, 0% 100%); }
+.zone--bottom { grid-column: 1 / 4; grid-row: 3; clip-path: polygon(28% 0%, 72% 0%, 100% 100%, 0% 100%); }
+
+/* The per-slot axis every directional treatment (frost wash, door fade, self mask) reads:
+   from the tray's own OUTER board edge toward the table centre, in physical screen space
+   (the zone divs never rotate — only the cards layer does). */
+.zone--bottom { --edge: to top; }
+.zone--top { --edge: to bottom; }
+.zone--left { --edge: to right; }
+.zone--right { --edge: to left; }
 
 /* Felt OUTER rim: a soft hairline + a whisper of inner shadow along each tray's own board edge (the
    "bottom" border for you, the matching outer edge for every seat). It is drawn on the rectangular
@@ -102,42 +124,41 @@
    and is clipped away on the diagonals — giving a quality, perceptible boundary that is never a hard
    full box. The diagonal seams shared with neighbours stay felt through the two trays' own frost
    meeting along them. */
-.zone--self, .zone--bottom { box-shadow: inset 0 -1px 0 rgba(243, 239, 229, 0.12), inset 0 -10px 20px rgba(0, 0, 0, 0.10); }
+.zone--bottom { box-shadow: inset 0 -1px 0 rgba(243, 239, 229, 0.12), inset 0 -10px 20px rgba(0, 0, 0, 0.10); }
 .zone--top { box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.11), inset 0 10px 20px rgba(0, 0, 0, 0.10); }
 .zone--left { box-shadow: inset 1px 0 0 rgba(243, 239, 229, 0.11), inset 10px 0 20px rgba(0, 0, 0, 0.10); }
 .zone--right { box-shadow: inset -1px 0 0 rgba(243, 239, 229, 0.11), inset -10px 0 20px rgba(0, 0, 0, 0.10); }
 
-/* Edge fade: each tray is strongest along its own board edge and dissolves toward the centre, so the
-   inner ("door") edge melts into the open shared area instead of ending on a hard line, and the
-   narrow trapezoid tip + its sharp corners simply fade out. The bulk of the tray stays present (the
-   fade only bites in the inner third) so the area never reads as vague. Directions are in physical
-   screen space (the zone divs never rotate — only the cards layer does). */
-.zone--self, .zone--bottom {
-  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 56%, transparent 100%);
-  mask-image: linear-gradient(to top, #000 0%, #000 56%, transparent 100%);
-}
-.zone--top {
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 56%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 56%, transparent 100%);
-}
-.zone--left {
-  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 56%, transparent 100%);
-  mask-image: linear-gradient(to right, #000 0%, #000 56%, transparent 100%);
-}
-.zone--right {
-  -webkit-mask-image: linear-gradient(to left, #000 0%, #000 56%, transparent 100%);
-  mask-image: linear-gradient(to left, #000 0%, #000 56%, transparent 100%);
-}
-
 /* YOUR OWN tray gets a CLEARLY readable boundary: the inner ("door") edge no longer fades to
-   nothing (so you can see where your area ends) and carries a soft top catch-light right at the
+   nothing (so you can see where your area ends) and carries a soft catch-light right at the
    door. Rivals' trays still dissolve toward the centre — you don't need to read their edge — but
-   your own area is unambiguous, top included. Overrides the shared bottom mask + rim above. */
+   your own area is unambiguous. The mask follows the slot's --edge; the rim + door catch-light
+   need explicit per-slot offsets, so the highlight stays correct wherever your seat renders. */
 .zone--self {
-  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 66%, rgba(0, 0, 0, 0.55) 100%);
-  mask-image: linear-gradient(to top, #000 0%, #000 66%, rgba(0, 0, 0, 0.55) 100%);
+  -webkit-mask-image: linear-gradient(var(--edge, to top), #000 0%, #000 66%, rgba(0, 0, 0, 0.55) 100%);
+  mask-image: linear-gradient(var(--edge, to top), #000 0%, #000 66%, rgba(0, 0, 0, 0.55) 100%);
+}
+.zone--self.zone--bottom {
   box-shadow:
     inset 0 1px 0 rgba(243, 239, 229, 0.16),    /* inner door edge catch-light (clipped to the door) */
     inset 0 -1px 0 rgba(243, 239, 229, 0.12),   /* outer board edge */
     inset 0 -10px 20px rgba(0, 0, 0, 0.10);
+}
+.zone--self.zone--top {
+  box-shadow:
+    inset 0 -1px 0 rgba(243, 239, 229, 0.16),
+    inset 0 1px 0 rgba(243, 239, 229, 0.12),
+    inset 0 10px 20px rgba(0, 0, 0, 0.10);
+}
+.zone--self.zone--left {
+  box-shadow:
+    inset -1px 0 0 rgba(243, 239, 229, 0.16),
+    inset 1px 0 0 rgba(243, 239, 229, 0.12),
+    inset 10px 0 20px rgba(0, 0, 0, 0.10);
+}
+.zone--self.zone--right {
+  box-shadow:
+    inset 1px 0 0 rgba(243, 239, 229, 0.16),
+    inset -1px 0 0 rgba(243, 239, 229, 0.12),
+    inset -10px 0 20px rgba(0, 0, 0, 0.10);
 }

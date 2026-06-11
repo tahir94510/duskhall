@@ -93,13 +93,25 @@ body:not(.is-ready) .board__perspective { transition: none; }
 
 /* Camera turn (V key / perspective button): the cards rotate smoothly via the
    transform transition above, but the frosted zone trays and the upright seat
-   labels are SIBLINGS of .board, so they re-map their slot instantly. A brief
-   fade-in over the same duration masks that snap so the whole turn reads as one
-   cohesive motion. Honours reduced motion automatically (--dur-slow -> 0ms). */
+   labels are SIBLINGS of .board, so they re-map their slot in one step. The two
+   layers dip fully out, the remap lands inside the invisible window (Game.
+   togglePerspective defers refreshZones to ~35% of the turn), and they fade back
+   already showing the new mapping — no half-swapped colours ever paint. Zone/label
+   transitions are suspended for the turn so the seat tints can't crossfade through
+   in-between colours while fading back in. Honours reduced motion automatically
+   (--dur-slow -> 0ms; the remap then applies immediately, with no animation). */
 @media (prefers-reduced-motion: no-preference) {
   .table.is-rotating .zones,
   .table.is-rotating .board__labels { animation: board-view-turn var(--dur-slow) var(--ease); }
-  @keyframes board-view-turn { from { opacity: 0.25; } to { opacity: 1; } }
+  .table.is-rotating .zone,
+  .table.is-rotating .seat-label,
+  .table.is-rotating .seat-label__dot { transition: none; }
+  @keyframes board-view-turn {
+    0% { opacity: 1; }
+    30% { opacity: 0; }
+    55% { opacity: 0; }
+    100% { opacity: 1; }
+  }
 }
 
 .board__perspective > * { pointer-events: auto; }
