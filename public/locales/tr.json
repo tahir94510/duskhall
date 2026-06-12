@@ -170,46 +170,79 @@
   "shortcutsList": {
     "title": "Kısayollar",
     "subtitle": "Çoğu işlem imlecin altındaki kart için geçerlidir; alanını düzenlemek gibi birkaçı ise kendi elin için çalışır. Boş alanda hiçbir şey olmaz.",
-    "items": [
+    "groups": [
       {
-        "keys": "Sol tık, sürükle",
-        "desc": "İmlecin altındaki kartı taşı"
+        "title": "Temel",
+        "items": [
+          {
+            "keys": "Sol tık, sürükle",
+            "desc": "İmlecin altındaki kartı taşı"
+          },
+          {
+            "keys": "Tekerlek",
+            "desc": "İmlecin altındaki tek kartı çevir"
+          },
+          {
+            "keys": "Sağ tık",
+            "desc": "İmlecin altındaki yığını çevir (tek kart yalnız çevrilir)"
+          }
+        ]
       },
       {
-        "keys": "Ctrl + sol tık, sürükle",
-        "desc": "İmlecin altındaki yığını taşı"
+        "title": "Yığınlar",
+        "items": [
+          {
+            "keys": "Ctrl + sol tık, sürükle",
+            "desc": "İmlecin altındaki yığını taşı"
+          },
+          {
+            "keys": "Ctrl + tekerlek",
+            "desc": "İmlecin altındaki yığını toplu çevir"
+          },
+          {
+            "keys": "Shift + tekerlek",
+            "desc": "90° yana döndür (yüzünü çevirmez); yığının üzerindeyken tüm desteyi döndürüp hizalar"
+          },
+          {
+            "keys": "G",
+            "desc": "İmlecin altındaki yığını topla"
+          },
+          {
+            "keys": "M",
+            "desc": "İmlecin altındaki yığını karıştır"
+          }
+        ]
       },
       {
-        "keys": "Sağ tık",
-        "desc": "İmlecin altındaki yığını çevir (tek kart yalnız çevrilir)"
+        "title": "Görünüm",
+        "items": [
+          {
+            "keys": "V",
+            "desc": "Masayı solundaki oyuncunun açısından görürsün; tekrar basınca kendi açına dönersin. Bu yalnızca senin görünümünü değiştirir, başka kimse için bir şey değişmez. Kendi alanını tam karşına almak için elverişlidir."
+          }
+        ]
       },
       {
-        "keys": "Tekerlek",
-        "desc": "İmlecin altındaki tek kartı çevir"
+        "title": "Kendi alanın",
+        "items": [
+          {
+            "keys": "D",
+            "desc": "Kendi alanını derleyip toplar. Oradaki kartların düzgün, deste gibi bir düzene oturur: aynı kartlar üst üste, türüne göre sıralı ve ortalanmış, komşunun alanına hiç taşmadan. Sesini yalnız sen duyarsın; kartlarının yerine süzülüşünü herkes görür."
+          }
+        ]
       },
       {
-        "keys": "Ctrl + tekerlek",
-        "desc": "İmlecin altındaki yığını toplu çevir"
-      },
-      {
-        "keys": "Shift + tekerlek",
-        "desc": "90° yana döndür (yüzünü çevirmez); yığının üzerindeyken tüm desteyi döndürüp hizalar"
-      },
-      {
-        "keys": "G",
-        "desc": "İmlecin altındaki yığını topla"
-      },
-      {
-        "keys": "M",
-        "desc": "İmlecin altındaki yığını karıştır"
-      },
-      {
-        "keys": "V",
-        "desc": "Masayı solundaki oyuncunun açısından görürsün; tekrar basınca kendi açına dönersin. Bu yalnızca senin görünümünü değiştirir, başka kimse için bir şey değişmez. Kendi alanını tam karşına almak için elverişlidir."
-      },
-      {
-        "keys": "D",
-        "desc": "Kendi alanını derleyip toplar. Oradaki kartların düzgün, deste gibi bir düzene oturur: aynı kartlar üst üste, türüne göre sıralı ve ortalanmış, komşunun alanına hiç taşmadan. Sesini yalnız sen duyarsın; kartlarının yerine süzülüşünü herkes görür."
+        "title": "Dokunmatik",
+        "items": [
+          {
+            "keys": "Uzun bas",
+            "desc": "Kartın eylem çubuğunu açar: çevirme, döndürme, toplama, karıştırma, bilgi, görünüm ve alan düzeni"
+          },
+          {
+            "keys": "Parmakla sürükle",
+            "desc": "Kartı taşır; bıraktığın yerde kalır"
+          }
+        ]
       }
     ],
     "mobileNote": "Dokunmatikte fare ya da klavye yoktur. Bir karta uzun bas, eylem çubuğu açılsın: oradan kartı çevirebilir, yana döndürebilir, destesini toplayabilir ya da karıştırabilir, bilgilerini görebilir ya da masaya bakışını çevirebilirsin. Kendi kartlarından birine uzun basarsan tüm alanını derli toplu bir düzene de sokabilirsin."
@@ -611,6 +644,16 @@
     "intro": "Her şeyin merkezinde, kaynağı bilinmeyen ve çok önce paramparça olmuş bir güç vardır: Eter. Onun parçaları yüzyıllar boyunca sessiz ittifaklarla, fısıltıyla verilen sözlerle ve soğukkanlı ihanetlerle el değiştirdi. Artık sen de o masadasın: ileri görüşlü, kurnaz, Eter'i hâlâ kendi iradesine boyun eğdirebilen ender kişilerden biri. Burada dostluk yoktur, merhamet yoktur, şans yoktur. Yalnızca manipülasyon, strateji ve hiç durmayan bir güç savaşı vardır.",
     "sections": [
       {
+        "id": "goal",
+        "title": "Amaç",
+        "body": [
+          "Güç topla, Yükseliş ilan et, bir tam tur hayatta kal. Oyunun özü bu.",
+          "Kazanmak için turunun sonunda masanda en az 3 Mühür tutar, Yükseliş ilan eder ve sıra sana geri geldiğinde hâlâ en az 3 Mühre sahip olursun. Masadaki her şey ya o âna ulaşmak ya da onu bir başkasına vermemek içindir.",
+          "Her tur sana harcayacak 2 HP verir: Mühür ve Hizmetkâr yerleştir, rakiplerine Büyü savur ya da kart ara. Müdahaleler bedavadır ve her an herkesi bölebilir; bu masada kimse yalnızca sıra beklemez.",
+          "İhanete hazır ol. Bir oyuncu Yükseliş ilan ettiği anda bütün masa bir tur boyunca ona döner; buna Sınav denir. Onu atlatırsan Eter senindir."
+        ]
+      },
+      {
         "id": "components",
         "title": "1. Bileşenler",
         "body": [
@@ -759,23 +802,27 @@
         "id": "edge",
         "title": "12. Kenar durum rehberi",
         "body": [
-          "S. Sustur! ile iptal edilen Büyü ne olur? C. İptal edilen Büyü ve Sustur! Çöplüğe gider. Harcanan 1 HP geri ödenmez.",
+          "### Zamanlama ve mühürler",
           "S. Zaman Çatlağı bu tur konuldu, hemen 3 kart çekebilir miyim? C. Hayır. Efekti bir sonraki turun Odaklanma'sında başlar.",
           "S. 2 Zaman Çatlağı masada, kaç kart çekerim? C. 4 (her kopya +1).",
           "S. Kızıl Monolit bu tur konuldu, bu tur 3 HP'yi mi kullanırım? C. Hayır. Bir sonraki turdan itibaren geçerlidir.",
           "S. Ölüçağıranın Gözü bu tur konuldu, bu turun Kapanış'ında kart alır mıyım? C. Evet. Tetik Kapanış'ta çalışır; Aksiyon'dan sonra gelir.",
           "S. Ölüçağıranın Gözü'nün aldırdığı kartı tutmak zorunda mıyım? C. Hayır. Önce kartı alırsın, sonra el limiti kontrol edilir. 7'nin üstündeysen onu ya da başka bir kartı aynı Kapanış'ta atabilirsin.",
+          "### İptaller ve koruma",
+          "S. Sustur! ile iptal edilen Büyü ne olur? C. İptal edilen Büyü ve Sustur! Çöplüğe gider. Harcanan 1 HP geri ödenmez.",
+          "S. Karmik Yansıma saldırıyı geri döndürdüğünde saldırganın Hizmetkâr Kalkanı uygulanır mı? C. Evet. Geri dönen saldırı saldırganın Hizmetkâr Kalkanı'na tabidir; Mühürlerine ulaşmadan önce Hizmetkârlarını temizlemek zorundadır.",
+          "S. Gölge Hırsızlığı Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. El koruma altındadır.",
+          "S. Kaderin Cilvesi Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. Hedef oyuncunun eli koruma altında.",
+          "### Hizmetkârlar",
           "S. Gölge Katili'ni masada hiç Hizmetkâr yokken oynarsam? C. Giriş efekti boşa düşer. Gölge Katili yine masaya yerleşir.",
           "S. Gölge Katili girişiyle Buzul Ucube'yi yok edersem kim tur atlar? C. SİZ. Cezayı yok eden öder.",
-          "S. Karmik Yansıma saldırıyı geri döndürdüğünde saldırganın Hizmetkâr Kalkanı uygulanır mı? C. Evet. Geri dönen saldırı saldırganın Hizmetkâr Kalkanı'na tabidir; Mühürlerine ulaşmadan önce Hizmetkârlarını temizlemek zorundadır.",
-          "S. Kan Kefareti için elimde kaç kart olmalı? C. En az 2. Daha azıyla oynanamaz.",
-          "S. Kan Kefareti'nin attığı 2 kartı kim seçer? C. Kimse. Kartlar elinden rastgele çıkar, bu yüzden bedeli ödemek her zaman bir risktir.",
           "S. Zihin Paraziti'ni masamda zaten 3 Hizmetkâr varken oynayabilir miyim? C. Hayır (HP harcanmaz): çalma için boş bir Hizmetkâr yuvası gerekir ve yer açmak için kendi kartınızı attırmaz. Yer açmak için atma takası yalnızca elinizden Oluştur içindir.",
           "S. Hizmetkâr sıram dolu (3) ve elimden bir tane daha oynamak istiyorum? C. O Oluştur'un parçası olarak önce kendi Hizmetkârlarınızdan birini yer açmak için Çöplüğe atın (seçim sizin; ekstra HP yok). Masadaki bir kart asla elinize geri alınamaz; yalnızca yok edilerek, feda edilerek, yer açmak için atılarak ya da çalınarak ayrılır.",
           "S. Zihin Paraziti ile bir Buzul Ucube'yi ele geçirirsem tur atlar mıyım? C. Hayır. Ele geçirmek yok etmek değildir; tur atlatma cezası tetiklenmez, yalnız Buzul Ucube yok edildiğinde işler.",
-          "S. Gölge Hırsızlığı Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. El koruma altındadır.",
-          "S. Kaderin Cilvesi Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. Hedef oyuncunun eli koruma altında.",
           "S. Buzul Ucube ile turu atlanan oyuncu Müdahale oynayabilir mi? C. Evet. Müdahaleler tepkiseldir; sıra düzeninden bağımsızdır.",
+          "### El ve deste",
+          "S. Kan Kefareti için elimde kaç kart olmalı? C. En az 2. Daha azıyla oynanamaz.",
+          "S. Kan Kefareti'nin attığı 2 kartı kim seçer? C. Kimse. Kartlar elinden rastgele çıkar, bu yüzden bedeli ödemek her zaman bir risktir.",
           "S. Çekim efekti sırasında deste biterse? C. Önce Eter Dalgalanması işlenir; kalan çekim yeni desteden tamamlanır."
         ]
       },
@@ -850,15 +897,15 @@
     "phase": {
       "focus": {
         "title": "Odaklanma",
-        "body": "Desteden 2 kart çek. Sahada Zaman Çatlağı mührün varsa daha fazla çekersin. Çektiğinde onay işaretine bas."
+        "body": "Desteden 2 kart çek; sahandaki her Zaman Çatlağı bir kart daha ekler. Çekince onay işaretine bas."
       },
       "action": {
         "title": "Aksiyon",
-        "body": "Bu turda harcayacağın 2 HP'n var (sahada Kızıl Monolit mührün varsa 5'e kadar). Her HP bir eylem alır: Oluştur (bir Büyü, Mühür ya da Hizmetkâr oyna), Araştır (1 kart çek) ya da Arındır (1 kart at, sonra 1 kart çek). Müdahaleler bedavadır ve her an oynanabilir. Bitince onay işaretine bas."
+        "body": "Bu tur 2 HP'n var; sahandaki her Kızıl Monolit bir HP daha ekler, en çok 5. Her HP bir eylem alır: Oluştur (elinden bir Büyü oyna ya da masana bir Mühür veya Hizmetkâr koy), Araştır (1 kart çek) ya da Arındır (1 kart at, sonra 1 kart çek). Müdahaleler her an bedavadır; kalan HP bir sonraki tura aktarılmaz. Bitince onay işaretine bas."
       },
       "closing": {
         "title": "Kapanış",
-        "body": "Aktif Mühür etkilerini tetikle, sonra elini 7 karta indir. 3 veya daha fazla Mührün varsa Yükseliş ilan edebilirsin. Sırayı sonraki oyuncuya geçirmek için onay işaretine bas."
+        "body": "Aktif Mühür etkilerini tetikle (Ölüçağıranın Gözü kartını şimdi alır), sonra elini 7 karta indir. En az 3 Mührün varsa Yükseliş ilan edebilirsin. Sırayı sonraki oyuncuya geçirmek için onay işaretine bas."
       }
     }
   }

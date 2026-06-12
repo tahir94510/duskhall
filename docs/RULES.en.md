@@ -6,6 +6,16 @@ _The Complete Rulebook_
 
 At the centre of all things lies the Ether, a sourceless force, fractured long ago. Its shards have changed hands through silent treaties, whispered threats, and quiet betrayals. You sit at the table now: a visionary, a schemer, one of the few who can still bend the Ether to a will. There is no friendship here. There is no mercy. There is no luck. Only manipulation, strategy, and the unblinking war for power.
 
+## The goal
+
+Gather power, declare Ascension, survive one full round. That is the whole game.
+
+You win by holding at least 3 Seals on your tableau at the end of your turn, declaring Ascension, and still holding at least 3 when the turn comes back around. Everything at the table exists either to reach that moment or to deny it to someone else.
+
+Each turn hands you 2 HP to spend: place Seals and Servants, hurl Spells at your rivals, or dig for cards. Interventions cost nothing and can interrupt anyone at any time; nobody at this table merely waits for a turn.
+
+Expect betrayal. The moment a player declares Ascension the whole table turns on them for one round; that round is the Trial. Outlast it and the Ether is yours.
+
 ## 1. Components
 
 Vaerum plays with a single deck of 72 cards. Nothing else is required.
@@ -163,7 +173,7 @@ When a card text and a general rule appear to disagree, the card text wins.
 
 ## 12. Edge-case guide
 
-Q. What happens to a Spell cancelled by Silence!? A. The cancelled Spell and the Silence! both go to the Discard. The caster's 1 HP is not refunded.
+### Timing and seals
 
 Q. Can Time Rift placed this turn give me extra cards? A. No. Its effect starts on your next turn, Focus has already happened this turn.
 
@@ -175,28 +185,37 @@ Q. Necromancer's Eye placed this turn, does it fire at this Closing? A. Yes. Its
 
 Q. Must I keep the card Necromancer's Eye makes me take? A. No. You take it first, then check the hand limit, so if you are over 7 you can discard it (or any other card) that same Closing.
 
-Q. Shadow Slayer enters but no rival has Servants? A. The entry effect fizzles. Shadow Slayer still enters as a normal Servant.
+### Cancels and protection
 
-Q. Shadow Slayer kills a Glacial Aberration on entry, who skips? A. You do. The destroyer pays the penalty.
+Q. What happens to a Spell cancelled by Silence!? A. The cancelled Spell and the Silence! both go to the Discard. The caster's 1 HP is not refunded.
 
 Q. When Karmic Reflection rebounds an attack, does the attacker's Servant Shield apply? A. Yes. The rebounding attack must respect the attacker's Servant Shield, so it has to clear their Servants before it can reach their Seals.
-
-Q. Blood Atonement needs how many cards in hand? A. At least 2. With fewer, it cannot be played.
-
-Q. Who picks the 2 cards Blood Atonement discards? A. Nobody. They leave your hand at random, so paying the cost is always a gamble.
-
-Q. Mind Parasite when your tableau already has 3 Servants? A. Cannot be cast; no HP spent.
-
-Q. If I take a Glacial Aberration with Mind Parasite, do I skip a turn? A. No. Taking control is not destroying, so its skip-a-turn penalty does not trigger; it only fires when the Aberration is destroyed.
 
 Q. Shadow Theft against a hand protected by Veil of Void? A. Not legal; cannot be cast.
 
 Q. Twist of Fate against Veil of Void? A. Not legal; the targeted player's hand is shielded.
 
+### Servants
+
+Q. Shadow Slayer enters but no rival has Servants? A. The entry effect fizzles. Shadow Slayer still enters as a normal Servant.
+
+Q. Shadow Slayer kills a Glacial Aberration on entry, who skips? A. You do. The destroyer pays the penalty.
+
+Q. Mind Parasite when your tableau already has 3 Servants? A. It cannot be cast (no HP spent): a steal needs a free Servant slot and is never allowed to discard your own to make room. That discard-to-make-room swap is only for a Create from your hand.
+
+Q. My Servant row is full (3) and I want to play another from my hand? A. As part of that Create, first Discard one of your own Servants to make room (your choice; no extra HP). A card already on your tableau can never be taken back into your hand; it leaves only by being destroyed, sacrificed, discarded to make room, or stolen.
+
+Q. If I take a Glacial Aberration with Mind Parasite, do I skip a turn? A. No. Taking control is not destroying, so its skip-a-turn penalty does not trigger; it only fires when the Aberration is destroyed.
+
 Q. Can a player skipped by Glacial Aberration still play Interventions? A. Yes. Interventions are reactive and ignore turn order.
 
-Q. The deck empties mid-draw? A. Ether Resonance resolves fully first; the draw effect then completes from the new deck.
+### Hand and deck
 
+Q. Blood Atonement needs how many cards in hand? A. At least 2. With fewer, it cannot be played.
+
+Q. Who picks the 2 cards Blood Atonement discards? A. Nobody. They leave your hand at random, so paying the cost is always a gamble.
+
+Q. The deck empties mid-draw? A. Ether Resonance resolves fully first; the draw effect then completes from the new deck.
 
 ## 13. Quick reference
 

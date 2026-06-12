@@ -6,6 +6,16 @@ _Tam Kural Kitabı_
 
 Her şeyin merkezinde, kaynağı bilinmeyen ve çok önce paramparça olmuş bir güç vardır: Eter. Onun parçaları yüzyıllar boyunca sessiz ittifaklarla, fısıltıyla verilen sözlerle ve soğukkanlı ihanetlerle el değiştirdi. Artık sen de o masadasın: ileri görüşlü, kurnaz, Eter'i hâlâ kendi iradesine boyun eğdirebilen ender kişilerden biri. Burada dostluk yoktur, merhamet yoktur, şans yoktur. Yalnızca manipülasyon, strateji ve hiç durmayan bir güç savaşı vardır.
 
+## Amaç
+
+Güç topla, Yükseliş ilan et, bir tam tur hayatta kal. Oyunun özü bu.
+
+Kazanmak için turunun sonunda masanda en az 3 Mühür tutar, Yükseliş ilan eder ve sıra sana geri geldiğinde hâlâ en az 3 Mühre sahip olursun. Masadaki her şey ya o âna ulaşmak ya da onu bir başkasına vermemek içindir.
+
+Her tur sana harcayacak 2 HP verir: Mühür ve Hizmetkâr yerleştir, rakiplerine Büyü savur ya da kart ara. Müdahaleler bedavadır ve her an herkesi bölebilir; bu masada kimse yalnızca sıra beklemez.
+
+İhanete hazır ol. Bir oyuncu Yükseliş ilan ettiği anda bütün masa bir tur boyunca ona döner; buna Sınav denir. Onu atlatırsan Eter senindir.
+
 ## 1. Bileşenler
 
 Vaerum tek bir 72 kartlık deste ile oynanır. Başka bir bileşen gerekmez.
@@ -163,7 +173,7 @@ Bir kart metni ile genel bir kural çelişiyor gibi göründüğünde, kart metn
 
 ## 12. Kenar durum rehberi
 
-S. Sustur! ile iptal edilen Büyü ne olur? C. İptal edilen Büyü ve Sustur! Çöplüğe gider. Harcanan 1 HP geri ödenmez.
+### Zamanlama ve mühürler
 
 S. Zaman Çatlağı bu tur konuldu, hemen 3 kart çekebilir miyim? C. Hayır. Efekti bir sonraki turun Odaklanma'sında başlar.
 
@@ -175,28 +185,37 @@ S. Ölüçağıranın Gözü bu tur konuldu, bu turun Kapanış'ında kart alır
 
 S. Ölüçağıranın Gözü'nün aldırdığı kartı tutmak zorunda mıyım? C. Hayır. Önce kartı alırsın, sonra el limiti kontrol edilir. 7'nin üstündeysen onu ya da başka bir kartı aynı Kapanış'ta atabilirsin.
 
-S. Gölge Katili'ni masada hiç Hizmetkâr yokken oynarsam? C. Giriş efekti boşa düşer. Gölge Katili yine masaya yerleşir.
+### İptaller ve koruma
 
-S. Gölge Katili girişiyle Buzul Ucube'yi yok edersem kim tur atlar? C. SİZ. Cezayı yok eden öder.
+S. Sustur! ile iptal edilen Büyü ne olur? C. İptal edilen Büyü ve Sustur! Çöplüğe gider. Harcanan 1 HP geri ödenmez.
 
 S. Karmik Yansıma saldırıyı geri döndürdüğünde saldırganın Hizmetkâr Kalkanı uygulanır mı? C. Evet. Geri dönen saldırı saldırganın Hizmetkâr Kalkanı'na tabidir; Mühürlerine ulaşmadan önce Hizmetkârlarını temizlemek zorundadır.
-
-S. Kan Kefareti için elimde kaç kart olmalı? C. En az 2. Daha azıyla oynanamaz.
-
-S. Kan Kefareti'nin attığı 2 kartı kim seçer? C. Kimse. Kartlar elinden rastgele çıkar, bu yüzden bedeli ödemek her zaman bir risktir.
-
-S. Zihin Paraziti'ni masamda 3 Hizmetkâr varken oynayabilir miyim? C. Hayır. Ele geçirilen Hizmetkâr sınırınızı doldurur; oynanamaz, HP harcanmaz.
-
-S. Zihin Paraziti ile bir Buzul Ucube'yi ele geçirirsem tur atlar mıyım? C. Hayır. Ele geçirmek yok etmek değildir; tur atlatma cezası tetiklenmez, yalnız Buzul Ucube yok edildiğinde işler.
 
 S. Gölge Hırsızlığı Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. El koruma altındadır.
 
 S. Kaderin Cilvesi Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. Hedef oyuncunun eli koruma altında.
 
+### Hizmetkârlar
+
+S. Gölge Katili'ni masada hiç Hizmetkâr yokken oynarsam? C. Giriş efekti boşa düşer. Gölge Katili yine masaya yerleşir.
+
+S. Gölge Katili girişiyle Buzul Ucube'yi yok edersem kim tur atlar? C. SİZ. Cezayı yok eden öder.
+
+S. Zihin Paraziti'ni masamda zaten 3 Hizmetkâr varken oynayabilir miyim? C. Hayır (HP harcanmaz): çalma için boş bir Hizmetkâr yuvası gerekir ve yer açmak için kendi kartınızı attırmaz. Yer açmak için atma takası yalnızca elinizden Oluştur içindir.
+
+S. Hizmetkâr sıram dolu (3) ve elimden bir tane daha oynamak istiyorum? C. O Oluştur'un parçası olarak önce kendi Hizmetkârlarınızdan birini yer açmak için Çöplüğe atın (seçim sizin; ekstra HP yok). Masadaki bir kart asla elinize geri alınamaz; yalnızca yok edilerek, feda edilerek, yer açmak için atılarak ya da çalınarak ayrılır.
+
+S. Zihin Paraziti ile bir Buzul Ucube'yi ele geçirirsem tur atlar mıyım? C. Hayır. Ele geçirmek yok etmek değildir; tur atlatma cezası tetiklenmez, yalnız Buzul Ucube yok edildiğinde işler.
+
 S. Buzul Ucube ile turu atlanan oyuncu Müdahale oynayabilir mi? C. Evet. Müdahaleler tepkiseldir; sıra düzeninden bağımsızdır.
 
-S. Çekim efekti sırasında deste biterse? C. Önce Eter Dalgalanması işlenir; kalan çekim yeni desteden tamamlanır.
+### El ve deste
 
+S. Kan Kefareti için elimde kaç kart olmalı? C. En az 2. Daha azıyla oynanamaz.
+
+S. Kan Kefareti'nin attığı 2 kartı kim seçer? C. Kimse. Kartlar elinden rastgele çıkar, bu yüzden bedeli ödemek her zaman bir risktir.
+
+S. Çekim efekti sırasında deste biterse? C. Önce Eter Dalgalanması işlenir; kalan çekim yeni desteden tamamlanır.
 
 ## 13. Hızlı başvuru
 

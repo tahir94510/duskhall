@@ -208,6 +208,11 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
 
 .rules__toc a:hover { color: var(--ivory); background: rgba(255, 255, 255, 0.04); text-decoration-color: transparent; }
 
+/* Reading-position indicator: the section currently under the top of the view keeps its
+   TOC entry lit (set by the IntersectionObserver in RulesModal), so a reader always knows
+   where they are in the long rulebook. Same family as :hover, slightly firmer. */
+.rules__toc a.is-active { color: var(--ivory); background: rgba(243, 239, 229, 0.07); }
+
 .rules__content { min-width: 0; max-width: 64ch; }
 .rules__content section { scroll-margin-top: 24px; }
 
@@ -222,6 +227,17 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   border-bottom: 1px solid var(--line-2);
 }
 .rules h2:first-child { margin-top: 4px; }
+
+/* Subheadings inside a long section (the themed clusters of the edge-case guide):
+   smaller than the section caps, no rule line, so the groups read as soft chapter
+   breaks rather than competing with the numbered section heads. */
+.rules h3 {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--ivory-dim);
+  margin: 22px 0 10px;
+}
 
 .rules p {
   font-size: 13px;
@@ -366,6 +382,11 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
     color: var(--ivory-dim);
   }
   .rules__toc a:active { background: rgba(255, 255, 255, 0.08); color: var(--ivory); }
+  .rules__toc a.is-active {
+    background: rgba(243, 239, 229, 0.10);
+    border-color: var(--line-3);
+    color: var(--ivory);
+  }
 }
 
 /* --- Support --- */
@@ -450,6 +471,21 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
 }
 
 /* --- Shortcuts --- */
+/* Themed shortcut groups: a quiet caps header above each grid, so the list reads
+   as Basics -> Piles -> View -> Your area -> Touch instead of one flat wall. */
+.shortcuts-group { margin: 0 0 18px; }
+.shortcuts-group:last-of-type { margin-bottom: 0; }
+.shortcuts-group h3 {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ivory-mute);
+  margin: 0 0 9px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--line);
+}
+
 .shortcuts-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -465,10 +501,15 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
 .shortcuts-grid kbd {
   background: rgba(28, 28, 28, 0.7);
   border: 1px solid var(--line-2);
+  /* A real keycap read: a soft bottom ledge and a faint top light, still flat
+     enough to stay inside the monochrome chrome. */
+  border-bottom-color: var(--line-3);
+  box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.05), 0 1px 0 rgba(0, 0, 0, 0.4);
   border-radius: 5px;
   padding: 2px 7px;
   font-family: var(--font-body);
   font-size: 11px;
+  font-weight: 600;
   color: var(--ivory);
   white-space: nowrap;
 }

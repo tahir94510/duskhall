@@ -143,6 +143,16 @@ function renderBody(lines: string[], nameToId?: Map<string, string>, termToKey?:
     const line = raw.trim();
     if (!line) continue;
 
+    // Subheading: "### Timing and seals" clusters a long section (the edge-case
+    // guide) into themed groups. Markdown-native in the docs mirror; here it
+    // renders as an h3. Must be checked before the other line shapes.
+    const heading = line.match(/^###\s+(.+)$/);
+    if (heading) {
+      flushAll();
+      out.push(`<h3>${linkify(heading[1]!, nameToId, termToKey)}</h3>`);
+      continue;
+    }
+
     // Q&A grid
     if (/^Q\.\s/.test(line) || /^S\.\s/.test(line)) {
       flushAll();
@@ -197,9 +207,16 @@ export function openRulesModal(modal: Modal, tooltip?: Tooltip): void {
   // Closing the rulebook must also dismiss any term/card info panel opened from inside it —
   // otherwise a sticky tooltip whose anchor (a term button) was just removed with the modal
   // lingers, stranded at a stale position (the top-left "ghost bubble"). hide() clears it.
-  modal.open({ title, subtitle, bodyHtml, onClose: () => tooltip?.hide() });
+  // The section observer below is disconnected on the same path.
+  let sectionObserver: IntersectionObserver | null = null;
+  modal.open({ title, subtitle, bodyHtml, onClose: () => { tooltip?.hide(); sectionObserver?.disconnect(); } });
 
   const body = modal.bodyEl();
+  const setActiveToc = (id: string): void => {
+    body?.querySelectorAll<HTMLAnchorElement>(".rules__toc a").forEach((a) => {
+      a.classList.toggle("is-active", a.getAttribute("href") === `#${id}`);
+    });
+  };
   body?.querySelectorAll<HTMLAnchorElement>('.rules__toc a').forEach((a) => {
     a.addEventListener("click", (e) => {
       e.preventDefault();
@@ -207,8 +224,34 @@ export function openRulesModal(modal: Modal, tooltip?: Tooltip): void {
       if (!id) return;
       const target = body.querySelector(id);
       target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Mark the clicked entry at once; the observer settles on the same section
+      // when the smooth scroll lands, so there is no flicker in between.
+      setActiveToc(id.slice(1));
     });
   });
+
+  // Reading-position indicator: while the content scrolls, the TOC entry of the
+  // section currently occupying the top quarter of the view is highlighted, so a
+  // reader deep in a long rulebook always knows where they are. The modal body is
+  // the scroll container, hence the explicit root; the bottom margin shrinks the
+  // observed band to that top quarter. Of every section touching the band, the
+  // FIRST in document order is the one the eye is actually in, so it wins.
+  if (body && typeof IntersectionObserver === "function") {
+    const sections = Array.from(body.querySelectorAll<HTMLElement>('section[id^="sec-"]'));
+    if (sections.length) {
+      setActiveToc(sections[0]!.id);
+      const inBand = new Set<string>();
+      sectionObserver = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) inBand.add(entry.target.id);
+          else inBand.delete(entry.target.id);
+        }
+        const current = sections.find((s) => inBand.has(s.id));
+        if (current) setActiveToc(current.id);
+      }, { root: body, rootMargin: "0px 0px -75% 0px", threshold: 0 });
+      for (const s of sections) sectionObserver.observe(s);
+    }
+  }
 
   // A card name or glossary term in the rulebook opens the same info panel the table uses:
   // on HOVER after a short delay (like hovering a card), and on click/tap (sticky, for touch).
