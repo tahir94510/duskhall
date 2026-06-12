@@ -16,6 +16,18 @@ Her tur sana harcayacak 2 HP verir: Mühür ve Hizmetkâr yerleştir, rakiplerin
 
 İhanete hazır ol. Bir oyuncu Yükseliş ilan ettiği anda bütün masa bir tur boyunca ona döner; buna Sınav denir. Onu atlatırsan Eter senindir.
 
+## Çırak kuralları (ilk oyununuz)
+
+Vaerum'u ilk kez oynayan bir masa için resmî, basitleştirilmiş başlangıç. İlk bir iki oyunu böyle oynayın; tadı damağınızda kalınca tam kurallara geçin.
+
+ZİNCİR YOK: bir hamleye en fazla BİR Müdahale ile karşılık verilir; Sustur!'a Sustur! oynanmaz.
+
+DALGALANMA KURBANSIZ: deste bitince Çöplük karıştırılıp yeni deste olur; kimse kart feda etmez.
+
+KENAR DURUM YOK: kart ne diyorsa o. Anlaşmazlıkta en basit okuma geçerlidir ve oyun durmaz.
+
+GERİSİ AYNI: 2 kart çek, 2 HP harca, elini 7'ye indir. 3 Mühür biriktirip Sınav'ı atlatan kazanır.
+
 ## 1. Bileşenler
 
 Vaerum tek bir 72 kartlık deste ile oynanır. Başka bir bileşen gerekmez.

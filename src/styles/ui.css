@@ -540,6 +540,7 @@
    panel pitch black. */
 .tooltip__title,
 .tooltip__type,
+.tooltip__lead,
 .tooltip__body,
 .tooltip__flavor { position: relative; z-index: 1; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 1px rgba(0, 0, 0, 0.8); }
 
@@ -562,6 +563,11 @@
   margin-bottom: 8px;
   font-weight: 600;
 }
+/* The action line: every card text opens with one plain sentence saying what the card
+   does (Tooltip.renderDef splits it out). A touch larger and semibold so a newcomer
+   reads the point first; the fine print follows in the regular body tone below. */
+.tooltip__lead { font-size: 13.5px; font-weight: 600; color: var(--ivory); line-height: 1.5; }
+.tooltip__lead + .tooltip__body { margin-top: 4px; }
 .tooltip__body { font-size: 13px; color: var(--ivory); line-height: 1.55; }
 /* Flavour shares the secondary ivory-dim tone (~6.5:1, comfortable); the italic, not a
    different colour, sets it apart from the type label — keeping the two-tone monochrome. */

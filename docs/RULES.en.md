@@ -16,6 +16,18 @@ Each turn hands you 2 HP to spend: place Seals and Servants, hurl Spells at your
 
 Expect betrayal. The moment a player declares Ascension the whole table turns on them for one round; that round is the Trial. Outlast it and the Ether is yours.
 
+## Apprentice rules (your first game)
+
+The official, simplified start for a table playing Vaerum for the first time. Play your first game or two this way; switch to the full rules once it clicks.
+
+NO CHAINS: a move can be answered by at most ONE Intervention; a Silence! cannot be played on a Silence!.
+
+RESONANCE WITHOUT SACRIFICE: when the deck runs out, shuffle the Discard into a new deck; nobody sacrifices a card.
+
+NO EDGE CASES: the card does what it says. On a disagreement the simplest reading wins and play continues.
+
+EVERYTHING ELSE IS THE SAME: draw 2, spend 2 HP, end at 7 in hand. Collect 3 Seals and survive the Trial to win.
+
 ## 1. Components
 
 Vaerum plays with a single deck of 72 cards. Nothing else is required.
