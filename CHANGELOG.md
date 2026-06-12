@@ -56,7 +56,7 @@ the spell copy counts move for the first time (rules V8.2). 273 tests green.
   action bar wraps within its max width, card info panels paint above the guide, and the
   guide's minimize button explains itself while disabled.
 - **One glass, two layers: uniform trays.** zones.css splits each hand tray into a base
-  glass layer (.zone: frost, edge wash, mask, rim — identical for all four slots, plus a
+  glass layer (.zone: frost, edge wash, mask, rim, identical for all four slots, plus a
   faint near-black underlay so a custom backdrop can no longer tint the trays apart) and an
   identity overlay (.zone::after: the occupancy washes). The per-seat tray tint
   (color-mix of the seat tone) is gone: the seat ladder is pure lightness, so it made the
