@@ -189,7 +189,7 @@ export class Header {
       const btn = e.currentTarget as HTMLElement;
       void navigator.clipboard?.writeText(inviteUrl(this.roomSlug)).then(() => {
         flashConfirm(btn);
-        toast(t("ui.linkCopied"));
+        toast(t("ui.linkCopied"), { kind: "success" });
       }).catch(() => {});
     });
 

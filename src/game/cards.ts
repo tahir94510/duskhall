@@ -30,12 +30,14 @@ export const CARD_DEFS: CardDef[] = [
   { id: "crimsonMonolith", category: "seal", count: 4, typeIconId: "cat-seal", nameIconId: "name-crimsonMonolith", accentColor: "#e07a5a" },
   { id: "necromancersEye", category: "seal", count: 4, typeIconId: "cat-seal", nameIconId: "name-necromancersEye", accentColor: "#9bd17b" },
 
-  // Spells: 8 + 6 + 4 + 4 + 2 = 24
-  { id: "etherStrike", category: "spell", count: 8, typeIconId: "cat-spell", nameIconId: "name-etherStrike", accentColor: "#f0c068" },
-  { id: "shadowTheft", category: "spell", count: 6, typeIconId: "cat-spell", nameIconId: "name-shadowTheft", accentColor: "#7a6cc7" },
+  // Spells: 7 + 5 + 4 + 4 + 4 = 24 (V8.2 retune: Twist of Fate 2 -> 4 so the deck's
+  // wildest swing actually shows up in most games, paid for by one Ether Strike and
+  // one Shadow Theft so raw removal/theft stops crowding the spell suite).
+  { id: "etherStrike", category: "spell", count: 7, typeIconId: "cat-spell", nameIconId: "name-etherStrike", accentColor: "#f0c068" },
+  { id: "shadowTheft", category: "spell", count: 5, typeIconId: "cat-spell", nameIconId: "name-shadowTheft", accentColor: "#7a6cc7" },
   { id: "ancientSight", category: "spell", count: 4, typeIconId: "cat-spell", nameIconId: "name-ancientSight", accentColor: "#5fc6c0" },
   { id: "mindParasite", category: "spell", count: 4, typeIconId: "cat-spell", nameIconId: "name-mindParasite", accentColor: "#c87fb2" },
-  { id: "twistOfFate", category: "spell", count: 2, typeIconId: "cat-spell", nameIconId: "name-twistOfFate", accentColor: "#e5c578" },
+  { id: "twistOfFate", category: "spell", count: 4, typeIconId: "cat-spell", nameIconId: "name-twistOfFate", accentColor: "#e5c578" },
 
   // Interventions: 8 + 4 + 4 = 16
   { id: "silence", category: "intervention", count: 8, typeIconId: "cat-intervention", nameIconId: "name-silence", accentColor: "#d5d2cb" },

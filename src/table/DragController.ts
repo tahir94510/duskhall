@@ -358,11 +358,24 @@ export class DragController {
       // Use the element cached at grab — a per-move querySelector for every card
       // in a large stack was the bulk-drag lag source. (nx, ny) is the card CENTRE;
       // subtract half the card to get the top-left pixel, as cardTransform does.
-      const el = s.els.get(id);
+      const el = this.heldEl(s, id);
       if (el) el.style.transform = `translate3d(${c.x * m.width - m.cardW / 2}px, ${c.y * m.height - m.cardH / 2}px, 0) rotate(${c.rot * 90}deg)`;
     }
     this.hooks.onDragProgress(s.ids);
   };
+
+  // The cached element for a held card, self-healing: if the cached node was replaced
+  // under us (e.g. the cards layer was rebuilt by a room switch mid-drag), re-query by
+  // id once and re-cache, so the transform write never lands on a detached node. The
+  // isConnected read is cheap; the querySelector runs only when actually stale.
+  private heldEl(s: DragSession, id: string): HTMLDivElement | null {
+    const cached = s.els.get(id);
+    if (cached && cached.isConnected) return cached;
+    const fresh = this.host.querySelector<HTMLDivElement>(`.card[data-id="${id}"]`);
+    if (fresh) s.els.set(id, fresh);
+    else s.els.delete(id);
+    return fresh;
+  }
 
   // Start (or keep running) the camera-turn glue loop. While the board animates, the held pile is
   // re-placed every frame at the board's LIVE angle so its grab point stays under the cursor and its
@@ -417,7 +430,7 @@ export class DragController {
       if (!rel || !c) continue;
       c.x = seedNx + rel.dx;
       c.y = seedNy + rel.dy;
-      const el = s.els.get(id);
+      const el = this.heldEl(s, id);
       if (el) el.style.transform = `translate3d(${c.x * m.width - m.cardW / 2}px, ${c.y * m.height - m.cardH / 2}px, 0) rotate(${c.rot * 90}deg)`;
     }
   }

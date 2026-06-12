@@ -58,14 +58,14 @@ empty, nothing happens. It works the turn it is placed.
 
 ## Spells (24)
 
-### Ether Strike (Spell, 8 copies)
+### Ether Strike (Spell, 7 copies)
 Spend 1 HP. Destroy 1 card on a rival's tableau. The Servant Shield rule applies: if
 the rival has any Servant, you must target a Servant first. If the chosen target is
 untargetable, the spell cannot be cast, no HP is spent.
 
 *A clean cut between the seen and the sealed.*
 
-### Shadow Theft (Spell, 6 copies)
+### Shadow Theft (Spell, 5 copies)
 Spend 1 HP. Choose a rival. Their hand is shuffled face-down so no one can see it, then
 one card is taken from it at random into your hand; neither of you chooses which. If their
 hand is empty or protected by Veil of Void, this spell cannot be cast and no HP is spent.
@@ -88,7 +88,7 @@ has none, this spell cannot be cast and no HP is spent.
 
 *Loyalty is a door, and you have the key.*
 
-### Twist of Fate (Spell, 2 copies)
+### Twist of Fate (Spell, 4 copies)
 Spend 1 HP. Exchange every card in your hand with every card in a chosen rival's hand.
 Tableau cards are unaffected. Hand-limit excess is resolved by each player at their next
 Closing phase. Cannot be cast if the target is protected by Veil of Void.

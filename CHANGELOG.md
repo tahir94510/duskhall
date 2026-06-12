@@ -1,5 +1,49 @@
 # Changelog
 
+## 0.9.23: First-run welcome, restructured rules, V8.2 counts
+
+An onboarding, content and balance pass. The card sync and canonical frame are unchanged;
+the spell copy counts move for the first time (rules V8.2). 273 tests green.
+
+- **First-visit welcome hint.** A small non-blocking card (new `src/ui/WelcomeHint.ts`,
+  `welcome.*` locale group) shows once per device after the About panel: core gestures with
+  separate desktop and touch copy, plus a pointer at the Guide and the invite link. Sequenced
+  via a new onClose hook on openLegalModal; one-shot flags `vaerum:seen-welcome` and
+  `vaerum:hint:longpress` (the latter also set by a new first-table-touch long-press toast).
+- **Your-turn cue.** Game.refreshGuide tracks the walkthrough's turn seat and, when it
+  becomes the local player's, plays a new local-only "your-turn" chime (Audio.ts) and pulses
+  the guide bar (GuidePanel.pulseTurn, reduced-motion aware). The host's 2s re-broadcast echo
+  cannot retrigger it, and a reload straight into your own turn stays silent.
+- **Rulebook restructure.** A new unnumbered "The goal" section opens rulesDoc in both
+  locales (and both RULES.md mirrors): the win condition, the turn economy and the Trial in
+  four short paragraphs. The 18 edge-case Q&As are clustered under four "###" subheadings
+  (a new heading line shape in RulesModal.renderBody), and an IntersectionObserver highlights
+  the current section in the TOC while the content scrolls.
+- **Shortcuts grouped.** shortcutsList.items becomes shortcutsList.groups (Basics / Piles /
+  View / Your area / Touch) in both locales; ShortcutsPanel renders group headers, falls back
+  to the old flat shape for a stale cached locale, and the kbd caps get a real keycap read.
+- **Guide phase copy.** The three turn-phase texts now state per-copy stacking explicitly,
+  the two halves of Create, and that unspent HP does not carry over (both locales).
+- **Balance, V8.2.** Ether Strike 8 to 7, Shadow Theft 6 to 5, Twist of Fate 2 to 4; spells
+  stay 24, the deck stays 72. Updated together: cards.ts, both locales' components line,
+  both rulebooks, both encyclopedias, the DESIGN.md distribution table plus a new retune
+  rationale section, and the README version pointers. tryRestoreSnapshot now verifies a
+  saved room's card ids against the current composition and deals fresh on any mismatch,
+  so a pre-retune snapshot cannot strand orphan instance ids.
+- **Pile locks release on settle.** lockPileForAnim returns an early-release scheduler:
+  a flip or shuffle whose tidy phases were skipped (already-square pile) frees the pile for
+  peers right after the visible animation instead of holding the worst-case timer (~700ms
+  longer); the worst-case release stays as the backstop.
+- **No wrong-face flash on D.** clearCardAnim snaps a mid-flip card's painted face to its
+  authoritative state (transition-free, via is-flip-staging) before stripping animation
+  classes, and runFlipVisual's commit frame skips cards whose animation was taken over.
+- **Status toasts.** toast() accepts a kind (info / success / error); success and error
+  carry a small coloured dot via new --status-ok / --status-err tokens (DESIGN.md palette
+  synced). Wired: connection restored and link copied as success, kicked as error.
+- **Small fixes.** Held-card element cache self-heals if a node was replaced mid-drag
+  (DragController.heldEl); four dead ui.* locale keys removed from both languages
+  (ui.reset, ui.leave, ui.joined, ui.waiting); a stale selector comment corrected.
+
 ## 0.9.22: Readable seat colours, and a clean camera turn
 
 A colour and camera-turn fix pass. The card sync, canonical frame and balance numbers are

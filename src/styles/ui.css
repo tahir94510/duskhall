@@ -289,6 +289,99 @@
 }
 .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 
+/* Status toasts: a small coloured dot beside the message (mirrors the offline banner's
+   amber dot) so success and error read at a glance without tinting the whole pill. */
+.toast--success,
+.toast--error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(92vw, 460px);
+}
+.toast--success::before,
+.toast--error::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.toast--success::before { background: var(--status-ok); box-shadow: 0 0 6px rgba(60, 154, 106, 0.55); }
+.toast--error::before { background: var(--status-err); box-shadow: 0 0 6px rgba(200, 68, 74, 0.55); }
+
+/* One-time first-visit hint: a small non-blocking card floating just above the player's own
+   edge (clear of the toast slot below it). Quiet panel styling, a plain list of the core
+   gestures and one dismiss control; no backdrop, the table stays fully playable behind it. */
+.welcome-hint {
+  position: fixed;
+  left: 50%;
+  bottom: calc(max(env(safe-area-inset-bottom), 28px) + 46px);
+  transform: translate(-50%, 14px);
+  width: min(92vw, 440px);
+  background: rgba(14, 14, 14, 0.94);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-panel);
+  color: var(--ivory-dim);
+  padding: 14px 16px 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  z-index: var(--z-toast);
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.welcome-hint.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+.welcome-hint__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.welcome-hint__title {
+  color: var(--ivory);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.welcome-hint__dismiss {
+  flex: none;
+  border: 1px solid var(--line-2);
+  background: transparent;
+  color: var(--ivory);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.welcome-hint__dismiss:hover { border-color: var(--line-3); background: rgba(243, 239, 229, 0.06); }
+.welcome-hint__list {
+  margin: 0;
+  padding: 0 0 0 16px;
+  display: grid;
+  gap: 3px;
+}
+.welcome-hint__list li::marker { color: var(--ivory-mute); }
+.welcome-hint__pointer {
+  margin: 9px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  color: var(--ivory-mute);
+}
+@media (prefers-reduced-motion: reduce) {
+  .welcome-hint { transition: none; transform: translate(-50%, 0); }
+}
+
 /* Persistent offline banner: pinned at the top centre, it stays up the whole time live sync is down
    (set only after the dropped-connection grace, so a refresh flap never flashes it). A small amber
    dot + ivory text on a dark pill — clear without being alarming, and inert to pointer input. */

@@ -10,8 +10,6 @@
     "support": "Support",
     "feedback": "Feedback",
     "legal": "About & legal",
-    "leave": "Exit room",
-    "reset": "Exit room",
     "exit": "Exit room",
     "resetDeck": "Reset deck",
     "deckReset": "The deck has been gathered and shuffled.",
@@ -32,9 +30,7 @@
     "linkCopied": "Invite link copied",
     "newRoom": "A new room has been opened.",
     "timer": "Time",
-    "waiting": "You are the only one here. Share the room link to play with friends.",
     "pasteJoin": "Paste code or link to join",
-    "joined": "Joined the room",
     "alreadyInRoom": "You're already in this room.",
     "invalidCode": "No valid room code on the clipboard",
     "connection": "Connection",
@@ -154,49 +150,99 @@
     "done": "{name} was removed from the table.",
     "kicked": "The host removed you from the table."
   },
+  "welcome": {
+    "title": "Welcome to the table",
+    "dismiss": "Got it",
+    "guidePointer": "Follow the Guide in the top right to learn the rules in play. Copy the invite link from the Menu and bring your friends to the table.",
+    "desktopItems": [
+      "Drag a card to move it; hold Ctrl and drag to move the whole pile.",
+      "The wheel flips a card; right-click flips the whole pile.",
+      "G gathers, M shuffles, D tidies your own area.",
+      "The frosted strip at the bottom of your screen is your hidden area."
+    ],
+    "touchItems": [
+      "Drag a card with your finger to move it.",
+      "Long-press a card: flip, turn, shuffle and more.",
+      "The frosted strip at the bottom of your screen is your hidden area."
+    ],
+    "longPress": "Tip: long-press a card to open its action bar."
+  },
   "shortcutsList": {
     "title": "Shortcuts",
     "subtitle": "Most actions work on the card under your cursor; a few, like tidying your area, act on your own hand. Empty space does nothing.",
-    "items": [
+    "groups": [
       {
-        "keys": "Left-press, drag",
-        "desc": "Move the card under the cursor"
+        "title": "Basics",
+        "items": [
+          {
+            "keys": "Left-press, drag",
+            "desc": "Move the card under the cursor"
+          },
+          {
+            "keys": "Scroll",
+            "desc": "Flip the single card under the cursor"
+          },
+          {
+            "keys": "Right-click",
+            "desc": "Flip the stack under the cursor (a single card flips alone)"
+          }
+        ]
       },
       {
-        "keys": "Ctrl + Left-press, drag",
-        "desc": "Move the whole stack under the cursor"
+        "title": "Piles",
+        "items": [
+          {
+            "keys": "Ctrl + Left-press, drag",
+            "desc": "Move the whole stack under the cursor"
+          },
+          {
+            "keys": "Ctrl + scroll",
+            "desc": "Flip the whole stack under the cursor"
+          },
+          {
+            "keys": "Shift + scroll",
+            "desc": "Rotate 90° sideways (not a flip); over a pile it turns and squares up the whole stack"
+          },
+          {
+            "keys": "G",
+            "desc": "Gather the stack under the cursor"
+          },
+          {
+            "keys": "M",
+            "desc": "Shuffle the stack under the cursor"
+          }
+        ]
       },
       {
-        "keys": "Right-click",
-        "desc": "Flip the stack under the cursor (a single card flips alone)"
+        "title": "View",
+        "items": [
+          {
+            "keys": "V",
+            "desc": "View the table from your left-hand neighbour's side; press again to return to your own. This changes only your own view, nothing for anyone else. It is handy for bringing your own area square in front of you."
+          }
+        ]
       },
       {
-        "keys": "Scroll",
-        "desc": "Flip the single card under the cursor"
+        "title": "Your area",
+        "items": [
+          {
+            "keys": "D",
+            "desc": "Tidy your own area. Every card you hold there settles into a neat, deck-like layout: matching cards stacked together, sorted by type and centred, never crossing into a neighbour's space. Only you hear it; everyone sees your cards slide into place."
+          }
+        ]
       },
       {
-        "keys": "Ctrl + scroll",
-        "desc": "Flip the whole stack under the cursor"
-      },
-      {
-        "keys": "Shift + scroll",
-        "desc": "Rotate 90° sideways (not a flip); over a pile it turns and squares up the whole stack"
-      },
-      {
-        "keys": "G",
-        "desc": "Gather the stack under the cursor"
-      },
-      {
-        "keys": "M",
-        "desc": "Shuffle the stack under the cursor"
-      },
-      {
-        "keys": "V",
-        "desc": "View the table from your left-hand neighbour's side; press again to return to your own. This changes only your own view, nothing for anyone else. It is handy for bringing your own area square in front of you."
-      },
-      {
-        "keys": "D",
-        "desc": "Tidy your own area. Every card you hold there settles into a neat, deck-like layout: matching cards stacked together, sorted by type and centred, never crossing into a neighbour's space. Only you hear it; everyone sees your cards slide into place."
+        "title": "Touch",
+        "items": [
+          {
+            "keys": "Long-press",
+            "desc": "Opens the card's action bar: flip, turn, gather, shuffle, info, view and area tidy"
+          },
+          {
+            "keys": "Drag with a finger",
+            "desc": "Moves the card; it rests where you let go"
+          }
+        ]
       }
     ],
     "mobileNote": "On touch there is no mouse or keyboard. Long-press a card to open its action bar: from there you can flip it, turn it sideways, gather or shuffle its stack, read its details, or turn your view of the table. Long-press one of your own cards and you can also tidy your whole area into a clean layout."
@@ -250,6 +296,19 @@
     "badge": "New",
     "empty": "No updates yet.",
     "entries": [
+      {
+        "v": "2026-06-12",
+        "date": "June 12, 2026",
+        "title": "A warmer welcome, and fate worth fearing",
+        "items": [
+          "New players get a real welcome: on your first visit a small card teaches the core moves (drag, flip, gather, tidy; long-press on touch) and points at the Guide and the invite link. It shows once, stays out of the way and closes with one tap.",
+          "When the Guide hands the turn to you, its bar glows twice and a quiet chime plays, so you notice even if your eyes wandered. Only you hear it, and it follows your volume and reduced-motion settings.",
+          "The rulebook now opens with The goal: how you win, what a turn buys you and why the Trial matters, before any numbered rule. The 18 edge-case questions sit under four themed headings, and the table of contents highlights where you are while you read.",
+          "Shortcuts are grouped into Basics, Piles, View, Your area and Touch, with real keycaps, so the list reads as a path from your first drag to the power moves.",
+          "Balance, rules V8.2: Twist of Fate goes from 2 copies to 4, paid for by one Ether Strike and one Shadow Theft (now 7 and 5). The deck stays at 72, and the hand-swap chaos now shows up in most games instead of almost never. A room dealt before this update keeps its old deck until you use Reset deck.",
+          "Feel: a shuffled or flipped pile frees up for the other players the moment it settles instead of a beat later, good-news messages carry a small green dot (errors a red one), and a card mid-flip no longer flashes the wrong face when you tidy your area with D."
+        ]
+      },
       {
         "v": "2026-06-09.2",
         "date": "June 9, 2026",
@@ -598,13 +657,23 @@
     "intro": "At the centre of all things lies the Ether, a sourceless force, fractured long ago. Its shards have changed hands through silent treaties, whispered threats, and quiet betrayals. You sit at the table now: a visionary, a schemer, one of the few who can still bend the Ether to a will. There is no friendship here. There is no mercy. There is no luck. Only manipulation, strategy, and the unblinking war for power.",
     "sections": [
       {
+        "id": "goal",
+        "title": "The goal",
+        "body": [
+          "Gather power, declare Ascension, survive one full round. That is the whole game.",
+          "You win by holding at least 3 Seals on your tableau at the end of your turn, declaring Ascension, and still holding at least 3 when the turn comes back around. Everything at the table exists either to reach that moment or to deny it to someone else.",
+          "Each turn hands you 2 HP to spend: place Seals and Servants, hurl Spells at your rivals, or dig for cards. Interventions cost nothing and can interrupt anyone at any time; nobody at this table merely waits for a turn.",
+          "Expect betrayal. The moment a player declares Ascension the whole table turns on them for one round; that round is the Trial. Outlast it and the Ether is yours."
+        ]
+      },
+      {
         "id": "components",
         "title": "1. Components",
         "body": [
           "Vaerum plays with a single deck of 72 cards. Nothing else is required.",
           "Distribution:",
           "Seal (Violet) x16: 4 unique seals, 4 copies each.",
-          "Spell (Crimson) x24: 5 unique spells in counts of 2 to 8.",
+          "Spell (Crimson) x24: 5 unique spells in counts of 4 to 7.",
           "Intervention (Azure) x16: 3 unique cards in counts of 4 to 8.",
           "Servant (Verdant) x16: 3 unique cards in counts of 4 to 8.",
           "Colour key:",
@@ -746,23 +815,27 @@
         "id": "edge",
         "title": "12. Edge-case guide",
         "body": [
-          "Q. What happens to a Spell cancelled by Silence!? A. The cancelled Spell and the Silence! both go to the Discard. The caster's 1 HP is not refunded.",
+          "### Timing and seals",
           "Q. Can Time Rift placed this turn give me extra cards? A. No. Its effect starts on your next turn, Focus has already happened this turn.",
           "Q. Two Time Rifts, how many cards? A. 4 (each copy adds +1).",
           "Q. Crimson Monolith placed this turn, does it give me 3 HP now? A. No. It activates next turn.",
           "Q. Necromancer's Eye placed this turn, does it fire at this Closing? A. Yes. Its trigger is during Closing, which is after Action.",
           "Q. Must I keep the card Necromancer's Eye makes me take? A. No. You take it first, then check the hand limit, so if you are over 7 you can discard it (or any other card) that same Closing.",
+          "### Cancels and protection",
+          "Q. What happens to a Spell cancelled by Silence!? A. The cancelled Spell and the Silence! both go to the Discard. The caster's 1 HP is not refunded.",
+          "Q. When Karmic Reflection rebounds an attack, does the attacker's Servant Shield apply? A. Yes. The rebounding attack must respect the attacker's Servant Shield, so it has to clear their Servants before it can reach their Seals.",
+          "Q. Shadow Theft against a hand protected by Veil of Void? A. Not legal; cannot be cast.",
+          "Q. Twist of Fate against Veil of Void? A. Not legal; the targeted player's hand is shielded.",
+          "### Servants",
           "Q. Shadow Slayer enters but no rival has Servants? A. The entry effect fizzles. Shadow Slayer still enters as a normal Servant.",
           "Q. Shadow Slayer kills a Glacial Aberration on entry, who skips? A. You do. The destroyer pays the penalty.",
-          "Q. When Karmic Reflection rebounds an attack, does the attacker's Servant Shield apply? A. Yes. The rebounding attack must respect the attacker's Servant Shield, so it has to clear their Servants before it can reach their Seals.",
-          "Q. Blood Atonement needs how many cards in hand? A. At least 2. With fewer, it cannot be played.",
-          "Q. Who picks the 2 cards Blood Atonement discards? A. Nobody. They leave your hand at random, so paying the cost is always a gamble.",
           "Q. Mind Parasite when your tableau already has 3 Servants? A. It cannot be cast (no HP spent): a steal needs a free Servant slot and is never allowed to discard your own to make room. That discard-to-make-room swap is only for a Create from your hand.",
           "Q. My Servant row is full (3) and I want to play another from my hand? A. As part of that Create, first Discard one of your own Servants to make room (your choice; no extra HP). A card already on your tableau can never be taken back into your hand; it leaves only by being destroyed, sacrificed, discarded to make room, or stolen.",
           "Q. If I take a Glacial Aberration with Mind Parasite, do I skip a turn? A. No. Taking control is not destroying, so its skip-a-turn penalty does not trigger; it only fires when the Aberration is destroyed.",
-          "Q. Shadow Theft against a hand protected by Veil of Void? A. Not legal; cannot be cast.",
-          "Q. Twist of Fate against Veil of Void? A. Not legal; the targeted player's hand is shielded.",
           "Q. Can a player skipped by Glacial Aberration still play Interventions? A. Yes. Interventions are reactive and ignore turn order.",
+          "### Hand and deck",
+          "Q. Blood Atonement needs how many cards in hand? A. At least 2. With fewer, it cannot be played.",
+          "Q. Who picks the 2 cards Blood Atonement discards? A. Nobody. They leave your hand at random, so paying the cost is always a gamble.",
           "Q. The deck empties mid-draw? A. Ether Resonance resolves fully first; the draw effect then completes from the new deck."
         ]
       },
@@ -837,15 +910,15 @@
     "phase": {
       "focus": {
         "title": "Focus",
-        "body": "Draw 2 cards from the deck. Draw more if you have Time Rift seals in play. Tap the check when you have drawn."
+        "body": "Draw 2 cards from the deck; each Time Rift on your tableau adds one more. Tap the check when you have drawn."
       },
       "action": {
         "title": "Action",
-        "body": "You have 2 HP to spend this turn (up to 5 with Crimson Monolith seals in play). Each HP buys one action: Create (play a Spell, Seal or Servant), Study (draw 1 card), or Cleanse (discard 1 card, then draw 1). Interventions are free and can be played any time. Tap the check when you are done."
+        "body": "You have 2 HP this turn; each Crimson Monolith on your tableau adds one more, up to 5. Each HP buys one action: Create (cast a Spell from your hand, or place a Seal or Servant on your tableau), Study (draw 1 card) or Cleanse (discard 1 card, then draw 1). Interventions are free at any moment, and unspent HP does not carry over. Tap the check when you are done."
       },
       "closing": {
         "title": "Closing",
-        "body": "Trigger your active Seal effects, then discard down to 7 cards in hand. If you have 3 or more Seals, you may declare Ascension. Tap the check to pass the turn to the next player."
+        "body": "Trigger your active Seal effects (Necromancer's Eye takes its card now), then discard down to 7 cards in hand. With at least 3 Seals you may declare Ascension. Tap the check to pass the turn to the next player."
       }
     }
   }

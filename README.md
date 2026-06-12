@@ -153,8 +153,8 @@ In-game **Settings** (Master / Music / Effects) sliders persist to `localStorage
 
 ## Docs
 
-- `docs/RULES.en.md`: complete English V8.1 rulebook
-- `docs/RULES.tr.md`: Türkçe V8.1 kural kitabı
+- `docs/RULES.en.md`: complete English V8.2 rulebook
+- `docs/RULES.tr.md`: Türkçe V8.2 kural kitabı
 - `docs/CARDS.en.md`: card encyclopedia, every card's effect and flavor (English)
 - `docs/CARDS.tr.md`: kart ansiklopedisi, her kartın etkisi ve hikâyesi (Türkçe)
 - `docs/DESIGN.md`: balance numbers, palette, coordinate system, asset systems

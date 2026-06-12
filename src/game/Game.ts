@@ -10,6 +10,7 @@ import { openRulesModal } from "../ui/RulesModal.js";
 import { openSupportModal } from "../ui/SupportModal.js";
 import { openFeedbackModal, hasFeedbackChannel } from "../ui/FeedbackModal.js";
 import { openLegalModal } from "../ui/LegalModal.js";
+import { showWelcomeHint } from "../ui/WelcomeHint.js";
 import { openUpdatesModal, latestUpdateVersion } from "../ui/UpdatesModal.js";
 import { openLeaveConfirm } from "../ui/LeaveConfirm.js";
 import { openRoomFull } from "../ui/RoomFullModal.js";
@@ -26,6 +27,7 @@ import { t, onLocaleChange } from "../i18n/index.js";
 import { getOrCreateRoom, newRoom, setRoomSlug } from "../net/room.js";
 import { showLoader, hideLoader } from "../ui/loader.js";
 import { seededDeck } from "./deck.js";
+import { buildDeck } from "./cards.js";
 import { seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, shouldClearTombstone, shouldReTombstone, seniorityOnReturn, type Occupancy, type HostCandidate, type SeatClaimEntry } from "./occupancy.js";
 import {
   findStackOverlapping,
@@ -46,7 +48,7 @@ import { cardZoneOwner, pointInZoneCanonical, CARD_CANON_W, CARD_CANON_H } from 
 import { arrangeZone, isZoneArranged } from "../table/ArrangeZone.js";
 import { clampSeedToPage, type ClampCard } from "../table/playfield.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry, GuideWire, SfxMsg } from "../net/realtime.js";
-import { initialGuide, startGuide, setOpen as setGuideOpenState, advance as advanceGuide, chooseFirst as chooseFirstGuide, adoptGuide, type GuideState } from "./guide.js";
+import { initialGuide, startGuide, setOpen as setGuideOpenState, advance as advanceGuide, chooseFirst as chooseFirstGuide, adoptGuide, viewOf as guideViewOf, type GuideState } from "./guide.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
@@ -116,6 +118,13 @@ const TAB_AWAY_RELOAD_MS = 20000;
 // Not room-scoped and never swept by pruneStaleStorage / clearRoomStorage (it matches
 // none of their prefixes), so it persists across rooms, refreshes, leaves and kicks.
 const LS_SEEN_ABOUT = "vaerum:seen-about";
+// One-shot, per-device flag for the first-visit welcome hint (the small gesture
+// card shown after the About panel). Same lifetime rules as LS_SEEN_ABOUT.
+const LS_SEEN_WELCOME = "vaerum:seen-welcome";
+// One-shot, per-device flag for the first-touch "long-press a card" toast. Set by
+// the toast itself, or by the welcome hint when it shows the touch copy (which
+// already teaches the gesture), so the tip is taught exactly once either way.
+const LS_HINT_LONGPRESS = "vaerum:hint:longpress";
 // Per-device record of the newest "What's new" version this browser has opened. The
 // Updates row shows a "New" badge while this differs from the latest entry; opening the
 // panel writes the latest here and clears the badge until the next update ships.
@@ -395,6 +404,7 @@ export class Game {
 
     this.bindHooks();
     this.installKeyboardAndWheel();
+    this.installLongPressHint();
     this.installPerspectiveButton();
     this.installResizeObserver();
     this.installRealtime();
@@ -421,20 +431,67 @@ export class Game {
     await Promise.race([this.firstSync, delay(1800)]);
   }
 
-  // First-ever visit on this device: auto-open the About panel once, just after the
-  // loader lifts, so a newcomer learns what Vaerum is. A localStorage flag makes it a
-  // one-shot — every later load (refresh, new room, return) skips it silently. Called
-  // by the boot sequence right after hideLoader(); never throws (storage may be off).
-  showAboutOnFirstVisit(): void {
-    let seen = true;
-    // If storage can't be read we can't remember showing it, so default to NOT
-    // nagging on every load — only a confirmed first visit (null flag) opens it.
-    try { seen = localStorage.getItem(LS_SEEN_ABOUT) === "1"; } catch { return; }
-    if (seen) return;
-    try { localStorage.setItem(LS_SEEN_ABOUT, "1"); } catch {}
-    // A short beat after the board reveal so the modal doesn't fight the reveal
-    // animation. No sound: audio is still gated until the first user gesture.
-    window.setTimeout(() => { if (!this.modal.isOpen()) openLegalModal(this.modal); }, 500);
+  // First-ever visit on this device, run just after the loader lifts: auto-open the
+  // About panel once, then float the one-time welcome hint (the core gestures and
+  // where the Guide lives) when that panel closes. Each piece is a localStorage
+  // one-shot, so every later load (refresh, new room, return) skips it silently. A
+  // device that saw About before the hint existed gets the hint alone. Never throws
+  // (storage may be off; an unreadable flag means "never nag on every load").
+  showFirstRunHints(): void {
+    let seenAbout = true;
+    let seenWelcome = true;
+    try {
+      seenAbout = localStorage.getItem(LS_SEEN_ABOUT) === "1";
+      seenWelcome = localStorage.getItem(LS_SEEN_WELCOME) === "1";
+    } catch { return; }
+    if (seenAbout && seenWelcome) return;
+    if (!seenAbout) {
+      try { localStorage.setItem(LS_SEEN_ABOUT, "1"); } catch {}
+      // A short beat after the board reveal so the modal doesn't fight the reveal
+      // animation. No sound: audio is still gated until the first user gesture.
+      window.setTimeout(() => {
+        if (this.modal.isOpen()) return;
+        openLegalModal(this.modal, () => this.showWelcomeHintOnce());
+      }, 500);
+      return;
+    }
+    window.setTimeout(() => { if (!this.modal.isOpen()) this.showWelcomeHintOnce(); }, 500);
+  }
+
+  // Show the welcome hint if this device has never seen it; mark it seen on a
+  // successful show. A stale locale cache (welcome keys missing) shows nothing and
+  // leaves the flag unset, so the hint simply tries again on a later visit.
+  private showWelcomeHintOnce(): void {
+    try { if (localStorage.getItem(LS_SEEN_WELCOME) === "1") return; } catch { return; }
+    const touch = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+    const shown = showWelcomeHint({ touch, canEscapeDismiss: () => !this.modal.isOpen() });
+    if (!shown) return;
+    try {
+      localStorage.setItem(LS_SEEN_WELCOME, "1");
+      // The touch copy already teaches long-press; don't repeat it as a toast later.
+      if (touch) localStorage.setItem(LS_HINT_LONGPRESS, "1");
+    } catch {}
+  }
+
+  // One-time touch tip: the first touch on the TABLE (not inside a modal) points at
+  // the long-press action bar, the only touch affordance with no visible control.
+  // Taught exactly once — by this toast, or by the welcome hint's touch copy (which
+  // sets the same flag first). The listener unhooks itself after one decision.
+  private installLongPressHint(): void {
+    try { if (localStorage.getItem(LS_HINT_LONGPRESS) === "1") return; } catch { return; }
+    const onDown = (e: PointerEvent): void => {
+      if (e.pointerType !== "touch") return;
+      if (this.modal.isOpen()) return; // keep listening; teach on the first table touch
+      window.removeEventListener("pointerdown", onDown);
+      try {
+        if (localStorage.getItem(LS_HINT_LONGPRESS) === "1") return; // welcome hint taught it
+        localStorage.setItem(LS_HINT_LONGPRESS, "1");
+      } catch { return; }
+      const tip = t("welcome.longPress");
+      if (tip === "welcome.longPress") return; // locale cache predates the key
+      toast(tip, { durationMs: 6000 });
+    };
+    window.addEventListener("pointerdown", onDown, { passive: true });
   }
 
   // True when there's a newer "What's new" entry than the one this device last opened.
@@ -1701,6 +1758,32 @@ export class Game {
     if (!this.guidePanel) return;
     this.guidePanel.update(this.buildGuideVM());
     this.header.setGuideOpen(this.guide.open);
+    this.cueYourTurn();
+  }
+
+  // Whose guide turn we last observed (-2 = nothing observed yet, -1 = not in the
+  // turn loop). Drives the your-turn cue below.
+  private lastGuideTurnSeat = -2;
+
+  /** When the walkthrough hands the turn TO US — and only on that transition — play a
+   *  quiet local chime and pulse the guide bar, so a player whose eyes drifted away
+   *  knows the table is waiting. Purely local (never sent to peers) and behind the
+   *  normal effects volume/mute. The sentinel keeps a reload that restores straight
+   *  into our own turn (or joining such a game) silent; the host's ~2s re-broadcast
+   *  echo never reaches here (handleGuide refreshes only on genuinely newer state). */
+  private cueYourTurn(): void {
+    const g = this.guide;
+    let cur = -1;
+    if (g.open && g.started) {
+      const view = guideViewOf(g, this.guideSeatedSeats());
+      if (view.phase === "turn") cur = view.turnSeat;
+    }
+    const prev = this.lastGuideTurnSeat;
+    this.lastGuideTurnSeat = cur;
+    if (prev === -2 || cur === prev) return;
+    if (cur < 0 || cur !== this.claimSeat) return;
+    void this.audio.play("your-turn");
+    this.guidePanel?.pulseTurn();
   }
 
   /** Adopt a new guide state locally; if we're the host, broadcast it as authoritative. */
@@ -1960,6 +2043,14 @@ export class Game {
       };
       if (!Array.isArray(data.cards) || data.cards.length === 0) return false;
       if (Date.now() - data.ts > SNAPSHOT_TTL_MS) return false; // 12h freshness
+      // Composition guard: instance ids derive from the copy counts in cards.ts, so a
+      // snapshot written before a deck retune carries ids that no longer exist (and
+      // misses new ones). Restoring it verbatim would strand orphan cards that even
+      // Reset deck (which iterates the CURRENT composition) could never collect. If
+      // the saved id set differs from today's deck in any way, deal fresh instead.
+      const expected = new Set(buildDeck().map((i) => i.instanceId));
+      const savedIds = new Set(data.cards.map((c) => c.id).filter((id): id is string => typeof id === "string" && !!id));
+      if (savedIds.size !== expected.size || ![...savedIds].every((id) => expected.has(id))) return false;
       // Restore the saved seat occupancy so the privacy layout is correct from the FIRST
       // paint: an occupied (or reserved-away) rival seat conceals its hand even before live
       // sync, while an empty seat's cards read as normal table cards. Live presence then
@@ -2233,13 +2324,18 @@ export class Game {
       const c = this.state.cards.get(cid);
       if (c && c.z > topZ) { topZ = c.z; topId = cid; }
     }
-    // Lock the whole pile to peers for the entire straighten→gather→flip flow so no
-    // one can grab/flip/rotate a card out from under the animation. Released by a
-    // guaranteed timer covering the worst-case (straighten + gather + flip) duration.
-    this.lockPileForAnim(stack, STACK_STRAIGHTEN_MS + STACK_TIDY_MS + FLIP_ANIM_MS);
+    // Lock the whole pile to peers for the entire straighten→gather→flip flow. The
+    // worst-case (straighten + gather + flip) timer is the backstop; when the tidy
+    // phases get skipped (pile already square) the act callback releases the lock
+    // right after the flip itself, so peers are not left waiting on phases that
+    // never ran.
+    const release = this.lockPileForAnim(stack, STACK_STRAIGHTEN_MS + STACK_TIDY_MS + FLIP_ANIM_MS);
     // squareUp:false — a flip turns the pile over in place, keeping its orientation (it does
     // NOT force the pile upright). Squaring up is the separate Gather action.
-    this.tidyStackThen(stack, topId, () => this.performStackFlip(stack), FLIP_ANIM_MS, false);
+    this.tidyStackThen(stack, topId, () => {
+      this.performStackFlip(stack);
+      release(FLIP_ANIM_MS + 80);
+    }, FLIP_ANIM_MS, false);
   }
 
   // The flip itself: reverse depth order + toggle every face, then float the pile
@@ -2274,12 +2370,15 @@ export class Game {
         if (id !== visibleId) this.cardEls.get(id)?.classList.add("is-flip-quiet");
       }
     }
-    // Next frame: flip to the real face so the rotateY transition fires.
+    // Next frame: flip to the real face so the rotateY transition fires. Skip any
+    // card whose animation was taken over in the meantime (e.g. a tidy cleared
+    // is-animating to reposition and face it): writing here would fight the
+    // takeover's authoritative face (same guard as runSameFaceTurn).
     requestAnimationFrame(() => {
       for (const id of ids) {
         const c = this.state.cards.get(id);
         const el = this.cardEls.get(id);
-        if (!c || !el) continue;
+        if (!c || !el || !el.classList.contains("is-animating")) continue;
         el.classList.toggle("is-faceup", c.faceUp);
       }
     });
@@ -2293,8 +2392,8 @@ export class Game {
         el?.classList.remove("is-flipping");
       }
       // Let the render loop settle the faces/z on its next tick. We must NOT paint
-      // synchronously here: is-animating has just cleared, so a synchronous pass would
-      // toggle is-concealed and let `.is-concealed:not(.is-animating)` snap the card's
+      // synchronously here: is-flip-quiet has just cleared, so a synchronous pass would
+      // toggle is-concealed and let `.is-concealed:not(.is-flip-quiet)` snap the card's
       // rotateY, replaying the turn a second time. The connected-stack capture already
       // gathers the pile onto one spot, so the depth settle is invisible regardless.
       this.requestRender();
@@ -2540,7 +2639,19 @@ export class Game {
     const handle = this.animTimers.get(id);
     if (handle !== undefined) { window.clearTimeout(handle); this.animTimers.delete(id); }
     const el = this.cardEls.get(id);
-    if (el) el.classList.remove("is-animating", "is-shuffling", "is-flip-quiet", "is-flip-staging", "is-flipping");
+    if (!el) return;
+    // If the card is mid-flip, the painted face may still be the staged OLD face
+    // (runFlipVisual writes the old face first and commits the real one a frame
+    // later). Snap it to the authoritative state transition-free BEFORE the classes
+    // drop, or the takeover (e.g. tidying with D right after a flip) would show the
+    // wrong face for a beat and then replay the rotateY during the slide.
+    const c = this.state.cards.get(id);
+    if (c && (el.classList.contains("is-flipping") || el.classList.contains("is-flip-quiet") || el.classList.contains("is-flip-staging"))) {
+      el.classList.add("is-flip-staging"); // transition: none on .card__inner
+      el.classList.toggle("is-faceup", c.faceUp);
+      void el.offsetWidth; // commit the face with no transition
+    }
+    el.classList.remove("is-animating", "is-shuffling", "is-flip-quiet", "is-flip-staging", "is-flipping");
   }
 
   // Tidy our own hidden-zone cards into a clean, deck-like layout: identical cards collected into one
@@ -2600,9 +2711,12 @@ export class Game {
     // check), so nothing extra is needed here.
     const upright = this.viewerUprightRot(seed.rot);
     // Lock the whole pile to peers for the entire face-down → straighten → gather →
-    // riffle flow so no card can be grabbed mid-shuffle. Worst-case duration covers
-    // every phase; the guaranteed release timer frees it even on an early return.
-    this.lockPileForAnim(stack, FLIP_ANIM_MS + STACK_STRAIGHTEN_MS + STACK_TIDY_MS + SHUFFLE_ANIM_MS);
+    // riffle flow so no card can be grabbed mid-shuffle. The worst-case timer is the
+    // backstop (it also covers the early stackBlocked return below); when the turn or
+    // tidy phases get skipped (deck already square and face-down) the act callback
+    // releases the lock right after the riffle, so peers regain the deck as soon as
+    // the wobble settles instead of ~700ms later.
+    const release = this.lockPileForAnim(stack, FLIP_ANIM_MS + STACK_STRAIGHTEN_MS + STACK_TIDY_MS + SHUFFLE_ANIM_MS);
     // Three clean beats: turn the whole pile face-DOWN (so no faces flash through the
     // gather), THEN straighten + gather into one pile, THEN riffle-shuffle the squared
     // deck. A face-down resting deck skips the turn and shuffles at once.
@@ -2616,6 +2730,7 @@ export class Game {
         // Send immediately with a shuffle hint so peers riffle the same pile.
         this.flushWithAnim(stack, { kind: "shuffle", ids: stack });
         void this.audio.play("shuffle");
+        release(SHUFFLE_ANIM_MS + 80);
       }, SHUFFLE_ANIM_MS);
     });
   }
@@ -3224,7 +3339,7 @@ export class Game {
           this.bus.updateMe(this.presencePayload());
           // Only reassure "back online" if we actually told the player it dropped — otherwise a
           // silent flap would announce a recovery from a loss they never saw.
-          if (this.realtimeDown) toast(t("ui.connRestored"));
+          if (this.realtimeDown) toast(t("ui.connRestored"), { kind: "success" });
         }
         this.hasBeenOnline = true;
         // Cross-device sync is back: clear the "unreachable" hint on rival seats and drop the banner.
@@ -3357,7 +3472,7 @@ export class Game {
       this.cursorEls.clear();
       this.lastCursors.clear();
       this.clearRoomStorage(this.room);
-      void this.joinRoom(newRoom()).then(() => toast(t("kick.kicked")));
+      void this.joinRoom(newRoom()).then(() => toast(t("kick.kicked"), { kind: "error" }));
       return;
     }
     // A peer (not the target): evict the kicked player. Tombstone FIRST, with a connAt
@@ -3498,25 +3613,32 @@ export class Game {
   // Lock a whole pile to peers for the duration of a multi-phase animation
   // (straighten → gather → flip/shuffle), then release it automatically. Peers see the
   // cards as held (is-locked) and every interaction path rejects them, so no one can
-  // grab/flip/rotate a card out from under the running animation. The release is a
-  // GUARANTEED timer covering the worst-case total, so an early return inside the
-  // flow can never leave a stuck lock. We never clobber an in-progress drag hold
+  // grab/flip/rotate a card out from under the running animation. The worst-case
+  // release timer is a GUARANTEED backstop, so an early return inside the flow can
+  // never leave a stuck lock. The flows skip phases when a pile is already tidy
+  // (tidyStackThen / turnPileFaceDown), which can finish well before the worst case;
+  // the RETURNED scheduler lets the act callback release the lock right after the
+  // phase that actually ran, so peers regain the pile as soon as it settles. Double
+  // release is harmless: the first broadcastHold(ids, true) clears myHeldIds, so the
+  // later timer's token check fails. We never clobber an in-progress drag hold
   // (mutually exclusive in practice, but guarded so a stray gesture can't release a
   // drag's cards early). Locking uses the same myHeldIds/heldByOther machinery as a
   // drag, so applyPatch leaves the actor's pile untouched while it animates too.
-  private lockPileForAnim(stack: string[], totalMs: number): void {
-    if (!this.seated() || stack.length < 2) return;
-    if (this.myHeldIds.length) return; // a drag hold is active — don't clobber it
+  private lockPileForAnim(stack: string[], worstCaseMs: number): (afterMs: number) => void {
+    if (!this.seated() || stack.length < 2) return () => {};
+    if (this.myHeldIds.length) return () => {}; // a drag hold is active — don't clobber it
     this.broadcastHold(stack, false);
     const ids = stack.slice();
     const token = ids.join(",");
-    window.setTimeout(() => {
-      // Release only if WE still own this exact lock. If a drag started in the
-      // meantime it replaced myHeldIds with its own cards; releasing here would clear
-      // the drag's hold, so we leave it alone (the orphaned pile lock auto-expires at
-      // the hold TTL on peers — bounded and harmless).
+    // Release only if WE still own this exact lock. If a drag started in the
+    // meantime it replaced myHeldIds with its own cards; releasing here would clear
+    // the drag's hold, so we leave it alone (the orphaned pile lock auto-expires at
+    // the hold TTL on peers — bounded and harmless).
+    const releaseIfOwned = () => {
       if (this.myHeldIds.join(",") === token) this.broadcastHold(ids, true);
-    }, totalMs + 80);
+    };
+    window.setTimeout(releaseIfOwned, worstCaseMs + 80);
+    return (afterMs: number) => { window.setTimeout(releaseIfOwned, afterMs); };
   }
 
   private sendSnapshot(anim?: PatchAnim): void {

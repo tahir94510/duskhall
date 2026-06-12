@@ -1,7 +1,7 @@
 // Lightweight audio: try /audio/<name>.mp3, otherwise synthesise a placeholder
 // tone with the Web Audio API. Users replace the MP3s under public/audio/.
 
-export type SfxName = "flip" | "pickup" | "place" | "shuffle" | "gather" | "snap" | "ui-click" | "ui-open" | "ui-close";
+export type SfxName = "flip" | "pickup" | "place" | "shuffle" | "gather" | "snap" | "ui-click" | "ui-open" | "ui-close" | "your-turn";
 
 interface ProceduralSpec {
   type: "click" | "swoosh" | "thud" | "riffle" | "chime" | "snap";
@@ -17,7 +17,10 @@ const PROCEDURAL: Record<SfxName, ProceduralSpec> = {
   "snap": { type: "snap", freq: 320 },
   "ui-click": { type: "click", freq: 980 },
   "ui-open": { type: "chime", freq: 660 },
-  "ui-close": { type: "chime", freq: 440 }
+  "ui-close": { type: "chime", freq: 440 },
+  // Local-only guide cue ("the turn is yours"): a fifth above ui-open so it reads
+  // as an invitation, still inside the same quiet chime family. Never ducks music.
+  "your-turn": { type: "chime", freq: 784 }
 };
 
 // Player-friendly defaults: the music sits gently in the background while the

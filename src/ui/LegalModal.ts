@@ -24,7 +24,9 @@ function renderBody(lines: string[]): string {
 
 // About / Privacy / Terms / Copyright, presented in the same side-nav + content
 // layout as the rulebook (reuses the .rules CSS) so it feels native to the app.
-export function openLegalModal(modal: Modal): void {
+// `onClose` fires once when the dialog leaves (any path: button, Escape, backdrop);
+// the first-run flow uses it to sequence the welcome hint after the About panel.
+export function openLegalModal(modal: Modal, onClose?: () => void): void {
   const sections = tArr<LegalSection>("legalDoc.sections");
   const toc = sections.map((s) => `<a href="#legal-${s.id}">${escape(s.title)}</a>`).join("");
   const intro = `<p class="intro">${inline(escape(t("legalDoc.intro")))}</p>`;
@@ -35,7 +37,7 @@ export function openLegalModal(modal: Modal): void {
     <nav class="rules__toc" aria-label="${escape(t("legalDoc.title"))}">${toc}</nav>
     <div class="rules__content">${intro}${content}</div>
   </div>`;
-  modal.open({ title: t("legalDoc.title"), subtitle: t("legalDoc.subtitle"), bodyHtml });
+  modal.open({ title: t("legalDoc.title"), subtitle: t("legalDoc.subtitle"), bodyHtml, onClose });
 
   const body = modal.bodyEl();
   body?.querySelectorAll<HTMLAnchorElement>(".rules__toc a").forEach((a) => {
