@@ -27,7 +27,7 @@ Deste bileşimi: **Mühür 16** (4 benzersiz × 4), **Büyü 24**, **Müdahale 1
 ## Mühürler (16)
 
 ### Zaman Çatlağı (Mühür, 4 kopya)
-Odaklanma aşamasında 2 yerine 3 kart çekersiniz. Her ek kopya +1 kart daha ekler (max 4
+Odaklanma aşamasında 2 yerine 3 kart çekersiniz. Her ek kopya +1 kart daha ekler (en fazla 4
 kopya, 6 kart). Yerleştirildiği turda değil, bir sonraki turdan itibaren aktif olur.
 
 *Saatte ince bir çatlak; her nefesle büyüyen.*

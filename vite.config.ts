@@ -17,7 +17,7 @@ function assetManifest(): Plugin {
   const AUDIO_EXT = ["mp3", "ogg", "wav", "m4a", "aac"];
   const SFX_NAMES = new Set([
     "flip", "pickup", "place", "shuffle", "gather", "snap",
-    "ui-click", "ui-open", "ui-close"
+    "ui-click", "ui-open", "ui-close", "your-turn"
   ]);
   // Legacy flat-layout music naming: "music", "music1", "music2", …
   const LEGACY_MUSIC_RE = /^music[0-9]*$/;
