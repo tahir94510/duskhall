@@ -73,6 +73,10 @@ the spell copy counts move for the first time (rules V8.2). 273 tests green.
   sentences carry the constraints, and the cost closes as a tag ("1 HP." / "Costs no HP").
   No rule content changed, only order and sentence length (longest card 476 -> ~260 chars).
   CARDS.en/tr.md mirror the locale text exactly (verified by a wrap-normalized comparison).
+  The in-app rules encyclopedia (section 11) is realigned to the same voice in both
+  languages (action first, cost as a closing tag, one consistent informal address in
+  Turkish instead of the old sen/siz mix), and the rulebook tldr's two separate newcomer
+  pointers are merged into a single Guide-plus-Apprentice sentence.
 - **The info panel leads with the point.** Tooltip.renderDef splits the effect's first
   sentence into a semibold .tooltip__lead line above the fine print, so hovering a card
   answers "what does this do" before the details. Rulebook card links share the panel.

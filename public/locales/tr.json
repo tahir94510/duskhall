@@ -655,7 +655,7 @@
   "rulesDoc": {
     "title": "Vaerum: Eterin Vârisleri",
     "subtitle": "Tam Kural Kitabı",
-    "tldr": "2 ila 4 oyuncu. 30 ila 60 dakika. 14 yaş ve üzeri. Yeni misin? Menüden Rehber'i aç; tüm masayı bir oyun boyunca adım adım yönlendirir. İlk kez mi? Kurallardaki Çırak kurallarıyla başlayın.",
+    "tldr": "2 ila 4 oyuncu. 30 ila 60 dakika. 14 yaş ve üzeri. Yeni misin? Menüden Rehber'i aç ve ilk oyunu Çırak kurallarıyla oyna; masa seni adım adım yönlendirir.",
     "intro": "Her şeyin merkezinde, kaynağı bilinmeyen ve çok önce paramparça olmuş bir güç vardır: Eter. Onun parçaları yüzyıllar boyunca sessiz ittifaklarla, fısıltıyla verilen sözlerle ve soğukkanlı ihanetlerle el değiştirdi. Artık sen de o masadasın: ileri görüşlü, kurnaz, Eter'i hâlâ kendi iradesine boyun eğdirebilen ender kişilerden biri. Burada dostluk yoktur, merhamet yoktur, şans yoktur. Yalnızca manipülasyon, strateji ve hiç durmayan bir güç savaşı vardır.",
     "sections": [
       {
@@ -804,24 +804,24 @@
         "body": [
           "Her kart yüzünde yazıldığı gibi çözülür. Bir kart metni ile genel bir kural çelişiyor gibi göründüğünde, kart metni kazanır.",
           "MÜHÜRLER (16 toplam, 4 benzersiz × 4 kopya):",
-          "Zaman Çatlağı: Odaklanma'da 2 yerine 3 kart çekersin. Her ek kopya +1 (en fazla 4 kopya, 6 kart). Konulduğu turun ERTESİ tur etkinleşir.",
-          "Hiçlik Örtüsü: Diğer Mühürlerin ve elin düşman büyüleri/efektleri tarafından hedeflenemez. Örtü'nün kendisi her zaman hedeflenebilir. Konulduğu anda etkin. Birden fazla kopya birikmez.",
-          "Kızıl Monolit: Aksiyon'da 2 yerine 3 HP kullanırsın. Her ek kopya +1 HP (en fazla 5). Konulduğu turun ERTESİ tur etkinleşir.",
-          "Ölüçağıranın Gözü: Kapanış'ın başında, el sınırı kontrolünden önce, Çöplüğün en üst kartını elinize alırsınız (her ek kopya bir kart daha alır). Sınır kontrolünden önce gerçekleştiği için eliniz 7'yi aşarsa her zamanki gibi 7'ye inersiniz ve az önce aldığınız kartı atabilirsiniz; yani tutmak istediğiniz bir kartı feda etmenize asla yol açmaz. Çöplük boşsa hiçbir şey olmaz. Konulduğu turda işler.",
+          "Zaman Çatlağı: Her tur 1 fazla kart çekersin (Odaklanma'da 2 yerine 3; her ek kopya +1, en fazla 4 kopya, 6 kart). Konulduğu turun ERTESİ tur işler.",
+          "Hiçlik Örtüsü: Diğer Mühürlerini ve elini hedeflenemez kılar; Örtü'nün kendisi her zaman hedeflenebilir. Anında işler; ek kopya fayda sağlamaz.",
+          "Kızıl Monolit: Her tur 1 fazla HP verir (Aksiyon'da 2 yerine 3; her ek kopya +1, en fazla 5). Konulduğu turun ERTESİ tur işler.",
+          "Ölüçağıranın Gözü: Kapanış'ının başında Çöplüğün en üst kartını eline alırsın (her ek kopya bir kart daha). El limiti kontrolünden ÖNCE çeker; el 7'yi aşarsa her zamanki gibi 7'ye inersin ve istersen az önce aldığın kartı atarsın, yani tutmak istediğin bir kartı asla feda ettirmez. Çöplük boşsa bir şey olmaz; konulduğu turda işler.",
           "BÜYÜLER (24 toplam):",
-          "Eterik Çarpma: 1 HP. Bir rakibin masasındaki 1 kartı yok edin. Hizmetkâr Kalkanı uygulanır.",
-          "Gölge Hırsızlığı: 1 HP. Rakibin eli kimse göremeyecek şekilde kapalı karıştırılır ve içinden rastgele 1 kart elinize geçer; hangisi olduğunu kimse seçmez. Hiçlik Örtüsü engeller.",
-          "Kadim Görü: 1 HP. Desteden 3 kart çekin. Yalnızca kendinize oynanır; hiçbir rakibi hedeflemez.",
-          "Zihin Paraziti: 1 HP. Bir rakibin Hizmetkârını kendi masanıza taşıyın; SÜREKLİ etkilerini korur ve 3 Hizmetkâr sınırınıza dahil olur (Gölge Katili'ninki gibi tek seferlik bir giriş etkisi, taşımayla yeniden tetiklenmez). Boş bir Hizmetkâr yuvası gerekir; zaten 3 varsa oynanamaz, çünkü çalma yer açmak için kendi kartınızı attırmaz (o gönüllü takas yalnızca elinizden Oluştur içindir). Ele geçirmek yok etmek değildir; çalınan bir Buzul Ucube tur atlatma cezasını tetiklemez.",
-          "Kaderin Cilvesi: 1 HP. Kendi elinizdeki tüm kartları seçilen bir rakibin elindeki tüm kartlarla takas edin. Hiçlik Örtüsü engeller.",
+          "Eterik Çarpma: Rakibin masasından bir kartı yok et. Hizmetkâr Kalkanı geçerli. 1 HP.",
+          "Gölge Hırsızlığı: Rakibin elinden rastgele bir kart çal; eli kimse göremeden kapalı karıştırılır, kimse seçmez. Hiçlik Örtüsü engeller. 1 HP.",
+          "Kadim Görü: Desteden 3 kart çek. Yalnızca sana işler; kimseyi hedeflemez. 1 HP.",
+          "Zihin Paraziti: Rakibin bir Hizmetkârını kendi masana geçir; SÜREKLİ etkileri sende sürer ve 3 Hizmetkâr sınırına sayılır (Gölge Katili'ninki gibi tek seferlik giriş etkisi taşımayla yeniden tetiklenmez). Boş yuva gerekir: zaten 3 varsa oynanamaz, çünkü çalma yer açmak için kendi kartını attırmaz (o gönüllü takas yalnızca elinden Oluştur içindir). Ele geçirmek yok etmek değildir; çalınan Buzul Ucube ceza tetiklemez. 1 HP.",
+          "Kaderin Cilvesi: Elini, seçtiğin bir rakibin eliyle komple takas et. Hiçlik Örtüsü engeller. 1 HP.",
           "MÜDAHALELER (16 toplam):",
-          "Sustur!: 0 HP. Taze atılmış bir Büyü veya Müdahaleyi iptal et. İptal edilen kart ve Sustur! Çöplüğe gider. Evrensel hedef.",
-          "Karmik Yansıma: 0 HP. Bencil. Size ya da masanızdaki kartlarınıza yönelen saldırıyı iptal eder ve saldırgana geri döndürür; bu geri dönüşte saldırganın kendi Hizmetkâr Kalkanı geçerlidir.",
-          "Kan Kefareti: 0 HP. Bencil. Yalnızca size ait bir Mühür yok edilecekken oynanır; elinizden 2 rastgele kart atıp Mührü kurtarırsınız. Kartları kimse seçmez; rastgele giderler (masa seçer).",
+          "Sustur!: Taze oynanmış bir Büyü ya da Müdahaleyi iptal et; iki kart da Çöplüğe gider. Evrensel hedef. 0 HP.",
+          "Karmik Yansıma: Sana ya da masandaki kartlarına yönelen saldırıyı saldırgana geri çevirir; dönüşte onun kendi Hizmetkâr Kalkanı geçerlidir. Bencildir, yalnızca seni korur. 0 HP.",
+          "Kan Kefareti: Yok edilmek üzere olan KENDİ Mührünü kurtarır; bedeli elinden rastgele 2 karttır, kimse seçmez. 0 HP.",
           "HİZMETKÂRLAR (16 toplam):",
-          "Rünik Bekçi: Masandayken TÜM Mühürlerin hedeflenemez olur. Hizmetkâr Kalkanı geçerli; rakipler önce tüm Hizmetkârları temizlemelidir.",
-          "Buzul Ucube: Yok edildiğinde, onu yok eden oyuncu sonraki tüm turunu atlar (Odaklanma, Aksiyon, Kapanış); atlanan turda Müdahaleler yine oynanabilir. Yalnızca yok edilmesi bunu tetikler, çalınması (örneğin Zihin Paraziti ile) tetiklemez.",
-          "Gölge Katili: Girişte, bir rakibin Hizmetkâr'ı varsa BİRİNİ yok etmek ZORUNDASIN. Bu yolla Buzul Ucube yok edilirse cezayı SEN ödersin."
+          "Rünik Bekçi: Masandayken TÜM Mühürlerin hedeflenemez olur. Hizmetkâr Kalkanı yine geçerlidir; rakipler önce Bekçileri temizlemek zorundadır.",
+          "Buzul Ucube: Bunu yok eden, bir sonraki turunun tamamını atlar (Odaklanma, Aksiyon, Kapanış); atlanan turda Müdahaleler oynanabilir. Yalnızca yok edilmesi tetikler; çalınması (örneğin Zihin Paraziti ile) tetiklemez.",
+          "Gölge Katili: Girişte, bir rakipte Hizmetkâr varsa BİRİNİ yok etmek ZORUNDASIN; bu yolla Buzul Ucube ölürse cezayı SEN ödersin."
         ]
       },
       {
