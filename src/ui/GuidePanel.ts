@@ -102,6 +102,20 @@ export class GuidePanel {
     this.render();
   }
 
+  /** Pulse the bar (two soft ivory glows) when the turn becomes the local player's.
+   *  The bar shows in both the minimized and maximized states, so the cue always
+   *  lands. Re-triggerable: the class is dropped at animationend and a forced reflow
+   *  restarts the keyframes; under reduced motion the CSS declares no animation, so
+   *  the class comes and goes with no visual effect. */
+  pulseTurn(): void {
+    const bar = this.el.querySelector<HTMLElement>(".guide__bar");
+    if (!bar) return;
+    bar.classList.remove("guide__bar--pulse");
+    void bar.offsetWidth;
+    bar.classList.add("guide__bar--pulse");
+    bar.addEventListener("animationend", () => bar.classList.remove("guide__bar--pulse"), { once: true });
+  }
+
   update(vm: GuideVM): void {
     this.vm = vm;
     this.render();

@@ -10,6 +10,7 @@ import { openRulesModal } from "../ui/RulesModal.js";
 import { openSupportModal } from "../ui/SupportModal.js";
 import { openFeedbackModal, hasFeedbackChannel } from "../ui/FeedbackModal.js";
 import { openLegalModal } from "../ui/LegalModal.js";
+import { showWelcomeHint } from "../ui/WelcomeHint.js";
 import { openUpdatesModal, latestUpdateVersion } from "../ui/UpdatesModal.js";
 import { openLeaveConfirm } from "../ui/LeaveConfirm.js";
 import { openRoomFull } from "../ui/RoomFullModal.js";
@@ -46,7 +47,7 @@ import { cardZoneOwner, pointInZoneCanonical, CARD_CANON_W, CARD_CANON_H } from 
 import { arrangeZone, isZoneArranged } from "../table/ArrangeZone.js";
 import { clampSeedToPage, type ClampCard } from "../table/playfield.js";
 import type { RealtimeBus, PresencePlayer, CardPatch, PatchCard, PatchAnim, HoldMsg, LeftMsg, KickMsg, SeatClaim, RemovedEntry, GuideWire, SfxMsg } from "../net/realtime.js";
-import { initialGuide, startGuide, setOpen as setGuideOpenState, advance as advanceGuide, chooseFirst as chooseFirstGuide, adoptGuide, type GuideState } from "./guide.js";
+import { initialGuide, startGuide, setOpen as setGuideOpenState, advance as advanceGuide, chooseFirst as chooseFirstGuide, adoptGuide, viewOf as guideViewOf, type GuideState } from "./guide.js";
 import { isNewerWrite } from "../net/lww.js";
 import type { RuntimeConfig } from "../net/config.js";
 import { AudioEngine, type SfxName } from "../audio/Audio.js";
@@ -116,6 +117,13 @@ const TAB_AWAY_RELOAD_MS = 20000;
 // Not room-scoped and never swept by pruneStaleStorage / clearRoomStorage (it matches
 // none of their prefixes), so it persists across rooms, refreshes, leaves and kicks.
 const LS_SEEN_ABOUT = "vaerum:seen-about";
+// One-shot, per-device flag for the first-visit welcome hint (the small gesture
+// card shown after the About panel). Same lifetime rules as LS_SEEN_ABOUT.
+const LS_SEEN_WELCOME = "vaerum:seen-welcome";
+// One-shot, per-device flag for the first-touch "long-press a card" toast. Set by
+// the toast itself, or by the welcome hint when it shows the touch copy (which
+// already teaches the gesture), so the tip is taught exactly once either way.
+const LS_HINT_LONGPRESS = "vaerum:hint:longpress";
 // Per-device record of the newest "What's new" version this browser has opened. The
 // Updates row shows a "New" badge while this differs from the latest entry; opening the
 // panel writes the latest here and clears the badge until the next update ships.
@@ -395,6 +403,7 @@ export class Game {
 
     this.bindHooks();
     this.installKeyboardAndWheel();
+    this.installLongPressHint();
     this.installPerspectiveButton();
     this.installResizeObserver();
     this.installRealtime();
@@ -421,20 +430,67 @@ export class Game {
     await Promise.race([this.firstSync, delay(1800)]);
   }
 
-  // First-ever visit on this device: auto-open the About panel once, just after the
-  // loader lifts, so a newcomer learns what Vaerum is. A localStorage flag makes it a
-  // one-shot — every later load (refresh, new room, return) skips it silently. Called
-  // by the boot sequence right after hideLoader(); never throws (storage may be off).
-  showAboutOnFirstVisit(): void {
-    let seen = true;
-    // If storage can't be read we can't remember showing it, so default to NOT
-    // nagging on every load — only a confirmed first visit (null flag) opens it.
-    try { seen = localStorage.getItem(LS_SEEN_ABOUT) === "1"; } catch { return; }
-    if (seen) return;
-    try { localStorage.setItem(LS_SEEN_ABOUT, "1"); } catch {}
-    // A short beat after the board reveal so the modal doesn't fight the reveal
-    // animation. No sound: audio is still gated until the first user gesture.
-    window.setTimeout(() => { if (!this.modal.isOpen()) openLegalModal(this.modal); }, 500);
+  // First-ever visit on this device, run just after the loader lifts: auto-open the
+  // About panel once, then float the one-time welcome hint (the core gestures and
+  // where the Guide lives) when that panel closes. Each piece is a localStorage
+  // one-shot, so every later load (refresh, new room, return) skips it silently. A
+  // device that saw About before the hint existed gets the hint alone. Never throws
+  // (storage may be off; an unreadable flag means "never nag on every load").
+  showFirstRunHints(): void {
+    let seenAbout = true;
+    let seenWelcome = true;
+    try {
+      seenAbout = localStorage.getItem(LS_SEEN_ABOUT) === "1";
+      seenWelcome = localStorage.getItem(LS_SEEN_WELCOME) === "1";
+    } catch { return; }
+    if (seenAbout && seenWelcome) return;
+    if (!seenAbout) {
+      try { localStorage.setItem(LS_SEEN_ABOUT, "1"); } catch {}
+      // A short beat after the board reveal so the modal doesn't fight the reveal
+      // animation. No sound: audio is still gated until the first user gesture.
+      window.setTimeout(() => {
+        if (this.modal.isOpen()) return;
+        openLegalModal(this.modal, () => this.showWelcomeHintOnce());
+      }, 500);
+      return;
+    }
+    window.setTimeout(() => { if (!this.modal.isOpen()) this.showWelcomeHintOnce(); }, 500);
+  }
+
+  // Show the welcome hint if this device has never seen it; mark it seen on a
+  // successful show. A stale locale cache (welcome keys missing) shows nothing and
+  // leaves the flag unset, so the hint simply tries again on a later visit.
+  private showWelcomeHintOnce(): void {
+    try { if (localStorage.getItem(LS_SEEN_WELCOME) === "1") return; } catch { return; }
+    const touch = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+    const shown = showWelcomeHint({ touch, canEscapeDismiss: () => !this.modal.isOpen() });
+    if (!shown) return;
+    try {
+      localStorage.setItem(LS_SEEN_WELCOME, "1");
+      // The touch copy already teaches long-press; don't repeat it as a toast later.
+      if (touch) localStorage.setItem(LS_HINT_LONGPRESS, "1");
+    } catch {}
+  }
+
+  // One-time touch tip: the first touch on the TABLE (not inside a modal) points at
+  // the long-press action bar, the only touch affordance with no visible control.
+  // Taught exactly once — by this toast, or by the welcome hint's touch copy (which
+  // sets the same flag first). The listener unhooks itself after one decision.
+  private installLongPressHint(): void {
+    try { if (localStorage.getItem(LS_HINT_LONGPRESS) === "1") return; } catch { return; }
+    const onDown = (e: PointerEvent): void => {
+      if (e.pointerType !== "touch") return;
+      if (this.modal.isOpen()) return; // keep listening; teach on the first table touch
+      window.removeEventListener("pointerdown", onDown);
+      try {
+        if (localStorage.getItem(LS_HINT_LONGPRESS) === "1") return; // welcome hint taught it
+        localStorage.setItem(LS_HINT_LONGPRESS, "1");
+      } catch { return; }
+      const tip = t("welcome.longPress");
+      if (tip === "welcome.longPress") return; // locale cache predates the key
+      toast(tip, { durationMs: 6000 });
+    };
+    window.addEventListener("pointerdown", onDown, { passive: true });
   }
 
   // True when there's a newer "What's new" entry than the one this device last opened.
@@ -1701,6 +1757,32 @@ export class Game {
     if (!this.guidePanel) return;
     this.guidePanel.update(this.buildGuideVM());
     this.header.setGuideOpen(this.guide.open);
+    this.cueYourTurn();
+  }
+
+  // Whose guide turn we last observed (-2 = nothing observed yet, -1 = not in the
+  // turn loop). Drives the your-turn cue below.
+  private lastGuideTurnSeat = -2;
+
+  /** When the walkthrough hands the turn TO US — and only on that transition — play a
+   *  quiet local chime and pulse the guide bar, so a player whose eyes drifted away
+   *  knows the table is waiting. Purely local (never sent to peers) and behind the
+   *  normal effects volume/mute. The sentinel keeps a reload that restores straight
+   *  into our own turn (or joining such a game) silent; the host's ~2s re-broadcast
+   *  echo never reaches here (handleGuide refreshes only on genuinely newer state). */
+  private cueYourTurn(): void {
+    const g = this.guide;
+    let cur = -1;
+    if (g.open && g.started) {
+      const view = guideViewOf(g, this.guideSeatedSeats());
+      if (view.phase === "turn") cur = view.turnSeat;
+    }
+    const prev = this.lastGuideTurnSeat;
+    this.lastGuideTurnSeat = cur;
+    if (prev === -2 || cur === prev) return;
+    if (cur < 0 || cur !== this.claimSeat) return;
+    void this.audio.play("your-turn");
+    this.guidePanel?.pulseTurn();
   }
 
   /** Adopt a new guide state locally; if we're the host, broadcast it as authoritative. */

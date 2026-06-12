@@ -56,6 +56,18 @@
 }
 .guide.is-min .guide__bar { box-shadow: none; }
 
+/* Your-turn cue: two soft ivory glows over the bar when the walkthrough hands the
+   turn to the local player (GuidePanel.pulseTurn). Quiet by design — a breath of
+   light, not a flash — and absent entirely under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .guide__bar--pulse { animation: guide-turn-pulse 1.7s var(--ease); }
+  @keyframes guide-turn-pulse {
+    0%, 100% { background-color: transparent; }
+    18%, 62% { background-color: rgba(243, 239, 229, 0.13); }
+    40%, 80% { background-color: rgba(243, 239, 229, 0.03); }
+  }
+}
+
 .guide__status {
   flex: 1;
   display: flex;

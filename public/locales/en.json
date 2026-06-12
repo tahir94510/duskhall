@@ -150,6 +150,23 @@
     "done": "{name} was removed from the table.",
     "kicked": "The host removed you from the table."
   },
+  "welcome": {
+    "title": "Welcome to the table",
+    "dismiss": "Got it",
+    "guidePointer": "Follow the Guide in the top right to learn the rules in play. Copy the invite link from the Menu and bring your friends to the table.",
+    "desktopItems": [
+      "Drag a card to move it; hold Ctrl and drag to move the whole pile.",
+      "The wheel flips a card; right-click flips the whole pile.",
+      "G gathers, M shuffles, D tidies your own area.",
+      "The frosted strip at the bottom of your screen is your hidden area."
+    ],
+    "touchItems": [
+      "Drag a card with your finger to move it.",
+      "Long-press a card: flip, turn, shuffle and more.",
+      "The frosted strip at the bottom of your screen is your hidden area."
+    ],
+    "longPress": "Tip: long-press a card to open its action bar."
+  },
   "shortcutsList": {
     "title": "Shortcuts",
     "subtitle": "Most actions work on the card under your cursor; a few, like tidying your area, act on your own hand. Empty space does nothing.",

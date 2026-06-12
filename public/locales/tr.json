@@ -150,6 +150,23 @@
     "done": "{name} masadan çıkarıldı.",
     "kicked": "Oda sahibi seni masadan çıkardı."
   },
+  "welcome": {
+    "title": "Masaya hoş geldin",
+    "dismiss": "Anladım",
+    "guidePointer": "Kuralları oyun içinde öğrenmek için sağ üstteki Rehber'i izle. Davet bağlantısını Menü'den kopyalayıp arkadaşlarını masaya çağır.",
+    "desktopItems": [
+      "Kartı sürükleyerek taşı; tüm yığını taşımak için Ctrl ile sürükle.",
+      "Tekerlek kartı çevirir; sağ tık tüm yığını çevirir.",
+      "G topla, M karıştır, D kendi alanını derleyip toplar.",
+      "Ekranının altındaki bulanık şerit senin gizli alanın."
+    ],
+    "touchItems": [
+      "Kartı parmağınla sürükleyerek taşı.",
+      "Bir karta uzun bas: çevirme, döndürme, karıştırma ve daha fazlası.",
+      "Ekranının altındaki bulanık şerit senin gizli alanın."
+    ],
+    "longPress": "İpucu: bir karta uzun bas, eylem çubuğu açılsın."
+  },
   "shortcutsList": {
     "title": "Kısayollar",
     "subtitle": "Çoğu işlem imlecin altındaki kart için geçerlidir; alanını düzenlemek gibi birkaçı ise kendi elin için çalışır. Boş alanda hiçbir şey olmaz.",
