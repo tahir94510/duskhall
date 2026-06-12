@@ -75,7 +75,7 @@ Sıra sizdeyken aşağıdaki 3 aşamayı bu sırayla, eksiksiz uygulayın. Aşam
 
 AŞAMA 1, ODAKLANMA: Desteden 2 kart çekin. Çekim sırasında deste biterse önce Eter Dalgalanması çözülür ve kalan çekim yeni desteden tamamlanır. Zaman Çatlağı varsa 3 (ek kopyalarla 4, 5, 6) kart çekersiniz.
 
-AŞAMA 2, AKSİYON: Bu turda 2 HP'niz var (Kızıl Monolit ile 3 ila 5; max 5). HP'leri aşağıdaki eylemler için, istediğiniz kombinasyonda harcayın. Kalan HP yanar; bir sonraki tura aktarılamaz.
+AŞAMA 2, AKSİYON: Bu turda 2 HP'niz var (Kızıl Monolit ile 3 ila 5; en fazla 5). HP'leri aşağıdaki eylemler için, istediğiniz kombinasyonda harcayın. Kalan HP yanar; bir sonraki tura aktarılamaz.
 
 OLUŞTUR (1 HP): elden 1 Büyü oynayın, ya da masanıza 1 Mühür veya 1 Hizmetkâr yerleştirin.
 
@@ -221,7 +221,7 @@ S. Çekim efekti sırasında deste biterse? C. Önce Eter Dalgalanması işlenir
 
 Aşamalar: Odaklanma, Aksiyon, Kapanış, (opsiyonel) Yükseliş ilanı.
 
-HP: Müdahale 0 HP; Oluştur, Araştır, Arındır her biri 1 HP; tur tabanı 2 HP; Kızıl Monolit ile max 5 HP.
+HP: Müdahale 0 HP; Oluştur, Araştır, Arındır her biri 1 HP; tur tabanı 2 HP; Kızıl Monolit ile en fazla 5 HP.
 
 Limitler: El 7, Mühür 4, Hizmetkâr 3, HP üst sınırı 5.
 

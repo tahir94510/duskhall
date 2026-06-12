@@ -43,6 +43,18 @@ the spell copy counts move for the first time (rules V8.2). 273 tests green.
 - **Small fixes.** Held-card element cache self-heals if a node was replaced mid-drag
   (DragController.heldEl); four dead ui.* locale keys removed from both languages
   (ui.reset, ui.leave, ui.joined, ui.waiting); a stale selector comment corrected.
+- **Audio asset pipeline.** The new "your-turn" id is in the Vite manifest allowlist, so a
+  dropped public/audio/sfx/your-turn.mp3 actually loads (it would have been silently
+  ignored); public/audio/README.md and docs/ASSETS.md document it, and ASSETS.md drops the
+  stale "place-stack" id that never existed in code.
+- **Turkish wording unified.** The stray English "max" in Turkish copy is now native
+  phrasing ("en fazla") across the locale, the rulebook and the encyclopedia, and the
+  "en çok / en fazla" split is settled on one form.
+- **Re-verified as already correct (no change).** A second pass over the remaining audit
+  candidates confirmed each is handled by design: rapid V presses are blocked while a turn
+  is in flight, the 33ms drag-preview interval is a deliberate wire rate cap, the touch
+  action bar wraps within its max width, card info panels paint above the guide, and the
+  guide's minimize button explains itself while disabled.
 
 ## 0.9.22: Readable seat colours, and a clean camera turn
 
