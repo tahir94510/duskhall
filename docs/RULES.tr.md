@@ -24,7 +24,7 @@ Dağılım:
 
 Mühür (Mor) x16: 4 farklı mühür, her birinden 4 adet.
 
-Büyü (Kızıl) x24: 5 farklı büyü, 2 ila 8 adet.
+Büyü (Kızıl) x24: 5 farklı büyü, 4 ila 7 adet.
 
 Müdahale (Gök) x16: 3 farklı kart, 4 ila 8 adet.
 

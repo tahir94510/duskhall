@@ -24,7 +24,7 @@ Distribution:
 
 Seal (Violet) x16: 4 unique seals, 4 copies each.
 
-Spell (Crimson) x24: 5 unique spells in counts of 2 to 8.
+Spell (Crimson) x24: 5 unique spells in counts of 4 to 7.
 
 Intervention (Azure) x16: 3 unique cards in counts of 4 to 8.
 

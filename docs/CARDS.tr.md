@@ -58,14 +58,14 @@ açmaz. Çöplük boşsa hiçbir şey olmaz. Konulduğu turda da işler.
 
 ## Büyüler (24)
 
-### Eterik Çarpma (Büyü, 8 kopya)
+### Eterik Çarpma (Büyü, 7 kopya)
 1 HP harcayın. Bir rakibin masasındaki 1 kartı yok edin. Hizmetkâr Kalkanı kuralı
 geçerlidir: hedefin Hizmetkârı varsa önce bir Hizmetkâr seçmek zorundasınız. Seçilen
 hedef hedef alınamaz ise büyü oynanamaz; HP harcanmaz.
 
 *Görünenle mühürlenen arasındaki temiz bir kesik.*
 
-### Gölge Hırsızlığı (Büyü, 6 kopya)
+### Gölge Hırsızlığı (Büyü, 5 kopya)
 1 HP harcayın. Bir rakip seçin. Eli, kimse göremeyecek şekilde kapalı olarak karıştırılır;
 içinden rastgele 1 kart elinize geçer, hangisi olduğunu ne siz ne rakip seçer. Rakibin eli
 boşsa ya da Hiçlik Örtüsü ile korunuyorsa büyü oynanamaz ve HP harcanmaz.
@@ -88,7 +88,7 @@ yoksa büyü oynanamaz ve HP harcanmaz.
 
 *Sadakat bir kapıdır; anahtar sende.*
 
-### Kaderin Cilvesi (Büyü, 2 kopya)
+### Kaderin Cilvesi (Büyü, 4 kopya)
 1 HP harcayın. Elinizdeki tüm kartları seçtiğiniz bir rakibin elindeki tüm kartlarla
 toptan takas edin. Masa kartları etkilenmez. El limiti fazlalıkları her oyuncunun bir
 sonraki Kapanış'ında giderilir. Hedef Hiçlik Örtüsü ile korunuyorsa oynanamaz.

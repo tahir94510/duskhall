@@ -22,7 +22,7 @@ The canonical balance numbers live in `src/game/balance.ts`. The rulebook copy i
 | Category | Counts | Total |
 | --- | --- | --- |
 | Seals (4 types × 4) | Time Rift 4, Veil of Void 4, Crimson Monolith 4, Necromancer's Eye 4 | 16 |
-| Spells (5 types) | Ether Strike 8, Shadow Theft 6, Ancient Sight 4, Mind Parasite 4, Twist of Fate 2 | 24 |
+| Spells (5 types) | Ether Strike 7, Shadow Theft 5, Ancient Sight 4, Mind Parasite 4, Twist of Fate 4 | 24 |
 | Interventions (3 types) | Silence! 8, Karmic Reflection 4, Blood Atonement 4 | 16 |
 | Servants (3 types) | Runic Warden 8, Glacial Aberration 4, Shadow Slayer 4 | 16 |
 | **Total** | | **72** |
@@ -201,6 +201,28 @@ The runtime (`src/audio/Audio.ts`) routes every voice through a per-effect gain 
 - Ascension declaration restricted to end-of-own-turn explicitly.
 - Blood Atonement randomiser: digital table auto-shuffles and auto-discards two hand cards; physical play follows the same rule.
 - Rulebook §13 quick reference now sources its limits and totals from `balance.ts`.
+
+## Balance retune (V8.1 -> V8.2)
+
+One change, three numbers: Ether Strike 8 -> 7, Shadow Theft 6 -> 5, Twist of Fate
+2 -> 4 (spells stay 24, the deck stays 72, the spell count range becomes 4 to 7).
+
+- **Twist of Fate at 2 copies was a ghost.** Most games never surfaced it, and when
+  it did appear it dominated the table precisely because nobody had ever played
+  around it. At 4 copies it shows up in most games: players learn its shape, hold a
+  Silence! or lean on Veil of Void when their hand is worth protecting, and the
+  swing becomes a planned-for chaos beat instead of a freak event.
+- **Removal and theft gave up one copy each.** Ether Strike at 7 is still the most
+  common Spell (the rock-paper-scissors note below holds), and Shadow Theft at 5
+  still pressures hoarded hands; the suite just stops being two answers repeated
+  and gains a third real archetype.
+- **Counterplay already exists.** Twist of Fate is a Spell: Silence! cancels it and
+  Veil of Void blocks it, so raising its count adds drama without adding a
+  defenseless effect.
+
+Card text is unchanged; only the copy counts moved. `cards.ts`, both locales'
+components line, both rulebooks, both encyclopedias and the distribution table
+above carry the same numbers (the balance test cross-checks them).
 
 ## Balance rationale (why the numbers are what they are)
 

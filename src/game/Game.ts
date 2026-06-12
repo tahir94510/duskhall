@@ -27,6 +27,7 @@ import { t, onLocaleChange } from "../i18n/index.js";
 import { getOrCreateRoom, newRoom, setRoomSlug } from "../net/room.js";
 import { showLoader, hideLoader } from "../ui/loader.js";
 import { seededDeck } from "./deck.js";
+import { buildDeck } from "./cards.js";
 import { seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, shouldClearTombstone, shouldReTombstone, seniorityOnReturn, type Occupancy, type HostCandidate, type SeatClaimEntry } from "./occupancy.js";
 import {
   findStackOverlapping,
@@ -2042,6 +2043,14 @@ export class Game {
       };
       if (!Array.isArray(data.cards) || data.cards.length === 0) return false;
       if (Date.now() - data.ts > SNAPSHOT_TTL_MS) return false; // 12h freshness
+      // Composition guard: instance ids derive from the copy counts in cards.ts, so a
+      // snapshot written before a deck retune carries ids that no longer exist (and
+      // misses new ones). Restoring it verbatim would strand orphan cards that even
+      // Reset deck (which iterates the CURRENT composition) could never collect. If
+      // the saved id set differs from today's deck in any way, deal fresh instead.
+      const expected = new Set(buildDeck().map((i) => i.instanceId));
+      const savedIds = new Set(data.cards.map((c) => c.id).filter((id): id is string => typeof id === "string" && !!id));
+      if (savedIds.size !== expected.size || ![...savedIds].every((id) => expected.has(id))) return false;
       // Restore the saved seat occupancy so the privacy layout is correct from the FIRST
       // paint: an occupied (or reserved-away) rival seat conceals its hand even before live
       // sync, while an empty seat's cards read as normal table cards. Live presence then
