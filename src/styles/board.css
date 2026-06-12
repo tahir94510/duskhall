@@ -92,18 +92,21 @@
 body:not(.is-ready) .board__perspective { transition: none; }
 
 /* Camera turn (V key / perspective button): the cards rotate smoothly via the
-   transform transition above, but the frosted zone trays and the upright seat
-   labels are SIBLINGS of .board, so they re-map their slot in one step. The two
-   layers dip fully out, the remap lands inside the invisible window (Game.
+   transform transition above. The frosted zone trays are SIBLINGS of .board and
+   never rotate; only WHO each physical tray belongs to is re-mapped mid-turn. The
+   GLASS itself (the .zone base layer, zones.css) is identical for every seat and
+   stays fully visible through the whole turn — nothing blinks. Only the IDENTITY
+   layers dip: the per-tray occupancy wash (.zone::after) and the upright name
+   labels fade out, the remap lands inside the invisible window (Game.
    togglePerspective defers refreshZones to ~35% of the turn), and they fade back
-   already showing the new mapping — no half-swapped colours ever paint. Zone/label
-   transitions are suspended for the turn so the seat tints can't crossfade through
-   in-between colours while fading back in. Honours reduced motion automatically
-   (--dur-slow -> 0ms; the remap then applies immediately, with no animation). */
+   already showing the new owners. Overlay/label transitions are suspended for the
+   turn so the swap can't crossfade through in-between colours while fading back
+   in. Honours reduced motion automatically (--dur-slow -> 0ms; the remap then
+   applies immediately, with no animation). */
 @media (prefers-reduced-motion: no-preference) {
-  .table.is-rotating .zones,
+  .table.is-rotating .zone::after,
   .table.is-rotating .board__labels { animation: board-view-turn var(--dur-slow) var(--ease); }
-  .table.is-rotating .zone,
+  .table.is-rotating .zone::after,
   .table.is-rotating .seat-label,
   .table.is-rotating .seat-label__dot { transition: none; }
   @keyframes board-view-turn {
