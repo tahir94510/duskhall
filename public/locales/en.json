@@ -306,7 +306,8 @@
           "The rulebook now opens with The goal: how you win, what a turn buys you and why the Trial matters, before any numbered rule. The 18 edge-case questions sit under four themed headings, and the table of contents highlights where you are while you read.",
           "Shortcuts are grouped into Basics, Piles, View, Your area and Touch, with real keycaps, so the list reads as a path from your first drag to the power moves.",
           "Balance, rules V8.2: Twist of Fate goes from 2 copies to 4, paid for by one Ether Strike and one Shadow Theft (now 7 and 5). The deck stays at 72, and the hand-swap chaos now shows up in most games instead of almost never. A room dealt before this update keeps its old deck until you use Reset deck.",
-          "Feel: a shuffled or flipped pile frees up for the other players the moment it settles instead of a beat later, good-news messages carry a small green dot (errors a red one), and a card mid-flip no longer flashes the wrong face when you tidy your area with D."
+          "Feel: a shuffled or flipped pile frees up for the other players the moment it settles instead of a beat later, good-news messages carry a small green dot (errors a red one), and a card mid-flip no longer flashes the wrong face when you tidy your area with D.",
+          "The four hand areas now share one consistent glass tone; who sits where is carried by the name, its status light and the cursor. Turning the view with V no longer blanks the trays: the glass stays put and only the names and area washes softly change hands. An away player's area now quietly dims its wash instead of darkening the whole tray."
         ]
       },
       {

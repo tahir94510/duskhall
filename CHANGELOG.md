@@ -55,6 +55,19 @@ the spell copy counts move for the first time (rules V8.2). 273 tests green.
   is in flight, the 33ms drag-preview interval is a deliberate wire rate cap, the touch
   action bar wraps within its max width, card info panels paint above the guide, and the
   guide's minimize button explains itself while disabled.
+- **One glass, two layers: uniform trays.** zones.css splits each hand tray into a base
+  glass layer (.zone: frost, edge wash, mask, rim, identical for all four slots, plus a
+  faint near-black underlay so a custom backdrop can no longer tint the trays apart) and an
+  identity overlay (.zone::after: the occupancy washes). The per-seat tray tint
+  (color-mix of the seat tone) is gone: the seat ladder is pure lightness, so it made the
+  areas read as inconsistently bright while the name, light and cursor already carry
+  identity. The self/rival asymmetries in mask profile, backdrop saturation and rim alpha
+  are unified; the self door reads through a catch-light on the overlay instead of a
+  different mask. Empty seats are the bare glass; dropped/unreachable dim only their wash.
+- **The V turn no longer blinks the trays.** The board-view-turn dip now animates only the
+  identity overlay and the name labels; the glass stays fully visible through the turn, so
+  turning the view reads as the cards rotating over a steady table instead of the areas
+  flashing out and back. Occupancy changes (join/leave/away) crossfade on the overlay too.
 
 ## 0.9.22: Readable seat colours, and a clean camera turn
 
