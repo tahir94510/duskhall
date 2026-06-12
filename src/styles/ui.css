@@ -289,6 +289,26 @@
 }
 .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 
+/* Status toasts: a small coloured dot beside the message (mirrors the offline banner's
+   amber dot) so success and error read at a glance without tinting the whole pill. */
+.toast--success,
+.toast--error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(92vw, 460px);
+}
+.toast--success::before,
+.toast--error::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.toast--success::before { background: var(--status-ok); box-shadow: 0 0 6px rgba(60, 154, 106, 0.55); }
+.toast--error::before { background: var(--status-err); box-shadow: 0 0 6px rgba(200, 68, 74, 0.55); }
+
 /* Persistent offline banner: pinned at the top centre, it stays up the whole time live sync is down
    (set only after the dropped-connection grace, so a refresh flap never flashes it). A small amber
    dot + ivory text on a dark pill — clear without being alarming, and inert to pointer input. */

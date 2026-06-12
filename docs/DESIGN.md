@@ -84,6 +84,10 @@ source of truth; the values here are a snapshot for orientation.
   on the dark table (a player's name must never look "faded out") while adjacent steps stay
   tellable apart. `SEAT_COLORS` in `src/game/Game.ts` mirrors these values; change both together.
 
+- Status dots `--status-ok` `#3c9a6a`, `--status-err` `#c8444a`: the only saturated chrome
+  colours, used solely as the small dot beside a success/error toast (the same language as the
+  offline banner's amber dot), never as a surface tint, so the monochrome holds.
+
 Category hues (`--cat-seal`, `--cat-spell`, `--cat-intervention`, `--cat-servant`) are kept in tokens.css purely so the rulebook can describe the four canonical colours; the live UI does not paint with them.
 
 ## Seating layout

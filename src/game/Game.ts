@@ -2233,13 +2233,18 @@ export class Game {
       const c = this.state.cards.get(cid);
       if (c && c.z > topZ) { topZ = c.z; topId = cid; }
     }
-    // Lock the whole pile to peers for the entire straighten→gather→flip flow so no
-    // one can grab/flip/rotate a card out from under the animation. Released by a
-    // guaranteed timer covering the worst-case (straighten + gather + flip) duration.
-    this.lockPileForAnim(stack, STACK_STRAIGHTEN_MS + STACK_TIDY_MS + FLIP_ANIM_MS);
+    // Lock the whole pile to peers for the entire straighten→gather→flip flow. The
+    // worst-case (straighten + gather + flip) timer is the backstop; when the tidy
+    // phases get skipped (pile already square) the act callback releases the lock
+    // right after the flip itself, so peers are not left waiting on phases that
+    // never ran.
+    const release = this.lockPileForAnim(stack, STACK_STRAIGHTEN_MS + STACK_TIDY_MS + FLIP_ANIM_MS);
     // squareUp:false — a flip turns the pile over in place, keeping its orientation (it does
     // NOT force the pile upright). Squaring up is the separate Gather action.
-    this.tidyStackThen(stack, topId, () => this.performStackFlip(stack), FLIP_ANIM_MS, false);
+    this.tidyStackThen(stack, topId, () => {
+      this.performStackFlip(stack);
+      release(FLIP_ANIM_MS + 80);
+    }, FLIP_ANIM_MS, false);
   }
 
   // The flip itself: reverse depth order + toggle every face, then float the pile
@@ -2274,12 +2279,15 @@ export class Game {
         if (id !== visibleId) this.cardEls.get(id)?.classList.add("is-flip-quiet");
       }
     }
-    // Next frame: flip to the real face so the rotateY transition fires.
+    // Next frame: flip to the real face so the rotateY transition fires. Skip any
+    // card whose animation was taken over in the meantime (e.g. a tidy cleared
+    // is-animating to reposition and face it): writing here would fight the
+    // takeover's authoritative face (same guard as runSameFaceTurn).
     requestAnimationFrame(() => {
       for (const id of ids) {
         const c = this.state.cards.get(id);
         const el = this.cardEls.get(id);
-        if (!c || !el) continue;
+        if (!c || !el || !el.classList.contains("is-animating")) continue;
         el.classList.toggle("is-faceup", c.faceUp);
       }
     });
@@ -2293,8 +2301,8 @@ export class Game {
         el?.classList.remove("is-flipping");
       }
       // Let the render loop settle the faces/z on its next tick. We must NOT paint
-      // synchronously here: is-animating has just cleared, so a synchronous pass would
-      // toggle is-concealed and let `.is-concealed:not(.is-animating)` snap the card's
+      // synchronously here: is-flip-quiet has just cleared, so a synchronous pass would
+      // toggle is-concealed and let `.is-concealed:not(.is-flip-quiet)` snap the card's
       // rotateY, replaying the turn a second time. The connected-stack capture already
       // gathers the pile onto one spot, so the depth settle is invisible regardless.
       this.requestRender();
@@ -2540,7 +2548,19 @@ export class Game {
     const handle = this.animTimers.get(id);
     if (handle !== undefined) { window.clearTimeout(handle); this.animTimers.delete(id); }
     const el = this.cardEls.get(id);
-    if (el) el.classList.remove("is-animating", "is-shuffling", "is-flip-quiet", "is-flip-staging", "is-flipping");
+    if (!el) return;
+    // If the card is mid-flip, the painted face may still be the staged OLD face
+    // (runFlipVisual writes the old face first and commits the real one a frame
+    // later). Snap it to the authoritative state transition-free BEFORE the classes
+    // drop, or the takeover (e.g. tidying with D right after a flip) would show the
+    // wrong face for a beat and then replay the rotateY during the slide.
+    const c = this.state.cards.get(id);
+    if (c && (el.classList.contains("is-flipping") || el.classList.contains("is-flip-quiet") || el.classList.contains("is-flip-staging"))) {
+      el.classList.add("is-flip-staging"); // transition: none on .card__inner
+      el.classList.toggle("is-faceup", c.faceUp);
+      void el.offsetWidth; // commit the face with no transition
+    }
+    el.classList.remove("is-animating", "is-shuffling", "is-flip-quiet", "is-flip-staging", "is-flipping");
   }
 
   // Tidy our own hidden-zone cards into a clean, deck-like layout: identical cards collected into one
@@ -2600,9 +2620,12 @@ export class Game {
     // check), so nothing extra is needed here.
     const upright = this.viewerUprightRot(seed.rot);
     // Lock the whole pile to peers for the entire face-down → straighten → gather →
-    // riffle flow so no card can be grabbed mid-shuffle. Worst-case duration covers
-    // every phase; the guaranteed release timer frees it even on an early return.
-    this.lockPileForAnim(stack, FLIP_ANIM_MS + STACK_STRAIGHTEN_MS + STACK_TIDY_MS + SHUFFLE_ANIM_MS);
+    // riffle flow so no card can be grabbed mid-shuffle. The worst-case timer is the
+    // backstop (it also covers the early stackBlocked return below); when the turn or
+    // tidy phases get skipped (deck already square and face-down) the act callback
+    // releases the lock right after the riffle, so peers regain the deck as soon as
+    // the wobble settles instead of ~700ms later.
+    const release = this.lockPileForAnim(stack, FLIP_ANIM_MS + STACK_STRAIGHTEN_MS + STACK_TIDY_MS + SHUFFLE_ANIM_MS);
     // Three clean beats: turn the whole pile face-DOWN (so no faces flash through the
     // gather), THEN straighten + gather into one pile, THEN riffle-shuffle the squared
     // deck. A face-down resting deck skips the turn and shuffles at once.
@@ -2616,6 +2639,7 @@ export class Game {
         // Send immediately with a shuffle hint so peers riffle the same pile.
         this.flushWithAnim(stack, { kind: "shuffle", ids: stack });
         void this.audio.play("shuffle");
+        release(SHUFFLE_ANIM_MS + 80);
       }, SHUFFLE_ANIM_MS);
     });
   }
@@ -3224,7 +3248,7 @@ export class Game {
           this.bus.updateMe(this.presencePayload());
           // Only reassure "back online" if we actually told the player it dropped — otherwise a
           // silent flap would announce a recovery from a loss they never saw.
-          if (this.realtimeDown) toast(t("ui.connRestored"));
+          if (this.realtimeDown) toast(t("ui.connRestored"), { kind: "success" });
         }
         this.hasBeenOnline = true;
         // Cross-device sync is back: clear the "unreachable" hint on rival seats and drop the banner.
@@ -3357,7 +3381,7 @@ export class Game {
       this.cursorEls.clear();
       this.lastCursors.clear();
       this.clearRoomStorage(this.room);
-      void this.joinRoom(newRoom()).then(() => toast(t("kick.kicked")));
+      void this.joinRoom(newRoom()).then(() => toast(t("kick.kicked"), { kind: "error" }));
       return;
     }
     // A peer (not the target): evict the kicked player. Tombstone FIRST, with a connAt
@@ -3498,25 +3522,32 @@ export class Game {
   // Lock a whole pile to peers for the duration of a multi-phase animation
   // (straighten → gather → flip/shuffle), then release it automatically. Peers see the
   // cards as held (is-locked) and every interaction path rejects them, so no one can
-  // grab/flip/rotate a card out from under the running animation. The release is a
-  // GUARANTEED timer covering the worst-case total, so an early return inside the
-  // flow can never leave a stuck lock. We never clobber an in-progress drag hold
+  // grab/flip/rotate a card out from under the running animation. The worst-case
+  // release timer is a GUARANTEED backstop, so an early return inside the flow can
+  // never leave a stuck lock. The flows skip phases when a pile is already tidy
+  // (tidyStackThen / turnPileFaceDown), which can finish well before the worst case;
+  // the RETURNED scheduler lets the act callback release the lock right after the
+  // phase that actually ran, so peers regain the pile as soon as it settles. Double
+  // release is harmless: the first broadcastHold(ids, true) clears myHeldIds, so the
+  // later timer's token check fails. We never clobber an in-progress drag hold
   // (mutually exclusive in practice, but guarded so a stray gesture can't release a
   // drag's cards early). Locking uses the same myHeldIds/heldByOther machinery as a
   // drag, so applyPatch leaves the actor's pile untouched while it animates too.
-  private lockPileForAnim(stack: string[], totalMs: number): void {
-    if (!this.seated() || stack.length < 2) return;
-    if (this.myHeldIds.length) return; // a drag hold is active — don't clobber it
+  private lockPileForAnim(stack: string[], worstCaseMs: number): (afterMs: number) => void {
+    if (!this.seated() || stack.length < 2) return () => {};
+    if (this.myHeldIds.length) return () => {}; // a drag hold is active — don't clobber it
     this.broadcastHold(stack, false);
     const ids = stack.slice();
     const token = ids.join(",");
-    window.setTimeout(() => {
-      // Release only if WE still own this exact lock. If a drag started in the
-      // meantime it replaced myHeldIds with its own cards; releasing here would clear
-      // the drag's hold, so we leave it alone (the orphaned pile lock auto-expires at
-      // the hold TTL on peers — bounded and harmless).
+    // Release only if WE still own this exact lock. If a drag started in the
+    // meantime it replaced myHeldIds with its own cards; releasing here would clear
+    // the drag's hold, so we leave it alone (the orphaned pile lock auto-expires at
+    // the hold TTL on peers — bounded and harmless).
+    const releaseIfOwned = () => {
       if (this.myHeldIds.join(",") === token) this.broadcastHold(ids, true);
-    }, totalMs + 80);
+    };
+    window.setTimeout(releaseIfOwned, worstCaseMs + 80);
+    return (afterMs: number) => { window.setTimeout(releaseIfOwned, afterMs); };
   }
 
   private sendSnapshot(anim?: PatchAnim): void {

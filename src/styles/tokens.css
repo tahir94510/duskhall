@@ -24,6 +24,13 @@
   --accent: #f3efe5;
   --accent-dim: #b3afa5;
 
+  /* Status dots for transient toasts (success / error): a SMALL coloured dot beside the
+     message, the same visual language as the offline banner's amber dot, never a full
+     surface tint, so the monochrome holds. Families match the card categories
+     (servant green / spell crimson in cards.ts CATEGORY_META). */
+  --status-ok: #3c9a6a;
+  --status-err: #c8444a;
+
   /* Seat accents: four ivory-to-warm-grey tones forming a clear ladder. Tuned so even the
      DARKEST step stays clearly readable as label text on the near-black table (≥ AA contrast)
      — the old graphite tail (#6a665d) made seat 2/3 names read as "faded/disconnected" and
