@@ -27,30 +27,28 @@ Deck composition: **Seals 16** (4 unique × 4), **Spells 24**, **Interventions 1
 ## Seals (16)
 
 ### Time Rift (Seal, 4 copies)
-During your Focus phase you draw 3 cards instead of 2. Each additional copy adds +1
-draw (max 4 copies, 6 cards). Becomes active from the turn AFTER it is placed.
+Draw 1 extra card every turn. Focus gives you 3 cards instead of 2; each extra copy adds 1
+more (up to 4 copies, 6 cards). Starts working next turn.
 
 *A hairline crack in the hour, widening with every breath.*
 
 ### Veil of Void (Seal, 4 copies)
-Your other Seals and your hand cannot be targeted by enemy spells or effects. Veil of
-Void itself remains targetable. Active immediately when placed. Multiple copies do not
-stack.
+Shields your other Seals and your hand. Neither can be targeted by enemy spells or
+effects; the Veil itself stays targetable. Works at once; extra copies add nothing.
 
 *Where it falls, the world forgets to look.*
 
 ### Crimson Monolith (Seal, 4 copies)
-During your Action phase you spend 3 HP instead of 2. Each additional copy adds +1 HP,
-but your total HP can never exceed 5. Becomes active from the turn AFTER it is placed.
+Gives you 1 extra HP every turn. Action grants 3 HP instead of 2; each extra copy adds 1,
+never past 5 in total. Starts working next turn.
 
 *It still stands when all else has fallen.*
 
 ### Necromancer's Eye (Seal, 4 copies)
-At the start of your Closing phase, before the hand-limit check, take the top card of the
-Discard into your hand (each extra copy takes one more). Because this happens before the
-limit check, if your hand goes over 7 you simply discard down as usual and may discard the
-card you just took, so it never costs you a card you wanted to keep. If the Discard is
-empty, nothing happens. It works the turn it is placed.
+Take the Discard's top card into your hand every turn. It fires at the start of your
+Closing (one more per extra copy) and works the turn it is placed. If the Discard is
+empty, nothing happens. It draws before the hand-limit check, so it never costs you a card
+you wanted.
 
 *The dead keep their accounts in long, patient ledgers.*
 
@@ -59,39 +57,36 @@ empty, nothing happens. It works the turn it is placed.
 ## Spells (24)
 
 ### Ether Strike (Spell, 7 copies)
-Spend 1 HP. Destroy 1 card on a rival's tableau. The Servant Shield rule applies: if
-the rival has any Servant, you must target a Servant first. If the chosen target is
-untargetable, the spell cannot be cast, no HP is spent.
+Destroy one card on a rival's tableau. Servant Shield applies: if they have any Servant,
+you must target a Servant first. If the target is untargetable it cannot be cast, and no
+HP is spent. 1 HP.
 
 *A clean cut between the seen and the sealed.*
 
 ### Shadow Theft (Spell, 5 copies)
-Spend 1 HP. Choose a rival. Their hand is shuffled face-down so no one can see it, then
-one card is taken from it at random into your hand; neither of you chooses which. If their
-hand is empty or protected by Veil of Void, this spell cannot be cast and no HP is spent.
+Steal one random card from a rival's hand. Their hand is shuffled face-down first; no one
+chooses which card moves. If their hand is empty or shielded by Veil of Void it cannot be
+cast, and no HP is spent. 1 HP.
 
 *Every secret has a weight you can lift.*
 
 ### Ancient Sight (Spell, 4 copies)
-Spend 1 HP. Draw 3 cards from the deck. It only ever benefits you; no opponent is
-targeted. If the deck empties mid-draw, Ether Resonance resolves first, then the
-remaining draws come from the new deck.
+Draw 3 cards from the deck. It only benefits you; no one is targeted. If the deck runs out
+mid-draw, Ether Resonance resolves first and the rest come from the new deck. 1 HP.
 
 *Open the eye that never blinks.*
 
 ### Mind Parasite (Spell, 4 copies)
-Spend 1 HP. Take control of one Servant on a rival's tableau and move it to yours. It
-counts toward your 3-Servant limit and keeps all of its ongoing effects, now under your
-control. Taking control is not the same as destroying, so stealing a Glacial Aberration
-does not trigger its skip-a-turn penalty. If you already have 3 Servants, or the target
-has none, this spell cannot be cast and no HP is spent.
+Take a rival's Servant onto your own tableau. Its ongoing effects now serve you, and it
+counts toward your 3-Servant limit. With no free slot, or no Servant to take, it cannot be
+cast and no HP is spent. 1 HP.
 
 *Loyalty is a door, and you have the key.*
 
 ### Twist of Fate (Spell, 4 copies)
-Spend 1 HP. Exchange every card in your hand with every card in a chosen rival's hand.
-Tableau cards are unaffected. Hand-limit excess is resolved by each player at their next
-Closing phase. Cannot be cast if the target is protected by Veil of Void.
+Swap your entire hand with a chosen rival's. Tableau cards stay put; hand-limit excess
+resolves at each player's own Closing. It cannot be cast if the target is shielded by Veil
+of Void. 1 HP.
 
 *Fate's wheel turns, and asks no one.*
 
@@ -100,27 +95,23 @@ Closing phase. Cannot be cast if the target is protected by Veil of Void.
 ## Interventions (16)
 
 ### Silence! (Intervention, 8 copies)
-Costs no HP. Played at any moment, on anyone's turn, to instantly cancel a freshly cast
-Spell or Intervention. The cancelled card and Silence! both go to the Discard. Silence!
-can be cancelled by another Silence!, the topmost Silence! cancels the one below.
+Cancel a freshly played Spell or Intervention. The cancelled card and the Silence! both go
+to the Discard. A Silence! can be silenced by another; the topmost cancels the one below.
+Costs no HP; play it at any moment, on anyone's turn.
 
 *The gavel of the table.*
 
 ### Karmic Reflection (Intervention, 4 copies)
-Costs no HP. Play it only to cancel an attack aimed at you or at a card you control in
-play (your Seals and Servants on your tableau). It does not shield your hand or your
-deck, and it cannot protect another player. The cancelled attack rebounds onto the
-attacker and resolves against them in full. On the rebound, the attacker's own Servant
-Shield applies: if they have any Servant in play, the attack must destroy those Servants
-first and only then can it reach their Seals.
+Turn an attack on you or your tableau back onto the attacker. It resolves against them in
+full, and on the rebound their own Servant Shield applies. Strictly selfish: it cannot
+cover your hand, your deck or another player. Costs no HP; play it at any moment.
 
 *What you send returns, in kind.*
 
 ### Blood Atonement (Intervention, 4 copies)
-Costs no HP. Played ONLY when one of YOUR own Seals is about to be destroyed. To save
-the Seal, 2 cards leave your hand at random. You do not pick them and neither does your
-opponent, so it is always a gamble. If you have fewer than 2 cards in hand, this card
-cannot be played.
+Save YOUR OWN Seal at the moment it would be destroyed. Play it right then; as the price,
+2 random cards leave your hand for the Discard. Neither you nor your rival picks them; it
+is always a gamble. With fewer than 2 cards in hand it cannot be played. Costs no HP.
 
 *A vow paid in heartbeats.*
 
@@ -129,27 +120,24 @@ cannot be played.
 ## Servants (16)
 
 ### Runic Warden (Servant, 8 copies)
-While Runic Warden is on your tableau, ALL of your Seals gain the 'untargetable' status.
-Runic Warden itself is always targetable. As a normal Servant, the Servant Shield rule
-applies: rivals must destroy Wardens (and any other Servant) before they can target
-Seals.
+While it stands, ALL of your Seals are untargetable. The Warden itself can always be
+targeted. As a normal Servant it obeys the Shield rule: rivals must clear every Servant
+before they can reach your Seals.
 
 *Patience etched in iron.*
 
 ### Glacial Aberration (Servant, 4 copies)
-When this Servant is destroyed, whoever destroyed it skips their entire next turn (Focus,
-Action, and Closing); they may still play Interventions during that skipped turn. The
-penalty applies even when the destruction is indirect, such as a Shadow Slayer's entry or
-a Karmic Reflection redirect. Only destruction triggers it: having this Servant stolen,
-for example by Mind Parasite, does not.
+Whoever destroys this skips their entire next turn. The skipped turn has no Focus, Action
+or Closing; Interventions may still be played. The penalty fires on indirect kills too (a
+Shadow Slayer entry, a Karmic Reflection rebound). Stealing it does not trigger; only
+destruction does.
 
 *A winter that keeps its own time.*
 
 ### Shadow Slayer (Servant, 4 copies)
-When you place Shadow Slayer, if any rival has at least one Servant you MUST choose one
-of those Servants and destroy it immediately. If a Glacial Aberration is destroyed this
-way, YOU receive its skip-next-turn penalty. If no rival Servant exists, the entry effect
-fizzles but Shadow Slayer still enters play.
+On entry you MUST destroy one rival Servant. If any rival has one, choose it and destroy
+it at once; if a Glacial Aberration dies this way, YOU pay its skip-a-turn penalty. With
+no rival Servant in play, the effect fizzles and the Slayer still enters.
 
 *Even shadows answer to him.*
 

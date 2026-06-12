@@ -179,11 +179,21 @@ export class Tooltip {
       <div class="tooltip__divider" aria-hidden="true"></div>
       <div class="tooltip__stack">${escapeHtml(t("table.pile", { count: stackCount }))}</div>`
       : "";
+    // The effect copy is written action-first: every card's opening sentence says
+    // WHAT IT DOES in plain words, then costs and fine print follow. Surface that
+    // structure here: the first sentence renders as a lead line, the rest as the
+    // body, so a newcomer hovering a card gets the point before the details. If no
+    // split point exists the whole text is the lead.
+    const effect = t(`cards.${def.id}.effect`);
+    const m = effect.match(/^(.+?[.!?])\s+([\s\S]+)$/);
+    const lead = m ? m[1]! : effect;
+    const rest = m ? m[2]! : "";
     this.el.innerHTML = `
       <div class="tooltip__scrim" aria-hidden="true"></div>
       <div class="tooltip__title">${escapeHtml(t(`cards.${def.id}.name`))}</div>
       <div class="tooltip__type">${escapeHtml(t(`categories.${def.category}.name`))}</div>
-      <div class="tooltip__body">${escapeHtml(t(`cards.${def.id}.effect`))}</div>
+      <div class="tooltip__lead">${escapeHtml(lead)}</div>
+      ${rest ? `<div class="tooltip__body">${escapeHtml(rest)}</div>` : ""}
       <div class="tooltip__flavor">${escapeHtml(t(`cards.${def.id}.flavor`))}</div>${pileLine}
     `;
     return true;

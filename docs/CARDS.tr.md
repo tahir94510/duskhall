@@ -27,30 +27,28 @@ Deste bileşimi: **Mühür 16** (4 benzersiz × 4), **Büyü 24**, **Müdahale 1
 ## Mühürler (16)
 
 ### Zaman Çatlağı (Mühür, 4 kopya)
-Odaklanma aşamasında 2 yerine 3 kart çekersiniz. Her ek kopya +1 kart daha ekler (en fazla 4
-kopya, 6 kart). Yerleştirildiği turda değil, bir sonraki turdan itibaren aktif olur.
+Her tur 1 fazla kart çekersin. Odaklanma'da 2 yerine 3 kart çekilir; her ek kopya +1 ekler
+(en fazla 4 kopya, 6 kart). Bir sonraki turdan itibaren işler.
 
 *Saatte ince bir çatlak; her nefesle büyüyen.*
 
 ### Hiçlik Örtüsü (Mühür, 4 kopya)
-Diğer Mühürleriniz ve elinizdeki kartlar düşman büyü ve efektlerinden hedef alınamaz
-statüsü kazanır. Hiçlik Örtüsü'nün kendisi her zaman hedef alınabilir. Yerleştirildiği
-anda aktiftir; istiflenmez.
+Diğer Mühürlerini ve elini korumaya alır. İkisi de düşman büyü ve efektlerince hedef
+alınamaz; Örtü'nün kendisi her zaman hedeflenebilir. Anında işler; ek kopya fayda
+sağlamaz.
 
 *Düştüğü yerde dünya bakmayı unutur.*
 
 ### Kızıl Monolit (Mühür, 4 kopya)
-Aksiyon aşamasında 2 yerine 3 HP kullanırsınız. Her ek kopya +1 HP ekler; toplam HP 5'i
-aşamaz. Yerleştirildiği turda değil, bir sonraki turdan itibaren aktif olur.
+Her tur 1 fazla HP verir. Aksiyon'da 2 yerine 3 HP harcarsın; her ek kopya +1 ekler,
+toplam asla 5'i aşmaz. Bir sonraki turdan itibaren işler.
 
 *Her şey yıkıldığında hâlâ ayakta duran.*
 
 ### Ölüçağıranın Gözü (Mühür, 4 kopya)
-Kapanış aşamanızın başında, el sınırı kontrolünden önce, Çöplüğün en üstündeki kartı
-elinize alırsınız (her ek kopya bir kart daha alır). Bu, sınır kontrolünden önce
-gerçekleştiği için eliniz 7'yi aşarsa her zamanki gibi 7'ye inersiniz ve az önce aldığınız
-kartı atabilirsiniz; yani bu kart, tutmak istediğiniz bir kartı feda etmenize asla yol
-açmaz. Çöplük boşsa hiçbir şey olmaz. Konulduğu turda da işler.
+Çöplüğün en üst kartını her tur eline alırsın. Kapanış'ının başında işler (her ek kopya
+bir kart daha) ve konulduğu turda da çalışır. Çöplük boşsa bir şey olmaz. El limiti
+kontrolünden önce çeker, yani tutmak istediğin bir kartı asla feda ettirmez.
 
 *Ölüler hesaplarını sabırlı defterlerde tutar.*
 
@@ -59,39 +57,35 @@ açmaz. Çöplük boşsa hiçbir şey olmaz. Konulduğu turda da işler.
 ## Büyüler (24)
 
 ### Eterik Çarpma (Büyü, 7 kopya)
-1 HP harcayın. Bir rakibin masasındaki 1 kartı yok edin. Hizmetkâr Kalkanı kuralı
-geçerlidir: hedefin Hizmetkârı varsa önce bir Hizmetkâr seçmek zorundasınız. Seçilen
-hedef hedef alınamaz ise büyü oynanamaz; HP harcanmaz.
+Rakibin masasından bir kartı yok et. Hizmetkâr Kalkanı geçerli: hedefin Hizmetkârı varsa
+önce bir Hizmetkâr seçmek zorundasın. Hedef hedeflenemezse oynanamaz, HP harcanmaz. 1 HP.
 
 *Görünenle mühürlenen arasındaki temiz bir kesik.*
 
 ### Gölge Hırsızlığı (Büyü, 5 kopya)
-1 HP harcayın. Bir rakip seçin. Eli, kimse göremeyecek şekilde kapalı olarak karıştırılır;
-içinden rastgele 1 kart elinize geçer, hangisi olduğunu ne siz ne rakip seçer. Rakibin eli
-boşsa ya da Hiçlik Örtüsü ile korunuyorsa büyü oynanamaz ve HP harcanmaz.
+Bir rakibin elinden rastgele bir kart çal. Eli, kimse göremeden kapalı karıştırılır; hangi
+kartın geçtiğini kimse seçmez. Eli boşsa ya da Hiçlik Örtüsü ile korunuyorsa oynanamaz, HP
+harcanmaz. 1 HP.
 
 *Her sırrın kaldırabileceğin bir ağırlığı vardır.*
 
 ### Kadim Görü (Büyü, 4 kopya)
-1 HP harcayın. Kapalı desteden 3 kart çekin. Yalnızca kendinize oynanır; hiçbir rakibi
-hedeflemez. Çekim sırasında deste biterse önce Eter Dalgalanması işlenir, kalan çekim yeni
-desteden tamamlanır.
+Desteden 3 kart çek. Yalnızca sana işler; kimseyi hedeflemez. Çekim sırasında deste
+biterse önce Eter Dalgalanması çözülür, kalan kartlar yeni desteden gelir. 1 HP.
 
 *Asla kırpılmayan gözü aç.*
 
 ### Zihin Paraziti (Büyü, 4 kopya)
-1 HP harcayın. Bir rakibin masasındaki 1 Hizmetkârı ele geçirip kendi masanıza taşıyın.
-Sizin 3 Hizmetkâr sınırınıza dahil olur ve tüm sürekli etkileri artık sizin kontrolünüzde
-sürer. Ele geçirmek yok etmek değildir; bu yüzden bir Buzul Ucube'yi çalmak onun tur
-atlatma cezasını tetiklemez. Masanızda zaten 3 Hizmetkâr varsa ya da hedefin Hizmetkârı
-yoksa büyü oynanamaz ve HP harcanmaz.
+Rakibin bir Hizmetkârını kendi masana geçir. Sürekli etkileri artık sana hizmet eder ve 3
+Hizmetkâr sınırına dahil olur. Boş yuvan yoksa ya da hedefin Hizmetkârı yoksa oynanamaz,
+HP harcanmaz. 1 HP.
 
 *Sadakat bir kapıdır; anahtar sende.*
 
 ### Kaderin Cilvesi (Büyü, 4 kopya)
-1 HP harcayın. Elinizdeki tüm kartları seçtiğiniz bir rakibin elindeki tüm kartlarla
-toptan takas edin. Masa kartları etkilenmez. El limiti fazlalıkları her oyuncunun bir
-sonraki Kapanış'ında giderilir. Hedef Hiçlik Örtüsü ile korunuyorsa oynanamaz.
+Elini, seçtiğin bir rakibin eliyle komple takas et. Masadaki kartlar etkilenmez; el limiti
+fazlası herkesin kendi Kapanış'ında çözülür. Hedef Hiçlik Örtüsü ile korunuyorsa
+oynanamaz. 1 HP.
 
 *Kaderin çarkı kimseye sormadan döner.*
 
@@ -100,26 +94,24 @@ sonraki Kapanış'ında giderilir. Hedef Hiçlik Örtüsü ile korunuyorsa oynan
 ## Müdahaleler (16)
 
 ### Sustur! (Müdahale, 8 kopya)
-HP harcamaz. Sıra kimde olursa olsun, taze atılmış bir Büyü ya da Müdahaleyi anında iptal
-etmek için oynanır. İptal edilen kart ve Sustur! Çöplüğe gider. Sustur! başka bir Sustur!
-ile iptal edilebilir, üstteki Sustur! alttakini iptal eder.
+Yeni oynanmış bir Büyü ya da Müdahaleyi iptal et. İptal edilen kart da Sustur! da Çöplüğe
+gider. Sustur! başka bir Sustur! ile susturulabilir; üstteki alttakini iptal eder. HP
+istemez; sıra kimde olursa olsun her an oynanabilir.
 
 *Masanın yargıç tokmağı.*
 
 ### Karmik Yansıma (Müdahale, 4 kopya)
-HP harcamaz. Yalnızca size ya da masanızdaki bir kartınıza (Mühürleriniz ve
-Hizmetkârlarınız) yönelen bir saldırıyı iptal etmek için oynanır. Elinizi ya da destenizi
-korumaz ve başka bir oyuncuyu kollamak için kullanılamaz. İptal edilen saldırı saldırgana
-geri döner ve etkisini olduğu gibi ona uygular. Bu geri dönüşte saldırganın kendi
-Hizmetkâr Kalkanı devreye girer: masasında Hizmetkârı varsa, saldırı önce o Hizmetkârları
-yok etmek zorundadır, ancak ondan sonra Mühürlerine ulaşabilir.
+Sana ya da masandaki bir kartına yönelen saldırıyı saldırgana geri çevir. Saldırı,
+sahibine tam etkisiyle işler; geri dönüşte onun kendi Hizmetkâr Kalkanı geçerlidir.
+Yalnızca kendini korur: elini, desteni ya da başka bir oyuncuyu kollayamaz. HP istemez;
+her an oynanabilir.
 
 *Gönderdiğin geri döner, aynı sertlikte.*
 
 ### Kan Kefareti (Müdahale, 4 kopya)
-HP harcamaz. YALNIZCA KENDİ Mührünüzün yok edilmek üzere olduğu anda oynanır. Mührü
-kurtarmak için elinizden 2 kart rastgele çöpe gider. Bu kartları ne siz seçersiniz ne
-rakibiniz, yani her zaman bir risktir. Elinizde 2'den az kart varsa oynanamaz.
+Yok edilmek üzere olan KENDİ Mührünü kurtar. Tam o anda oynanır; bedel olarak elinden
+rastgele 2 kart Çöplüğe gider. Kartları ne sen seçersin ne rakibin; her zaman bir
+kumardır. Elinde 2'den az kart varsa oynanamaz. HP istemez.
 
 *Kalp atışıyla ödenen bir yemin.*
 
@@ -128,26 +120,24 @@ rakibiniz, yani her zaman bir risktir. Elinizde 2'den az kart varsa oynanamaz.
 ## Hizmetkârlar (16)
 
 ### Rünik Bekçi (Hizmetkâr, 8 kopya)
-Masanızda durduğu sürece TÜM Mühürleriniz hedef alınamaz statüsü kazanır. Rünik Bekçi'nin
-kendisi her zaman hedeflenebilir. Normal Hizmetkâr olarak Kalkan Kuralı'na tabidir; rakip
-önce tüm Hizmetkârları yok etmek zorundadır.
+Masanda durduğu sürece TÜM Mühürlerin hedeflenemez olur. Bekçi'nin kendisi her zaman
+hedeflenebilir. Normal bir Hizmetkâr olarak Kalkan kuralına tabidir: rakip, Mühürlerine
+uzanmadan önce tüm Hizmetkârları yok etmek zorundadır.
 
 *Demire kazınmış sabır.*
 
 ### Buzul Ucube (Hizmetkâr, 4 kopya)
-Bu Hizmetkâr yok edildiğinde, onu yok eden oyuncunun bir sonraki turu tamamen atlanır
-(Odaklanma, Aksiyon ve Kapanış); o atlanan turda Müdahaleler yine de oynanabilir. Ceza,
-yok etme dolaylı olduğunda da uygulanır; örneğin bir Gölge Katili'nin giriş etkisi ya da
-bir Karmik Yansıma yönlendirmesi. Yalnızca yok edilmesi bunu tetikler: bu Hizmetkârın
-çalınması (örneğin Zihin Paraziti ile) tetiklemez.
+Bunu yok eden, bir sonraki turunun tamamını atlar. Atlanan turda Odaklanma, Aksiyon ve
+Kapanış yoktur; Müdahaleler yine oynanabilir. Ceza, dolaylı yok etmelerde de işler
+(örneğin Gölge Katili'nin girişi ya da Karmik Yansıma dönüşü). Çalınması tetiklemez;
+yalnız yok edilmesi.
 
 *Kendi zamanını tutan bir kış.*
 
 ### Gölge Katili (Hizmetkâr, 4 kopya)
-Gölge Katili'ni yerleştirdiğinizde, bir rakibin en az 1 Hizmetkârı varsa onlardan birini
-ZORUNLU olarak seçip yok edersiniz. Bu sırada Buzul Ucube yok edilirse tur atlama cezası
-SİZE uygulanır. Hiçbir rakipte Hizmetkâr yoksa efekt boş geçer; Gölge Katili yine masaya
-yerleşir.
+Girişte bir rakip Hizmetkârını yok etmek ZORUNDASIN. Herhangi bir rakipte Hizmetkâr varsa
+birini seç ve hemen yok et; bu yolla bir Buzul Ucube ölürse tur atlama cezasını SEN
+ödersin. Hiçbir rakipte Hizmetkâr yoksa etki boşa düşer, Katil yine masaya yerleşir.
 
 *Gölgeler bile ona cevap verir.*
 

@@ -68,6 +68,19 @@ the spell copy counts move for the first time (rules V8.2). 273 tests green.
   identity overlay and the name labels; the glass stays fully visible through the turn, so
   turning the view reads as the cards rotating over a steady table instead of the areas
   flashing out and back. Occupancy changes (join/leave/away) crossfade on the overlay too.
+- **Action-first card text.** All 16 card effects are rewritten in both languages to a
+  strict template: the first sentence states what the card does in plain words, short
+  sentences carry the constraints, and the cost closes as a tag ("1 HP." / "Costs no HP").
+  No rule content changed, only order and sentence length (longest card 476 -> ~260 chars).
+  CARDS.en/tr.md mirror the locale text exactly (verified by a wrap-normalized comparison).
+- **The info panel leads with the point.** Tooltip.renderDef splits the effect's first
+  sentence into a semibold .tooltip__lead line above the fine print, so hovering a card
+  answers "what does this do" before the details. Rulebook card links share the panel.
+- **Apprentice rules.** A new unnumbered rulebook section (after The goal, both locales and
+  both RULES.md mirrors) defines the official simplified first-game variant: no chains, no
+  resonance sacrifice, no edge cases, everything else unchanged. The rulebook tldr points
+  first-timers at it, and the Guide intro now includes a three-sentence teach script for
+  the host. The full V8.2 rules are untouched; this is a sanctioned on-ramp, not a fork.
 
 ## 0.9.22: Readable seat colours, and a clean camera turn
 

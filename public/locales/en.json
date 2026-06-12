@@ -307,7 +307,8 @@
           "Shortcuts are grouped into Basics, Piles, View, Your area and Touch, with real keycaps, so the list reads as a path from your first drag to the power moves.",
           "Balance, rules V8.2: Twist of Fate goes from 2 copies to 4, paid for by one Ether Strike and one Shadow Theft (now 7 and 5). The deck stays at 72, and the hand-swap chaos now shows up in most games instead of almost never. A room dealt before this update keeps its old deck until you use Reset deck.",
           "Feel: a shuffled or flipped pile frees up for the other players the moment it settles instead of a beat later, good-news messages carry a small green dot (errors a red one), and a card mid-flip no longer flashes the wrong face when you tidy your area with D.",
-          "The four hand areas now share one consistent glass tone; who sits where is carried by the name, its status light and the cursor. Turning the view with V no longer blanks the trays: the glass stays put and only the names and area washes softly change hands. An away player's area now quietly dims its wash instead of darkening the whole tray."
+          "The four hand areas now share one consistent glass tone; who sits where is carried by the name, its status light and the cursor. Turning the view with V no longer blanks the trays: the glass stays put and only the names and area washes softly change hands. An away player's area now quietly dims its wash instead of darkening the whole tray.",
+          "Easier to bring friends in: every card now says what it does in its first sentence, and the info panel shows that line up front with the fine print below. The rulebook gains Apprentice rules, an official simplified setup for a table's first game (no chains, no resonance sacrifice, no edge cases), and the Guide's intro now hands the host a three-sentence teach script."
         ]
       },
       {
@@ -563,98 +564,98 @@
     "timeRift": {
       "name": "Time Rift",
       "type": "Seal",
-      "effect": "During your Focus phase you draw 3 cards instead of 2. Each additional copy adds +1 draw (max 4 copies, 6 cards). Becomes active from the turn AFTER it is placed.",
+      "effect": "Draw 1 extra card every turn. Focus gives you 3 cards instead of 2; each extra copy adds 1 more (up to 4 copies, 6 cards). Starts working next turn.",
       "flavor": "A hairline crack in the hour, widening with every breath."
     },
     "veilOfVoid": {
       "name": "Veil of Void",
       "type": "Seal",
-      "effect": "Your other Seals and your hand cannot be targeted by enemy spells or effects. Veil of Void itself remains targetable. Active immediately when placed. Multiple copies do not stack.",
+      "effect": "Shields your other Seals and your hand. Neither can be targeted by enemy spells or effects; the Veil itself stays targetable. Works at once; extra copies add nothing.",
       "flavor": "Where it falls, the world forgets to look."
     },
     "crimsonMonolith": {
       "name": "Crimson Monolith",
       "type": "Seal",
-      "effect": "During your Action phase you spend 3 HP instead of 2. Each additional copy adds +1 HP, but your total HP can never exceed 5. Becomes active from the turn AFTER it is placed.",
+      "effect": "Gives you 1 extra HP every turn. Action grants 3 HP instead of 2; each extra copy adds 1, never past 5 in total. Starts working next turn.",
       "flavor": "It still stands when all else has fallen."
     },
     "necromancersEye": {
       "name": "Necromancer's Eye",
       "type": "Seal",
-      "effect": "At the start of your Closing phase, take the top card of the Discard into your hand (one more per extra copy). It works the turn it is placed; if the Discard is empty, nothing happens. (It draws before the hand-limit check, so it never costs you a card you wanted; see the rulebook.)",
+      "effect": "Take the Discard's top card into your hand every turn. It fires at the start of your Closing (one more per extra copy) and works the turn it is placed. If the Discard is empty, nothing happens. It draws before the hand-limit check, so it never costs you a card you wanted.",
       "flavor": "The dead keep their accounts in long, patient ledgers."
     },
     "etherStrike": {
       "name": "Ether Strike",
       "type": "Spell",
-      "effect": "Spend 1 HP. Destroy 1 card on a rival's tableau. The Servant Shield rule applies: if the rival has any Servant, you must target a Servant first. If the chosen target is untargetable, the spell cannot be cast, no HP is spent.",
+      "effect": "Destroy one card on a rival's tableau. Servant Shield applies: if they have any Servant, you must target a Servant first. If the target is untargetable it cannot be cast, and no HP is spent. 1 HP.",
       "flavor": "A clean cut between the seen and the sealed."
     },
     "shadowTheft": {
       "name": "Shadow Theft",
       "type": "Spell",
-      "effect": "Spend 1 HP. Choose a rival. Their hand is shuffled face-down so no one can see it, then one card is taken from it at random into your hand; neither of you chooses which. If their hand is empty or protected by Veil of Void, this spell cannot be cast and no HP is spent.",
+      "effect": "Steal one random card from a rival's hand. Their hand is shuffled face-down first; no one chooses which card moves. If their hand is empty or shielded by Veil of Void it cannot be cast, and no HP is spent. 1 HP.",
       "flavor": "Every secret has a weight you can lift."
     },
     "ancientSight": {
       "name": "Ancient Sight",
       "type": "Spell",
-      "effect": "Spend 1 HP. Draw 3 cards from the deck. It only ever benefits you; no opponent is targeted. If the deck empties mid-draw, Ether Resonance resolves first, then the remaining draws come from the new deck.",
+      "effect": "Draw 3 cards from the deck. It only benefits you; no one is targeted. If the deck runs out mid-draw, Ether Resonance resolves first and the rest come from the new deck. 1 HP.",
       "flavor": "Open the eye that never blinks."
     },
     "mindParasite": {
       "name": "Mind Parasite",
       "type": "Spell",
-      "effect": "Spend 1 HP. Move one Servant from a rival's tableau to yours; it keeps its ongoing effects, now under your control, and counts toward your 3-Servant limit. You need a free Servant slot: with 3 already, or if the target has no Servant, it cannot be cast and no HP is spent.",
+      "effect": "Take a rival's Servant onto your own tableau. Its ongoing effects now serve you, and it counts toward your 3-Servant limit. With no free slot, or no Servant to take, it cannot be cast and no HP is spent. 1 HP.",
       "flavor": "Loyalty is a door, and you have the key."
     },
     "twistOfFate": {
       "name": "Twist of Fate",
       "type": "Spell",
-      "effect": "Spend 1 HP. Exchange every card in your hand with every card in a chosen rival's hand. Tableau cards are unaffected. Hand-limit excess is resolved by each player at their next Closing phase. Cannot be cast if the target is protected by Veil of Void.",
+      "effect": "Swap your entire hand with a chosen rival's. Tableau cards stay put; hand-limit excess resolves at each player's own Closing. It cannot be cast if the target is shielded by Veil of Void. 1 HP.",
       "flavor": "Fate's wheel turns, and asks no one."
     },
     "silence": {
       "name": "Silence!",
       "type": "Intervention",
-      "effect": "Costs no HP. Played at any moment, on anyone's turn, to instantly cancel a freshly cast Spell or Intervention. The cancelled card and Silence! both go to the Discard. Silence! can be cancelled by another Silence!, the topmost Silence! cancels the one below.",
+      "effect": "Cancel a freshly played Spell or Intervention. The cancelled card and the Silence! both go to the Discard. A Silence! can be silenced by another; the topmost cancels the one below. Costs no HP; play it at any moment, on anyone's turn.",
       "flavor": "The gavel of the table."
     },
     "karmicReflection": {
       "name": "Karmic Reflection",
       "type": "Intervention",
-      "effect": "Costs no HP. Play it only to cancel an attack aimed at you or at a card you control in play (your Seals and Servants on your tableau). It does not shield your hand or your deck, and it cannot protect another player. The cancelled attack rebounds onto the attacker and resolves against them in full. On the rebound, the attacker's own Servant Shield applies: if they have any Servant in play, the attack must destroy those Servants first and only then can it reach their Seals.",
+      "effect": "Turn an attack on you or your tableau back onto the attacker. It resolves against them in full, and on the rebound their own Servant Shield applies. Strictly selfish: it cannot cover your hand, your deck or another player. Costs no HP; play it at any moment.",
       "flavor": "What you send returns, in kind."
     },
     "bloodAtonement": {
       "name": "Blood Atonement",
       "type": "Intervention",
-      "effect": "Costs no HP. Played ONLY when one of YOUR own Seals is about to be destroyed. To save the Seal, 2 cards leave your hand at random. You do not pick them and neither does your opponent, so it is always a gamble. If you have fewer than 2 cards in hand, this card cannot be played.",
+      "effect": "Save YOUR OWN Seal at the moment it would be destroyed. Play it right then; as the price, 2 random cards leave your hand for the Discard. Neither you nor your rival picks them; it is always a gamble. With fewer than 2 cards in hand it cannot be played. Costs no HP.",
       "flavor": "A vow paid in heartbeats."
     },
     "runicWarden": {
       "name": "Runic Warden",
       "type": "Servant",
-      "effect": "While Runic Warden is on your tableau, ALL of your Seals gain the 'untargetable' status. Runic Warden itself is always targetable. As a normal Servant, the Servant Shield rule applies: rivals must destroy Wardens (and any other Servant) before they can target Seals.",
+      "effect": "While it stands, ALL of your Seals are untargetable. The Warden itself can always be targeted. As a normal Servant it obeys the Shield rule: rivals must clear every Servant before they can reach your Seals.",
       "flavor": "Patience etched in iron."
     },
     "glacialAberration": {
       "name": "Glacial Aberration",
       "type": "Servant",
-      "effect": "When this Servant is destroyed, whoever destroyed it skips their entire next turn (Focus, Action, and Closing); they may still play Interventions during that skipped turn. The penalty applies even when the destruction is indirect, such as a Shadow Slayer's entry or a Karmic Reflection redirect. Only destruction triggers it: having this Servant stolen, for example by Mind Parasite, does not.",
+      "effect": "Whoever destroys this skips their entire next turn. The skipped turn has no Focus, Action or Closing; Interventions may still be played. The penalty fires on indirect kills too (a Shadow Slayer entry, a Karmic Reflection rebound). Stealing it does not trigger; only destruction does.",
       "flavor": "A winter that keeps its own time."
     },
     "shadowSlayer": {
       "name": "Shadow Slayer",
       "type": "Servant",
-      "effect": "When you place Shadow Slayer, if any rival has at least one Servant you MUST choose one of those Servants and destroy it immediately. If a Glacial Aberration is destroyed this way, YOU receive its skip-next-turn penalty. If no rival Servant exists, the entry effect fizzles but Shadow Slayer still enters play.",
+      "effect": "On entry you MUST destroy one rival Servant. If any rival has one, choose it and destroy it at once; if a Glacial Aberration dies this way, YOU pay its skip-a-turn penalty. With no rival Servant in play, the effect fizzles and the Slayer still enters.",
       "flavor": "Even shadows answer to him."
     }
   },
   "rulesDoc": {
     "title": "Vaerum: Heirs of the Ether",
     "subtitle": "The Complete Rulebook",
-    "tldr": "2 to 4 players. 30 to 60 minutes. Ages 14+. New here? Open the Guide from the menu and it walks the whole table through a game, step by step.",
+    "tldr": "2 to 4 players. 30 to 60 minutes. Ages 14+. New here? Open the Guide from the menu and it walks the whole table through a game, step by step. First time? Start with the Apprentice rules in the rulebook.",
     "intro": "At the centre of all things lies the Ether, a sourceless force, fractured long ago. Its shards have changed hands through silent treaties, whispered threats, and quiet betrayals. You sit at the table now: a visionary, a schemer, one of the few who can still bend the Ether to a will. There is no friendship here. There is no mercy. There is no luck. Only manipulation, strategy, and the unblinking war for power.",
     "sections": [
       {
@@ -665,6 +666,17 @@
           "You win by holding at least 3 Seals on your tableau at the end of your turn, declaring Ascension, and still holding at least 3 when the turn comes back around. Everything at the table exists either to reach that moment or to deny it to someone else.",
           "Each turn hands you 2 HP to spend: place Seals and Servants, hurl Spells at your rivals, or dig for cards. Interventions cost nothing and can interrupt anyone at any time; nobody at this table merely waits for a turn.",
           "Expect betrayal. The moment a player declares Ascension the whole table turns on them for one round; that round is the Trial. Outlast it and the Ether is yours."
+        ]
+      },
+      {
+        "id": "apprentice",
+        "title": "Apprentice rules (your first game)",
+        "body": [
+          "The official, simplified start for a table playing Vaerum for the first time. Play your first game or two this way; switch to the full rules once it clicks.",
+          "NO CHAINS: a move can be answered by at most ONE Intervention; a Silence! cannot be played on a Silence!.",
+          "RESONANCE WITHOUT SACRIFICE: when the deck runs out, shuffle the Discard into a new deck; nobody sacrifices a card.",
+          "NO EDGE CASES: the card does what it says. On a disagreement the simplest reading wins and play continues.",
+          "EVERYTHING ELSE IS THE SAME: draw 2, spend 2 HP, end at 7 in hand. Collect 3 Seals and survive the Trial to win."
         ]
       },
       {
@@ -886,7 +898,7 @@
     "yourTurn": "It is your turn. Tap the check when you are done.",
     "aPlayer": "a player",
     "youTag": "(you)",
-    "introBody": "This guide walks the whole table through a game, one step at a time. It only suggests what to do next and never moves your cards, so you stay free to move, flip, shuffle and tidy them however you like. Tip: to begin from a freshly shuffled deck, use Reset deck from the menu first, then press Start.",
+    "introBody": "This guide walks the whole table through a game, one step at a time. It only suggests what to do next and never moves your cards, so you stay free to move, flip, shuffle and tidy them however you like. Tip: to begin from a freshly shuffled deck, use Reset deck from the menu first, then press Start. Teaching the table takes three sentences: on your turn draw 2 cards, spend your 2 points on playing or drawing cards, and end at 7 cards in hand. Collect 3 Seals and protect them for one full round to win. The cards say the rest; read each as it reaches your hand. For a first game, open the Apprentice rules section in the rulebook.",
     "introWaiting": "Waiting for the host to start the game.",
     "start": "Start",
     "restart": "Restart",
