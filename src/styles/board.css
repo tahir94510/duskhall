@@ -266,12 +266,16 @@ body:not(.is-ready) .board__perspective { transition: none; }
   background-position: center center;
   background-size: cover;
   /* Lifted off near-pure black so cards (and their borders) read against the felt on
-     dim/OLED screens, while keeping the deep, calm atmosphere. */
-  background-color: #0c0c11;
+     dim/OLED screens, while keeping the deep, calm atmosphere. The felt carries a faint
+     WARM charcoal/amber undertone (R >= G >= B) rather than the old cool violet cast: a
+     warm low light reads as inviting and comfortable to sit at, where a cool one reads as
+     clinical, and it harmonises with the cream ivory and the amber "away" accent. Same
+     darkness and depth, only the hue is warmed, so card legibility is untouched. */
+  background-color: #0f0c0a;
   background-image:
-    radial-gradient(120% 90% at 50% 34%, rgba(74, 70, 86, 0.24) 0%, rgba(20, 18, 24, 0) 56%),
-    radial-gradient(150% 120% at 50% 122%, rgba(44, 41, 52, 0.28) 0%, rgba(8, 8, 12, 0) 62%),
-    linear-gradient(180deg, #100f15 0%, #0b0a0f 52%, #08080c 100%);
+    radial-gradient(120% 90% at 50% 34%, rgba(86, 76, 62, 0.24) 0%, rgba(24, 20, 16, 0) 56%),
+    radial-gradient(150% 120% at 50% 122%, rgba(52, 46, 38, 0.28) 0%, rgba(12, 10, 8, 0) 62%),
+    linear-gradient(180deg, #14110d 0%, #0e0c09 52%, #0a0806 100%);
 }
 
 /* Atmosphere painted ON TOP of the table image (Background.ts replaces the .app-bg
