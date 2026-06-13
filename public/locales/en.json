@@ -638,19 +638,19 @@
     "runicWarden": {
       "name": "Runic Warden",
       "type": "Servant",
-      "effect": "While it stands, ALL of your Seals are untargetable. The Warden itself can always be targeted. As a normal Servant it obeys the Shield rule: rivals must clear every Servant before they can reach your Seals.",
+      "effect": "While it stands, all of your Seals are untargetable; before a rival can reach them they must destroy the Warden itself, and by the Shield rule every other Servant too.",
       "flavor": "Patience etched in iron."
     },
     "glacialAberration": {
       "name": "Glacial Aberration",
       "type": "Servant",
-      "effect": "Whoever destroys this skips their entire next turn. The skipped turn has no Focus, Action or Closing; Interventions may still be played. The penalty fires on indirect kills too (a Shadow Slayer entry, a Karmic Reflection rebound). Stealing it does not trigger; only destruction does.",
+      "effect": "Whoever destroys this skips their entire next turn (Focus, Action and Closing); they may still play Interventions. The penalty fires on an indirect kill too, such as a Shadow Slayer entry or a Karmic Reflection rebound. Only destroying it triggers this; stealing it does not.",
       "flavor": "A winter that keeps its own time."
     },
     "shadowSlayer": {
       "name": "Shadow Slayer",
       "type": "Servant",
-      "effect": "On entry you MUST destroy one rival Servant. If any rival has one, choose it and destroy it at once; if a Glacial Aberration dies this way, YOU pay its skip-a-turn penalty. With no rival Servant in play, the effect fizzles and the Slayer still enters.",
+      "effect": "When you place it, if any rival has a Servant you must choose one and destroy it at once. If that destroys a Glacial Aberration, YOU take its skip-a-turn penalty. If no rival has a Servant the effect does nothing, but the Slayer still enters.",
       "flavor": "Even shadows answer to him."
     }
   },
@@ -900,8 +900,8 @@
     "yourTurn": "It is your turn. Tap the check when you are done.",
     "aPlayer": "a player",
     "youTag": "(you)",
-    "introBody": "This guide walks the whole table through one game, step by step. It only suggests the next move; your cards are always yours to move, flip and shuffle.",
-    "introTeach": "The whole game in three lines: draw 2 cards on your turn, spend your 2 HP to play or draw, then drop to 7 cards in hand. Collect 3 Seals and keep them through one full round to win. First time? Use the Apprentice rules in the rulebook for your first game.",
+    "introBody": "This guide shows one game step by step. It only suggests the next move; your cards are always yours to move, flip and shuffle.",
+    "introTeach": "A turn in short: draw 2 cards from the deck into your hand, then spend 2 action points (HP). Each point does one thing: cast a Spell, place a Seal or Servant on the table, draw an extra card, or swap a card (discard one, draw one). Interventions are free and can be played any time, even on someone else's turn. At the end, drop your hand to 7 cards. Collect 3 Seals and keep them for one full round to win. First time? Open Rules from the menu and try the Apprentice rules.",
     "introWaiting": "Waiting for the host to start the game.",
     "start": "Start",
     "restart": "Restart",
@@ -912,29 +912,29 @@
     "steps": {
       "shuffle": {
         "title": "Opening hands",
-        "body": "Shuffle the deck. Each player then takes 5 cards from it and keeps them hidden. Leave the rest face down in the centre as the draw pile. The host taps the check once everyone has drawn."
+        "body": "Shuffle the deck if it isn't already. Each player draws 5 cards from it into their hand. The rest stays face down in the centre as the draw pile for every Focus phase. Once everyone has drawn, the host taps the check."
       },
       "reveal": {
         "title": "Who goes first",
-        "body": "To decide who starts, each player reveals the top card of the deck. Highest type wins, in this order: Servant, Spell, Seal, Intervention. Tied players reveal again. Shuffle these cards back, then the host taps the check."
+        "body": "To decide who starts, each player draws one card from the deck and turns it face up for all to see. The highest type goes first, then those cards are shuffled back in. Type order: Servant, Spell, Seal, Intervention. When done, the host taps the check."
       },
       "chooseFirst": {
         "title": "First player",
-        "body": "The host picks the player who revealed the highest card. They take the first turn, and play continues clockwise."
+        "body": "The host picks the player who revealed the highest type. Play starts with them and goes clockwise."
       }
     },
     "phase": {
       "focus": {
         "title": "Focus",
-        "body": "Draw 2 cards from the deck (each Time Rift adds one more). Tap the check when done."
+        "body": "Draw 2 cards from the deck. If you have a Time Rift on the table, draw one more. Tap the check when you have drawn."
       },
       "action": {
         "title": "Action",
-        "body": "You have 2 HP this turn (up to 5 with Crimson Monolith). Spend each HP on one action: Create (play a Spell, or place a Seal or Servant), Study (draw a card) or Cleanse (discard 1, then draw 1). Interventions are free, any time. Tap the check when done."
+        "body": "You have 2 action points (HP); each Crimson Monolith on your table adds one, up to 5. Spend each on one of: cast a Spell, place a Seal or Servant on the table, draw an extra card, or swap a card (discard one, draw one). Interventions cost nothing and can be played any time. Tap the check when done."
       },
       "closing": {
         "title": "Closing",
-        "body": "Your active Seals trigger now (Necromancer's Eye draws its card). Then drop to 7 cards in hand. With 3 or more Seals you may declare Ascension. Tap the check to pass the turn."
+        "body": "Your active Seals trigger now (for example, Necromancer's Eye takes the top card of the Discard). Then drop your hand to 7 cards. With 3 or more Seals you may declare Ascension: keep them until your next turn to win. Tap the check to pass the turn."
       }
     }
   }

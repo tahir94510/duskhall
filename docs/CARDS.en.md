@@ -120,24 +120,23 @@ is always a gamble. With fewer than 2 cards in hand it cannot be played. Costs n
 ## Servants (16)
 
 ### Runic Warden (Servant, 8 copies)
-While it stands, ALL of your Seals are untargetable. The Warden itself can always be
-targeted. As a normal Servant it obeys the Shield rule: rivals must clear every Servant
-before they can reach your Seals.
+While it stands, all of your Seals are untargetable; before a rival can reach them they
+must destroy the Warden itself, and by the Shield rule every other Servant too.
 
 *Patience etched in iron.*
 
 ### Glacial Aberration (Servant, 4 copies)
-Whoever destroys this skips their entire next turn. The skipped turn has no Focus, Action
-or Closing; Interventions may still be played. The penalty fires on indirect kills too (a
-Shadow Slayer entry, a Karmic Reflection rebound). Stealing it does not trigger; only
-destruction does.
+Whoever destroys this skips their entire next turn (Focus, Action and Closing); they may
+still play Interventions. The penalty fires on an indirect kill too, such as a Shadow
+Slayer entry or a Karmic Reflection rebound. Only destroying it triggers this; stealing it
+does not.
 
 *A winter that keeps its own time.*
 
 ### Shadow Slayer (Servant, 4 copies)
-On entry you MUST destroy one rival Servant. If any rival has one, choose it and destroy
-it at once; if a Glacial Aberration dies this way, YOU pay its skip-a-turn penalty. With
-no rival Servant in play, the effect fizzles and the Slayer still enters.
+When you place it, if any rival has a Servant you must choose one and destroy it at once.
+If that destroys a Glacial Aberration, YOU take its skip-a-turn penalty. If no rival has a
+Servant the effect does nothing, but the Slayer still enters.
 
 *Even shadows answer to him.*
 

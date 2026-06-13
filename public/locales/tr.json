@@ -638,19 +638,19 @@
     "runicWarden": {
       "name": "Rünik Bekçi",
       "type": "Hizmetkâr",
-      "effect": "Masanda durduğu sürece TÜM Mühürlerin hedeflenemez olur. Bekçi'nin kendisi her zaman hedeflenebilir. Normal bir Hizmetkâr olarak Kalkan kuralına tabidir: rakip, Mühürlerine uzanmadan önce tüm Hizmetkârları yok etmek zorundadır.",
+      "effect": "Masanda durduğu sürece tüm Mühürlerin hedeflenemez olur; rakip onlara uzanmadan önce Bekçi'nin kendisini, Kalkan kuralı gereği diğer tüm Hizmetkârlarını da yok etmek zorundadır.",
       "flavor": "Demire kazınmış sabır."
     },
     "glacialAberration": {
       "name": "Buzul Ucube",
       "type": "Hizmetkâr",
-      "effect": "Bunu yok eden, bir sonraki turunun tamamını atlar. Atlanan turda Odaklanma, Aksiyon ve Kapanış yoktur; Müdahaleler yine oynanabilir. Ceza, dolaylı yok etmelerde de işler (örneğin Gölge Katili'nin girişi ya da Karmik Yansıma dönüşü). Çalınması tetiklemez; yalnız yok edilmesi.",
+      "effect": "Bunu yok eden, bir sonraki turunun tamamını atlar (Odaklanma, Aksiyon ve Kapanış); Müdahaleleri yine oynayabilir. Ceza dolaylı yok etmelerde de işler; örneğin bir Gölge Katili girişi ya da Karmik Yansıma dönüşü. Yalnızca yok edilmesi bunu tetikler; çalınması tetiklemez.",
       "flavor": "Kendi zamanını tutan bir kış."
     },
     "shadowSlayer": {
       "name": "Gölge Katili",
       "type": "Hizmetkâr",
-      "effect": "Girişte bir rakip Hizmetkârını yok etmek ZORUNDASIN. Herhangi bir rakipte Hizmetkâr varsa birini seç ve hemen yok et; bu yolla bir Buzul Ucube ölürse tur atlama cezasını SEN ödersin. Hiçbir rakipte Hizmetkâr yoksa etki boşa düşer, Katil yine masaya yerleşir.",
+      "effect": "Masaya koyduğunda, bir rakibin Hizmetkârı varsa birini seçip hemen yok etmek zorundasın. Bu yolla bir Buzul Ucube yok edersen tur-atlama cezasını SEN ödersin. Hiçbir rakipte Hizmetkâr yoksa etki boşa düşer ama Katil yine de masana gelir.",
       "flavor": "Gölgeler bile ona cevap verir."
     }
   },
@@ -900,8 +900,8 @@
     "yourTurn": "Sıra sende. Bitirince onay işaretine bas.",
     "aPlayer": "bir oyuncu",
     "youTag": "(sen)",
-    "introBody": "Bu rehber tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sıradaki hamleyi önerir; kartların her zaman senin: taşı, çevir, karıştır.",
-    "introTeach": "Oyunun tamamı üç satırda: sıranda 2 kart çek, 2 HP'ni kart oynamaya ya da çekmeye harca, sonra elini 7 karta indir. 3 Mühür biriktirip bir tam tur boyunca korursan kazanırsın. İlk kez mi? İlk oyununu kural kitabındaki Çırak kurallarıyla oyna.",
+    "introBody": "Bu rehber bir oyunu adım adım gösterir. Yalnızca sıradaki hamleyi önerir; kartların her zaman senin: taşı, çevir, karıştır.",
+    "introTeach": "Kısaca bir tur: desteden 2 kart çekip eline al, sonra 2 hamle puanı (HP) harca. Her puanla şunlardan birini yap: bir Büyü oyna, masaya bir Mühür ya da Hizmetkâr koy, fazladan bir kart çek, ya da bir kartı değiştir (birini at, birini çek). Müdahaleler bedavadır ve sıra sende olmasa bile her an oynanır. Tur sonunda elini 7 karta indir. 3 Mühür toplayıp bir tam tur boyunca korursan kazanırsın. İlk kez mi? Menüden Kurallar'ı açıp Çırak kurallarını dene.",
     "introWaiting": "Oyunun başlaması için ev sahibi bekleniyor.",
     "start": "Başlat",
     "restart": "Yeniden başlat",
@@ -912,29 +912,29 @@
     "steps": {
       "shuffle": {
         "title": "İlk eller",
-        "body": "Desteyi karıştır. Sonra her oyuncu desteden 5 kart alıp gizli tutar. Kalanı ortada kapalı çekme destesi olarak bırak. Herkes kartını aldıktan sonra ev sahibi onay işaretine basar."
+        "body": "Deste karışık değilse karıştır. Her oyuncu desteden 5 kart çekip eline alır. Kalan kartlar ortada kapalı durur ve her turun Odaklanma'sında buradan çekilir. Herkes çekince ev sahibi onay işaretine basar."
       },
       "reveal": {
         "title": "Kim başlıyor",
-        "body": "Kimin başlayacağını belirlemek için her oyuncu desteden bir kart açar. En yüksek tür kazanır; sıra: Hizmetkâr, Büyü, Mühür, Müdahale. Eşit kalanlar yeniden açar. Bu kartları desteye geri karıştır, sonra ev sahibi onay işaretine basar."
+        "body": "Kimin başlayacağını bulmak için her oyuncu desteden bir kart çekip herkesin göreceği şekilde açar. En yüksek türü açan başlar; sonra bu kartlar desteye karıştırılıp geri konur. Tür sırası: Hizmetkâr, Büyü, Mühür, Müdahale. Bitince ev sahibi onay işaretine basar."
       },
       "chooseFirst": {
         "title": "İlk oyuncu",
-        "body": "En yüksek kartı açan oyuncuyu ev sahibi seçer. İlk turu o oynar, oyun saat yönünde devam eder."
+        "body": "En yüksek türü açan oyuncuyu ev sahibi seçer. Oyun ondan başlar ve saat yönünde ilerler."
       }
     },
     "phase": {
       "focus": {
         "title": "Odaklanma",
-        "body": "Desteden 2 kart çek (her Zaman Çatlağı bir kart daha ekler). Bitince onay işaretine bas."
+        "body": "Desteden 2 kart çek. Masanda Zaman Çatlağı mührü varsa bir kart daha çekersin. Çekince onay işaretine bas."
       },
       "action": {
         "title": "Aksiyon",
-        "body": "Bu tur 2 HP'n var (Kızıl Monolit ile 5'e kadar). Her HP'yi bir eyleme harca: Oluştur (bir Büyü oyna ya da bir Mühür/Hizmetkâr koy), Araştır (bir kart çek) ya da Arındır (1 kart at, sonra 1 çek). Müdahaleler bedava, her an. Bitince onay işaretine bas."
+        "body": "2 hamle puanın (HP) var; masandaki her Kızıl Monolit bir puan ekler, en fazla 5. Her puanla şunlardan birini yap: bir Büyü oyna, masaya bir Mühür ya da Hizmetkâr koy, fazladan bir kart çek ya da bir kartı değiştir (birini at, birini çek). Müdahaleler bedavadır ve her an oynanır. Bitince onay işaretine bas."
       },
       "closing": {
         "title": "Kapanış",
-        "body": "Aktif Mühürlerin şimdi tetiklenir (Ölüçağıranın Gözü kartını çeker). Sonra elini 7 karta indir. 3 ya da daha fazla Mührün varsa Yükseliş ilan edebilirsin. Sırayı geçirmek için onay işaretine bas."
+        "body": "Aktif Mühürlerin şimdi tetiklenir (örneğin Ölüçağıranın Gözü, Çöplüğün en üst kartını alır). Sonra elini 7 karta indir. 3 ya da daha fazla Mührün varsa Yükseliş ilan edebilirsin: bir sonraki turuna kadar korursan kazanırsın. Sırayı geçirmek için onay işaretine bas."
       }
     }
   }
