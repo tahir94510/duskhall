@@ -5,12 +5,21 @@
 An onboarding, content and balance pass. The card sync and canonical frame are unchanged;
 the spell copy counts move for the first time (rules V8.2). 273 tests green.
 
-- **Plainer first-run wording.** The Guide intro is split into two short paragraphs (what
-  it is, then the whole game in three lines) instead of one dense block (new
-  `guide.introTeach` key, rendered as a second `.guide__lead`), and the turn-phase, setup,
-  goal and the three longest glossary entries are rewritten in shorter, plainer sentences
-  in both languages. The goal and Apprentice sections are mirrored to docs/RULES.{en,tr}.md.
-  No rules or numbers changed, only the phrasing.
+- **Plainer wording across the rulebook.** The Guide intro is split into two short
+  paragraphs (what it is, then the whole game in three lines) via a guarded new
+  `guide.introTeach` key, and the turn-phase and setup-step text plus eight rulebook
+  sections (components, setup, zones, turn flow, card-type rules, chained reactions,
+  resonance, the digital table) and the three longest glossary entries are rewritten in
+  shorter, plainer sentences in both languages. Every rule and number is preserved (the
+  balance test still passes); only the phrasing and sentence length changed. All rewritten
+  sections, plus the goal and Apprentice sections, are mirrored verbatim to
+  docs/RULES.{en,tr}.md.
+- **Always the latest version, no hard refresh.** index.html is now served
+  `max-age=0, must-revalidate` and the locale JSON `no-cache` (vercel.json), and
+  `loadLocale` revalidates with `cache: "no-cache"`, so a new release's text and code load
+  on their own instead of a stale copy lingering for up to an hour. The Guide's teach line
+  is also guarded against a missing key, so a transitional stale locale can never paint a
+  raw `guide.introTeach` to a player. Hashed `/assets/*` stay immutably cached.
 - **First-visit welcome hint.** A small non-blocking card (new `src/ui/WelcomeHint.ts`,
   `welcome.*` locale group) shows once per device after the About panel: core gestures with
   separate desktop and touch copy, plus a pointer at the Guide and the invite link. Sequenced

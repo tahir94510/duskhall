@@ -26,7 +26,12 @@ export function detectLocale(): Locale {
 }
 
 export async function loadLocale(loc: Locale): Promise<void> {
-  const res = await fetch(`/locales/${loc}.json`, { cache: "default" });
+  // Always revalidate the locale against the server (a conditional request, cheap 304
+  // when unchanged). The translations ship WITH each release, so a stale cached copy
+  // meeting a newer bundle is what showed raw keys like "guide.introTeach"; this plus
+  // the no-cache response header (vercel.json) keeps the text in step with the code
+  // without the player ever needing a hard refresh.
+  const res = await fetch(`/locales/${loc}.json`, { cache: "no-cache" });
   if (!res.ok) throw new Error(`locale ${loc} failed`);
   data = await res.json();
   current = loc;

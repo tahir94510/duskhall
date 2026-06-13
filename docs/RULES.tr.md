@@ -42,84 +42,72 @@ Hizmetkâr (Yeşil) x16: 3 farklı kart, 4 ila 8 adet.
 
 Renk anahtarı:
 
-MÜHÜR pasif güç verir; zaferin yoludur.
+MÜHÜR: pasif güç ve zafere giden yol.
 
-BÜYÜ tek kullanımlık saldırıdır; çözülür, çöpe gider.
+BÜYÜ: tek kullanımlık saldırı; çözülür, çöpe gider.
 
-MÜDAHALE HP harcamaz; her an oynanabilir.
+MÜDAHALE: HP harcamaz; her an oynanır.
 
-HİZMETKÂR Mühürlerinizi korur, özel yetenekler taşır.
-
-
+HİZMETKÂR: Mühürlerini korur, özel yetenekler taşır.
 ## 2. Kurulum
 
-72 kartlık desteyi iyice karıştır.
+72 kartlık desteyi iyice karıştırın.
 
-Her oyuncuya 5 kart dağıt; kartlar gizli tutulur.
+Her oyuncuya 5 kart dağıtın; kartlar gizli tutulur.
 
-Kalanı kapalı deste olarak ortaya koy.
+Kalanı kapalı deste olarak ortaya koyun.
 
-Her oyuncu desteden 1 kart açar; en yüksek tür Hizmetkâr, Büyü, Mühür, Müdahale sırasına göre ilk oyuncuyu belirler. Eşitlikte tekrar çek. Oyun başlamadan önce açılan kartları desteye geri karıştır.
+Her oyuncu bir kart açar; en yüksek tür başlar (sıra: Hizmetkâr, Büyü, Mühür, Müdahale). Eşit kalanlar yeniden çeker. Açılan kartları oyun başlamadan desteye geri karıştırın.
 
 Oyun, seçilen ilk oyuncudan başlayarak saat yönünde ilerler.
 
 Oyuncu sayısı: 2 hızlı ve doğrudan; 3 dengeli ve taktiksel; 4 önerilen, kaotik ve diplomatik koltuk.
-
-
 ## 3. Alanlar
 
 Her oyuncunun 3 kişisel alanı vardır; 2 alan ortaktır.
 
-EL: gizli kartlar. Rakipler sayıyı görür, içeriği göremez. El limiti 7'dir; fazlası Kapanış'ta çöpe gider. Mühürler ve Hizmetkârlar elde hiçbir etki göstermez.
+EL: gizli kartların. Rakipler sayıyı görür, içeriği göremez. Limit 7'dir (fazlası Kapanış'ta atılır). Mühür ve Hizmetkârlar elde hiçbir işe yaramaz.
 
-MASA: Mühürlerinizi ve Hizmetkârlarınızı açık dizdiğiniz alan. En fazla 4 Mühür ve 3 Hizmetkâr. Masa doluysa, yeni kartı oynamadan önce mevcut kartlarınızdan birini seçip Çöplüğe atın; bu ekstra eylem maliyeti gerektirmez.
+MASA: Mühür ve Hizmetkârlarını açık dizdiğin alan; en fazla 4 Mühür ve 3 Hizmetkâr (sınırlar ayrı). Elinden bir kart Oluştururken o sıra doluysa, yer açmak için kendi kartlarından aynı türden birini atabilirsin; bu aynı Oluştur'un parçasıdır, ekstra HP istemez. Yerleştirdiğin kart bağlanır: yalnızca yok edilerek, feda edilerek (Eter Dalgalanması), yer açmak için atılarak ya da çalınarak ayrılır; asla eline dönmez.
 
 DESTE (ortak): ortadaki kapalı yığın. Bittiğinde Eter Dalgalanması tetiklenir (bkz. bölüm 9).
 
 ÇÖPLÜK (ortak): harcanmış Büyüler, iptal kartları, yok edilmiş Mühürler ve Hizmetkârlar; açık yığılır.
-
-
 ## 4. Tur akışı
 
 Sıra sizdeyken aşağıdaki 3 aşamayı bu sırayla, eksiksiz uygulayın. Aşamalar atlanamaz, sırası değişmez.
 
-AŞAMA 1, ODAKLANMA: Desteden 2 kart çekin. Çekim sırasında deste biterse önce Eter Dalgalanması çözülür ve kalan çekim yeni desteden tamamlanır. Zaman Çatlağı varsa 3 (ek kopyalarla 4, 5, 6) kart çekersiniz.
+AŞAMA 1, ODAKLANMA: Desteden 2 kart çekin. Çekim sırasında deste biterse önce Eter Dalgalanması çözülür, kalan çekim yeni desteden gelir. Zaman Çatlağı varsa 3 (ek kopyalarla 4, 5, 6) kart çekersiniz.
 
-AŞAMA 2, AKSİYON: Bu turda 2 HP'niz var (Kızıl Monolit ile 3 ila 5; en fazla 5). HP'leri aşağıdaki eylemler için, istediğiniz kombinasyonda harcayın. Kalan HP yanar; bir sonraki tura aktarılamaz.
+AŞAMA 2, AKSİYON: 2 HP'niz var (Kızıl Monolit ile 3 ila 5; en fazla 5). Her HP'yi aşağıdaki bir eyleme, istediğiniz kombinasyonda harcayın. Kalan HP yanar; sonraki tura aktarılamaz.
 
 OLUŞTUR (1 HP): elden 1 Büyü oynayın, ya da masanıza 1 Mühür veya 1 Hizmetkâr yerleştirin.
 
 ARAŞTIR (1 HP): desteden 1 ekstra kart çekin.
 
-ARINDIR (1 HP): elinizden 1 kart atın, ardından 1 kart çekin. Arındır ile çekilen kart aynı turda başka bir Arındır ile atılamaz. Arındır elinizin boyutunu değiştirmez (takas), Araştır ise eli bir kart büyütür; eliniz doluyken ya da kullanamayacağınız bir kartı döndürmek için Arındır'ı, yalnızca daha çok kart istediğinizde Araştır'ı seçin.
+ARINDIR (1 HP): elinizden 1 kart atın, sonra 1 kart çekin. (Bu yolla çekilen kart aynı turda yeniden Arındırılamaz.) Arındır el boyutunu değiştirmeden bir kartı takas eder; Araştır ise eli bir kart büyütür.
 
-AŞAMA 3, KAPANIŞ: Önce aktif tüm Mühür efektleri devreye girer (Ölüçağıranın Gözü kartını şimdi alır). Sonra el limiti kontrol edilir ve 7'ye iner. Ölüçağıranın Gözü'nün yeni aldığı kart da bu limite dahildir ve atılacak kart o olabilir. Kapanış tamamlandıktan sonra masanızda en az 3 Mühür varsa Yükseliş ilan edebilirsiniz (bkz. bölüm 10).
-
-
+AŞAMA 3, KAPANIŞ: önce aktif tüm Mühür tetikleri işler (Ölüçağıranın Gözü kartını şimdi alır), sonra elinizi 7'ye indirirsiniz. Az önce alınan kart da 7'ye dahildir ve atacağınız kart o olabilir. Kapanış'tan sonra 3 ya da daha fazla Mührünüz varsa Yükseliş ilan edebilirsiniz (bkz. bölüm 10).
 ## 5. Kart türü kuralları
 
-MÜHÜRLER kalıcıdır. Elde hiçbir etki göstermezler; yalnızca masada aktiftirler.
+MÜHÜRLER kalıcıdır. Elde hiçbir işe yaramaz; etkileri yalnızca masada çalışır.
 
 BÜYÜLER 1 HP harcar. Oynamadan önce geçerli bir hedef belirleyin. Tüm olası hedefler hedef alınamaz ise büyü oynanamaz; HP harcanmaz.
 
-MÜDAHALELER HP harcamaz. Sıra kimde olursa olsun, en son eyleme tepki olarak oynanabilir.
+MÜDAHALELER HP harcamaz. Sıra kimde olursa olsun, en son eyleme tepki olarak her an oynanır.
 
-Karmik Yansıma ve Kan Kefareti BENCİL: yalnızca KENDİ kartlarınızı veya kendinizi korumak için.
+Karmik Yansıma ve Kan Kefareti BENCİLdir: yalnızca KENDİNİZİ ya da kendi kartlarınızı korumak için.
 
-Sustur! EVRENSEL: taze atılmış herhangi bir Büyü veya Müdahaleyi iptal edebilir.
+Sustur! EVRENSELdir: taze oynanmış herhangi bir Büyü ya da Müdahaleyi iptal eder. Mühür ya da Hizmetkâr koymak (Oluştur) bunlardan biri değildir; Sustur! yerleştirmeyi durduramaz.
 
-HİZMETKÂR: HİZMETKÂR KALKANI mutlaktır. Bir oyuncunun masasında en az 1 Hizmetkâr varsa, hiçbir rakip o oyuncunun Mühürlerini doğrudan hedef alamaz. Rakip önce tüm Hizmetkârları yok etmek zorundadır.
-
-
+HİZMETKÂRLAR: Hizmetkâr Kalkanı mutlaktır. Bir oyuncunun masasında bir Hizmetkâr olduğu sürece hiçbir rakip onun Mühürlerini hedefleyemez; önce her Hizmetkâr yok edilmelidir (Rünik Bekçi gibi hedeflenebilir olsa bile).
 ## 6. Zincir tepkileri
 
-Bir eylem yapıldığında diğer oyuncular Müdahale kartıyla zincire dahil olabilir. Zincir herkes pas geçene kadar açık kalır; sonra tepeden tabana çözülür, en son oynanan ilk çözülür.
+Bir eylem yapıldığında her oyuncu bir Müdahale ile yanıt verebilir. Zincir herkes pas geçene dek açık kalır, sonra tepeden tabana çözülür: en son oynanan ilk çözülür.
 
 Örnek: A Eterik Çarpma oynar (altta). B Sustur! ile yanıtlar (ortada). A başka bir Sustur! oynar (üstte). Çözüm: A'nın Sustur!'u B'nin Sustur!'unu iptal eder; ikisi de Çöplüğe gider. Alttaki Eterik Çarpma normal çözülür.
 
-Sustur! etkileşimleri: iptal edilen kart ve onu iptal eden Sustur! Çöplüğe gider. İptal edilen büyünün HP'si geri ödenmez. Karmik Yansıma Sustur! ile iptal edilebilir; bu durumda yansıma gerçekleşmez ve orijinal saldırı hedefe ulaşır.
-
-
+Sustur! etkileşimleri: iptal edilen kart ve onu iptal eden Sustur! Çöplüğe gider; iptal edilen büyünün HP'si geri ödenmez. Bir Sustur!, Karmik Yansıma'yı iptal edebilir; o zaman yansıma olmaz ve asıl saldırı hedefe ulaşır.
 ## 7. Hedef alınamazlık
 
 Bazı efektler hedeflerini düşman eylemlerinden bağışık kılar. Hedef alınamazlık katmanlıdır: her bağımsız katman ayrı ayrı kaldırılmalıdır.
@@ -146,7 +134,7 @@ Hiçlik Örtüsü: İSTİFLENMEZ. Ek kopya avantaj sağlamaz.
 
 ## 9. Eter Dalgalanması
 
-Ortadaki deste tamamen tükendiğinde oyun durur. Çöplük alınır, karıştırılır ve yeni deste olur. Bu karışım o döngünün tek ve geri alınamaz Eter Dalgalanması olayıdır.
+Ortadaki deste bittiğinde oyun durur: Çöplük karıştırılıp yeni deste olur. Bu karıştırma, o döngünün tek ve geri alınamaz Eter Dalgalanması'dır.
 
 Kurban sırası: her oyuncu aşağıdaki öncelikle 1 kart kaybeder:
 
@@ -156,9 +144,7 @@ Sonra EL: YALNIZCA masanız tamamen boşsa dalgalanma elinize ulaşır. Elinizde
 
 Çekim efekti çözüm sırasında deste tükenirse dalgalanma tam olarak işlenir; kalan çekim yeni desteden tamamlanır.
 
-Hem deste hem Çöplük boşsa Dalgalanma tetiklenmez ve yeni deste oluşamaz. Çekim talep eden efektler bu denemede çekemez; oyun devam eder.
-
-
+Hem deste hem Çöplük boşsa Dalgalanma tetiklenmez ve yeni deste oluşmaz. Çekim isteyen efektler bu sefer çekemez; oyun devam eder.
 ## 10. Zafer, Yükseliş
 
 İLAN: kendi Kapanış aşamanız bittiğinde, masanızda en az 3 Mühür sağlamsa Yükseliş ilan EDEBİLİRSİNİZ. İlan geri alınamaz.
@@ -244,17 +230,11 @@ Kapanış sırası: önce Mühür tetikleri, sonra el limiti kontrolü.
 
 Vaerum web sürümü serbest bir masadır. Otomatik kural motoru yoktur; oyuncular kuralları bu kitaba göre kendileri uygular.
 
-İsteğe bağlı bir Rehber, bu kitabı adım adım anlatır. Host onu menüden açar ve tüm masada görünür. Hazırlığı, ilk oyuncu açılışını ve her turun Odak, Eylem ve Kapanış fazlarını kapsar. Hazırlıkta her adımı host onay işaretine basarak ilerletir ve ilk oyuncuyu seçer. Tur döngüsünde her fazı, sırası gelen oyuncu onay işaretine basarak tamamlar. Rehber yalnızca önerir. Oyunu asla kısıtlamaz. Panelin içinden host oyunu Başlat ya da Yeniden başlat ile başlatabilir; bu, deste toplanıp karıştırılarak temiz bir başlangıç sağlar. Menüdeki Desteyi sıfırla ise tüm kartları karışık tek desteye döndürür. Panelin üst barı kimin sırasında olduğunu ve mevcut fazı gösterir; her oyuncu paneli bu bara küçültüp tekrar büyütebilir. Açma, kapama, başlatma ve ilk oyuncu seçimi yalnızca host'a aittir. Her oyuncu onay işaretine yalnızca kendi sırasında basar.
+Kartı sürükleyerek taşı; sağ tık imlecin altındaki yığını çevirir. Ctrl tüm yığını taşır ya da çevirir; Shift + tekerlek yana döndürür. Yığını toplamak için G, karıştırmak için M, kendi alanını derlemek için D. Menüdeki Kısayollar bölümü tüm kontrolleri listeler.
 
-Fare ve klavye: imlecin altındaki kartı sol tıkla basılı tutup sürükleyerek taşırsın; sürüklerken Ctrl'ye basılı tutarsan yığının tamamını taşırsın. Sağ tık, imlecin altındaki yığını toplu çevirir (tek bir kart ise yalnızca o döner). Tekerleği kaydırmak imlecin altındaki tek kartı çevirir; Ctrl ile kaydırmak yığının tamamını çevirir. Shift ile kaydırmak doksan derece yana döndürür (yüzünü çevirmez); yığının üzerindeyken tüm desteyi döndürüp hizalar. Yığını derli toplu bir desteye toplamak için G'ye, karıştırmak için M'ye, kendi alanını düzgün, gruplu ve deste gibi bir düzene sokmak için D'ye bas (aynı kartlar üst üste, türüne göre sıralı ve ortalanmış, komşunun alanına hiç taşmadan). Bu düzenlemenin sesini yalnız sen duyarsın; kartlarının yerleşmesini herkes görür.
+Kendi alanın, ekranının altındaki bulanık şerittir. Oradaki kartlar sana özeldir; rakipler yalnızca arkalarını görür, sayısını tahmin edebilir. Rakibin alanına kart bırakamazsın; kenarda bırak, sahibi içeri kendisi çeker.
 
-Dokunmatik ekranlar: kartı tek parmakla sürükleyerek taşı. Bir karta basılı tutunca çevirme, döndürme, toplama, karıştırma ve kart bilgisi düğmelerini içeren etkileşim çubuğu açılır; yalnızca kendi kartlarında bir de alanını düzenleme düğmesi belirir. Çevir düğmesi parmağının altındaki yığının tamamını tek seferde çevirir (tek kart varsa yalnızca onu); toplama ve karıştırma tek kartta pasif kalır.
-
-Kendi alanın, ekranının altındaki bulanık şeritte yer alır. Oradaki kartlar sana özeldir; rakipler yalnızca kartların arkasını görür ve sayısını tahmin edebilir. Rakibin alanına kart bırakamazsın; kenarda bırak, sahibi içeri kendisi çeker.
-
-Herkes ayrıldığında oda kapanır. Odadan ayrılmak, seni ev sahibi yapan yeni bağlantılı taze bir oda açar.
-
-
+Herkes ayrıldığında oda kapanır. Çıkmak, seni ev sahibi yapan yeni bağlantılı taze bir oda açar.
 ---
 
 **Masada merhamet göstermeyin.**

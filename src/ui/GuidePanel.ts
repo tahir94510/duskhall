@@ -219,9 +219,14 @@ export class GuidePanel {
         ? `<button type="button" class="guide__primary" data-action="start">${esc(t("guide.start"))}</button>`
         : `<p class="guide__muted">${esc(t("guide.introWaiting"))}</p>`;
       // Two short paragraphs: what the guide is, then the whole game in a breath. Far
-      // friendlier to a newcomer than one dense block (introTeach is the second line).
-      return `<p class="guide__lead">${esc(t("guide.introBody"))}</p>`
-        + `<p class="guide__lead guide__lead--teach">${esc(t("guide.introTeach"))}</p>${action}`;
+      // friendlier to a newcomer than one dense block. The teach line is GUARDED: a new
+      // bundle can meet an older cached locale JSON that lacks the key, and t() returns
+      // the raw key on a miss, so we render the second paragraph only when it resolved
+      // (otherwise the lead alone still reads fine, never a stray "guide.introTeach").
+      const teach = t("guide.introTeach");
+      const teachHtml = teach && teach !== "guide.introTeach"
+        ? `<p class="guide__lead guide__lead--teach">${esc(teach)}</p>` : "";
+      return `<p class="guide__lead">${esc(t("guide.introBody"))}</p>${teachHtml}${action}`;
     }
 
     if (view.phase === "setup" && view.step) {
