@@ -3536,6 +3536,11 @@ export class Game {
         this.players.delete(target.id);
         this.applyLeft({ id: target.id, seat });
         toast(t("kick.done", { name: target.name }));
+        // Re-broadcast at once so a peer that missed the one-shot kick converges NOW, not up to
+        // 2s later on the next periodic pass: the reconcile carries the authoritative claims
+        // (which prune the kicked seat's stale away-claim on peers) and removed[] (which
+        // tombstones the kicked id), so no one is left showing the kicked player as "away".
+        this.sendReconcileNow();
       }
     );
   }

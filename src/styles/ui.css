@@ -139,6 +139,11 @@
   top: 46px;
   right: 0;
   min-width: 220px;
+  /* Never run past the viewport on a short screen (a landscape phone with the URL bar up):
+     cap the height and scroll, so the bottom rows (incl. Exit) are always reachable. */
+  max-height: calc(100dvh - 64px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: rgba(12, 12, 12, 0.94);
   border: 1px solid var(--line-2);
   border-radius: 12px;
@@ -185,7 +190,9 @@
 .header__menu-icon { display: grid; place-items: center; color: var(--ivory-dim); }
 .header__menu-icon svg { width: 16px; height: 16px; }
 
-.header__menu-label { color: inherit; }
+/* The label yields (ellipsises) before the row's trailing controls (copy/paste/badge) get
+   squeezed, so a long localized label can never distort the room-code row on a narrow phone. */
+.header__menu-label { color: inherit; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .header__menu-value {
   font-variant-numeric: tabular-nums;
@@ -229,6 +236,7 @@
    deliberately NOT selectable — the room is shared via the copy button. */
 .header__code {
   justify-self: end;
+  min-width: 0;
   font-family: var(--font-body);
   font-variant-numeric: tabular-nums;
   font-size: 12px;
@@ -325,7 +333,9 @@
   padding: 14px 16px 12px;
   font-size: 12.5px;
   line-height: 1.5;
-  z-index: var(--z-toast);
+  /* Below the header so the three-dot menu (which this hint points you to) opens on top of
+     it, not under it; still above the board and the guide bar. */
+  z-index: var(--z-hint);
   opacity: 0;
   pointer-events: none;
   box-shadow: var(--shadow-panel);

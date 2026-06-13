@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.9.24: A kick that sticks, a fitting menu, and plainer wording
+
+A multiplayer-correctness, layout and content pass. No rules or numbers changed.
+
+- **A kick heals instantly for everyone.** A peer that missed the one-shot kick broadcast
+  used to keep showing the removed player as "away" (and, before the claims-in-reconcile
+  fix, could keep it forever). confirmKick now fires sendReconcileNow() right after the
+  eviction, so the authoritative claims (which prune the kicked seat) and removed[] (which
+  tombstones the id) reach every peer at once; the periodic reconcile keeps re-asserting.
+- **The menu opens above the welcome card.** The first-run welcome hint sat at the toast
+  band (1100), above the header (800), so the three-dot menu opened under it. The hint moves
+  to a new --z-hint (750), below the header; modal/toast layering is unchanged.
+- **The header menu fits small screens.** It now caps its height and scrolls (so the bottom
+  rows, including Exit, are always reachable on a short/landscape phone), and the room-code
+  row's label ellipsises before the copy/paste controls instead of distorting.
+- **Clearer guide and card wording, both languages.** The Guide intro, teach line, setup
+  steps and the three phase texts are rewritten to walk a newcomer through a turn in plain,
+  natural prose; the three trickiest card texts (Runic Warden, Shadow Slayer, Glacial
+  Aberration) are clarified and mirrored to docs/CARDS. The About/Privacy/How-it-works
+  pages drop the last "deal to each player" phrasing and a few formal/uneven Turkish forms,
+  so both languages read natively. Rules and numbers are untouched.
+
 ## 0.9.23: First-run welcome, restructured rules, V8.2 counts
 
 An onboarding, content and balance pass. The card sync and canonical frame are unchanged;

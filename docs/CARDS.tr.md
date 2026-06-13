@@ -120,24 +120,24 @@ kumardır. Elinde 2'den az kart varsa oynanamaz. HP istemez.
 ## Hizmetkârlar (16)
 
 ### Rünik Bekçi (Hizmetkâr, 8 kopya)
-Masanda durduğu sürece TÜM Mühürlerin hedeflenemez olur. Bekçi'nin kendisi her zaman
-hedeflenebilir. Normal bir Hizmetkâr olarak Kalkan kuralına tabidir: rakip, Mühürlerine
-uzanmadan önce tüm Hizmetkârları yok etmek zorundadır.
+Masanda durduğu sürece tüm Mühürlerin hedeflenemez olur; rakip onlara uzanmadan önce
+Bekçi'nin kendisini, Kalkan kuralı gereği diğer tüm Hizmetkârlarını da yok etmek
+zorundadır.
 
 *Demire kazınmış sabır.*
 
 ### Buzul Ucube (Hizmetkâr, 4 kopya)
-Bunu yok eden, bir sonraki turunun tamamını atlar. Atlanan turda Odaklanma, Aksiyon ve
-Kapanış yoktur; Müdahaleler yine oynanabilir. Ceza, dolaylı yok etmelerde de işler
-(örneğin Gölge Katili'nin girişi ya da Karmik Yansıma dönüşü). Çalınması tetiklemez;
-yalnız yok edilmesi.
+Bunu yok eden, bir sonraki turunun tamamını atlar (Odaklanma, Aksiyon ve Kapanış);
+Müdahaleleri yine oynayabilir. Ceza dolaylı yok etmelerde de işler; örneğin bir Gölge
+Katili girişi ya da Karmik Yansıma dönüşü. Yalnızca yok edilmesi bunu tetikler; çalınması
+tetiklemez.
 
 *Kendi zamanını tutan bir kış.*
 
 ### Gölge Katili (Hizmetkâr, 4 kopya)
-Girişte bir rakip Hizmetkârını yok etmek ZORUNDASIN. Herhangi bir rakipte Hizmetkâr varsa
-birini seç ve hemen yok et; bu yolla bir Buzul Ucube ölürse tur atlama cezasını SEN
-ödersin. Hiçbir rakipte Hizmetkâr yoksa etki boşa düşer, Katil yine masaya yerleşir.
+Masaya koyduğunda, bir rakibin Hizmetkârı varsa birini seçip hemen yok etmek zorundasın.
+Bu yolla bir Buzul Ucube yok edersen tur-atlama cezasını SEN ödersin. Hiçbir rakipte
+Hizmetkâr yoksa etki boşa düşer ama Katil yine de masana gelir.
 
 *Gölgeler bile ona cevap verir.*
 
