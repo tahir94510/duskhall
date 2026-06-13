@@ -492,7 +492,7 @@
         "id": "howto",
         "title": "How this table works",
         "body": [
-          "Vaerum gives you and your friends a shared table. You deal, move, flip, gather, shuffle and rotate the cards together in real time. It never enforces the rules, so you play by the rulebook yourselves, just as you would in person.",
+          "Vaerum gives you and your friends a shared table. You move, flip, gather, shuffle and rotate the cards together in real time, each drawing your own from the shared deck. It never enforces the rules, so you play by the rulebook yourselves, just as you would in person.",
           "Each player has a private area along their own edge of the table. Any card you place in your area is hidden from the others, who see only a blurred card back. Drag a card out of your area to reveal it to everyone, and back in to hide it again. A card switches between hidden and visible as it crosses the edge of your area, and it looks the same to every player on any screen.",
           "The basics: drag a card to move it, or hold Ctrl while dragging to move a whole stack. Scroll over a card to flip it, or right-click (Ctrl-scroll) to flip a whole pile. Press G to gather a loose pile into a tidy stack, M to shuffle it, Shift-scroll to turn it sideways, and D to lay your whole area out in a neat, grouped deck. On a phone, press and hold a card to open its quick actions. You can find the full list under Shortcuts in the menu.",
           "The menu also has two host controls. Open guide shows the rulebook walkthrough to the whole table: it explains setup, who goes first, and each player's turn, and the player whose turn it is taps the check to move the step on. The host runs the setup steps and can Start or Restart the game from inside the panel, which gathers and shuffles the deck for a fresh start. Reset deck simply returns every card to one shuffled pile. The guide only suggests. It never restricts your play."
@@ -549,7 +549,7 @@
     "spell": {
       "name": "Spell",
       "namePlural": "Spells",
-      "description": "A one-shot attack played from the hand for 1 HP. Resolved, then discarded."
+      "description": "A single-use attack you play from your hand for 1 HP. It resolves, then goes to the Discard."
     },
     "intervention": {
       "name": "Intervention",
@@ -559,7 +559,7 @@
     "servant": {
       "name": "Servant",
       "namePlural": "Servants",
-      "description": "A living shield on your tableau. Opponents must clear your Servants before they can target your Seals."
+      "description": "A guardian on your tableau. Opponents must destroy all your Servants before they can target your Seals."
     }
   },
   "cards": {
@@ -703,7 +703,7 @@
         "title": "2. Setup",
         "body": [
           "Shuffle the 72-card deck thoroughly.",
-          "Deal 5 cards to each player; keep them hidden.",
+          "Each player takes 5 cards from the deck and keeps them hidden.",
           "Place the remaining deck face-down at the centre.",
           "Each player reveals one card; the highest category goes first (order: Servant, Spell, Seal, Intervention). Tied players draw again. Shuffle the revealed cards back before play.",
           "Play proceeds clockwise, starting with the chosen first player.",
@@ -911,8 +911,8 @@
     "firstChosen": "{name} goes first.",
     "steps": {
       "shuffle": {
-        "title": "Deal",
-        "body": "Shuffle the deck and deal each player a hidden hand of 5. Leave the rest face down in the centre as the draw pile. The host taps the check once everyone is dealt."
+        "title": "Opening hands",
+        "body": "Shuffle the deck. Each player then takes 5 cards from it and keeps them hidden. Leave the rest face down in the centre as the draw pile. The host taps the check once everyone has drawn."
       },
       "reveal": {
         "title": "Who goes first",

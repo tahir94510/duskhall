@@ -183,12 +183,14 @@
 }
 
 @media (pointer: coarse) {
-  /* Comfortable ≥44px touch targets for the long-press action bar, and cap its
-     width so the buttons wrap to a tidy second row near a screen edge instead of
-     overflowing off-screen. Sized to keep all seven (the extra Arrange button shows
-     only on your own cards) on one row on mid-size phones; narrower screens wrap. */
-  .context-bar { max-width: min(94vw, 348px); justify-content: center; }
-  .context-bar__btn { width: 44px; height: 44px; }
+  /* Touch action bar: sized so all SEVEN buttons (the extra Arrange shows only on your own
+     cards) fit on ONE clean row across the real phone range. 7×40 + 6×5 gaps + 12 padding
+     = 322px, under the min(96vw, 360px) cap on any phone ~355px+; the rare narrower screen
+     wraps to a tidy centred row. 40px stays a comfortable touch target for a transient menu;
+     the floating perspective button is hidden on touch, so this bar is the only path to the
+     V camera turn and must keep every button. */
+  .context-bar { max-width: min(96vw, 360px); justify-content: center; gap: 5px; }
+  .context-bar__btn { width: 40px; height: 40px; }
   .context-bar__btn svg { width: 18px; height: 18px; }
   /* Comfortable touch targets: header buttons AND the minimized Guide bar grow together via --ctrl. */
   :root { --ctrl: 40px; }
@@ -208,9 +210,9 @@
   .modal__body { padding: 14px 14px 16px; }
   .modal__foot { padding: 10px 14px; }
   .context-bar { gap: 4px; padding: 5px; max-width: 96vw; }
-  /* Keep buttons tappable (≥40px) even on the smallest phones; the bar wraps
-     rather than shrinking targets below a usable size. */
-  .context-bar__btn { width: 40px; height: 40px; }
+  /* Tightest phones: 38px buttons + 4px gaps keep all seven on one row down to ~315px wide
+     (7×38 + 6×4 + 10 = 300px), still a usable touch target, before any wrap kicks in. */
+  .context-bar__btn { width: 38px; height: 38px; }
   .settings__row { grid-template-columns: 56px 1fr 28px; gap: 10px; }
   /* Keep the dock slots from crowding on the tiniest phones — still field-tied
      and .table-scoped so it matches the larger-mobile rule (and --card-h follows). */
