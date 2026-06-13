@@ -79,11 +79,11 @@
   "glossary": {
     "etherResonance": {
       "term": "Eter Dalgalanması",
-      "def": "Çekme destesi tükendiğinde oyun durur ve Çöplük karıştırılarak yeni deste olur (döngü başına bir kez). Ardından her oyuncu bir kart feda eder: masasından seçtiği bir Mühür ya da Hizmetkâr; yalnızca masası tamamen boşsa elinden rastgele bir kart. Hem deste hem Çöplük boşsa hiçbir şey olmaz."
+      "def": "Çekme destesi bitince Çöplük karıştırılıp yeni deste olur (döngüde bir kez). Sonra her oyuncu bir kart feda eder: masasından seçtiği bir Mühür ya da Hizmetkâr; yalnızca masası boşsa elinden rastgele bir kart. Deste de Çöplük de boşsa hiçbir şey olmaz."
     },
     "ascension": {
       "term": "Yükseliş",
-      "def": "Kapanış aşamanızın sonunda masanızda en az 3 Mühür varsa Yükseliş ilan edebilirsiniz (geri alınamaz). Sonra her rakip bir tam tur (Sınav) boyunca Mühürlerinizi yok etmeye, çalmaya ya da etkisiz kılmaya çalışır. Sıra size döndüğünde, Odaklanma'dan önce hâlâ en az 3 Mührünüz duruyorsa oyunu kazanırsınız."
+      "def": "Kapanışının sonunda masanda 3 ya da daha fazla Mühür varsa Yükseliş ilan edebilirsin (geri alınamaz). Sonra her rakip onu bozmak için bir tam tur, yani Sınav kullanır. Sıra sana döndüğünde hâlâ 3 Mührün varsa kazanırsın."
     },
     "servantShield": {
       "term": "Hizmetkâr Kalkanı",
@@ -95,7 +95,7 @@
     },
     "tableau": {
       "term": "Masa",
-      "def": "Mühür ve Hizmetkârlarınızı açık dizdiğiniz alan; en fazla 4 Mühür ve 3 Hizmetkâr (ayrı sınırlar). Etkileri yalnızca burada işler, elde değil. Yerleştirdiğiniz bir kart bağlanmıştır: yok edilene, feda edilene, yer açmak için atılana ya da çalınana dek kalır ve asla elinize dönmez."
+      "def": "Mühür ve Hizmetkârlarını açık dizdiğin alan; en çok 4 Mühür ve 3 Hizmetkâr. Etkileri yalnız burada işler, elde değil. Bir kez koyduğun kart bağlanır: ancak yok edilerek, feda edilerek ya da çalınarak ayrılır, asla eline dönmez."
     },
     "deck": {
       "term": "Deste",
@@ -308,7 +308,8 @@
           "Denge, kurallar V8.2: Kaderin Cilvesi 2 kopyadan 4'e çıktı; karşılığında birer Eterik Çarpma ve Gölge Hırsızlığı azaldı (artık 7 ve 5). Deste 72'de kalıyor ve el takası kaosu artık neredeyse hiç değil, çoğu oyunda karşına çıkıyor. Bu güncellemeden önce dağıtılmış bir oda, sen Desteyi sıfırla diyene dek eski destesiyle oynamaya devam eder.",
           "His: karıştırılan ya da çevrilen bir deste yerleşir yerleşmez diğer oyunculara açılıyor, bir an sonra değil; iyi haber bildirimleri küçük yeşil bir nokta taşıyor (hatalar kırmızı) ve D ile alanını derlerken çevrilmekte olan bir kart artık yanlış yüzünü göstermiyor.",
           "Dört el alanı artık tek ve tutarlı bir cam tonu taşıyor; kimin nerede oturduğunu isim, durum ışığı ve imleç söylüyor. V ile bakışı çevirmek tepsileri artık karartmıyor: cam yerinde duruyor, yalnızca isimler ve alan ışıltıları yumuşakça el değiştiriyor. Uzaktaki oyuncunun alanı da tüm tepsiyi karartmak yerine sessizce sönükleşiyor.",
-          "Arkadaşları masaya getirmek artık daha kolay: her kart ne yaptığını ilk cümlesinde söylüyor ve bilgi paneli o cümleyi en üstte, ayrıntıları altında gösteriyor. Kural kitabına Çırak kuralları eklendi: ilk oyun için resmî, basitleştirilmiş kurulum (zincir yok, dalgalanma kurbanı yok, kenar durum yok). Rehberin girişi de ev sahibine üç cümlelik bir anlatım senaryosu veriyor."
+          "Arkadaşları masaya getirmek artık daha kolay: her kart ne yaptığını ilk cümlesinde söylüyor ve bilgi paneli o cümleyi en üstte, ayrıntıları altında gösteriyor. Kural kitabına Çırak kuralları eklendi: ilk oyun için resmî, basitleştirilmiş kurulum (zincir yok, dalgalanma kurbanı yok, kenar durum yok). Rehberin girişi de ev sahibine üç cümlelik bir anlatım senaryosu veriyor.",
+          "İlk oynayanlar için daha net: Rehber girişi artık iki kısa satır (ne olduğu, sonra oyunun özü bir çırpıda), tur fazları, kurulum, amaç ve sözlük metinleri daha sade ve kısa cümlelerle yeniden yazıldı. Kurallar değişmedi, yalnızca ifade."
         ]
       },
       {
@@ -662,17 +663,17 @@
         "id": "goal",
         "title": "Amaç",
         "body": [
-          "Güç topla, Yükseliş ilan et, bir tam tur hayatta kal. Oyunun özü bu.",
-          "Kazanmak için turunun sonunda masanda en az 3 Mühür tutar, Yükseliş ilan eder ve sıra sana geri geldiğinde hâlâ en az 3 Mühre sahip olursun. Masadaki her şey ya o âna ulaşmak ya da onu bir başkasına vermemek içindir.",
-          "Her tur sana harcayacak 2 HP verir: Mühür ve Hizmetkâr yerleştir, rakiplerine Büyü savur ya da kart ara. Müdahaleler bedavadır ve her an herkesi bölebilir; bu masada kimse yalnızca sıra beklemez.",
-          "İhanete hazır ol. Bir oyuncu Yükseliş ilan ettiği anda bütün masa bir tur boyunca ona döner; buna Sınav denir. Onu atlatırsan Eter senindir."
+          "Amaç: masanda 3 Mühür kur, Yükseliş ilan et ve bir tam tur boyunca koru. Bunu atlatırsan kazanırsın.",
+          "Her tur kart çeker, sonra 2 HP'ni Büyü oynamaya, Mühür ve Hizmetkâr koymaya ya da kart aramaya harcarsın. Güç böyle kurulur.",
+          "Müdahaleler bedavadır ve her an herkesi bölebilir; kimse yalnızca sırasını beklemez. Masa hep canlıdır.",
+          "İşin püf noktası: Yükseliş ilan ettiğin an her rakip Mühürlerini yıkmak için bir tur kazanır. O tura Sınav denir. Onu atlatırsan Eter senindir."
         ]
       },
       {
         "id": "apprentice",
         "title": "Çırak kuralları",
         "body": [
-          "Vaerum'u ilk kez oynayan bir masa için resmî, basitleştirilmiş başlangıç. İlk bir iki oyunu böyle oynayın; tadı damağınızda kalınca tam kurallara geçin.",
+          "Başlamanın en kolay yolu. İlk bir iki oyununu böyle oyna, tadını alınca tam kurallara geç.",
           "ZİNCİR YOK: bir hamleye en fazla BİR Müdahale ile karşılık verilir; Sustur!'a Sustur! oynanmaz.",
           "DALGALANMA KURBANSIZ: deste bitince Çöplük karıştırılıp yeni deste olur; kimse kart feda etmez.",
           "KENAR DURUM YOK: kart ne diyorsa o. Anlaşmazlıkta en basit okuma geçerlidir ve oyun durmaz.",
@@ -898,7 +899,8 @@
     "yourTurn": "Sıra sende. Bitirince onay işaretine bas.",
     "aPlayer": "bir oyuncu",
     "youTag": "(sen)",
-    "introBody": "Bu rehber, tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sırada ne yapılacağını önerir, kartlarına asla dokunmaz; böylece kartları dilediğin gibi taşıyabilir, çevirebilir, karıştırabilir ve derleyip toplayabilirsin. İpucu: yeni karıştırılmış bir desteyle başlamak istersen önce menüden Desteyi sıfırla'yı kullan, sonra Başlat'a bas. Masaya anlatırken üç cümle yeter: sıranda 2 kart çek, 2 puanını kart oynamaya ya da çekmeye harca, sonunda elini 7'ye indir. Masanda 3 Mühür biriktirip bir tam tur koruyabilirsen kazanırsın. Gerisini kartlar söyler; eline gelince oku. İlk oyun için kurallardaki Çırak kuralları bölümünü açın.",
+    "introBody": "Bu rehber tüm masayı bir oyun boyunca adım adım yönlendirir. Yalnızca sıradaki hamleyi önerir; kartların her zaman senin: taşı, çevir, karıştır.",
+    "introTeach": "Oyunun tamamı üç satırda: sıranda 2 kart çek, 2 HP'ni kart oynamaya ya da çekmeye harca, sonra elini 7 karta indir. 3 Mühür biriktirip bir tam tur boyunca korursan kazanırsın. İlk kez mi? İlk oyununu kural kitabındaki Çırak kurallarıyla oyna.",
     "introWaiting": "Oyunun başlaması için ev sahibi bekleniyor.",
     "start": "Başlat",
     "restart": "Yeniden başlat",
@@ -909,29 +911,29 @@
     "steps": {
       "shuffle": {
         "title": "Dağıtım",
-        "body": "Desteyi karıştır ve her oyuncuya gizli tutacağı 5 kart dağıt. Kalanı ortada kapalı şekilde çekme destesi olarak bırak. Herkese kartlar dağıtıldıktan sonra ev sahibi onay işaretine basar."
+        "body": "Desteyi karıştır ve her oyuncuya gizli tutacağı 5 kart dağıt. Kalanı ortada kapalı şekilde çekme destesi olarak bırak. Herkese dağıtılınca ev sahibi onay işaretine basar."
       },
       "reveal": {
         "title": "Kim başlıyor",
-        "body": "Kimin başlayacağını belirlemek için her oyuncu desteden bir kart çekip açar. En yüksek tür başlar; sıralama şöyle: önce Hizmetkâr, sonra Büyü, sonra Mühür, sonra Müdahale. İki oyuncu eşitse yalnızca onlar yeniden çeker. Sonra açılan bu kartları desteye geri karıştır. Bu bittiğinde ev sahibi onay işaretine basar."
+        "body": "Kimin başlayacağını belirlemek için her oyuncu desteden bir kart açar. En yüksek tür kazanır; sıra: Hizmetkâr, Büyü, Mühür, Müdahale. Eşit kalanlar yeniden açar. Bu kartları desteye geri karıştır, sonra ev sahibi onay işaretine basar."
       },
       "chooseFirst": {
         "title": "İlk oyuncu",
-        "body": "En yüksek kartı açan oyuncuyu ev sahibi seçer. İlk turu o oynar, oyun oradan saat yönünde devam eder."
+        "body": "En yüksek kartı açan oyuncuyu ev sahibi seçer. İlk turu o oynar, oyun saat yönünde devam eder."
       }
     },
     "phase": {
       "focus": {
         "title": "Odaklanma",
-        "body": "Desteden 2 kart çek; sahandaki her Zaman Çatlağı bir kart daha ekler. Çekince onay işaretine bas."
+        "body": "Desteden 2 kart çek (her Zaman Çatlağı bir kart daha ekler). Bitince onay işaretine bas."
       },
       "action": {
         "title": "Aksiyon",
-        "body": "Bu tur 2 HP'n var; sahandaki her Kızıl Monolit bir HP daha ekler, en fazla 5. Her HP bir eylem alır: Oluştur (elinden bir Büyü oyna ya da masana bir Mühür veya Hizmetkâr koy), Araştır (1 kart çek) ya da Arındır (1 kart at, sonra 1 kart çek). Müdahaleler her an bedavadır; kalan HP bir sonraki tura aktarılmaz. Bitince onay işaretine bas."
+        "body": "Bu tur 2 HP'n var (Kızıl Monolit ile 5'e kadar). Her HP'yi bir eyleme harca: Oluştur (bir Büyü oyna ya da bir Mühür/Hizmetkâr koy), Araştır (bir kart çek) ya da Arındır (1 kart at, sonra 1 çek). Müdahaleler bedava, her an. Bitince onay işaretine bas."
       },
       "closing": {
         "title": "Kapanış",
-        "body": "Aktif Mühür etkilerini tetikle (Ölüçağıranın Gözü kartını şimdi alır), sonra elini 7 karta indir. En az 3 Mührün varsa Yükseliş ilan edebilirsin. Sırayı sonraki oyuncuya geçirmek için onay işaretine bas."
+        "body": "Aktif Mühürlerin şimdi tetiklenir (Ölüçağıranın Gözü kartını çeker). Sonra elini 7 karta indir. 3 ya da daha fazla Mührün varsa Yükseliş ilan edebilirsin. Sırayı geçirmek için onay işaretine bas."
       }
     }
   }

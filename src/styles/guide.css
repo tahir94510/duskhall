@@ -144,6 +144,9 @@
 }
 .guide__body[hidden] { display: none; }
 .guide__lead { margin: 0; }
+/* The teach paragraph under the intro lead: a small gap and a quieter tone so the two
+   read as "what this is" then "the game in a breath", not one wall of text. */
+.guide__lead--teach { margin: 9px 0 0; color: var(--ivory-dim); }
 .guide__step-body { margin: 0; }
 .guide__hint { margin: 8px 0 0; color: var(--ivory); font-size: 12px; }
 .guide__muted { margin: 8px 0 0; color: var(--ivory-mute); font-size: 12px; }
