@@ -869,7 +869,11 @@ export class RealtimeBus {
       // v is a monotonic patch-version counter (grows without bound), not a
       // coordinate — validate as a wide int so it is never clamped to the board range.
       const sanitized: CardPatch = { v: safeInt(p.v, 0), by, cards: this.sanitizeCards(p.cards) };
-      if (msg.type === "snapshot" && p.claims) sanitized.claims = this.sanitizeClaims(p.claims);
+      // Claims ride on snapshots AND on the host's periodic reconcile (a patch), so a peer's
+      // seat -> {id, name} binding converges every cadence, not only on a fresh snapshot. The
+      // receiver (Game.applyPatch) only adopts reconcile claims from the host, so passing them
+      // through here for any patch is safe.
+      if (p.claims) sanitized.claims = this.sanitizeClaims(p.claims);
       // The cosmetic anim hint rides on patches (a flip/shuffle flourish) AND on the
       // reset-deck snapshot (so peers riffle the gathered pile instead of snapping).
       // Sanitised so a malformed/oversize hint can never reach Game.

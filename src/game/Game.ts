@@ -3731,6 +3731,12 @@ export class Game {
       window.clearTimeout(this.syncNudgeTimer);
       if (p.claims && p.claims.length) this.mergeClaims(p.claims);
       this.resolveFirstSync();
+    } else if (p.claims && p.claims.length && this.hostOrRecent(p.by)) {
+      // The host's periodic reconcile carries the authoritative seat claims too, so a peer's
+      // seat -> {id, name} binding converges every cadence (not only on a fresh snapshot).
+      // Gated on the host (or a just-stepped-down host) so an ordinary card patch (which never
+      // carries claims) and any non-host packet can never rewrite our claims.
+      this.mergeClaims(p.claims);
     }
     // Converge on the sender's authoritative removals (reconcile + snapshot): a client
     // that missed a one-shot left/kick frees the seat and tombstones the player here,
@@ -3890,11 +3896,17 @@ export class Game {
     if (this.players.size <= 1 || !this.isHost()) return;
     this.patchVersion++;
     const cards = Array.from(this.state.cards.values()).slice(0, 200).map((c) => this.wireCard(c));
+    // The authoritative seat claims (id + NAME + seniority per seat) ride on the reconcile too,
+    // not just on a one-shot snapshot. Without this, a peer's seat -> {id, name} binding could
+    // drift (e.g. after a drop/return/kick churn) and never reconverge until a reconnect forced
+    // a fresh snapshot — the "host shows one name, the player sees another" desync. mergeClaims
+    // on the receiver is idempotent and preserves live-active seats, tombstones and host seniority.
+    const claims: SeatClaim[] = Array.from(this.seatClaims.entries()).map(([seat, c]) => ({ seat, id: c.id, name: c.name, joinedAt: c.joinedAt, connAt: c.connAt }));
     // Reconcile is a LWW patch (each card keeps its stored ts), sent on a path
     // exempt from the send-rate cap so a busy table never drops the self-heal. It
     // also carries the authoritative removed[] list so a peer that missed a
     // left/kick converges within the 2s cadence instead of after the away grace.
-    this.bus.sendReconcile({ v: this.patchVersion, by: this.self.id, cards, removed: this.buildRemovedList() });
+    this.bus.sendReconcile({ v: this.patchVersion, by: this.self.id, cards, claims, removed: this.buildRemovedList() });
     // Re-broadcast the authoritative guide state so a peer that missed a guide
     // packet (or joined mid-walkthrough) converges within the reconcile cadence.
     if (this.guide.open || this.guide.started) this.broadcastGuideState();
