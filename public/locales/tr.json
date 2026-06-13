@@ -297,6 +297,17 @@
     "empty": "Henüz güncelleme yok.",
     "entries": [
       {
+        "v": "2026-06-13",
+        "date": "13 Haziran 2026",
+        "title": "Kalıcı bir çıkarma, sığan bir menü ve daha sade dil",
+        "items": [
+          "Ev sahibi bir oyuncuyu çıkardığında, o oyuncu artık kimsenin masasında 'uzakta' takılı kalmıyor; koltuğun boşaldığını herkes anında görüyor.",
+          "Menü artık ilk-giriş karşılama kutusunun altında değil üstünde açılıyor; küçük ekranlarda da ekrana sığıp kayıyor, böylece her satıra (Çık dahil) ulaşılıyor.",
+          "Rehber ve en çetrefilli kart metinleri iki dilde de daha net ve doğal olacak şekilde yeniden yazıldı; hiçbir kural değişmedi.",
+          "Hakkında ve Gizlilik sayfaları da daha doğal okunuyor."
+        ]
+      },
+      {
         "v": "2026-06-12",
         "date": "12 Haziran 2026",
         "title": "Daha sıcak bir karşılama, korkulası bir kader",
@@ -492,7 +503,7 @@
         "id": "howto",
         "title": "Bu masa nasıl çalışır",
         "body": [
-          "Vaerum sana ve arkadaşlarına ortak bir masa sunar. Kartları gerçek zamanlı olarak birlikte taşır, çevirir, toplar, karıştırır ve döndürürsünüz; her oyuncu ortak desteden kendi kartlarını çeker. Kuralları kendiliğinden uygulamaz; tıpkı yüz yüze oynar gibi kuralları kendiniz işletirsiniz.",
+          "Vaerum sana ve arkadaşlarına ortak bir masa sunar. Kartları gerçek zamanlı olarak birlikte taşır, çevirir, toplar, karıştırır ve döndürürsün; her oyuncu ortak desteden kendi kartlarını çeker. Kuralları kendiliğinden uygulamaz; tıpkı yüz yüze oynar gibi kuralları kendin işletirsin.",
           "Her oyuncunun, masanın kendi kenarında özel bir alanı vardır. Bu alana koyduğun kartlar diğerlerinden gizlenir; onlar kartın yüzünü değil, yalnızca bulanık bir arkasını görür. Bir kartı alanından dışarı sürükleyince herkese görünür olur, geri sürükleyince yeniden gizlenir. Kart, alanının kenarını geçtiği anda gizliyle görünür arasında geçiş yapar ve bu, her oyuncuda ve her ekranda aynı görünür.",
           "Temel hareketler: kartı sürükleyerek taşı, tüm yığını taşımak için Ctrl'ye basılı tutarak sürükle. Bir kartı çevirmek için üzerinde tekerleği kaydır, tüm desteyi çevirmek için sağ tıkla (ya da Ctrl+tekerlek). Dağınık bir desteyi derli toplu yapmak için G, karıştırmak için M, yana döndürmek için Shift+tekerlek, tüm alanını düzgün ve gruplu bir deste hâline getirmek için D. Telefonda kartı basılı tutarak hızlı eylemleri aç. Tüm listeyi menüdeki Kısayollar bölümünde bulabilirsin.",
           "Menüde ev sahibine özel iki kontrol daha var. Rehberi aç, kural rehberini tüm masaya gösterir: hazırlığı, kimin başlayacağını ve her oyuncunun sırasını anlatır; adımı, sırası gelen oyuncu onay işaretine basarak ilerletir. Hazırlık adımlarını ev sahibi yürütür ve panelin içinden oyunu Başlat ya da Yeniden başlat ile başlatabilir; bu, deste toplanıp karıştırılarak temiz bir başlangıç sağlar. Desteyi sıfırla ise tüm kartları karışık tek desteye döndürür. Rehber yalnızca önerir. Oyununu asla kısıtlamaz."
@@ -502,7 +513,7 @@
         "id": "about",
         "title": "Hakkında",
         "body": [
-          "Vaerum: Eterin Vârisleri, 2 ila 4 oyunculu bir strateji kart oyunu için dijital bir masadır. Sana ve arkadaşlarına ortak bir masa sunar: kartları gerçek zamanlı olarak dağıt, taşı, çevir, grupla ve karıştır. Kuralları senin yerine uygulamaz; tıpkı gerçek bir masada olduğu gibi kuralları kural kitabına bakarak kendiniz uygularsınız.",
+          "Vaerum: Eterin Vârisleri, 2 ila 4 oyunculu bir strateji kart oyunu için dijital bir masadır. Sana ve arkadaşlarına ortak bir masa sunar: kartları gerçek zamanlı olarak taşı, çevir, grupla ve karıştır; kendi kartlarını ortak desteden çek. Kuralları senin yerine uygulamaz; tıpkı gerçek bir masada olduğu gibi kuralları kural kitabına bakarak kendin uygularsın.",
           "Küçük ve hızlı bir web uygulaması olarak geliştirildi ve tamamen tarayıcında çalışır. Cihazlar arası canlı oyun, her masanın hamlelerini iletmek için gerçek zamanlı bir mesajlaşma hizmeti kullanır; oyununu saklayan bir oyun sunucusu yoktur.",
           "Vaerum bağımsız bir tasarımcı tarafından yapılıyor ve oynaması ücretsizdir."
         ]

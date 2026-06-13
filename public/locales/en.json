@@ -297,6 +297,17 @@
     "empty": "No updates yet.",
     "entries": [
       {
+        "v": "2026-06-13",
+        "date": "June 13, 2026",
+        "title": "A kick that sticks, a menu that fits, and plainer wording",
+        "items": [
+          "When the host removes a player, that player no longer lingers as away on anyone's table; everyone sees the seat free up right away.",
+          "The menu now opens above the first-run welcome card instead of under it, and on small screens it fits the screen and scrolls so every row (including Exit) is reachable.",
+          "The Guide and the trickiest card texts are rewritten to be clearer and more natural, in both languages, with no rules changed.",
+          "The About and Privacy pages read more naturally too."
+        ]
+      },
+      {
         "v": "2026-06-12",
         "date": "June 12, 2026",
         "title": "A warmer welcome, and fate worth fearing",
@@ -502,7 +513,7 @@
         "id": "about",
         "title": "About",
         "body": [
-          "Vaerum: Heirs of the Ether is a digital tabletop for a 2 to 4 player strategy card game. It gives you and your friends a shared table: deal, move, flip, group and shuffle cards in real time. It does not enforce the rules for you, you follow the rulebook yourselves, exactly as you would around a physical table.",
+          "Vaerum: Heirs of the Ether is a digital tabletop for a 2 to 4 player strategy card game. It gives you and your friends a shared table: move, flip, group and shuffle cards in real time, each drawing your own from the shared deck. It does not enforce the rules; you follow the rulebook yourselves, exactly as you would around a physical table.",
           "It is built as a small, fast web app and runs entirely in your browser. Live play between devices uses a real-time messaging service to relay each table's moves; there is no game server storing your play.",
           "Vaerum is made by an independent designer. It is offered free to play."
         ]
