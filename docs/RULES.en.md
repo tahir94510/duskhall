@@ -42,15 +42,13 @@ Servant (Verdant) x16: 3 unique cards in counts of 4 to 8.
 
 Colour key:
 
-SEAL grants passive power and forms the path to victory.
+SEAL: passive power, and your path to victory.
 
-SPELL is a single-use attack; resolved, then discarded.
+SPELL: a one-shot attack; it resolves, then is discarded.
 
-INTERVENTION costs no HP and may be played at any time.
+INTERVENTION: costs no HP; play it any time.
 
-SERVANT shields your Seals and offers unique abilities.
-
-
+SERVANT: shields your Seals and carries special abilities.
 ## 2. Setup
 
 Shuffle the 72-card deck thoroughly.
@@ -59,67 +57,57 @@ Deal 5 cards to each player; keep them hidden.
 
 Place the remaining deck face-down at the centre.
 
-Each player reveals one card from the deck; the highest category in the order Servant, Spell, Seal, Intervention chooses the first player. Re-draw on ties. Shuffle the revealed cards back into the deck before play begins.
+Each player reveals one card; the highest category goes first (order: Servant, Spell, Seal, Intervention). Tied players draw again. Shuffle the revealed cards back before play.
 
 Play proceeds clockwise, starting with the chosen first player.
 
-Player counts: 2 means fast and direct; 3 means balanced and tactical; 4 means the recommended chaotic, diplomatic seat.
-
-
+Player counts: 2 is fast and direct; 3 is balanced and tactical; 4 is the recommended chaotic, diplomatic seat.
 ## 3. Zones
 
 Each player owns three personal zones; two are shared.
 
-HAND: hidden cards. Rivals see the count, not the contents. Hand limit is 7; excess is discarded at Closing. Seals and Servants do nothing while in the hand.
+HAND: your hidden cards. Rivals see the count, not the contents. The limit is 7 (excess is discarded at Closing). Seals and Servants do nothing in your hand.
 
-TABLEAU: face-up zone holding your Seals and Servants. Maximum 4 Seals and 3 Servants. If your tableau is full and you wish to play another, choose one of your existing cards and Discard it first; this does not cost an extra action.
+TABLEAU: your face-up area for Seals and Servants, up to 4 Seals and 3 Servants (separate limits). If a row is full when you Create one from your hand, you may first discard one of your own of the same type to make room; that is part of the same Create, at no extra HP. A placed card is committed: it leaves only by being destroyed, sacrificed (Ether Resonance), discarded for room, or stolen, and never returns to your hand.
 
 DECK (shared): face-down central pile. When it empties, Ether Resonance is triggered (see section 9).
 
-DISCARD (shared): face-up pile of spent Spells, cancelled cards, destroyed Seals and Servants.
-
-
+DISCARD (shared): face-up pile of spent Spells, cancelled cards, and destroyed Seals and Servants.
 ## 4. Turn flow
 
 On your turn, perform the three phases below in this exact order. Phases cannot be skipped or reordered.
 
-PHASE 1, FOCUS: Draw 2 cards from the deck. If it empties mid-draw, Ether Resonance resolves first and the remaining draws come from the new deck. With Time Rift in play, draw 3 (4, 5, 6 with additional copies).
+PHASE 1, FOCUS: Draw 2 cards from the deck. If it empties mid-draw, Ether Resonance resolves first and the rest come from the new deck. With Time Rift in play, draw 3 (4, 5, 6 with more copies).
 
-PHASE 2, ACTION: You have 2 HP this turn (3 to 5 if Crimson Monolith is in play, capped at 5). Spend each HP on any single action below, in any combination. Unspent HP is lost; it does not roll over.
+PHASE 2, ACTION: you have 2 HP (3 to 5 with Crimson Monolith, capped at 5). Spend each HP on one action below, in any mix. Unspent HP is lost; it does not roll over.
 
 CREATE (1 HP): cast 1 Spell from hand, or place 1 Seal or 1 Servant onto your tableau.
 
 STUDY (1 HP): draw 1 extra card from the deck.
 
-CLEANSE (1 HP): discard 1 card from your hand, then draw 1 card. The card drawn by Cleanse cannot be discarded by another Cleanse in the same turn. Cleanse keeps your hand the same size (a swap), while Study grows it by one; reach for Cleanse when your hand is full or to cycle out a card you cannot use, and for Study when you simply want more cards.
+CLEANSE (1 HP): discard 1 card, then draw 1. (A card drawn this way cannot be Cleansed again the same turn.) Cleanse swaps a card without changing your hand size; Study instead adds one.
 
-PHASE 3, CLOSING: First, every active Seal trigger fires (Necromancer's Eye takes its card from the Discard now). Then check the hand limit and discard down to 7 if needed. A card just taken by Necromancer's Eye counts toward the limit, and it can be the one you discard. After Closing is complete, if you have at least 3 Seals on your tableau you MAY declare Ascension (see section 10).
-
-
+PHASE 3, CLOSING: every active Seal trigger fires first (Necromancer's Eye takes its card now), then you discard down to 7. The card it just took counts toward the 7 and may be the one you discard. After Closing, with 3 or more Seals you may declare Ascension (see section 10).
 ## 5. Card-type rules
 
-SEALS are permanent. They do nothing while in your hand. Their effects activate only on your tableau.
+SEALS are permanent. They do nothing in your hand; their effects work only on your tableau.
 
-SPELLS cost 1 HP. You must declare a legal target before casting. If every potential target is untargetable, the spell cannot be cast and HP is not spent.
+SPELLS cost 1 HP. Declare a legal target before casting. If every possible target is untargetable, the spell cannot be cast and no HP is spent.
 
-INTERVENTIONS cost no HP. They may be played at any moment, on anyone's turn, as a reaction to the most recent action.
+INTERVENTIONS cost no HP. Play them at any moment, on anyone's turn, as a reaction to the most recent action.
 
 Karmic Reflection and Blood Atonement are SELFISH: usable only to protect YOURSELF or your own cards.
 
-Silence! is UNIVERSAL: usable to cancel any newly cast Spell or Intervention, regardless of target.
+Silence! is UNIVERSAL: it cancels any freshly cast Spell or Intervention. Placing a Seal or Servant (a Create) is neither, so Silence! cannot stop a placement.
 
-SERVANTS: the SERVANT SHIELD is absolute. While a player has at least one Servant on their tableau, no rival may target any of that player's Seals directly. Even targetable cards like Runic Warden cannot be skipped; the rival must clear every Servant first.
-
-
+SERVANTS: the Servant Shield is absolute. While a player has any Servant on their tableau, no rival can target that player's Seals; every Servant must be destroyed first (even a targetable one like Runic Warden).
 ## 6. Chained reactions
 
-When an action is taken, any player may add an Intervention to the chain in response. The chain stays open until everyone passes; it then resolves from top to bottom, the most recent card resolves first.
+When an action is taken, any player may answer with an Intervention. The chain stays open until everyone passes, then resolves top to bottom: the most recent card resolves first.
 
 Example: A casts Ether Strike (bottom). B answers with Silence! (middle). A answers with another Silence! (top). Resolution: A's Silence! cancels B's Silence!; both go to Discard. The bottom Ether Strike resolves normally.
 
-Silence! interactions: a cancelled card and the Silence! that cancelled it both go to the Discard. The HP of a cancelled spell is NOT refunded. Karmic Reflection can be cancelled by Silence!; in that case the reflection never happens and the original attack hits its target.
-
-
+Silence! interactions: a cancelled card and the Silence! that cancelled it both go to the Discard, and the cancelled spell's HP is not refunded. A Silence! can cancel a Karmic Reflection; then the reflection never happens and the original attack hits.
 ## 7. Untargetable status
 
 Some effects make their subject immune to enemy actions. Untargetability is layered: each independent layer must be removed individually.
@@ -146,7 +134,7 @@ Veil of Void: does NOT stack. Extra copies provide no extra benefit.
 
 ## 9. Ether Resonance
 
-When the central deck is fully exhausted, play freezes. The Discard is taken, shuffled, and becomes the new deck. This shuffle is the one and only Ether Resonance event of that cycle.
+When the central deck runs out, play freezes: the Discard is shuffled into a new deck. That shuffle is the cycle's one and only Ether Resonance.
 
 Sacrifice order: every player loses one card in the following priority:
 
@@ -156,9 +144,7 @@ Then, the hand: ONLY if your tableau is completely empty does the resonance reac
 
 If a draw effect was mid-resolution when the deck emptied, resonance resolves fully first; remaining draws come from the new deck.
 
-If both the deck and the Discard are empty, Resonance does not trigger and no new deck is formed. Effects that require a draw simply fail to draw for this attempt; play continues.
-
-
+If both the deck and the Discard are empty, Resonance does not trigger and no new deck forms. Effects that need a draw simply fail to draw this time; play continues.
 ## 10. Victory, Ascension
 
 DECLARATION: at the end of your Closing phase, if you have at least 3 Seals on your tableau, you MAY declare Ascension. Declaration is irrevocable.
@@ -244,17 +230,11 @@ Closing order: Seal triggers first, then hand-limit check.
 
 Vaerum on the web is a sandbox. There is no automated rules engine; players follow this rulebook themselves.
 
-An optional Guide narrates this rulebook step by step. The host opens it from the menu and it appears for the whole table. It covers setup, the first-player reveal, and each turn's Focus, Action and Closing phases. During setup the host taps the check to move each step on, and picks the first player. During the turn loop the player whose turn it is taps the check to finish each phase. The Guide only suggests. It never restricts play. From inside the panel the host can Start or Restart the game, which gathers and shuffles the deck for a fresh start; Reset deck, in the menu, returns every card to one shuffled pile. The panel's top bar shows whose turn it is and the current phase, and any player can collapse the panel to that bar or expand it again. Opening, closing, starting, and the first-player pick are host only. Each player taps the check only on their own turn.
+Drag a card to move it; right-click flips the pile under the cursor. Ctrl moves or flips the whole stack; Shift plus scroll turns it sideways. Press G to gather a pile, M to shuffle, D to tidy your own area. The Shortcuts panel in the menu lists every control.
 
-Mouse and keyboard: left-press and drag moves the card under the cursor; hold Ctrl while you drag to move the whole stack. Right-click flips the stack under the cursor (a lone card flips by itself). Scroll flips the single card under the cursor; Ctrl plus scroll flips the whole stack. Shift plus scroll rotates ninety degrees sideways (it does not flip the face); over a pile it turns and squares up the whole stack. Press G to gather the stack under the cursor into a tidy pile, M to shuffle it, and D to lay your own hand area out in a neat, grouped, deck-like layout (matching cards stacked, sorted by type and centred, never crossing into a neighbour's space). Only you hear the tidy; everyone sees your cards settle.
+Your zone is the blurred strip along the bottom of your screen. Cards there are private; rivals see only their backs and can infer the count. You cannot drop a card inside a rival's zone; leave it on the rim and the owner draws it in.
 
-Touch screens: drag with one finger to move a card. Press and hold a card to open its action bar, with buttons for flip, rotate, gather, shuffle, card info, and (on your own cards only) tidy your area. Flip turns the whole pile under your finger at once, or a lone card if that is all there is; gather and shuffle are greyed out for a single card.
-
-Your zone is the blurred strip along the bottom of your screen. Cards there are private to you; rivals see only their backs and can infer the count. You cannot drop a card inside an opponent's zone; leave it on the rim and the owner draws it in.
-
-When everyone leaves, the room closes. Leaving the room opens a fresh one with a new link, with you as its host.
-
-
+When everyone leaves, the room closes. Leaving opens a fresh room with a new link, with you as its host.
 ---
 
 **Show no mercy at the table.**
