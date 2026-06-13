@@ -135,10 +135,14 @@ layer. With no image, an elegant built-in gradient shows and nothing is fetched.
 
 **SFX**: `public/audio/sfx/`. File names must match these ids:
 `flip`, `pickup`, `place`, `shuffle`, `gather`, `snap`, `ui-open`, `ui-close`,
-`ui-click`, `your-turn`. Keep each under ~250 ms for a snappy feel, except
-`your-turn`: the quiet local chime when the Guide hands the turn to the player,
-which may breathe a little longer (up to ~600 ms), warm and inviting, never an
-alarm. Any id you omit falls back to its procedural tone.
+`ui-click`. Keep each under ~250 ms for a snappy feel. Any of these you omit falls
+back to a built-in procedural tone, so the table is never silent.
+
+`your-turn` is an OPTIONAL extra: a quiet local cue when the Guide hands the turn to
+the player (it may breathe a little longer, up to ~600 ms, warm and inviting, never an
+alarm). Unlike the others it has NO procedural fallback, so with no file it simply
+stays silent and only the gentle guide-bar pulse signals your turn. Add
+`public/audio/sfx/your-turn.<ext>` if you want a sound there.
 
 **Music**: `public/audio/music/`. Any file names; played in natural-sort order
 (`music2` before `music10`), then looped.

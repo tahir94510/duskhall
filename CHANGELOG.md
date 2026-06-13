@@ -26,9 +26,12 @@ the spell copy counts move for the first time (rules V8.2). 273 tests green.
   via a new onClose hook on openLegalModal; one-shot flags `vaerum:seen-welcome` and
   `vaerum:hint:longpress` (the latter also set by a new first-table-touch long-press toast).
 - **Your-turn cue.** Game.refreshGuide tracks the walkthrough's turn seat and, when it
-  becomes the local player's, plays a new local-only "your-turn" chime (Audio.ts) and pulses
-  the guide bar (GuidePanel.pulseTurn, reduced-motion aware). The host's 2s re-broadcast echo
-  cannot retrigger it, and a reload straight into your own turn stays silent.
+  becomes the local player's, pulses the guide bar (GuidePanel.pulseTurn, reduced-motion
+  aware). The host's 2s re-broadcast echo cannot retrigger it, and a reload straight into
+  your own turn stays silent. The cue's sound is now file-only (a new `fileOnly` option on
+  AudioEngine.play): it plays an optional `your-turn` asset if present but never the
+  procedural fallback, which had read as a cheap beep against the curated sfx set. With no
+  asset the cue is the gentle pulse alone.
 - **Rulebook restructure.** A new unnumbered "The goal" section opens rulesDoc in both
   locales (and both RULES.md mirrors): the win condition, the turn economy and the Trial in
   four short paragraphs. The 18 edge-case Q&As are clustered under four "###" subheadings
