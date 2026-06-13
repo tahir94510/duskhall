@@ -207,9 +207,9 @@ export function openRulesModal(modal: Modal, tooltip?: Tooltip): void {
   // Closing the rulebook must also dismiss any term/card info panel opened from inside it —
   // otherwise a sticky tooltip whose anchor (a term button) was just removed with the modal
   // lingers, stranded at a stale position (the top-left "ghost bubble"). hide() clears it.
-  // The section observer below is disconnected on the same path.
-  let sectionObserver: IntersectionObserver | null = null;
-  modal.open({ title, subtitle, bodyHtml, onClose: () => { tooltip?.hide(); sectionObserver?.disconnect(); } });
+  // The scroll-spy below is torn down on the same path.
+  let scrollSpyCleanup: (() => void) | null = null;
+  modal.open({ title, subtitle, bodyHtml, onClose: () => { tooltip?.hide(); scrollSpyCleanup?.(); } });
 
   const body = modal.bodyEl();
   const setActiveToc = (id: string): void => {
@@ -217,40 +217,52 @@ export function openRulesModal(modal: Modal, tooltip?: Tooltip): void {
       a.classList.toggle("is-active", a.getAttribute("href") === `#${id}`);
     });
   };
-  body?.querySelectorAll<HTMLAnchorElement>('.rules__toc a').forEach((a) => {
-    a.addEventListener("click", (e) => {
-      e.preventDefault();
-      const id = a.getAttribute("href");
-      if (!id) return;
-      const target = body.querySelector(id);
-      target?.scrollIntoView({ behavior: "smooth", block: "start" });
-      // Mark the clicked entry at once; the observer settles on the same section
-      // when the smooth scroll lands, so there is no flicker in between.
-      setActiveToc(id.slice(1));
-    });
-  });
 
-  // Reading-position indicator: while the content scrolls, the TOC entry of the
-  // section currently occupying the top quarter of the view is highlighted, so a
-  // reader deep in a long rulebook always knows where they are. The modal body is
-  // the scroll container, hence the explicit root; the bottom margin shrinks the
-  // observed band to that top quarter. Of every section touching the band, the
-  // FIRST in document order is the one the eye is actually in, so it wins.
-  if (body && typeof IntersectionObserver === "function") {
+  // Reading-position indicator (scroll-spy). The modal body is the scroll container.
+  // The active section is the LAST one whose top has crossed a reading line a little
+  // below the container top, so EXACTLY ONE entry is ever lit and it is the section the
+  // eye is actually in. A click marks its target active at once and holds it through the
+  // smooth scroll (clickLock) — which also keeps the right entry lit for end-of-list
+  // sections that can never reach the very top. (An IntersectionObserver "first section
+  // touching the top band" rule was wrong: with two sections in the band it lit the one
+  // ABOVE the clicked target.)
+  if (body) {
     const sections = Array.from(body.querySelectorAll<HTMLElement>('section[id^="sec-"]'));
-    if (sections.length) {
-      setActiveToc(sections[0]!.id);
-      const inBand = new Set<string>();
-      sectionObserver = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) inBand.add(entry.target.id);
-          else inBand.delete(entry.target.id);
-        }
-        const current = sections.find((s) => inBand.has(s.id));
-        if (current) setActiveToc(current.id);
-      }, { root: body, rootMargin: "0px 0px -75% 0px", threshold: 0 });
-      for (const s of sections) sectionObserver.observe(s);
-    }
+    let clickLockUntil = 0;
+    let raf = 0;
+    const computeActive = (): void => {
+      if (!sections.length || performance.now() < clickLockUntil) return;
+      const line = body.getBoundingClientRect().top + 88;
+      let active = sections[0]!.id;
+      for (const s of sections) {
+        if (s.getBoundingClientRect().top <= line) active = s.id; else break;
+      }
+      // At the very bottom the last sections can't reach the line; the section being read
+      // is the last one, so anchor to it.
+      if (body.scrollHeight - body.scrollTop - body.clientHeight < 2) active = sections[sections.length - 1]!.id;
+      setActiveToc(active);
+    };
+    const onScroll = (): void => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => { raf = 0; computeActive(); });
+    };
+    body.addEventListener("scroll", onScroll, { passive: true });
+    computeActive();
+    scrollSpyCleanup = () => { body.removeEventListener("scroll", onScroll); if (raf) cancelAnimationFrame(raf); };
+
+    body.querySelectorAll<HTMLAnchorElement>(".rules__toc a").forEach((a) => {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        const id = a.getAttribute("href");
+        if (!id) return;
+        body.querySelector(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        setActiveToc(id.slice(1));
+        // Hold the clicked entry active through the smooth scroll so the spy can't briefly
+        // light a neighbour mid-glide, and so it stays correct for an end-of-list section
+        // that never reaches the reading line.
+        clickLockUntil = performance.now() + 700;
+      });
+    });
   }
 
   // A card name or glossary term in the rulebook opens the same info panel the table uses:

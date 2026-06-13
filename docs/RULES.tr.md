@@ -16,7 +16,7 @@ Her tur sana harcayacak 2 HP verir: Mühür ve Hizmetkâr yerleştir, rakiplerin
 
 İhanete hazır ol. Bir oyuncu Yükseliş ilan ettiği anda bütün masa bir tur boyunca ona döner; buna Sınav denir. Onu atlatırsan Eter senindir.
 
-## Çırak kuralları (ilk oyununuz)
+## Çırak kuralları
 
 Vaerum'u ilk kez oynayan bir masa için resmî, basitleştirilmiş başlangıç. İlk bir iki oyunu böyle oynayın; tadı damağınızda kalınca tam kurallara geçin.
 
