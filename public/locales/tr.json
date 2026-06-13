@@ -492,7 +492,7 @@
         "id": "howto",
         "title": "Bu masa nasıl çalışır",
         "body": [
-          "Vaerum sana ve arkadaşlarına ortak bir masa sunar. Kartları gerçek zamanlı olarak birlikte dağıtır, taşır, çevirir, toplar, karıştırır ve döndürürsünüz. Kuralları kendiliğinden uygulamaz; tıpkı yüz yüze oynar gibi kuralları kendiniz işletirsiniz.",
+          "Vaerum sana ve arkadaşlarına ortak bir masa sunar. Kartları gerçek zamanlı olarak birlikte taşır, çevirir, toplar, karıştırır ve döndürürsünüz; her oyuncu ortak desteden kendi kartlarını çeker. Kuralları kendiliğinden uygulamaz; tıpkı yüz yüze oynar gibi kuralları kendiniz işletirsiniz.",
           "Her oyuncunun, masanın kendi kenarında özel bir alanı vardır. Bu alana koyduğun kartlar diğerlerinden gizlenir; onlar kartın yüzünü değil, yalnızca bulanık bir arkasını görür. Bir kartı alanından dışarı sürükleyince herkese görünür olur, geri sürükleyince yeniden gizlenir. Kart, alanının kenarını geçtiği anda gizliyle görünür arasında geçiş yapar ve bu, her oyuncuda ve her ekranda aynı görünür.",
           "Temel hareketler: kartı sürükleyerek taşı, tüm yığını taşımak için Ctrl'ye basılı tutarak sürükle. Bir kartı çevirmek için üzerinde tekerleği kaydır, tüm desteyi çevirmek için sağ tıkla (ya da Ctrl+tekerlek). Dağınık bir desteyi derli toplu yapmak için G, karıştırmak için M, yana döndürmek için Shift+tekerlek, tüm alanını düzgün ve gruplu bir deste hâline getirmek için D. Telefonda kartı basılı tutarak hızlı eylemleri aç. Tüm listeyi menüdeki Kısayollar bölümünde bulabilirsin.",
           "Menüde ev sahibine özel iki kontrol daha var. Rehberi aç, kural rehberini tüm masaya gösterir: hazırlığı, kimin başlayacağını ve her oyuncunun sırasını anlatır; adımı, sırası gelen oyuncu onay işaretine basarak ilerletir. Hazırlık adımlarını ev sahibi yürütür ve panelin içinden oyunu Başlat ya da Yeniden başlat ile başlatabilir; bu, deste toplanıp karıştırılarak temiz bir başlangıç sağlar. Desteyi sıfırla ise tüm kartları karışık tek desteye döndürür. Rehber yalnızca önerir. Oyununu asla kısıtlamaz."
@@ -549,7 +549,7 @@
     "spell": {
       "name": "Büyü",
       "namePlural": "Büyüler",
-      "description": "1 HP karşılığı elden oynanan tek kullanımlık saldırı. Çözülür, çöpe gider."
+      "description": "Elden 1 HP'ye oynanan tek kullanımlık saldırı. Çözülür, sonra Çöplüğe gider."
     },
     "intervention": {
       "name": "Müdahale",
@@ -559,7 +559,7 @@
     "servant": {
       "name": "Hizmetkâr",
       "namePlural": "Hizmetkârlar",
-      "description": "Masanızdaki canlı kalkan. Rakipler önce Hizmetkârları temizlemeden Mühürlerinizi hedef alamaz."
+      "description": "Masanızdaki koruyucu kart. Rakipler, Mühürlerinizi hedefleyebilmek için önce tüm Hizmetkârlarınızı yok etmek zorundadır."
     }
   },
   "cards": {
@@ -703,7 +703,7 @@
         "title": "2. Kurulum",
         "body": [
           "72 kartlık desteyi iyice karıştırın.",
-          "Her oyuncuya 5 kart dağıtın; kartlar gizli tutulur.",
+          "Her oyuncu desteden 5 kart alır ve gizli tutar.",
           "Kalanı kapalı deste olarak ortaya koyun.",
           "Her oyuncu bir kart açar; en yüksek tür başlar (sıra: Hizmetkâr, Büyü, Mühür, Müdahale). Eşit kalanlar yeniden çeker. Açılan kartları oyun başlamadan desteye geri karıştırın.",
           "Oyun, seçilen ilk oyuncudan başlayarak saat yönünde ilerler.",
@@ -911,8 +911,8 @@
     "firstChosen": "İlk oyuncu {name}.",
     "steps": {
       "shuffle": {
-        "title": "Dağıtım",
-        "body": "Desteyi karıştır ve her oyuncuya gizli tutacağı 5 kart dağıt. Kalanı ortada kapalı şekilde çekme destesi olarak bırak. Herkese dağıtılınca ev sahibi onay işaretine basar."
+        "title": "İlk eller",
+        "body": "Desteyi karıştır. Sonra her oyuncu desteden 5 kart alıp gizli tutar. Kalanı ortada kapalı çekme destesi olarak bırak. Herkes kartını aldıktan sonra ev sahibi onay işaretine basar."
       },
       "reveal": {
         "title": "Kim başlıyor",

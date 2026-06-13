@@ -53,7 +53,7 @@ SERVANT: shields your Seals and carries special abilities.
 
 Shuffle the 72-card deck thoroughly.
 
-Deal 5 cards to each player; keep them hidden.
+Each player takes 5 cards from the deck and keeps them hidden.
 
 Place the remaining deck face-down at the centre.
 

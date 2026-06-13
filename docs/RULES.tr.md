@@ -53,7 +53,7 @@ HİZMETKÂR: Mühürlerini korur, özel yetenekler taşır.
 
 72 kartlık desteyi iyice karıştırın.
 
-Her oyuncuya 5 kart dağıtın; kartlar gizli tutulur.
+Her oyuncu desteden 5 kart alır ve gizli tutar.
 
 Kalanı kapalı deste olarak ortaya koyun.
 

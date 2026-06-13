@@ -91,22 +91,17 @@
    re-seats only animate during live play. */
 body:not(.is-ready) .board__perspective { transition: none; }
 
-/* Camera turn (V key / perspective button): the cards rotate smoothly via the
-   transform transition above. The frosted zone trays are SIBLINGS of .board and
-   never rotate; only WHO each physical tray belongs to is re-mapped mid-turn. The
-   GLASS itself (the .zone base layer, zones.css) is identical for every seat and
-   stays fully visible through the whole turn — nothing blinks. Only the IDENTITY
-   layers dip: the per-tray occupancy wash (.zone::after) and the upright name
-   labels fade out, the remap lands inside the invisible window (Game.
-   togglePerspective defers refreshZones to ~35% of the turn), and they fade back
-   already showing the new owners. Overlay/label transitions are suspended for the
-   turn so the swap can't crossfade through in-between colours while fading back
-   in. Honours reduced motion automatically (--dur-slow -> 0ms; the remap then
-   applies immediately, with no animation). */
+/* Camera turn (V key / perspective button): the cards rotate smoothly via the transform
+   transition above. The frosted zone trays are SIBLINGS of .board and never rotate; only WHO
+   each physical tray belongs to is re-mapped mid-turn (Game.togglePerspective defers refreshZones
+   to ~35% of the turn). The GLASS (the .zone base layer) is identical for every seat and never
+   moves. The ZONE WASH (.zone::after) is now ivory-only for every seat (no seat-colour tint), so
+   when the remap swaps which slot is self/rival the wash simply CROSSFADES its strength + door
+   light through its own transition (zones.css) — it never blanks out. Only the NAME LABELS still
+   dip fully, because their seat-colour dots and names do swap and need to change behind cover.
+   Honours reduced motion automatically (--dur-slow -> 0ms; the remap applies instantly). */
 @media (prefers-reduced-motion: no-preference) {
-  .table.is-rotating .zone::after,
   .table.is-rotating .board__labels { animation: board-view-turn var(--dur-slow) var(--ease); }
-  .table.is-rotating .zone::after,
   .table.is-rotating .seat-label,
   .table.is-rotating .seat-label__dot { transition: none; }
   @keyframes board-view-turn {
