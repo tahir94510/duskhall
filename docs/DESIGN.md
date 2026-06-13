@@ -73,12 +73,15 @@ unaffected and turns the pile exactly as the actor asked.
 
 ## Palette (v3.7)
 
-Pure neutral greys plus ivory; no blue / purple / olive cast. `src/styles/tokens.css` is the
+Neutral greys plus a warm cream ivory; no blue / purple cast. `src/styles/tokens.css` is the
 source of truth; the values here are a snapshot for orientation.
 
 - `--ink` `#000000`, `--ink-2` `#060606`
 - `--ash` `#111111`, `--ash-2` `#1a1a1a`
 - `--ivory` `#f3efe5`, `--ivory-dim` `#b8b4aa`, `--ivory-mute` `#9b968b`
+- The full-bleed felt (`.app-bg`, board.css) carries a faint WARM charcoal/amber undertone
+  (R >= G >= B), so the dark table reads as inviting and comfortable rather than clinically
+  cool; it stays just as deep and calm, and the neutral ink/ivory tokens above are unchanged.
 - Seat accents `--seat-0..3` (`#f3efe5`, `#d8d3c7`, `#b9b4a8`, `#948f83`): an ivory-to-warm-grey
   ladder for names, zone tints and cursors. Tuned so the darkest step still reads at AA contrast
   on the dark table (a player's name must never look "faded out") while adjacent steps stay
