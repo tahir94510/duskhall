@@ -16,7 +16,7 @@ Each turn hands you 2 HP to spend: place Seals and Servants, hurl Spells at your
 
 Expect betrayal. The moment a player declares Ascension the whole table turns on them for one round; that round is the Trial. Outlast it and the Ether is yours.
 
-## Apprentice rules (your first game)
+## Apprentice rules
 
 The official, simplified start for a table playing Vaerum for the first time. Play your first game or two this way; switch to the full rules once it clicks.
 
