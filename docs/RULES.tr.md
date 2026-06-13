@@ -44,24 +44,24 @@ Renk anahtarı:
 
 MÜHÜR: pasif güç ve zafere giden yol.
 
-BÜYÜ: tek kullanımlık saldırı; çözülür, çöpe gider.
+BÜYÜ: tek kullanımlık saldırı; çözülür, Çöplüğe gider.
 
 MÜDAHALE: HP harcamaz; her an oynanır.
 
 HİZMETKÂR: Mühürlerini korur, özel yetenekler taşır.
 ## 2. Kurulum
 
-72 kartlık desteyi iyice karıştırın.
+Desteyi iyice karıştır.
 
 Her oyuncu desteden 5 kart alır ve gizli tutar.
 
-Kalanı kapalı deste olarak ortaya koyun.
+Kalanını ortada kapalı deste olarak bırak.
 
-Her oyuncu bir kart açar; en yüksek tür başlar (sıra: Hizmetkâr, Büyü, Mühür, Müdahale). Eşit kalanlar yeniden çeker. Açılan kartları oyun başlamadan desteye geri karıştırın.
+Kimin başlayacağını bulmak için her oyuncu desteden bir kart açar; en yüksek tür başlar (sıra: Hizmetkâr, Büyü, Mühür, Müdahale). Eşit kalanlar yeniden çeker. Açılan kartları, oyun başlamadan desteye geri karıştır.
 
-Oyun, seçilen ilk oyuncudan başlayarak saat yönünde ilerler.
+Oyun, seçilen ilk oyuncudan başlar ve saat yönünde ilerler.
 
-Oyuncu sayısı: 2 hızlı ve doğrudan; 3 dengeli ve taktiksel; 4 önerilen, kaotik ve diplomatik koltuk.
+Oyuncu sayısı: 2 kişi hızlı ve doğrudandır; 3 kişi dengeli ve taktikseldir; 4 kişi ise önerilen, kaotik ve diplomatik masadır.
 ## 3. Alanlar
 
 Her oyuncunun 3 kişisel alanı vardır; 2 alan ortaktır.
@@ -75,28 +75,28 @@ DESTE (ortak): ortadaki kapalı yığın. Bittiğinde Eter Dalgalanması tetikle
 ÇÖPLÜK (ortak): harcanmış Büyüler, iptal kartları, yok edilmiş Mühürler ve Hizmetkârlar; açık yığılır.
 ## 4. Tur akışı
 
-Sıra sizdeyken aşağıdaki 3 aşamayı bu sırayla, eksiksiz uygulayın. Aşamalar atlanamaz, sırası değişmez.
+Sıra sendeyken aşağıdaki 3 aşamayı sırasıyla ve eksiksiz uygula. Aşamalar atlanamaz, sırası değişmez.
 
-AŞAMA 1, ODAKLANMA: Desteden 2 kart çekin. Çekim sırasında deste biterse önce Eter Dalgalanması çözülür, kalan çekim yeni desteden gelir. Zaman Çatlağı varsa 3 (ek kopyalarla 4, 5, 6) kart çekersiniz.
+AŞAMA 1, ODAKLANMA: Desteden 2 kart çek. Çekerken deste biterse önce Eter Dalgalanması çözülür, kalan kartlar yeni desteden gelir. Masanda Zaman Çatlağı varsa 3 (ek kopyalarla 4, 5, 6) kart çekersin.
 
-AŞAMA 2, AKSİYON: 2 HP'niz var (Kızıl Monolit ile 3 ila 5; en fazla 5). Her HP'yi aşağıdaki bir eyleme, istediğiniz kombinasyonda harcayın. Kalan HP yanar; sonraki tura aktarılamaz.
+AŞAMA 2, AKSİYON: 2 HP'n var (Kızıl Monolit ile 3 ila 5; en fazla 5). Her HP'yi aşağıdaki bir eyleme, dilediğin gibi harca. Kalan HP yanar; sonraki tura aktarılmaz.
 
-OLUŞTUR (1 HP): elden 1 Büyü oynayın, ya da masanıza 1 Mühür veya 1 Hizmetkâr yerleştirin.
+OLUŞTUR (1 HP): elinden 1 Büyü oyna ya da masana 1 Mühür veya 1 Hizmetkâr koy.
 
-ARAŞTIR (1 HP): desteden 1 ekstra kart çekin.
+ARAŞTIR (1 HP): desteden 1 ek kart çek.
 
-ARINDIR (1 HP): elinizden 1 kart atın, sonra 1 kart çekin. (Bu yolla çekilen kart aynı turda yeniden Arındırılamaz.) Arındır el boyutunu değiştirmeden bir kartı takas eder; Araştır ise eli bir kart büyütür.
+ARINDIR (1 HP): elinden 1 kart at, sonra 1 kart çek. (Bu yolla çektiğin kartı aynı turda yeniden Arındıramazsın.) Arındır eli büyütmez, bir kartı takas eder; Araştır ise eli bir kart büyütür.
 
-AŞAMA 3, KAPANIŞ: önce aktif tüm Mühür tetikleri işler (Ölüçağıranın Gözü kartını şimdi alır), sonra elinizi 7'ye indirirsiniz. Az önce alınan kart da 7'ye dahildir ve atacağınız kart o olabilir. Kapanış'tan sonra 3 ya da daha fazla Mührünüz varsa Yükseliş ilan edebilirsiniz (bkz. bölüm 10).
+AŞAMA 3, KAPANIŞ: önce aktif tüm Mühür tetikleri işler (Ölüçağıranın Gözü kartını şimdi alır), sonra elini 7'ye indirirsin. Az önce alınan kart da 7'ye dahildir; atacağın kart o olabilir. Kapanış'tan sonra masanda 3 ya da daha fazla Mühür varsa Yükseliş ilan edebilirsin (bkz. bölüm 10).
 ## 5. Kart türü kuralları
 
 MÜHÜRLER kalıcıdır. Elde hiçbir işe yaramaz; etkileri yalnızca masada çalışır.
 
-BÜYÜLER 1 HP harcar. Oynamadan önce geçerli bir hedef belirleyin. Tüm olası hedefler hedef alınamaz ise büyü oynanamaz; HP harcanmaz.
+BÜYÜLER 1 HP harcar. Oynamadan önce geçerli bir hedef seç. Tüm olası hedefler hedeflenemez durumdaysa büyü oynanamaz ve HP harcanmaz.
 
 MÜDAHALELER HP harcamaz. Sıra kimde olursa olsun, en son eyleme tepki olarak her an oynanır.
 
-Karmik Yansıma ve Kan Kefareti BENCİLdir: yalnızca KENDİNİZİ ya da kendi kartlarınızı korumak için.
+Karmik Yansıma ve Kan Kefareti BENCİLdir: yalnızca kendini ya da kendi kartlarını korumak için oynanır.
 
 Sustur! EVRENSELdir: taze oynanmış herhangi bir Büyü ya da Müdahaleyi iptal eder. Mühür ya da Hizmetkâr koymak (Oluştur) bunlardan biri değildir; Sustur! yerleştirmeyi durduramaz.
 
@@ -110,15 +110,13 @@ Bir eylem yapıldığında her oyuncu bir Müdahale ile yanıt verebilir. Zincir
 Sustur! etkileşimleri: iptal edilen kart ve onu iptal eden Sustur! Çöplüğe gider; iptal edilen büyünün HP'si geri ödenmez. Bir Sustur!, Karmik Yansıma'yı iptal edebilir; o zaman yansıma olmaz ve asıl saldırı hedefe ulaşır.
 ## 7. Hedef alınamazlık
 
-Bazı efektler hedeflerini düşman eylemlerinden bağışık kılar. Hedef alınamazlık katmanlıdır: her bağımsız katman ayrı ayrı kaldırılmalıdır.
+Bazı efektler hedeflerini düşman eylemlerine karşı dokunulmaz kılar. Bu koruma katmanlıdır: her bağımsız katman ayrı ayrı kaldırılmalıdır.
 
-Hiçlik Örtüsü: diğer Mühürleriniz ve eliniz düşman büyü ve efektlerine karşı hedef alınamaz. Hiçlik Örtüsü'nün kendisi her zaman hedef alınabilir.
+Hiçlik Örtüsü: diğer Mühürlerin ve elin düşman büyü ve efektlerine karşı hedeflenemez olur. Hiçlik Örtüsü'nün kendisi her zaman hedeflenebilir.
 
-Rünik Bekçi: masada durduğu sürece tüm Mühürleriniz hedef alınamaz olur. Rünik Bekçi bir Hizmetkârdır ve Kalkan Kuralı'na tabidir; rakip her durumda önce tüm Hizmetkârları yok etmek zorundadır.
+Rünik Bekçi: masada durduğu sürece tüm Mühürlerin hedeflenemez olur. Rünik Bekçi bir Hizmetkârdır ve Kalkan kuralına tabidir; rakip her hâlükârda önce tüm Hizmetkârları yok etmek zorundadır.
 
-İstiflenme: hem Hiçlik Örtüsü hem Rünik Bekçi masadaysa Mühürleriniz iki ayrı katmanla korunur. Pratikte rakip önce tüm Hizmetkârları (Rünik Bekçi dahil) temizler, ardından Hiçlik Örtüsü'nü yok eder, sonra altındaki Mühürlere ulaşabilir.
-
-
+İstiflenme: hem Hiçlik Örtüsü hem Rünik Bekçi masadaysa Mühürlerin iki ayrı katmanla korunur. Pratikte rakip önce tüm Hizmetkârları (Rünik Bekçi dahil) temizler, sonra Hiçlik Örtüsü'nü yok eder, ancak ondan sonra altındaki Mühürlere ulaşır.
 ## 8. Mühür istiflenmesi
 
 Aynı Mühürden birden fazla masada bulunabilir. Yeni kopyalar yerleştirildiği turdan SONRAKİ turdan itibaren aktif olur (Ölüçağıranın Gözü tek istisnadır, aynı turun Kapanış'ında devreye girer).
@@ -136,30 +134,28 @@ Hiçlik Örtüsü: İSTİFLENMEZ. Ek kopya avantaj sağlamaz.
 
 Ortadaki deste bittiğinde oyun durur: Çöplük karıştırılıp yeni deste olur. Bu karıştırma, o döngünün tek ve geri alınamaz Eter Dalgalanması'dır.
 
-Kurban sırası: her oyuncu aşağıdaki öncelikle 1 kart kaybeder:
+Kurban sırası: her oyuncu aşağıdaki önceliğe göre 1 kart kaybeder:
 
-Önce MASA: masanızdaki herhangi bir Mühür veya Hizmetkârdan birini seçip Çöplüğe atın. Seçim tamamen sizin.
+Önce MASA: masandaki herhangi bir Mühür ya da Hizmetkârdan birini seçip Çöplüğe at. Seçim tamamen senin.
 
-Sonra EL: YALNIZCA masanız tamamen boşsa dalgalanma elinize ulaşır. Elinizden 1 kart rastgele Çöplüğe gider.
+Sonra EL: dalgalanma eline yalnızca masan tamamen boşsa ulaşır. Elinden 1 kart rastgele Çöplüğe gider.
 
-Çekim efekti çözüm sırasında deste tükenirse dalgalanma tam olarak işlenir; kalan çekim yeni desteden tamamlanır.
+Bir çekim efekti yarım kalmışken deste tükenirse dalgalanma tam olarak işlenir; kalan çekim yeni desteden tamamlanır.
 
 Hem deste hem Çöplük boşsa Dalgalanma tetiklenmez ve yeni deste oluşmaz. Çekim isteyen efektler bu sefer çekemez; oyun devam eder.
 ## 10. Zafer, Yükseliş
 
-İLAN: kendi Kapanış aşamanız bittiğinde, masanızda en az 3 Mühür sağlamsa Yükseliş ilan EDEBİLİRSİNİZ. İlan geri alınamaz.
+İLAN: kendi Kapanış aşaman bittiğinde masanda en az 3 sağlam Mühür varsa Yükseliş ilan EDEBİLİRSİN. İlan geri alınamaz.
 
-SINAV: sıra tekrar size gelmeden önce diğer tüm oyuncuların tam birer turu vardır. Sınav boyunca herkes Büyü, Müdahale ve Hizmetkâr ile Mühürlerinizi yok etmeyi, çalmayı veya devre dışı bırakmayı deneyebilir. Müdahaleler serbesttir.
+SINAV: sıra sana dönene dek diğer oyuncuların hepsinin birer tam turu olur. Bu tur boyunca herkes Büyü, Müdahale ve Hizmetkârla Mühürlerini yok etmeyi, çalmayı ya da devre dışı bırakmayı deneyebilir. Müdahaleler serbesttir.
 
-ZAFER: sıra tekrar size geldiğinde, Odaklanma BAŞLAMADAN önce masanızda hâlâ en az 3 Mühür sağlamsa oyunu kazanırsınız.
+ZAFER: sıra sana döndüğünde, Odaklanma BAŞLAMADAN önce masanda hâlâ en az 3 sağlam Mühür varsa oyunu kazanırsın.
 
-Aynı anda yalnızca 1 aktif Yükseliş olur. Başkaları yenisini ilan etmek için mevcut olanın çözülmesini (başarı ya da başarısızlık) bekler.
+Aynı anda yalnızca 1 aktif Yükseliş olabilir. Başkaları yenisini ilan etmek için mevcut olanın çözülmesini (başarı ya da başarısızlık) bekler.
 
 Sınav sırasında 3. Mühüre ulaşmak yeni bir ilan hakkı vermez; ilan yalnızca kendi turunun sonunda yapılır.
 
-Sınav'da Mühür kaybedip 3'ün altına düşerseniz Yükseliş başarısız olur; oyun normal seyrinde devam eder.
-
-
+Sınav'da Mühür kaybedip 3'ün altına düşersen Yükseliş başarısız olur ve oyun normal seyrinde devam eder.
 ## 11. Kart ansiklopedisi
 
 Her kart yüzünde yazıldığı gibi çözülür. Bu uygulamadaki bilgi panelleri metni doğrudan bu kural kitabından alır; ihtilafta ansiklopedi nihaidir.
@@ -195,11 +191,11 @@ S. Kaderin Cilvesi Hiçlik Örtüsü olan oyuncuya oynanır mı? C. Hayır. Hede
 
 S. Gölge Katili'ni masada hiç Hizmetkâr yokken oynarsam? C. Giriş efekti boşa düşer. Gölge Katili yine masaya yerleşir.
 
-S. Gölge Katili girişiyle Buzul Ucube'yi yok edersem kim tur atlar? C. SİZ. Cezayı yok eden öder.
+S. Gölge Katili girişiyle Buzul Ucube'yi yok edersem kim tur atlar? C. SEN. Cezayı yok eden öder.
 
-S. Zihin Paraziti'ni masamda zaten 3 Hizmetkâr varken oynayabilir miyim? C. Hayır (HP harcanmaz): çalma için boş bir Hizmetkâr yuvası gerekir ve yer açmak için kendi kartınızı attırmaz. Yer açmak için atma takası yalnızca elinizden Oluştur içindir.
+S. Zihin Paraziti'ni masamda zaten 3 Hizmetkâr varken oynayabilir miyim? C. Hayır (HP harcanmaz): çalma için boş bir Hizmetkâr yuvası gerekir ve yer açmak için kendi kartını attırmaz. Yer açmak için atma takası yalnızca elinden Oluştur içindir.
 
-S. Hizmetkâr sıram dolu (3) ve elimden bir tane daha oynamak istiyorum? C. O Oluştur'un parçası olarak önce kendi Hizmetkârlarınızdan birini yer açmak için Çöplüğe atın (seçim sizin; ekstra HP yok). Masadaki bir kart asla elinize geri alınamaz; yalnızca yok edilerek, feda edilerek, yer açmak için atılarak ya da çalınarak ayrılır.
+S. Hizmetkâr sıram dolu (3) ve elimden bir tane daha oynamak istiyorum? C. O Oluştur'un parçası olarak önce kendi Hizmetkârlarından birini yer açmak için Çöplüğe at (seçim senin; ekstra HP yok). Masadaki bir kart asla eline geri alınamaz; yalnızca yok edilerek, feda edilerek, yer açmak için atılarak ya da çalınarak ayrılır.
 
 S. Zihin Paraziti ile bir Buzul Ucube'yi ele geçirirsem tur atlar mıyım? C. Hayır. Ele geçirmek yok etmek değildir; tur atlatma cezası tetiklenmez, yalnız Buzul Ucube yok edildiğinde işler.
 
@@ -212,7 +208,6 @@ S. Kan Kefareti için elimde kaç kart olmalı? C. En az 2. Daha azıyla oynanam
 S. Kan Kefareti'nin attığı 2 kartı kim seçer? C. Kimse. Kartlar elinden rastgele çıkar, bu yüzden bedeli ödemek her zaman bir risktir.
 
 S. Çekim efekti sırasında deste biterse? C. Önce Eter Dalgalanması işlenir; kalan çekim yeni desteden tamamlanır.
-
 ## 13. Hızlı başvuru
 
 Aşamalar: Odaklanma, Aksiyon, Kapanış, (opsiyonel) Yükseliş ilanı.

@@ -15,7 +15,7 @@ oyuncular yapar.
 | Kategori | Nedir |
 | --- | --- |
 | **Mühür** | Masanıza yerleştirilen kalıcı yapı. Pasif güç. Yükselişe giden yol. |
-| **Büyü** | 1 HP karşılığı elden oynanan tek kullanımlık saldırı. Çözülür, çöpe gider. |
+| **Büyü** | 1 HP karşılığı elden oynanan tek kullanımlık saldırı. Çözülür, sonra Çöplüğe gider. |
 | **Müdahale** | Reaktif kart. HP harcamaz; sıra kimde olursa olsun her an oynanabilir. |
 | **Hizmetkâr** | Masanızdaki canlı kalkan. Rakipler önce Hizmetkârları temizlemeden Mühürlerinizi hedef alamaz. |
 
