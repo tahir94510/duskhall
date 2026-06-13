@@ -31,7 +31,7 @@ ignored.
 | `ui-click` | A generic UI button click |
 | `ui-open` | A modal opens |
 | `ui-close` | A modal closes |
-| `your-turn` | The Guide hands the turn to this player (local only) |
+| `your-turn` | The Guide hands the turn to this player (local only; optional, no procedural fallback, silent if absent) |
 
 Example: `public/audio/sfx/flip.mp3`.
 

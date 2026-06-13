@@ -1782,7 +1782,10 @@ export class Game {
     this.lastGuideTurnSeat = cur;
     if (prev === -2 || cur === prev) return;
     if (cur < 0 || cur !== this.claimSeat) return;
-    void this.audio.play("your-turn");
+    // Cosmetic cue: play a real your-turn asset if present, but NEVER the procedural
+    // fallback (it read as a cheap beep against the curated sfx set). The gentle guide-bar
+    // pulse is the always-on signal; the chime is optional polish if an asset is added.
+    void this.audio.play("your-turn", { fileOnly: true });
     this.guidePanel?.pulseTurn();
   }
 

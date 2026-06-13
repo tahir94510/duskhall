@@ -157,7 +157,11 @@ export class AudioEngine {
     if (!this.muted) await this.startMusic();
   }
 
-  async play(name: SfxName): Promise<void> {
+  // `fileOnly` plays the sound only if a real asset is present and skips the procedural
+  // fallback synth. Use it for cosmetic cues (the guide's your-turn chime) where the
+  // synthesized tone would read as a cheap "beep" out of step with the curated set: with
+  // no asset it simply stays silent rather than breaking the atmosphere.
+  async play(name: SfxName, opts?: { fileOnly?: boolean }): Promise<void> {
     if (this.muted) return;
     // Never create / touch an AudioContext before the first user gesture,
     // otherwise the browser logs "AudioContext was not allowed to start".
@@ -189,6 +193,8 @@ export class AudioEngine {
         return;
       }
     }
+    // No asset: cosmetic, file-only cues stay silent instead of synthesizing a tone.
+    if (opts?.fileOnly) return;
     this.playProcedural(PROCEDURAL[name]);
   }
 
