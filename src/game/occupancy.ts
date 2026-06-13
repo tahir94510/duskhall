@@ -207,11 +207,16 @@ export function resolveSeating(
     return -1;
   };
 
-  // Pass 1: honour a published seat that is free.
+  // Pass 1: honour a published seat that is free AND not reserved by an away owner. The
+  // away check matters: a brand-new client can publish a specific seat number (its local
+  // guess before it has the authoritative claims), and without this guard that published
+  // seat would be granted even when an AWAY player still holds it — letting a newcomer
+  // STEAL a dropped player's seat. A returning away owner is `present` this sync, so its
+  // own seat no longer reads as away-reserved and it reclaims it normally below.
   const deferred: RosterEntry[] = [];
   for (const p of present) {
     const want = p.seat >= 0 && p.seat < seatCount ? p.seat : -1;
-    if (want >= 0 && !bySeat.has(want)) bySeat.set(want, p.id);
+    if (want >= 0 && !bySeat.has(want) && !seatReservedAway(want)) bySeat.set(want, p.id);
     else deferred.push(p);
   }
   // Pass 2: a deferred client takes its OWN claimed seat if free, else (only if it
