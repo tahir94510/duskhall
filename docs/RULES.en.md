@@ -8,17 +8,16 @@ At the centre of all things lies the Ether, a sourceless force, fractured long a
 
 ## The goal
 
-Gather power, declare Ascension, survive one full round. That is the whole game.
+The aim: build 3 Seals on your tableau, declare Ascension, and hold them for one full round. Survive that and you win.
 
-You win by holding at least 3 Seals on your tableau at the end of your turn, declaring Ascension, and still holding at least 3 when the turn comes back around. Everything at the table exists either to reach that moment or to deny it to someone else.
+Each turn you draw cards, then spend 2 HP to play Spells, place Seals and Servants, or dig for more cards. That is how power is built.
 
-Each turn hands you 2 HP to spend: place Seals and Servants, hurl Spells at your rivals, or dig for cards. Interventions cost nothing and can interrupt anyone at any time; nobody at this table merely waits for a turn.
+Interventions cost nothing and can interrupt anyone at any time, so no one just waits for their turn. The table is always live.
 
-Expect betrayal. The moment a player declares Ascension the whole table turns on them for one round; that round is the Trial. Outlast it and the Ether is yours.
-
+The catch: the moment you declare Ascension, every rival gets one turn to tear your Seals down. That round is the Trial. Outlast it and the Ether is yours.
 ## Apprentice rules
 
-The official, simplified start for a table playing Vaerum for the first time. Play your first game or two this way; switch to the full rules once it clicks.
+The simplest way to start. Play your first game or two like this, then switch to the full rules once it clicks.
 
 NO CHAINS: a move can be answered by at most ONE Intervention; a Silence! cannot be played on a Silence!.
 
@@ -27,7 +26,6 @@ RESONANCE WITHOUT SACRIFICE: when the deck runs out, shuffle the Discard into a 
 NO EDGE CASES: the card does what it says. On a disagreement the simplest reading wins and play continues.
 
 EVERYTHING ELSE IS THE SAME: draw 2, spend 2 HP, end at 7 in hand. Collect 3 Seals and survive the Trial to win.
-
 ## 1. Components
 
 Vaerum plays with a single deck of 72 cards. Nothing else is required.

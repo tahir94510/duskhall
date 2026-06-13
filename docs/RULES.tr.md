@@ -8,17 +8,16 @@ Her şeyin merkezinde, kaynağı bilinmeyen ve çok önce paramparça olmuş bir
 
 ## Amaç
 
-Güç topla, Yükseliş ilan et, bir tam tur hayatta kal. Oyunun özü bu.
+Amaç: masanda 3 Mühür kur, Yükseliş ilan et ve bir tam tur boyunca koru. Bunu atlatırsan kazanırsın.
 
-Kazanmak için turunun sonunda masanda en az 3 Mühür tutar, Yükseliş ilan eder ve sıra sana geri geldiğinde hâlâ en az 3 Mühre sahip olursun. Masadaki her şey ya o âna ulaşmak ya da onu bir başkasına vermemek içindir.
+Her tur kart çeker, sonra 2 HP'ni Büyü oynamaya, Mühür ve Hizmetkâr koymaya ya da kart aramaya harcarsın. Güç böyle kurulur.
 
-Her tur sana harcayacak 2 HP verir: Mühür ve Hizmetkâr yerleştir, rakiplerine Büyü savur ya da kart ara. Müdahaleler bedavadır ve her an herkesi bölebilir; bu masada kimse yalnızca sıra beklemez.
+Müdahaleler bedavadır ve her an herkesi bölebilir; kimse yalnızca sırasını beklemez. Masa hep canlıdır.
 
-İhanete hazır ol. Bir oyuncu Yükseliş ilan ettiği anda bütün masa bir tur boyunca ona döner; buna Sınav denir. Onu atlatırsan Eter senindir.
-
+İşin püf noktası: Yükseliş ilan ettiğin an her rakip Mühürlerini yıkmak için bir tur kazanır. O tura Sınav denir. Onu atlatırsan Eter senindir.
 ## Çırak kuralları
 
-Vaerum'u ilk kez oynayan bir masa için resmî, basitleştirilmiş başlangıç. İlk bir iki oyunu böyle oynayın; tadı damağınızda kalınca tam kurallara geçin.
+Başlamanın en kolay yolu. İlk bir iki oyununu böyle oyna, tadını alınca tam kurallara geç.
 
 ZİNCİR YOK: bir hamleye en fazla BİR Müdahale ile karşılık verilir; Sustur!'a Sustur! oynanmaz.
 
@@ -27,7 +26,6 @@ DALGALANMA KURBANSIZ: deste bitince Çöplük karıştırılıp yeni deste olur;
 KENAR DURUM YOK: kart ne diyorsa o. Anlaşmazlıkta en basit okuma geçerlidir ve oyun durmaz.
 
 GERİSİ AYNI: 2 kart çek, 2 HP harca, elini 7'ye indir. 3 Mühür biriktirip Sınav'ı atlatan kazanır.
-
 ## 1. Bileşenler
 
 Vaerum tek bir 72 kartlık deste ile oynanır. Başka bir bileşen gerekmez.

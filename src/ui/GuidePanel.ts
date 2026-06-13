@@ -218,7 +218,10 @@ export class GuidePanel {
       const action = vm.isHost
         ? `<button type="button" class="guide__primary" data-action="start">${esc(t("guide.start"))}</button>`
         : `<p class="guide__muted">${esc(t("guide.introWaiting"))}</p>`;
-      return `<p class="guide__lead">${esc(t("guide.introBody"))}</p>${action}`;
+      // Two short paragraphs: what the guide is, then the whole game in a breath. Far
+      // friendlier to a newcomer than one dense block (introTeach is the second line).
+      return `<p class="guide__lead">${esc(t("guide.introBody"))}</p>`
+        + `<p class="guide__lead guide__lead--teach">${esc(t("guide.introTeach"))}</p>${action}`;
     }
 
     if (view.phase === "setup" && view.step) {

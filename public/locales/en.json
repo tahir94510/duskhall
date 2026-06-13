@@ -79,11 +79,11 @@
   "glossary": {
     "etherResonance": {
       "term": "Ether Resonance",
-      "def": "When the draw deck runs out, play pauses and the Discard is shuffled into a fresh deck (once per cycle). Each player then sacrifices one card: a Seal or Servant of their choice from their tableau, or, only if their tableau is empty, one card at random from their hand. If both the deck and the Discard are empty, nothing happens."
+      "def": "When the draw deck runs out, the Discard is shuffled into a fresh one (once per cycle). Each player then sacrifices one card: a Seal or Servant they choose from their tableau, or a random hand card only if their tableau is empty. If deck and Discard are both empty, nothing happens."
     },
     "ascension": {
       "term": "Ascension",
-      "def": "At the end of your Closing phase, with at least 3 Seals on your tableau, you may declare Ascension (this is irrevocable). Every rival then gets one full turn, the Trial, to destroy, steal or disable your Seals. If you still hold at least 3 Seals when the turn returns to you, before your Focus, you win the game."
+      "def": "At the end of your Closing, with 3 or more Seals on your tableau, you may declare Ascension (you cannot take it back). Every rival then gets one full turn, the Trial, to break it. If you still hold 3 Seals when your turn comes round, you win."
     },
     "servantShield": {
       "term": "Servant Shield",
@@ -95,7 +95,7 @@
     },
     "tableau": {
       "term": "Tableau",
-      "def": "Your face-up zone for Seals and Servants: at most 4 Seals and 3 Servants (separate limits). Their effects work only here, never from the hand. A card you place is committed: it stays until it is destroyed, sacrificed, discarded to make room, or stolen, and never returns to your hand."
+      "def": "Your face-up area for Seals and Servants, up to 4 Seals and 3 Servants. Their effects work only here, never from your hand. Once placed, a card is committed: it leaves only by being destroyed, sacrificed, or stolen, never back to your hand."
     },
     "deck": {
       "term": "Deck",
@@ -308,7 +308,8 @@
           "Balance, rules V8.2: Twist of Fate goes from 2 copies to 4, paid for by one Ether Strike and one Shadow Theft (now 7 and 5). The deck stays at 72, and the hand-swap chaos now shows up in most games instead of almost never. A room dealt before this update keeps its old deck until you use Reset deck.",
           "Feel: a shuffled or flipped pile frees up for the other players the moment it settles instead of a beat later, good-news messages carry a small green dot (errors a red one), and a card mid-flip no longer flashes the wrong face when you tidy your area with D.",
           "The four hand areas now share one consistent glass tone; who sits where is carried by the name, its status light and the cursor. Turning the view with V no longer blanks the trays: the glass stays put and only the names and area washes softly change hands. An away player's area now quietly dims its wash instead of darkening the whole tray.",
-          "Easier to bring friends in: every card now says what it does in its first sentence, and the info panel shows that line up front with the fine print below. The rulebook gains Apprentice rules, an official simplified setup for a table's first game (no chains, no resonance sacrifice, no edge cases), and the Guide's intro now hands the host a three-sentence teach script."
+          "Easier to bring friends in: every card now says what it does in its first sentence, and the info panel shows that line up front with the fine print below. The rulebook gains Apprentice rules, an official simplified setup for a table's first game (no chains, no resonance sacrifice, no edge cases), and the Guide's intro now hands the host a three-sentence teach script.",
+          "Clearer for first-timers: the Guide's intro is now two short lines (what it is, then the whole game in a breath), and the turn-phase, setup, goal and glossary text is rewritten in plainer, shorter sentences. No rules changed, only the wording."
         ]
       },
       {
@@ -662,17 +663,17 @@
         "id": "goal",
         "title": "The goal",
         "body": [
-          "Gather power, declare Ascension, survive one full round. That is the whole game.",
-          "You win by holding at least 3 Seals on your tableau at the end of your turn, declaring Ascension, and still holding at least 3 when the turn comes back around. Everything at the table exists either to reach that moment or to deny it to someone else.",
-          "Each turn hands you 2 HP to spend: place Seals and Servants, hurl Spells at your rivals, or dig for cards. Interventions cost nothing and can interrupt anyone at any time; nobody at this table merely waits for a turn.",
-          "Expect betrayal. The moment a player declares Ascension the whole table turns on them for one round; that round is the Trial. Outlast it and the Ether is yours."
+          "The aim: build 3 Seals on your tableau, declare Ascension, and hold them for one full round. Survive that and you win.",
+          "Each turn you draw cards, then spend 2 HP to play Spells, place Seals and Servants, or dig for more cards. That is how power is built.",
+          "Interventions cost nothing and can interrupt anyone at any time, so no one just waits for their turn. The table is always live.",
+          "The catch: the moment you declare Ascension, every rival gets one turn to tear your Seals down. That round is the Trial. Outlast it and the Ether is yours."
         ]
       },
       {
         "id": "apprentice",
         "title": "Apprentice rules",
         "body": [
-          "The official, simplified start for a table playing Vaerum for the first time. Play your first game or two this way; switch to the full rules once it clicks.",
+          "The simplest way to start. Play your first game or two like this, then switch to the full rules once it clicks.",
           "NO CHAINS: a move can be answered by at most ONE Intervention; a Silence! cannot be played on a Silence!.",
           "RESONANCE WITHOUT SACRIFICE: when the deck runs out, shuffle the Discard into a new deck; nobody sacrifices a card.",
           "NO EDGE CASES: the card does what it says. On a disagreement the simplest reading wins and play continues.",
@@ -898,7 +899,8 @@
     "yourTurn": "It is your turn. Tap the check when you are done.",
     "aPlayer": "a player",
     "youTag": "(you)",
-    "introBody": "This guide walks the whole table through a game, one step at a time. It only suggests what to do next and never moves your cards, so you stay free to move, flip, shuffle and tidy them however you like. Tip: to begin from a freshly shuffled deck, use Reset deck from the menu first, then press Start. Teaching the table takes three sentences: on your turn draw 2 cards, spend your 2 points on playing or drawing cards, and end at 7 cards in hand. Collect 3 Seals and protect them for one full round to win. The cards say the rest; read each as it reaches your hand. For a first game, open the Apprentice rules section in the rulebook.",
+    "introBody": "This guide walks the whole table through one game, step by step. It only suggests the next move; your cards are always yours to move, flip and shuffle.",
+    "introTeach": "The whole game in three lines: draw 2 cards on your turn, spend your 2 HP to play or draw, then drop to 7 cards in hand. Collect 3 Seals and keep them through one full round to win. First time? Use the Apprentice rules in the rulebook for your first game.",
     "introWaiting": "Waiting for the host to start the game.",
     "start": "Start",
     "restart": "Restart",
@@ -909,29 +911,29 @@
     "steps": {
       "shuffle": {
         "title": "Deal",
-        "body": "Shuffle the deck and deal 5 cards to each player to keep hidden. Leave the rest face down in the centre as the draw pile. The host taps the check once everyone has their hand."
+        "body": "Shuffle the deck and deal each player a hidden hand of 5. Leave the rest face down in the centre as the draw pile. The host taps the check once everyone is dealt."
       },
       "reveal": {
         "title": "Who goes first",
-        "body": "To decide who starts, each player draws one card from the deck and reveals it. The highest type goes first, in this order: Servant, then Spell, then Seal, then Intervention. If two players tie, only they draw again. Then shuffle those revealed cards back into the deck. The host taps the check when this is done."
+        "body": "To decide who starts, each player reveals the top card of the deck. Highest type wins, in this order: Servant, Spell, Seal, Intervention. Tied players reveal again. Shuffle these cards back, then the host taps the check."
       },
       "chooseFirst": {
         "title": "First player",
-        "body": "The host picks the player who revealed the highest card. That player takes the first turn, and play continues clockwise from there."
+        "body": "The host picks the player who revealed the highest card. They take the first turn, and play continues clockwise."
       }
     },
     "phase": {
       "focus": {
         "title": "Focus",
-        "body": "Draw 2 cards from the deck; each Time Rift on your tableau adds one more. Tap the check when you have drawn."
+        "body": "Draw 2 cards from the deck (each Time Rift adds one more). Tap the check when done."
       },
       "action": {
         "title": "Action",
-        "body": "You have 2 HP this turn; each Crimson Monolith on your tableau adds one more, up to 5. Each HP buys one action: Create (cast a Spell from your hand, or place a Seal or Servant on your tableau), Study (draw 1 card) or Cleanse (discard 1 card, then draw 1). Interventions are free at any moment, and unspent HP does not carry over. Tap the check when you are done."
+        "body": "You have 2 HP this turn (up to 5 with Crimson Monolith). Spend each HP on one action: Create (play a Spell, or place a Seal or Servant), Study (draw a card) or Cleanse (discard 1, then draw 1). Interventions are free, any time. Tap the check when done."
       },
       "closing": {
         "title": "Closing",
-        "body": "Trigger your active Seal effects (Necromancer's Eye takes its card now), then discard down to 7 cards in hand. With at least 3 Seals you may declare Ascension. Tap the check to pass the turn to the next player."
+        "body": "Your active Seals trigger now (Necromancer's Eye draws its card). Then drop to 7 cards in hand. With 3 or more Seals you may declare Ascension. Tap the check to pass the turn."
       }
     }
   }

@@ -5,6 +5,12 @@
 An onboarding, content and balance pass. The card sync and canonical frame are unchanged;
 the spell copy counts move for the first time (rules V8.2). 273 tests green.
 
+- **Plainer first-run wording.** The Guide intro is split into two short paragraphs (what
+  it is, then the whole game in three lines) instead of one dense block (new
+  `guide.introTeach` key, rendered as a second `.guide__lead`), and the turn-phase, setup,
+  goal and the three longest glossary entries are rewritten in shorter, plainer sentences
+  in both languages. The goal and Apprentice sections are mirrored to docs/RULES.{en,tr}.md.
+  No rules or numbers changed, only the phrasing.
 - **First-visit welcome hint.** A small non-blocking card (new `src/ui/WelcomeHint.ts`,
   `welcome.*` locale group) shows once per device after the About panel: core gestures with
   separate desktop and touch copy, plus a pointer at the Guide and the invite link. Sequenced
