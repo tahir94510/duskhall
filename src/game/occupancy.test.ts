@@ -250,6 +250,25 @@ describe("resolveSeating: dedupe, own-seat reclaim, tombstone, no auto-seat for 
     expect(resolved.get("join")).toBe(1); // seat 0 stays reserved for the away owner
   });
 
+  it("a newcomer PUBLISHING an away player's exact seat cannot steal it", () => {
+    // 'away' holds seat 0 but is not present; 'join' publishes seat 0 directly (its local
+    // guess). The away reservation must still win: join is bumped to a free seat, not 0.
+    const roster: RosterEntry[] = [R("join", 0)];
+    const claims = [{ seat: 0, id: "away" }];
+    const { resolved } = resolveSeating(roster, claims, noTomb, 4);
+    expect(resolved.get("join")).toBe(1); // seat 0 stays reserved for the away owner
+  });
+
+  it("the away owner still reclaims its own seat when it returns", () => {
+    // 'away' returns (now present) publishing seat 0; its own claim makes it reclaim 0,
+    // and a newcomer also publishing 0 the same sync is bumped elsewhere.
+    const roster: RosterEntry[] = [R("away", 0, 100), R("join", 0, 500)];
+    const claims = [{ seat: 0, id: "away" }];
+    const { resolved } = resolveSeating(roster, claims, noTomb, 4);
+    expect(resolved.get("away")).toBe(0); // owner reclaims
+    expect(resolved.get("join")).toBe(1); // newcomer bumped
+  });
+
   it("a joiner who wants a TAKEN seat still gets a free one (overflow)", () => {
     const roster: RosterEntry[] = [R("a", 0), R("b", 0)];
     const { resolved } = resolveSeating(roster, [], noTomb, 4);
