@@ -127,7 +127,7 @@
     --card-w: clamp(44px, calc(var(--field) * 0.125), 120px);
     --card-h: calc(var(--card-w) * 1.45);
   }
-  .header__menu { min-width: 200px; max-width: calc(100vw - 28px); }
+  .header__menu { min-width: clamp(200px, 80vw, 240px); max-width: calc(100vw - 28px); }
   .modal { max-height: 90vh; }
   .modal__body { padding: 16px 16px 18px; }
   .rules { grid-template-columns: 1fr; gap: 12px; }

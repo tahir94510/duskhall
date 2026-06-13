@@ -117,6 +117,9 @@
      header into the same top-right corner, always overlays the Guide instead of
      being half-hidden behind it. */
   --z-guide: 700;
+  /* First-run welcome hint: above the board/guide but BELOW the header so the three-dot
+     menu (which the hint tells you to open) always opens ON TOP of it, never under it. */
+  --z-hint: 750;
   --z-header: 800;
   --z-tooltip: 900;
   --z-modal: 1000;
