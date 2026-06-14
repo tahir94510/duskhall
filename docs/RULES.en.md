@@ -92,7 +92,7 @@ PHASE 3, CLOSING: every active Seal trigger fires first (Necromancer's Eye takes
 
 SEALS are permanent. They do nothing in your hand; their effects work only on your tableau.
 
-SPELLS cost 1 HP. Declare a legal target before casting. If every possible target is untargetable, the spell cannot be cast and no HP is spent.
+SPELLS cost 1 HP. Declare a legal target before casting. If every possible target is untargetable, the Spell cannot be cast and no HP is spent.
 
 INTERVENTIONS cost no HP. Play them at any moment, on anyone's turn, as a reaction to the most recent action.
 

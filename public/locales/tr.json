@@ -51,12 +51,12 @@
     "stepRest": "Projeye erişiliyor",
     "stepRealtime": "Gerçek zamanlı eşitleme",
     "verdictOk": "Her şey yolunda. Canlı çok oyunculu eşitleme çalışıyor.",
-    "verdictBad": "Çok oyunculu eşitleme henüz çalışmıyor. Aşağıdaki nota bakın.",
-    "error": "Sınama çalıştırılamadı. Lütfen yeniden deneyin.",
-    "hint_config-missing": "SUPABASE_URL ve SUPABASE_ANON_KEY değerlerini barındırma ortamınızda (Vercel) tanımlayın ve yeniden dağıtın. Tarayıcınızda /api/config adresini açarak doğrulayabilirsiniz; iki değer de dolu olmalıdır.",
-    "hint_url-bad": "Proje adresi tam olarak https://projeniz.supabase.co biçiminde olmalı, sonunda fazladan bir yol bulunmamalı. Supabase panelinizde Project Settings, Data API bölümünden kopyalayın.",
-    "hint_rest-failed": "Projeye erişilemedi ya da anon anahtarı reddedildi. URL'i ve anon (public) anahtarını doğrulayın; Supabase projesinin duraklatılmadığından emin olun.",
-    "hint_realtime-failed": "Projeye erişiliyor ama Realtime soketi bağlanamadı. Supabase panelinizde Realtime'ın açık olduğundan ve bir güvenlik duvarı ya da vekil sunucunun websocket'i engellemediğinden emin olun."
+    "verdictBad": "Çok oyunculu eşitleme henüz çalışmıyor. Aşağıdaki nota bak.",
+    "error": "Sınama çalıştırılamadı. Lütfen yeniden dene.",
+    "hint_config-missing": "SUPABASE_URL ve SUPABASE_ANON_KEY değerlerini barındırma ortamında (Vercel) tanımla ve yeniden dağıt. Tarayıcında /api/config adresini açarak doğrulayabilirsin; iki değer de dolu olmalıdır.",
+    "hint_url-bad": "Proje adresi tam olarak https://projen.supabase.co biçiminde olmalı, sonunda fazladan bir yol bulunmamalı. Supabase panelinde Project Settings, Data API bölümünden kopyala.",
+    "hint_rest-failed": "Projeye erişilemedi ya da anon anahtarı reddedildi. URL'i ve anon (public) anahtarını doğrula; Supabase projesinin duraklatılmadığından emin ol.",
+    "hint_realtime-failed": "Projeye erişiliyor ama Realtime soketi bağlanamadı. Supabase panelinde Realtime'ın açık olduğundan ve bir güvenlik duvarı ya da vekil sunucunun websocket'i engellemediğinden emin ol."
   },
   "actions": {
     "flip": "Çevir",
@@ -417,7 +417,7 @@
         "title": "Daha büyük, daha net bir masa",
         "items": [
           "Kartlar daha büyük ve daha net; artık küçük bir telefondan 4K TV'ye kadar her ekranda aynı oranda ölçekleniyor. Böylece masa, büyük monitörlerde ortada küçük bir ada gibi durmak yerine her yerde dolu ve gerçek hissettiriyor.",
-          "Gizli alanınız artık çok daha geniş ve ferah: masanın köşelerine kadar uzanıyor, böylece her koltuk büyük ve birebir aynı boyutta bir el alanına sahip oluyor. Bir kart, alanınıza girer girmez gizli, çıkar çıkmaz herkese açık okunuyor; hem sizin hem de izleyenlerin gözünde aynı.",
+          "Gizli alanın artık çok daha geniş ve ferah: masanın köşelerine kadar uzanıyor, böylece her koltuk büyük ve birebir aynı boyutta bir el alanına sahip oluyor. Bir kart, alanına girer girmez gizli, çıkar çıkmaz herkese açık okunuyor; hem senin hem de izleyenlerin gözünde aynı.",
           "Genel cila: daha keskin kart kenarları, gizli alanlar için premium buzlu cam tepsiler ve kaldırılan bir kartın veya destenin altında daha belirgin bir gölge.",
           "Düzeltme: üst menü, kendi butonundan klavyeyle kapatılamıyordu (Boşluk ya da Enter onu yeniden açıyordu). Artık beklendiği gibi kapanıyor."
         ]
@@ -427,8 +427,8 @@
         "date": "4 Haziran 2026",
         "title": "Deste sıfırlama herkeste çalışıyor",
         "items": [
-          "Deste sıfırlama artık yalnızca oda sahibinde değil, masadaki her oyuncuda çalışıyor. Tıklayınca bir onay penceresi açılıyor; onayladığınızda tüm kartlar toplanıp ortada kapalı, yeniden karılmış bir desteye (yani oyunun başındaki kuruluma) herkes için dönüyor. Önceden bunu sadece oda sahibi yapabiliyordu ve diğer herkeste buton hiçbir şey yapmıyordu.",
-          "Bir desteyi (deste dahil) topladığınızda, karıştırdığınızda ya da çevirdiğinizde artık yeniden SİZİN kendi bakışınıza göre düzleşiyor; masanın geri kalanıyla aynı. Düzelttiğiniz deste size düz görünür; diğer koltuklar onu kendi açılarında görür."
+          "Deste sıfırlama artık yalnızca oda sahibinde değil, masadaki her oyuncuda çalışıyor. Tıklayınca bir onay penceresi açılıyor; onayladığında tüm kartlar toplanıp ortada kapalı, yeniden karılmış bir desteye (yani oyunun başındaki kuruluma) herkes için dönüyor. Önceden bunu sadece oda sahibi yapabiliyordu ve diğer herkeste buton hiçbir şey yapmıyordu.",
+          "Bir desteyi (deste dahil) topladığında, karıştırdığında ya da çevirdiğinde artık yeniden SENİN kendi bakışına göre düzleşiyor; masanın geri kalanıyla aynı. Düzelttiğin deste sana düz görünür; diğer koltuklar onu kendi açılarında görür."
         ]
       },
       {
@@ -445,7 +445,7 @@
         "title": "Karıştırma her zaman çalışır",
         "items": [
           "Başka bir oyuncu bir desteyle işi biter bitmez onu karıştırmak, çevirmek ya da tutmak artık anında çalışıyor. Nadir bir aksaklık, kartları birkaç saniyeliğine diğer oyuncuda kilitli gösterebiliyordu; bu yüzden onların karıştırması hiçbir şey yapmıyormuş gibi görünüyordu. Artık bu tutma güvenilir biçimde bırakılıyor.",
-          "\"Birisi bunu tutuyor\" anlamına gelen kesik çizgili çerçeve, kartı tam siz alırken ya da çevirirken artık üstüne binip titremiyor."
+          "\"Birisi bunu tutuyor\" anlamına gelen kesik çizgili çerçeve, kartı tam sen alırken ya da çevirirken artık üstüne binip titremiyor."
         ]
       },
       {
@@ -453,7 +453,7 @@
         "date": "4 Haziran 2026",
         "title": "Daha temiz kaldırma",
         "items": [
-          "Bir desteyi kaldırdığınızda artık her kart aynı anda ağır bir gölge düşürmüyor; eskiden bu, destenin altında kalan her şeyi karanlığa gömüyordu. Deste artık tek, temiz bir gölgeyle havalanıyor ve altındaki masa okunaklı kalıyor."
+          "Bir desteyi kaldırdığında artık her kart aynı anda ağır bir gölge düşürmüyor; eskiden bu, destenin altında kalan her şeyi karanlığa gömüyordu. Deste artık tek, temiz bir gölgeyle havalanıyor ve altındaki masa okunaklı kalıyor."
         ]
       },
       {
@@ -461,15 +461,15 @@
         "date": "4 Haziran 2026",
         "title": "Daha büyük, daha zengin, daha sessiz masa",
         "items": [
-          "Kartlar artık daha büyük ve daha net, özellikle büyük ekranlarda; böylece masa, ortadaki küçük bir ada gibi değil, elinizdeki gerçek kartlar gibi hissettiriyor. Deste ve çöplük noktaları da onlarla birlikte büyüyor. Bir kartı kimin görebileceği ya da gruplayabileceği konusunda hiçbir şey değişmedi.",
-          "Kartlar gerçek basılı kartlara daha çok benziyor: deste sırtı daha derin, açık bir kartın net bir çerçeve kenarı var ve elinize aldığınız kart daha derin bir gölge bırakıyor. Yine sakin ve tek renk.",
+          "Kartlar artık daha büyük ve daha net, özellikle büyük ekranlarda; böylece masa, ortadaki küçük bir ada gibi değil, elindeki gerçek kartlar gibi hissettiriyor. Deste ve çöplük noktaları da onlarla birlikte büyüyor. Bir kartı kimin görebileceği ya da gruplayabileceği konusunda hiçbir şey değişmedi.",
+          "Kartlar gerçek basılı kartlara daha çok benziyor: deste sırtı daha derin, açık bir kartın net bir çerçeve kenarı var ve eline aldığın kart daha derin bir gölge bırakıyor. Yine sakin ve tek renk.",
           "Masa yüzeyi daha zengin, daha dokunsal bir his kazandı; ince bir doku ve kenarlara doğru yumuşak bir derinlik gölgesi eklendi, böylece zemin düz değil, bilinçli ve premium görünüyor; karanlık, sakin atmosfer ise korunuyor.",
           "Zaten derli toplu olan bir desteyi toplamak artık hiçbir şey yapmıyor; eskiden olduğu gibi her seferinde yeniden toplayıp sesi tekrar çalmıyor. Dağınık ya da yelpaze biçiminde açılmış bir deste yine eskisi gibi toplanıyor; karıştırma ve desteyi ters çevirme ise tekrarlanabilir kalıyor.",
           "Bütün bir desteyi bırakmak artık tek bir kartın net dokunuşundan farklı, daha derin ve ağırlıklı bir tok sesle yere iniyor; böylece masa, göründüğü gibi duyuluyor.",
-          "Cihazınızın 'hareketi azalt' ayarını açtıysanız, kart çevirme ve karıştırma artık tamamen anında: işlem sonrası hiçbir kart kısa süre gizli ya da donmuş kalmıyor ve deste diğer oyuncular için bir an bile kilitlenmiyor.",
-          "Tam bir tur çevrilmiş, kapalı duran bir deste, pencereyi yeniden boyutlandırdığınızda artık deste noktasında sabit kalıyor; eskisi gibi yavaşça oradan kaymıyor.",
-          "Kodla katılma artık daha titiz: yalnızca gerçek altı karakterli bir kodu ya da davet bağlantısını kabul ediyor, yapıştırdığınız daha uzun bir kelimeden yanlış bir kod çıkarmıyor; böylece artık boş, alakasız bir odaya düşmüyorsunuz.",
-          "Kuralları okurken ya da herhangi bir menüdeyken, diğer oyuncular artık imlecinizi masada donmuş hâlde görmüyor; siz dönene kadar gizleniyor."
+          "Cihazının 'hareketi azalt' ayarını açtıysan, kart çevirme ve karıştırma artık tamamen anında: işlem sonrası hiçbir kart kısa süre gizli ya da donmuş kalmıyor ve deste diğer oyuncular için bir an bile kilitlenmiyor.",
+          "Tam bir tur çevrilmiş, kapalı duran bir deste, pencereyi yeniden boyutlandırdığında artık deste noktasında sabit kalıyor; eskisi gibi yavaşça oradan kaymıyor.",
+          "Kodla katılma artık daha titiz: yalnızca gerçek altı karakterli bir kodu ya da davet bağlantısını kabul ediyor, yapıştırdığın daha uzun bir kelimeden yanlış bir kod çıkarmıyor; böylece artık boş, alakasız bir odaya düşmüyorsun.",
+          "Kuralları okurken ya da herhangi bir menüdeyken, diğer oyuncular artık imlecini masada donmuş hâlde görmüyor; sen dönene kadar gizleniyor."
         ]
       },
       {
@@ -761,7 +761,7 @@
         "title": "5. Kart türü kuralları",
         "body": [
           "MÜHÜRLER kalıcıdır. Elde hiçbir işe yaramaz; etkileri yalnızca masada çalışır.",
-          "BÜYÜLER 1 HP harcar. Oynamadan önce geçerli bir hedef seç. Tüm olası hedefler hedeflenemez durumdaysa büyü oynanamaz ve HP harcanmaz.",
+          "BÜYÜLER 1 HP harcar. Oynamadan önce geçerli bir hedef seç. Tüm olası hedefler hedeflenemez durumdaysa Büyü oynanamaz ve HP harcanmaz.",
           "MÜDAHALELER HP harcamaz. Sıra kimde olursa olsun, en son eyleme tepki olarak her an oynanır.",
           "Karmik Yansıma ve Kan Kefareti BENCİLdir: yalnızca kendini ya da kendi kartlarını korumak için oynanır.",
           "Sustur! EVRENSELdir: taze oynanmış herhangi bir Büyü ya da Müdahaleyi iptal eder. Mühür ya da Hizmetkâr koymak (Oluştur) bunlardan biri değildir; Sustur! yerleştirmeyi durduramaz.",
