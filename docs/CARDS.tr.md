@@ -63,9 +63,9 @@ Rakibin masasından bir kartı yok et. Hizmetkâr Kalkanı geçerli: hedefin Hiz
 *Görünenle mühürlenen arasındaki temiz bir kesik.*
 
 ### Gölge Hırsızlığı (Büyü, 5 kopya)
-Bir rakibin elinden rastgele bir kart çal. Eli, kimse göremeden kapalı karıştırılır; hangi
-kartın geçtiğini kimse seçmez. Eli boşsa ya da Hiçlik Örtüsü ile korunuyorsa oynanamaz, HP
-harcanmaz. 1 HP.
+Bir rakibin elinden rastgele bir kart çal. Eli kimse göremeden kapalı karıştırılır ve
+içinden rastgele biri eline geçer; hangisini alacağını ne sen ne rakip seçer. Eli boşsa ya
+da Hiçlik Örtüsü ile korunuyorsa oynanamaz, HP harcanmaz. 1 HP.
 
 *Her sırrın kaldırabileceğin bir ağırlığı vardır.*
 
@@ -77,8 +77,9 @@ biterse önce Eter Dalgalanması çözülür, kalan kartlar yeni desteden gelir.
 
 ### Zihin Paraziti (Büyü, 4 kopya)
 Rakibin bir Hizmetkârını kendi masana geçir. Sürekli etkileri artık sana hizmet eder ve 3
-Hizmetkâr sınırına dahil olur. Boş yuvan yoksa ya da hedefin Hizmetkârı yoksa oynanamaz,
-HP harcanmaz. 1 HP.
+Hizmetkâr sınırına sayılır. Boş bir yuvan olmalı: zaten 3 Hizmetkârın varsa oynanamaz
+(çalmak için kendi kartını atıp yer açamazsın), hedefin Hizmetkârı yoksa da oynanamaz; HP
+harcanmaz. 1 HP.
 
 *Sadakat bir kapıdır; anahtar sende.*
 
@@ -120,17 +121,17 @@ kumardır. Elinde 2'den az kart varsa oynanamaz. HP istemez.
 ## Hizmetkârlar (16)
 
 ### Rünik Bekçi (Hizmetkâr, 8 kopya)
-Masanda durduğu sürece tüm Mühürlerin hedeflenemez olur; rakip onlara uzanmadan önce
-Bekçi'nin kendisini, Kalkan kuralı gereği diğer tüm Hizmetkârlarını da yok etmek
+Masanda durduğu sürece tüm Mühürlerin hedeflenemez olur. Bekçi'nin kendisi hedeflenebilir;
+Kalkan kuralı gereği rakip, Mühürlerine uzanmadan önce tüm Hizmetkârları yok etmek
 zorundadır.
 
 *Demire kazınmış sabır.*
 
 ### Buzul Ucube (Hizmetkâr, 4 kopya)
-Bunu yok eden, bir sonraki turunun tamamını atlar (Odaklanma, Aksiyon ve Kapanış);
-Müdahaleleri yine oynayabilir. Ceza dolaylı yok etmelerde de işler; örneğin bir Gölge
-Katili girişi ya da Karmik Yansıma dönüşü. Yalnızca yok edilmesi bunu tetikler; çalınması
-tetiklemez.
+Bunu yok eden, bir sonraki turunun tamamını atlar. Atlanan turda Odaklanma, Aksiyon ve
+Kapanış yoktur; Müdahaleler yine oynanabilir. Ceza dolaylı yok etmelerde de işler, örneğin
+bir Gölge Katili girişi ya da Karmik Yansıma dönüşü; yalnızca yok edilmesi bunu tetikler,
+çalınması tetiklemez.
 
 *Kendi zamanını tutan bir kış.*
 

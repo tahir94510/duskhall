@@ -205,6 +205,8 @@ Q. If I take a Glacial Aberration with Mind Parasite, do I skip a turn? A. No. T
 
 Q. Can a player skipped by Glacial Aberration still play Interventions? A. Yes. Interventions are reactive and ignore turn order.
 
+Q. I declared Ascension; if I destroy a Glacial Aberration during the Trial (say, with a Karmic Reflection rebound), do I lose because my turn gets skipped? A. You still win. Ascension is checked the moment the turn returns to you, before Focus; if you hold 3 Seals then, you win the game. The skip-a-turn penalty only applies afterwards, when it no longer matters.
+
 ### Hand and deck
 
 Q. Blood Atonement needs how many cards in hand? A. At least 2. With fewer, it cannot be played.
@@ -212,7 +214,6 @@ Q. Blood Atonement needs how many cards in hand? A. At least 2. With fewer, it c
 Q. Who picks the 2 cards Blood Atonement discards? A. Nobody. They leave your hand at random, so paying the cost is always a gamble.
 
 Q. The deck empties mid-draw? A. Ether Resonance resolves fully first; the draw effect then completes from the new deck.
-
 ## 13. Quick reference
 
 Phases: Focus, Action, Closing, (optional) Ascension declaration.

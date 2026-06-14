@@ -201,6 +201,8 @@ S. Zihin Paraziti ile bir Buzul Ucube'yi ele geçirirsem tur atlar mıyım? C. H
 
 S. Buzul Ucube ile turu atlanan oyuncu Müdahale oynayabilir mi? C. Evet. Müdahaleler tepkiseldir; sıra düzeninden bağımsızdır.
 
+S. Yükseliş ilan ettim; Sınav sırasında (örneğin Karmik Yansıma dönüşüyle) bir Buzul Ucube yok edersem, turum atlanacağı için kaybeder miyim? C. Yine kazanırsın. Yükseliş, sıra sana döndüğü an, Odaklanma'dan önce değerlendirilir; o anda 3 Mührün duruyorsa oyunu kazanırsın. Tur-atlama cezası ancak ondan sonra, artık önemsizken işler.
+
 ### El ve deste
 
 S. Kan Kefareti için elimde kaç kart olmalı? C. En az 2. Daha azıyla oynanamaz.

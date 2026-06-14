@@ -64,9 +64,9 @@ HP is spent. 1 HP.
 *A clean cut between the seen and the sealed.*
 
 ### Shadow Theft (Spell, 5 copies)
-Steal one random card from a rival's hand. Their hand is shuffled face-down first; no one
-chooses which card moves. If their hand is empty or shielded by Veil of Void it cannot be
-cast, and no HP is spent. 1 HP.
+Steal one random card from a rival's hand. Their hand is shuffled face-down and one card
+moves to you at random; neither player chooses which. If their hand is empty or shielded
+by Veil of Void it cannot be cast, and no HP is spent. 1 HP.
 
 *Every secret has a weight you can lift.*
 
@@ -77,9 +77,10 @@ mid-draw, Ether Resonance resolves first and the rest come from the new deck. 1 
 *Open the eye that never blinks.*
 
 ### Mind Parasite (Spell, 4 copies)
-Take a rival's Servant onto your own tableau. Its ongoing effects now serve you, and it
-counts toward your 3-Servant limit. With no free slot, or no Servant to take, it cannot be
-cast and no HP is spent. 1 HP.
+Take a rival's Servant onto your own tableau. Its ongoing effects now serve you and it
+counts toward your 3-Servant limit. You need a free slot: with 3 Servants already it
+cannot be cast (a steal can't discard one of yours to make room), nor if the rival has no
+Servant; no HP is spent. 1 HP.
 
 *Loyalty is a door, and you have the key.*
 
@@ -120,16 +121,16 @@ is always a gamble. With fewer than 2 cards in hand it cannot be played. Costs n
 ## Servants (16)
 
 ### Runic Warden (Servant, 8 copies)
-While it stands, all of your Seals are untargetable; before a rival can reach them they
-must destroy the Warden itself, and by the Shield rule every other Servant too.
+All of your Seals become untargetable while it stands. The Warden itself can be targeted,
+and by the Shield rule a rival must destroy every Servant before reaching your Seals.
 
 *Patience etched in iron.*
 
 ### Glacial Aberration (Servant, 4 copies)
-Whoever destroys this skips their entire next turn (Focus, Action and Closing); they may
-still play Interventions. The penalty fires on an indirect kill too, such as a Shadow
-Slayer entry or a Karmic Reflection rebound. Only destroying it triggers this; stealing it
-does not.
+Whoever destroys this skips their entire next turn. The skipped turn has no Focus, Action
+or Closing, though Interventions may still be played. The penalty fires on an indirect
+kill too, such as a Shadow Slayer entry or a Karmic Reflection rebound; only destroying it
+triggers this, not stealing it.
 
 *A winter that keeps its own time.*
 
