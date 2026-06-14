@@ -903,7 +903,7 @@
   },
   "resetDeckConfirm": {
     "title": "Desteyi sıfırla?",
-    "body": "Masadaki tüm kartlar toplanır, kapalı şekilde karılır ve desteye geri konur. Bu işlem tüm oyuncuları etkiler.",
+    "body": "Masadaki tüm kartlar toplanır, kapalı şekilde karıştırılır ve desteye geri konur. Bu işlem tüm oyuncuları etkiler.",
     "confirm": "Desteyi sıfırla"
   },
   "restartGameConfirm": {
