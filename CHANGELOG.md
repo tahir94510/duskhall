@@ -2,7 +2,7 @@
 
 ## 0.9.25: A clearer card, centred messages, and a settled rule
 
-A render-bug, responsive and content pass. No rules or numbers changed; 275 tests green.
+A render-bug, responsive and content pass. No rules or numbers changed; 278 tests green.
 
 - **Runic Warden renders like every card again.** Tooltip.renderDef splits an effect into a
   semibold first sentence (.tooltip__lead) plus the rest (.tooltip__body); Runic Warden had
@@ -25,6 +25,12 @@ A render-bug, responsive and content pass. No rules or numbers changed; 275 test
   skip-a-turn penalty only applies afterwards, when it no longer matters. Mirrored to
   docs/RULES. No rule or number changed; it documents the existing "checked when the turn
   returns" rule.
+- **A consistency sweep across both languages.** The card encyclopedia headline now states the
+  deck's 15 unique faces (it said 16); balance.test gained guards so neither the face count nor
+  the CARDS headlines can drift from the card set again. Turkish now reads in one informal voice
+  everywhere, including the connection self-test and the older What's-new entries; the reset-deck
+  dialog uses the same shuffle verb as the rest of the app; and the Spells rule capitalizes the
+  category noun to match its neighbours. All copy-only; no rules, numbers or logic changed.
 
 ## 0.9.24: A kick that sticks, a fitting menu, and plainer wording
 
