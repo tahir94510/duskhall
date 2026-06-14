@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.9.25: A clearer card, centred messages, and a settled rule
+
+A render-bug, responsive and content pass. No rules or numbers changed; 275 tests green.
+
+- **Runic Warden renders like every card again.** Tooltip.renderDef splits an effect into a
+  semibold first sentence (.tooltip__lead) plus the rest (.tooltip__body); Runic Warden had
+  been rewritten as one semicolon-joined sentence with no internal ". ", so the regex never
+  split it and the whole effect rendered as one bold wall. renderDef now only promotes a lead
+  when it is short (<=96 chars) and ALWAYS prints a body, so no card can become an all-bold
+  block again; Runic Warden is also rewritten as two sentences. Mirrored to docs/CARDS.
+- **Toasts stay centred on every screen.** The base .toast had no max-width or text-align, so
+  a long info message ran past the viewport, and the success/error variants used a flex row
+  that pinned wrapped text left of centre. The base now caps at min(92vw, 460px) with
+  text-align: center, and the status dot is an inline ::before marker, so a one-line toast is a
+  centred pill and a long one wraps centred inside it. The offline banner is untouched.
+- **Clearer card and rule wording, both languages.** Shadow Theft's random steal, Runic
+  Warden's shield, Glacial Aberration's skip penalty (including indirect kills) and Mind
+  Parasite's free-slot requirement are reworded for clarity and mirrored to docs/CARDS; the
+  deck and Ether Resonance prose was verified consistent across card, glossary, rules and guide.
+- **The Ascension + skip-turn case is settled in the rulebook.** A new edge-case Q&A states
+  that if you declare Ascension and then destroy a Glacial Aberration during the Trial, the
+  victory check runs the moment the turn returns to you, before Focus, so you still win; the
+  skip-a-turn penalty only applies afterwards, when it no longer matters. Mirrored to
+  docs/RULES. No rule or number changed; it documents the existing "checked when the turn
+  returns" rule.
+
 ## 0.9.24: A kick that sticks, a fitting menu, and plainer wording
 
 A multiplayer-correctness, layout and content pass. No rules or numbers changed.

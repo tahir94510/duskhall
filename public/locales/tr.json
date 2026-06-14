@@ -297,6 +297,17 @@
     "empty": "Henüz güncelleme yok.",
     "entries": [
       {
+        "v": "2026-06-14",
+        "date": "14 Haziran 2026",
+        "title": "Düzgün okunan bir kart, ortalı bildirimler ve netleşen bir kural",
+        "items": [
+          "Rünik Bekçi'nin kartı artık diğerleri gibi okunuyor: ne yaptığını söyleyen kısa kalın bir satır ve altında ayrıntılar; eskisi gibi tek parça kalın bir metin yığını değil.",
+          "Ekrandaki bildirimler artık her ekran boyutunda altta ortalı duruyor: uzun bir mesaj sola kayıp kırılmak yerine kendi hap biçimi içinde düzgünce satır atlıyor.",
+          "Birkaç kart ve kural ifadesi iki dilde de daha net: Gölge Hırsızlığı'nın rastgele çalması nasıl işliyor, Rünik Bekçi neyi koruyor ve Zihin Paraziti neden boş bir Hizmetkâr yuvası ister.",
+          "Kural kitapçığı çetrefilli bir durumu çözüme bağlıyor: Yükseliş ilan edip Sınav sırasında bir Buzul Ucube yok edersen, sıra sana döndüğü anda, atlanan tur önem kazanamadan yine kazanırsın."
+        ]
+      },
+      {
         "v": "2026-06-13",
         "date": "13 Haziran 2026",
         "title": "Kalıcı bir çıkarma, sığan bir menü ve daha sade dil",
@@ -607,7 +618,7 @@
     "shadowTheft": {
       "name": "Gölge Hırsızlığı",
       "type": "Büyü",
-      "effect": "Bir rakibin elinden rastgele bir kart çal. Eli, kimse göremeden kapalı karıştırılır; hangi kartın geçtiğini kimse seçmez. Eli boşsa ya da Hiçlik Örtüsü ile korunuyorsa oynanamaz, HP harcanmaz. 1 HP.",
+      "effect": "Bir rakibin elinden rastgele bir kart çal. Eli kimse göremeden kapalı karıştırılır ve içinden rastgele biri eline geçer; hangisini alacağını ne sen ne rakip seçer. Eli boşsa ya da Hiçlik Örtüsü ile korunuyorsa oynanamaz, HP harcanmaz. 1 HP.",
       "flavor": "Her sırrın kaldırabileceğin bir ağırlığı vardır."
     },
     "ancientSight": {
@@ -619,7 +630,7 @@
     "mindParasite": {
       "name": "Zihin Paraziti",
       "type": "Büyü",
-      "effect": "Rakibin bir Hizmetkârını kendi masana geçir. Sürekli etkileri artık sana hizmet eder ve 3 Hizmetkâr sınırına dahil olur. Boş yuvan yoksa ya da hedefin Hizmetkârı yoksa oynanamaz, HP harcanmaz. 1 HP.",
+      "effect": "Rakibin bir Hizmetkârını kendi masana geçir. Sürekli etkileri artık sana hizmet eder ve 3 Hizmetkâr sınırına sayılır. Boş bir yuvan olmalı: zaten 3 Hizmetkârın varsa oynanamaz (çalmak için kendi kartını atıp yer açamazsın), hedefin Hizmetkârı yoksa da oynanamaz; HP harcanmaz. 1 HP.",
       "flavor": "Sadakat bir kapıdır; anahtar sende."
     },
     "twistOfFate": {
@@ -649,13 +660,13 @@
     "runicWarden": {
       "name": "Rünik Bekçi",
       "type": "Hizmetkâr",
-      "effect": "Masanda durduğu sürece tüm Mühürlerin hedeflenemez olur; rakip onlara uzanmadan önce Bekçi'nin kendisini, Kalkan kuralı gereği diğer tüm Hizmetkârlarını da yok etmek zorundadır.",
+      "effect": "Masanda durduğu sürece tüm Mühürlerin hedeflenemez olur. Bekçi'nin kendisi hedeflenebilir; Kalkan kuralı gereği rakip, Mühürlerine uzanmadan önce tüm Hizmetkârları yok etmek zorundadır.",
       "flavor": "Demire kazınmış sabır."
     },
     "glacialAberration": {
       "name": "Buzul Ucube",
       "type": "Hizmetkâr",
-      "effect": "Bunu yok eden, bir sonraki turunun tamamını atlar (Odaklanma, Aksiyon ve Kapanış); Müdahaleleri yine oynayabilir. Ceza dolaylı yok etmelerde de işler; örneğin bir Gölge Katili girişi ya da Karmik Yansıma dönüşü. Yalnızca yok edilmesi bunu tetikler; çalınması tetiklemez.",
+      "effect": "Bunu yok eden, bir sonraki turunun tamamını atlar. Atlanan turda Odaklanma, Aksiyon ve Kapanış yoktur; Müdahaleler yine oynanabilir. Ceza dolaylı yok etmelerde de işler, örneğin bir Gölge Katili girişi ya da Karmik Yansıma dönüşü; yalnızca yok edilmesi bunu tetikler, çalınması tetiklemez.",
       "flavor": "Kendi zamanını tutan bir kış."
     },
     "shadowSlayer": {
@@ -859,6 +870,7 @@
           "S. Hizmetkâr sıram dolu (3) ve elimden bir tane daha oynamak istiyorum? C. O Oluştur'un parçası olarak önce kendi Hizmetkârlarından birini yer açmak için Çöplüğe at (seçim senin; ekstra HP yok). Masadaki bir kart asla eline geri alınamaz; yalnızca yok edilerek, feda edilerek, yer açmak için atılarak ya da çalınarak ayrılır.",
           "S. Zihin Paraziti ile bir Buzul Ucube'yi ele geçirirsem tur atlar mıyım? C. Hayır. Ele geçirmek yok etmek değildir; tur atlatma cezası tetiklenmez, yalnız Buzul Ucube yok edildiğinde işler.",
           "S. Buzul Ucube ile turu atlanan oyuncu Müdahale oynayabilir mi? C. Evet. Müdahaleler tepkiseldir; sıra düzeninden bağımsızdır.",
+          "S. Yükseliş ilan ettim; Sınav sırasında (örneğin Karmik Yansıma dönüşüyle) bir Buzul Ucube yok edersem, turum atlanacağı için kaybeder miyim? C. Yine kazanırsın. Yükseliş, sıra sana döndüğü an, Odaklanma'dan önce değerlendirilir; o anda 3 Mührün duruyorsa oyunu kazanırsın. Tur-atlama cezası ancak ondan sonra, artık önemsizken işler.",
           "### El ve deste",
           "S. Kan Kefareti için elimde kaç kart olmalı? C. En az 2. Daha azıyla oynanamaz.",
           "S. Kan Kefareti'nin attığı 2 kartı kim seçer? C. Kimse. Kartlar elinden rastgele çıkar, bu yüzden bedeli ödemek her zaman bir risktir.",
@@ -891,7 +903,7 @@
   },
   "resetDeckConfirm": {
     "title": "Desteyi sıfırla?",
-    "body": "Masadaki tüm kartlar toplanır, kapalı şekilde karılır ve desteye geri konur. Bu işlem tüm oyuncuları etkiler.",
+    "body": "Masadaki tüm kartlar toplanır, kapalı şekilde karıştırılır ve desteye geri konur. Bu işlem tüm oyuncuları etkiler.",
     "confirm": "Desteyi sıfırla"
   },
   "restartGameConfirm": {

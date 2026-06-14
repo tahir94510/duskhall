@@ -181,19 +181,20 @@ export class Tooltip {
       : "";
     // The effect copy is written action-first: every card's opening sentence says
     // WHAT IT DOES in plain words, then costs and fine print follow. Surface that
-    // structure here: the first sentence renders as a lead line, the rest as the
-    // body, so a newcomer hovering a card gets the point before the details. If no
-    // split point exists the whole text is the lead.
+    // structure here: a SHORT first sentence renders as a semibold lead, the rest as
+    // the body. If the text has no early sentence break (a single long sentence), we
+    // skip the lead and show it all as body, so a card never renders as a wall of bold.
     const effect = t(`cards.${def.id}.effect`);
     const m = effect.match(/^(.+?[.!?])\s+([\s\S]+)$/);
-    const lead = m ? m[1]! : effect;
-    const rest = m ? m[2]! : "";
+    const hasLead = !!m && m[1]!.length <= 96;
+    const lead = hasLead ? m![1]! : "";
+    const rest = hasLead ? m![2]! : effect;
     this.el.innerHTML = `
       <div class="tooltip__scrim" aria-hidden="true"></div>
       <div class="tooltip__title">${escapeHtml(t(`cards.${def.id}.name`))}</div>
       <div class="tooltip__type">${escapeHtml(t(`categories.${def.category}.name`))}</div>
-      <div class="tooltip__lead">${escapeHtml(lead)}</div>
-      ${rest ? `<div class="tooltip__body">${escapeHtml(rest)}</div>` : ""}
+      ${lead ? `<div class="tooltip__lead">${escapeHtml(lead)}</div>` : ""}
+      <div class="tooltip__body">${escapeHtml(rest)}</div>
       <div class="tooltip__flavor">${escapeHtml(t(`cards.${def.id}.flavor`))}</div>${pileLine}
     `;
     return true;

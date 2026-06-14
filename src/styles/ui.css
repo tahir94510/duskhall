@@ -283,12 +283,20 @@
   left: 50%;
   bottom: max(env(safe-area-inset-bottom), 28px);
   transform: translate(-50%, 16px);
+  /* Cap the width so a long message wraps INSIDE the pill instead of running off the
+     viewport (the bug: an info toast with no max-width grew past the screen edge). With
+     box-sizing the padding stays inside the cap, and text-align keeps a wrapped two-line
+     message centred under the bottom-centre anchor rather than ragged-left. */
+  max-width: min(92vw, 460px);
+  box-sizing: border-box;
   background: rgba(18, 18, 18, 0.92);
   border: 1px solid var(--line-2);
   color: var(--ivory);
   padding: 9px 16px;
   border-radius: var(--r-pill);
   font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
   z-index: var(--z-toast);
   opacity: 0;
   pointer-events: none;
@@ -297,22 +305,19 @@
 }
 .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 
-/* Status toasts: a small coloured dot beside the message (mirrors the offline banner's
-   amber dot) so success and error read at a glance without tinting the whole pill. */
-.toast--success,
-.toast--error {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: min(92vw, 460px);
-}
+/* Status toasts: a small coloured dot before the message (mirrors the offline banner's
+   amber dot) so success and error read at a glance without tinting the whole pill. The dot
+   is an INLINE marker (not a flex row) so a message that wraps to two lines stays centred
+   under the base .toast text-align, instead of a flex row pinning the text left of centre. */
 .toast--success::before,
 .toast--error::before {
   content: "";
-  flex: none;
+  display: inline-block;
+  vertical-align: middle;
   width: 7px;
   height: 7px;
   border-radius: 50%;
+  margin-right: 8px;
 }
 .toast--success::before { background: var(--status-ok); box-shadow: 0 0 6px rgba(60, 154, 106, 0.55); }
 .toast--error::before { background: var(--status-err); box-shadow: 0 0 6px rgba(200, 68, 74, 0.55); }
