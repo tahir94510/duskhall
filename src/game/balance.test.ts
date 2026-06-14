@@ -33,6 +33,16 @@ describe("card set matches BALANCE", () => {
     expect(byCat.seal + byCat.spell + byCat.intervention + byCat.servant).toBe(BALANCE.TOTAL_CARDS);
   });
 
+  it("the deck has 15 unique faces (4 seals, 5 spells, 3 interventions, 3 servants)", () => {
+    const faces = { seal: 0, spell: 0, intervention: 0, servant: 0 } as Record<string, number>;
+    for (const d of CARD_DEFS) faces[d.category] = (faces[d.category] ?? 0) + 1;
+    expect(faces.seal).toBe(4);
+    expect(faces.spell).toBe(5);
+    expect(faces.intervention).toBe(3);
+    expect(faces.servant).toBe(3);
+    expect(CARD_DEFS.length).toBe(15);
+  });
+
   it("seal count never exceeds the in-play cap, ascension threshold is reachable", () => {
     expect(BALANCE.ASCENSION_SEAL_THRESHOLD).toBeLessThanOrEqual(BALANCE.MAX_SEALS_IN_PLAY);
     expect(BALANCE.HP_BASE).toBeLessThanOrEqual(BALANCE.HP_CAP);
@@ -49,6 +59,23 @@ describe("rulebook copy agrees with BALANCE (both locales)", () => {
       // Hand limit and HP cap appear in the quick reference.
       expect(text).toContain(String(BALANCE.HAND_LIMIT));
       expect(text).toContain(String(BALANCE.HP_CAP));
+    });
+  }
+});
+
+describe("card encyclopedia docs agree with the card set", () => {
+  // The CARDS.{en,tr}.md summary line states the deck size and the UNIQUE face count.
+  // Derive both from the card defs so a face added or removed can never leave a stale
+  // headline (this guards the exact "15 vs 16 faces" drift the locale rulebook misses).
+  const uniqueFaces = CARD_DEFS.length;
+  for (const [name, total, faces] of [
+    ["en", `${BALANCE.TOTAL_CARDS} cards`, `${uniqueFaces} unique faces`],
+    ["tr", `${BALANCE.TOTAL_CARDS} kart`, `${uniqueFaces} benzersiz yüz`],
+  ] as const) {
+    it(`${name}: CARDS.${name}.md headline matches the deck and face count`, () => {
+      const md = readFileSync(resolve(root, `docs/CARDS.${name}.md`), "utf8");
+      expect(md).toContain(total);
+      expect(md).toContain(faces);
     });
   }
 });

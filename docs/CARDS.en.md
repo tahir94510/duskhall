@@ -1,6 +1,6 @@
 # Vaerum: Card Encyclopedia (English)
 
-The complete deck: **72 cards**, 16 unique faces across four categories. Every card
+The complete deck: **72 cards**, 15 unique faces across four categories. Every card
 resolves exactly as written here; the digital table moves cards but never enforces
 these rules; the players do.
 

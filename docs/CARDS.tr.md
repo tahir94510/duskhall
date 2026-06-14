@@ -1,6 +1,6 @@
 # Vaerum: Kart Ansiklopedisi (Türkçe)
 
-Tüm deste: **72 kart**, dört kategoride 16 benzersiz yüz. Her kart tam olarak burada
+Tüm deste: **72 kart**, dört kategoride 15 benzersiz yüz. Her kart tam olarak burada
 yazıldığı gibi çözülür; dijital masa kartları taşır ama bu kuralları dayatmaz; onu
 oyuncular yapar.
 
