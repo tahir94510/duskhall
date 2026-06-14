@@ -351,7 +351,11 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   letter-spacing: 0.04em;
 }
 
-@media (max-width: 600px) {
+/* The rulebook stacks to one column at <=760px (mobile.css), so the TOC becomes a
+   wrapped bar of tappable section buttons here, across that SAME range. This block owns
+   the stacked-TOC styling outright (mobile.css no longer restyles .rules__toc) so the
+   sticky pin and its reading-position highlight are never overridden by import order. */
+@media (max-width: 760px) {
   .rules { grid-template-columns: 1fr; }
   /* A wrapped bar of clearly tappable section buttons, pinned to the top of the
      scrolling body so the reader can jump sections at any time — not a hidden
