@@ -92,7 +92,7 @@ AŞAMA 3, KAPANIŞ: önce aktif tüm Mühür tetikleri işler (Ölüçağıranı
 
 MÜHÜRLER kalıcıdır. Elde hiçbir işe yaramaz; etkileri yalnızca masada çalışır.
 
-BÜYÜLER 1 HP harcar. Oynamadan önce geçerli bir hedef seç. Tüm olası hedefler hedeflenemez durumdaysa büyü oynanamaz ve HP harcanmaz.
+BÜYÜLER 1 HP harcar. Oynamadan önce geçerli bir hedef seç. Tüm olası hedefler hedeflenemez durumdaysa Büyü oynanamaz ve HP harcanmaz.
 
 MÜDAHALELER HP harcamaz. Sıra kimde olursa olsun, en son eyleme tepki olarak her an oynanır.
 

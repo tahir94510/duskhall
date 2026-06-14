@@ -761,7 +761,7 @@
         "title": "5. Card-type rules",
         "body": [
           "SEALS are permanent. They do nothing in your hand; their effects work only on your tableau.",
-          "SPELLS cost 1 HP. Declare a legal target before casting. If every possible target is untargetable, the spell cannot be cast and no HP is spent.",
+          "SPELLS cost 1 HP. Declare a legal target before casting. If every possible target is untargetable, the Spell cannot be cast and no HP is spent.",
           "INTERVENTIONS cost no HP. Play them at any moment, on anyone's turn, as a reaction to the most recent action.",
           "Karmic Reflection and Blood Atonement are SELFISH: usable only to protect YOURSELF or your own cards.",
           "Silence! is UNIVERSAL: it cancels any freshly cast Spell or Intervention. Placing a Seal or Servant (a Create) is neither, so Silence! cannot stop a placement.",

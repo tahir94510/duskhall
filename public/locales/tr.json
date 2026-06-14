@@ -761,7 +761,7 @@
         "title": "5. Kart türü kuralları",
         "body": [
           "MÜHÜRLER kalıcıdır. Elde hiçbir işe yaramaz; etkileri yalnızca masada çalışır.",
-          "BÜYÜLER 1 HP harcar. Oynamadan önce geçerli bir hedef seç. Tüm olası hedefler hedeflenemez durumdaysa büyü oynanamaz ve HP harcanmaz.",
+          "BÜYÜLER 1 HP harcar. Oynamadan önce geçerli bir hedef seç. Tüm olası hedefler hedeflenemez durumdaysa Büyü oynanamaz ve HP harcanmaz.",
           "MÜDAHALELER HP harcamaz. Sıra kimde olursa olsun, en son eyleme tepki olarak her an oynanır.",
           "Karmik Yansıma ve Kan Kefareti BENCİLdir: yalnızca kendini ya da kendi kartlarını korumak için oynanır.",
           "Sustur! EVRENSELdir: taze oynanmış herhangi bir Büyü ya da Müdahaleyi iptal eder. Mühür ya da Hizmetkâr koymak (Oluştur) bunlardan biri değildir; Sustur! yerleştirmeyi durduramaz.",
