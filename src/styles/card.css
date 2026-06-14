@@ -177,6 +177,15 @@
   transform: rotateY(180deg);
 }
 
+/* Promote the inner to its OWN compositor layer the instant a turn begins. runFlipVisual
+   adds is-flipping a frame BEFORE it toggles is-faceup, so the layer exists before the
+   rotateY fires: both faces are rasterized up front and the 3D turn composites on the GPU.
+   This makes the FIRST flip of a card as smooth as the rest, instead of janking while the
+   browser builds the layer (and first-rasterizes the hidden front face) mid-rotation. Scoped
+   to the turn so no card holds a layer at rest — the table can carry 72+ cards. Cleared when
+   is-flipping is removed at settle. */
+.card.is-flipping .card__inner { will-change: transform; }
+
 .card__face {
   position: absolute;
   inset: 0;
@@ -190,6 +199,9 @@
    vignette, a fine inner frame, and the Vaerum rhombus emblem centred at low
    opacity, consistent with the logo, calm and elegant (no nested clutter). */
 .card__face--back {
+  /* A matching 1px depth push (see --front) keeps the two faces on separate planes, so the
+     nearer, opaque face always occludes the other during a turn. */
+  transform: translateZ(1px);
   background:
     radial-gradient(120% 90% at 50% 38%, rgba(243, 239, 229, 0.08) 0%, rgba(243, 239, 229, 0) 56%),
     linear-gradient(160deg, #17171d 0%, #121217 52%, #0e0e12 100%);
@@ -222,8 +234,13 @@
 }
 
 .card__face--front {
-  /* rotated away from camera until is-faceup flips */
-  transform: rotateY(180deg);
+  /* Rotated away from the camera until is-faceup flips, and pushed 1px along its own depth
+     axis so the two faces never share the exact same plane. The camera-facing face is always
+     the nearer, opaque one, so it cleanly occludes the other through the WHOLE turn -- no
+     front bleeding through the back at the half-turn (the "bright underside" flash), regardless
+     of any backface-visibility quirk with overflow:hidden. The ~0.1% perspective scale from
+     1px at perspective:1000px is imperceptible; the pair just reads as real card stock. */
+  transform: rotateY(180deg) translateZ(1px);
   background: #131318;
   /* A touch crisper than before so a face-up card keeps a clean printed edge at
      the larger sizes, without going harsh. */

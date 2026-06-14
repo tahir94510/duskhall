@@ -8,7 +8,7 @@ At the centre of all things lies the Ether, a sourceless force, fractured long a
 
 ## The goal
 
-The aim: build 3 Seals on your tableau, declare Ascension, and hold them for one full round. Survive that and you win.
+The aim: place 3 Seals on your tableau, declare Ascension, and hold them for one full round. Survive that and you win.
 
 Each turn you draw cards, then spend 2 HP to play Spells, place Seals and Servants, or dig for more cards. That is how power is built.
 
