@@ -8,7 +8,7 @@ Her şeyin merkezinde, kaynağı bilinmeyen ve çok önce paramparça olmuş bir
 
 ## Amaç
 
-Amaç: masana 3 Mühür koy, Yükseliş ilan et ve bir tam tur boyunca koru. Bunu atlatırsan kazanırsın.
+Amaç: açık alanına 3 Mühür diz, Yükseliş ilan et ve bir tam tur boyunca koru. Bunu atlatırsan kazanırsın.
 
 Her tur kart çeker, sonra 2 HP'ni Büyü oynamaya, Mühür ve Hizmetkâr koymaya ya da kart aramaya harcarsın. Güç böyle kurulur.
 
