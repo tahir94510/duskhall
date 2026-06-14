@@ -131,27 +131,9 @@
   .modal { max-height: 90vh; }
   .modal__body { padding: 16px 16px 18px; }
   .rules { grid-template-columns: 1fr; gap: 12px; }
-  .rules__toc {
-    position: static;
-    flex-direction: row;
-    overflow-x: auto;
-    padding: 0 0 8px;
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-    white-space: nowrap;
-    gap: 2px;
-  }
-  .rules__toc a {
-    white-space: nowrap;
-    padding: 6px 10px;
-    font-size: 11px;
-    min-height: 30px;
-    display: inline-flex;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-  }
+  /* The stacked-TOC styling (the sticky wrapped pill-bar) lives in modal.css's <=760 block,
+     which now owns it outright. Duplicating .rules__toc here previously overrode that sticky
+     pin via import order, leaving the TOC scrolling away with the body on phones. */
   .shortcuts-grid { grid-template-columns: 1fr; }
   /* Drive the shared control unit so the header buttons AND the minimized Guide bar shrink together. */
   :root { --ctrl: 34px; }

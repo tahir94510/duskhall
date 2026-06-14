@@ -1455,7 +1455,12 @@ export class Game {
       el.classList.remove("is-shuffling");
       void el.offsetWidth;
       el.classList.add("is-shuffling");
-      window.setTimeout(() => {
+      // Track the cleanup handle so a later re-elevation of this card can cancel the wobble
+      // cleanly (clearShuffleJitter). Clear any prior handle first so the map never leaks.
+      const prevJitter = this.shuffleJitterTimers.get(id);
+      if (prevJitter !== undefined) window.clearTimeout(prevJitter);
+      const jitterHandle = window.setTimeout(() => {
+        this.shuffleJitterTimers.delete(id);
         el.classList.remove("is-shuffling");
         el.style.removeProperty("--tx");
         el.style.removeProperty("--ty");
@@ -1467,6 +1472,7 @@ export class Game {
         // restored cleanly now that the wobble class is gone.
         this.requestRender();
       }, SHUFFLE_ANIM_MS);
+      this.shuffleJitterTimers.set(id, jitterHandle);
     }
   }
 
@@ -1944,12 +1950,36 @@ export class Game {
   // card that is still mid-transition. The render loop is told to leave their
   // z-index alone while `.is-animating` is set (see renderAllCards).
   private animTimers = new Map<string, number>();
+  // Per-card riffle-cleanup handles (applyShuffleJitter). Tracked so a LATER gesture that
+  // re-elevates a still-wobbling card can cancel its stray cleanup timer (see clearShuffleJitter),
+  // instead of that timer firing mid-new-animation and leaving the card a frame behind its pile.
+  private shuffleJitterTimers = new Map<string, number>();
   // True if any of these cards is mid flip/shuffle/tidy animation. Used to ignore a
   // repeat flip/shuffle on a pile that is still animating, so a double-click during
   // the tidy→act window can't stack two gestures and play the turn twice.
   private anyAnimating(ids: string[]): boolean {
     for (const id of ids) if (this.animTimers.has(id)) return true;
     return false;
+  }
+  // Stop a card's riffle wobble at once and hand its transform back to the render loop. The
+  // riffle keyframe owns the transform via is-shuffling + inline --tx..--a2 with its OWN settle
+  // timer (applyShuffleJitter). If a SECOND gesture re-elevates this card while it is still
+  // wobbling (a co-located card pulled into a different stack action), that stray timer would
+  // later fire mid-new-animation and, with is-animating set, the render loop (busy) would skip
+  // the transform write for a frame — a visible lag. The new gesture calls this first to take
+  // clean ownership: drop the class, the inline props and the pending timer now.
+  private clearShuffleJitter(id: string): void {
+    const h = this.shuffleJitterTimers.get(id);
+    if (h !== undefined) { window.clearTimeout(h); this.shuffleJitterTimers.delete(id); }
+    const el = this.cardEls.get(id);
+    if (!el || !el.classList.contains("is-shuffling")) return;
+    el.classList.remove("is-shuffling");
+    el.style.removeProperty("--tx");
+    el.style.removeProperty("--ty");
+    el.style.removeProperty("--from-rot");
+    el.style.removeProperty("--base-rot");
+    el.style.removeProperty("--a1");
+    el.style.removeProperty("--a2");
   }
   private elevateDuringAnim(ids: string[], durMs: number): void {
     // Preserve internal order by current z so the pile keeps its stacking.
@@ -1960,6 +1990,10 @@ export class Game {
     for (const { id, z } of ordered) {
       const el = this.cardEls.get(id);
       if (!el) continue;
+      // If this card is still riffling from an earlier shuffle (e.g. a co-located card pulled
+      // into THIS gesture), cancel that wobble now so its stray cleanup timer can't fire mid-
+      // animation and leave the card a frame behind its pile. This new animation owns it.
+      this.clearShuffleJitter(id);
       el.classList.add("is-animating");
       // Paint at ANIM_Z_BASE + offset from the pile's lowest z, preserving the FULL
       // internal order for any pile size (a 72-card flip/shuffle no longer collapses

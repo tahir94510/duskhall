@@ -158,7 +158,8 @@
       "Drag a card to move it; hold Ctrl and drag to move the whole pile.",
       "The wheel flips a card; right-click flips the whole pile.",
       "G gathers, M shuffles, D tidies your own area.",
-      "The frosted strip at the bottom of your screen is your hidden area."
+      "The frosted strip at the bottom of your screen is your hidden area.",
+      "Press V to turn your view, bringing your own area square in front of you."
     ],
     "touchItems": [
       "Drag a card with your finger to move it.",
@@ -686,7 +687,7 @@
         "id": "goal",
         "title": "The goal",
         "body": [
-          "The aim: place 3 Seals on your tableau, declare Ascension, and hold them for one full round. Survive that and you win.",
+          "The aim: lay out 3 Seals in your open area, declare Ascension, and hold them for one full round. Survive that and you win.",
           "Each turn you draw cards, then spend 2 HP to play Spells, place Seals and Servants, or dig for more cards. That is how power is built.",
           "Interventions cost nothing and can interrupt anyone at any time, so no one just waits for their turn. The table is always live.",
           "The catch: the moment you declare Ascension, every rival gets one turn to tear your Seals down. That round is the Trial. Outlast it and the Ether is yours."

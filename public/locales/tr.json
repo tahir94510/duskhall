@@ -158,7 +158,8 @@
       "Kartı sürükleyerek taşı; tüm yığını taşımak için Ctrl ile sürükle.",
       "Tekerlek kartı çevirir; sağ tık tüm yığını çevirir.",
       "G topla, M karıştır, D kendi alanını derleyip toplar.",
-      "Ekranının altındaki bulanık şerit senin gizli alanın."
+      "Ekranının altındaki bulanık şerit senin gizli alanın.",
+      "V ile bakışını çevirip kendi alanını tam karşına alırsın."
     ],
     "touchItems": [
       "Kartı parmağınla sürükleyerek taşı.",
@@ -686,7 +687,7 @@
         "id": "goal",
         "title": "Amaç",
         "body": [
-          "Amaç: masana 3 Mühür koy, Yükseliş ilan et ve bir tam tur boyunca koru. Bunu atlatırsan kazanırsın.",
+          "Amaç: açık alanına 3 Mühür diz, Yükseliş ilan et ve bir tam tur boyunca koru. Bunu atlatırsan kazanırsın.",
           "Her tur kart çeker, sonra 2 HP'ni Büyü oynamaya, Mühür ve Hizmetkâr koymaya ya da kart aramaya harcarsın. Güç böyle kurulur.",
           "Müdahaleler bedavadır ve her an herkesi bölebilir; kimse yalnızca sırasını beklemez. Masa hep canlıdır.",
           "İşin püf noktası: Yükseliş ilan ettiğin an her rakip Mühürlerini yıkmak için bir tur kazanır. O tura Sınav denir. Onu atlatırsan Eter senindir."

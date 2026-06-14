@@ -124,7 +124,12 @@
   transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 .guide__btn svg { width: 16px; height: 16px; display: block; }
-.guide__btn:hover { color: var(--ivory); background: rgba(243, 239, 229, 0.08); }
+/* Hover only on real hovering pointers (mouse): the Guide panel stays on screen during
+   play, so on touch a tapped control would otherwise keep its hover tint stuck until the
+   next tap elsewhere. Same guard the icon/context/perspective buttons already use. */
+@media (hover: hover) {
+  .guide__btn:hover { color: var(--ivory); background: rgba(243, 239, 229, 0.08); }
+}
 .guide__btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .guide__btn:disabled:hover { color: var(--ivory-dim); background: transparent; }
 /* The confirm tick, when it is this player's to press, reads as the primary action: a filled
@@ -133,7 +138,7 @@
   background: var(--ivory);
   color: var(--ink);
 }
-.guide__tick:not(:disabled):hover { background: #fff; }
+@media (hover: hover) { .guide__tick:not(:disabled):hover { background: #fff; } }
 
 .guide__body {
   padding: 12px;
@@ -165,7 +170,7 @@
   cursor: pointer;
   transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 }
-.guide__primary:hover { background: #fff; border-color: #fff; }
+@media (hover: hover) { .guide__primary:hover { background: #fff; border-color: #fff; } }
 
 /* chooseFirst: a tappable chip per seated player, tinted with their seat accent. */
 .guide__picks { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -184,7 +189,7 @@
   cursor: pointer;
   transition: background var(--dur-fast) var(--ease);
 }
-.guide__pick:hover { background: rgba(32, 32, 32, 0.85); }
+@media (hover: hover) { .guide__pick:hover { background: rgba(32, 32, 32, 0.85); } }
 .guide__pick em { font-style: normal; color: var(--ivory-mute); font-weight: 400; font-size: 11px; }
 
 /* The host-only Open guide row gets a quiet ivory accent so it reads as the primary
