@@ -2,563 +2,374 @@
   "meta": {
     "title": "Vaerum: Heirs of the Ether",
     "tagline": "",
-    "description": "A digital card table for friends. Move and flip cards freely; follow the official rulebook yourselves."
+    "description": "A digital card table for you and your friends. Move and flip cards freely; follow the official rulebook yourselves."
   },
   "ui": {
     "menu": "Menu",
     "rules": "Rules",
     "support": "Support",
     "feedback": "Feedback",
-    "legal": "About & legal",
-    "exit": "Exit room",
-    "resetDeck": "Reset deck",
+    "legal": "About & Legal",
+    "exit": "Leave Room",
+    "resetDeck": "Reset Deck",
     "deckReset": "The deck has been gathered and shuffled.",
     "settings": "Settings",
     "shortcuts": "Shortcuts",
-    "updates": "What's new",
+    "updates": "What's New",
     "language": "Language",
     "close": "Close",
     "cancel": "Cancel",
     "confirm": "Confirm",
     "room": "Room",
-    "roomCode": "Room code",
+    "roomCode": "Room Code",
     "reveal": "Tap to reveal or hide",
     "join": "Join",
-    "joinPlaceholder": "Room code",
-    "joinAria": "Enter a room code to join",
-    "copyLink": "Copy invite link",
-    "linkCopied": "Invite link copied",
-    "newRoom": "A new room has been opened.",
+    "joinPlaceholder": "Enter Room Code",
+    "joinAria": "Enter a room code to join the table",
+    "copyLink": "Copy Invite Link",
+    "linkCopied": "Invite link copied to clipboard.",
+    "newRoom": "A new room has been created.",
     "timer": "Time",
-    "pasteJoin": "Paste code or link to join",
-    "alreadyInRoom": "You're already in this room.",
-    "invalidCode": "No valid room code on the clipboard",
+    "pasteJoin": "Paste a code or link to join",
+    "alreadyInRoom": "You are already at this table.",
+    "invalidCode": "No valid room code found on the clipboard.",
     "connection": "Connection",
     "connOnline": "Online",
     "connConnecting": "Connecting...",
     "connOffline": "Offline",
-    "connLost": "Connection lost. Reconnecting; your moves are saved and will sync.",
-    "connRestored": "Back online. Your moves are in sync.",
+    "connLost": "Connection lost. Reconnecting. Your moves are saved and will sync shortly.",
+    "connRestored": "Back online. Your moves are now in sync.",
     "guide": "Guide"
   },
   "diag": {
-    "title": "Connection self-test",
-    "subtitle": "Checks whether multiplayer sync is set up correctly.",
-    "run": "Run the connection self-test",
-    "running": "Testing the connection...",
+    "title": "Connection Self-Test",
+    "subtitle": "Checks if live multiplayer synchronization is working properly.",
+    "run": "Run connection test",
+    "running": "Testing connection...",
     "stepConfig": "Settings loaded",
-    "stepUrl": "Project address",
-    "stepRest": "Project reachable",
-    "stepRealtime": "Realtime sync",
-    "verdictOk": "All good. Live multiplayer sync is working.",
-    "verdictBad": "Multiplayer sync is not working yet. See the note below.",
-    "error": "The test could not run. Please try again.",
-    "hint_config-missing": "Set SUPABASE_URL and SUPABASE_ANON_KEY in your hosting environment (Vercel), then redeploy. You can verify them by opening /api/config in your browser; both values must be filled in.",
-    "hint_url-bad": "The project address must be exactly https://your-project.supabase.co, with no extra path. Copy it from your Supabase dashboard under Project Settings, Data API.",
-    "hint_rest-failed": "The project could not be reached, or the anon key was rejected. Confirm the URL and the anon (public) key, and make sure the Supabase project is not paused.",
-    "hint_realtime-failed": "The project is reachable but the Realtime socket did not connect. In your Supabase dashboard, make sure Realtime is enabled, and check that no firewall or proxy is blocking the websocket."
+    "stepUrl": "Project address verified",
+    "stepRest": "Project is reachable",
+    "stepRealtime": "Realtime sync active",
+    "verdictOk": "Everything looks good. Live multiplayer is working perfectly.",
+    "verdictBad": "Multiplayer synchronization is currently failing. Please check the notes below.",
+    "error": "The test could not be completed. Please try again.",
+    "hint_config-missing": "Ensure SUPABASE_URL and SUPABASE_ANON_KEY are set in your hosting environment, then redeploy. You can verify this by visiting /api/config in your browser.",
+    "hint_url-bad": "The project address must be exactly https://your-project.supabase.co without any extra paths. You can find this in your Supabase dashboard.",
+    "hint_rest-failed": "Could not reach the project or the public key was rejected. Double-check your URL and key, and ensure your Supabase project is active.",
+    "hint_realtime-failed": "The project is reachable, but the live socket failed to connect. Ensure Realtime is enabled in your Supabase dashboard and check your firewall settings."
   },
   "actions": {
     "flip": "Flip",
     "rotate": "Rotate 90°",
     "gather": "Gather",
     "shuffle": "Shuffle",
-    "info": "Card info",
-    "perspective": "Turn the view",
-    "arrange": "Tidy your area"
+    "info": "Card Details",
+    "perspective": "Change View",
+    "arrange": "Tidy Your Area"
   },
   "table": {
     "deck": "Deck",
     "open": "Open",
     "discard": "Discard",
-    "tableau": "Seals · Servants",
-    "youSuffix": " (you)",
-    "droppedSuffix": " (away)",
-    "pile": "{count} cards in this pile"
+    "tableau": "Seals & Servants",
+    "youSuffix": " (You)",
+    "droppedSuffix": " (Away)",
+    "pile": "{count} cards in this stack"
   },
   "glossary": {
     "etherResonance": {
       "term": "Ether Resonance",
-      "def": "When the draw deck runs out, the Discard is shuffled into a fresh one (once per cycle). Each player then sacrifices one card: a Seal or Servant they choose from their tableau, or a random hand card only if their tableau is empty. If deck and Discard are both empty, nothing happens."
+      "def": "When the main deck runs out, the Discard pile is shuffled to form a new deck. This happens only once per game cycle. Right after the shuffle, every player must sacrifice one Seal or Servant from their tableau. If your tableau is empty, you must sacrifice a random card from your hand instead. If both the deck and Discard are empty, nothing happens."
     },
     "ascension": {
       "term": "Ascension",
-      "def": "At the end of your Closing, with 3 or more Seals on your tableau, you may declare Ascension (you cannot take it back). Every rival then gets one full turn, the Trial, to break it. If you still hold 3 Seals when your turn comes round, you win."
+      "def": "The path to winning. If you have 3 or more Seals on your tableau at the end of your turn, you may declare Ascension. You cannot take this back. Once declared, every opponent gets one full turn to destroy your Seals. This round is called the Trial. If you survive the Trial and still have at least 3 Seals when your next turn starts, you win the game."
     },
     "servantShield": {
       "term": "Servant Shield",
-      "def": "While a player has at least one Servant on their tableau, rivals cannot target that player's Seals at all. Every Servant must be destroyed first, even a targetable one such as Runic Warden, before any Seal can be reached."
+      "def": "A protective barrier. As long as you have at least one Servant on your tableau, opponents cannot target your Seals with anything. They must destroy every single Servant you control before they can touch your Seals."
     },
     "hand": {
       "term": "Hand",
-      "def": "Your hidden cards. Rivals see the count, not the contents. The hand limit is 7 (excess is discarded at Closing); Seals and Servants do nothing while in your hand."
+      "def": "Your private cards. Opponents can see how many cards you hold, but not what they are. You can hold a maximum of 7 cards. Any extras must be discarded at the end of your turn. Seals and Servants have no effect while they are in your hand."
     },
     "tableau": {
       "term": "Tableau",
-      "def": "Your face-up area for Seals and Servants, up to 4 Seals and 3 Servants. Their effects work only here, never from your hand. Once placed, a card is committed: it leaves only by being destroyed, sacrificed, or stolen, never back to your hand."
+      "def": "Your public play area. This is where you place your Seals (up to 4) and Servants (up to 3) face up. Their powers only work while they are here. Once placed, a card is locked in. It can only be removed if it is destroyed, sacrificed, or stolen. It never goes back to your hand."
     },
     "deck": {
       "term": "Deck",
-      "def": "The shared face-down central pile you draw from. When it empties, Ether Resonance shuffles the Discard into a fresh deck."
+      "def": "The shared face-down pile in the center of the table. Everyone draws from it. When it runs out, Ether Resonance triggers and reshuffles the Discard pile into a new deck."
     },
     "discard": {
       "term": "Discard",
-      "def": "The shared face-up pile of spent Spells, cancelled cards, and destroyed Seals and Servants."
+      "def": "The shared face-up pile for used Spells, canceled cards, and destroyed Seals or Servants."
     },
     "focus": {
       "term": "Focus",
-      "def": "Phase 1 of your turn: draw 2 cards from the deck (3 or more with Time Rift in play)."
+      "def": "The first phase of your turn. You draw 2 cards from the deck. Certain cards like Time Rift can increase this number."
     },
     "action": {
       "term": "Action",
-      "def": "Phase 2 of your turn: spend your 2 HP (up to 5 with Crimson Monolith) on any mix of Create, Study and Cleanse. Unspent HP is lost."
+      "def": "The second phase of your turn. You start with 2 Action Points (HP). You can spend them to Create, Study, or Cleanse. Any unused points are lost at the end of your turn."
     },
     "closing": {
       "term": "Closing",
-      "def": "Phase 3 of your turn: every active Seal trigger fires, then you discard down to the hand limit of 7. After Closing you may declare Ascension."
+      "def": "The final phase of your turn. First, any active Seal effects trigger. Then, if you have more than 7 cards in your hand, you must discard the extras. Finally, you may declare Ascension if you meet the requirements."
     },
     "create": {
       "term": "Create",
-      "def": "An Action (1 HP): cast 1 Spell from your hand, or place 1 Seal or 1 Servant onto your tableau. If that tableau row is full, you may discard one of your own of the same type to make room, at no extra HP."
+      "def": "An action costing 1 HP. You play 1 Spell from your hand, or place 1 Seal or Servant onto your tableau. If your tableau is full, you can discard an existing card of the same type to make room without paying extra HP."
     },
     "study": {
       "term": "Study",
-      "def": "An Action (1 HP): draw 1 extra card from the deck."
+      "def": "An action costing 1 HP. You draw 1 extra card from the deck."
     },
     "cleanse": {
       "term": "Cleanse",
-      "def": "An Action (1 HP): discard 1 card from your hand, then draw 1. This swap keeps your hand the same size."
+      "def": "An action costing 1 HP. You discard 1 card from your hand and then draw 1 new card. This helps you refresh your hand without changing its total size."
     },
     "hp": {
       "term": "HP",
-      "def": "The action points for your turn: 2 by default, up to 5 with Crimson Monolith. Create, Study and Cleanse each cost 1 HP; Interventions cost none. Unspent HP does not carry over."
+      "def": "Your Action Points. You get 2 per turn by default, up to a maximum of 5. Create, Study, and Cleanse cost 1 HP each. Interventions cost zero HP. Unused points do not carry over to the next turn."
     },
     "trial": {
       "term": "Trial",
-      "def": "After you declare Ascension, every rival gets one full turn to destroy, steal or disable your Seals before the turn returns to you."
+      "def": "The ultimate test. Once you declare Ascension, every opponent takes one normal turn. They will use everything they have to destroy or steal your Seals. If you survive until your next turn, you win."
     },
     "untargetable": {
       "term": "Untargetable",
-      "def": "Immune to enemy actions. Untargetability is layered: each independent protective layer must be removed on its own before the card beneath it can be targeted."
+      "def": "A status that makes a card immune to enemy actions. If a card has multiple layers of protection, opponents must break each layer one by one before they can reach the card underneath."
     }
   },
   "kick": {
-    "title": "Remove player",
-    "body": "Remove {name} from the table? They will be sent to a new, empty room.",
+    "title": "Remove Player",
+    "body": "Are you sure you want to remove {name} from the table? They will be moved to a new, empty room.",
     "confirm": "Remove",
-    "aria": "Remove {name}",
-    "done": "{name} was removed from the table.",
-    "kicked": "The host removed you from the table."
+    "aria": "Remove {name} from the room",
+    "done": "{name} has been removed from the table.",
+    "kicked": "You have been removed from the table by the host."
   },
   "welcome": {
-    "title": "Welcome to the table",
+    "title": "Welcome to the Table",
     "dismiss": "Got it",
-    "guidePointer": "Follow the Guide in the top right to learn the rules in play. Copy the invite link from the Menu and bring your friends to the table.",
+    "guidePointer": "Use the Guide in the top right corner to learn how to play step by step. You can copy the invite link from the Menu to bring your friends here.",
     "desktopItems": [
-      "Drag a card to move it; hold Ctrl and drag to move the whole pile.",
-      "The wheel flips a card; right-click flips the whole pile.",
-      "G gathers, M shuffles, D tidies your own area.",
-      "The frosted strip at the bottom of your screen is your hidden area.",
-      "Press V to turn your view, bringing your own area square in front of you."
+      "Click and drag to move a card. Hold Ctrl while dragging to move an entire pile.",
+      "Scroll your mouse wheel to flip a single card. Right-click to flip a whole pile.",
+      "Press G to gather cards, M to shuffle, and D to tidy up your personal area.",
+      "The frosted glass area at the bottom of the screen is your private hand. Only you can see cards placed there.",
+      "Press V to change your perspective and view the table from a different angle."
     ],
     "touchItems": [
-      "Drag a card with your finger to move it.",
-      "Long-press a card: flip, turn, shuffle and more.",
-      "The frosted strip at the bottom of your screen is your hidden area."
+      "Use your finger to drag and move a card.",
+      "Long-press any card to open a menu with options to flip, rotate, shuffle, and more.",
+      "The frosted glass area at the bottom of your screen is your private hand. Keep your secrets there."
     ],
-    "longPress": "Tip: long-press a card to open its action bar."
+    "longPress": "Pro tip: Long-press a card on mobile to open its action menu."
   },
   "shortcutsList": {
     "title": "Shortcuts",
-    "subtitle": "Most actions work on the card under your cursor; a few, like tidying your area, act on your own hand. Empty space does nothing.",
+    "subtitle": "Most controls apply to the card directly under your cursor. A few commands apply to your private hand. Clicking on empty space does nothing.",
     "groups": [
       {
         "title": "Basics",
         "items": [
           {
-            "keys": "Left-press, drag",
-            "desc": "Move the card under the cursor"
+            "keys": "Left-click and drag",
+            "desc": "Move the card under your cursor."
           },
           {
-            "keys": "Scroll",
-            "desc": "Flip the single card under the cursor"
+            "keys": "Scroll wheel",
+            "desc": "Flip the single card under your cursor."
           },
           {
             "keys": "Right-click",
-            "desc": "Flip the stack under the cursor (a single card flips alone)"
+            "desc": "Flip the entire stack under your cursor."
           }
         ]
       },
       {
-        "title": "Piles",
+        "title": "Working with Piles",
         "items": [
           {
-            "keys": "Ctrl + Left-press, drag",
-            "desc": "Move the whole stack under the cursor"
+            "keys": "Ctrl + Left-click and drag",
+            "desc": "Move the entire stack under your cursor."
           },
           {
-            "keys": "Ctrl + scroll",
-            "desc": "Flip the whole stack under the cursor"
+            "keys": "Ctrl + Scroll wheel",
+            "desc": "Flip the entire stack."
           },
           {
-            "keys": "Shift + scroll",
-            "desc": "Rotate 90° sideways (not a flip); over a pile it turns and squares up the whole stack"
+            "keys": "Shift + Scroll wheel",
+            "desc": "Rotate the card or pile 90 degrees sideways. This also neatly squares up messy piles."
           },
           {
             "keys": "G",
-            "desc": "Gather the stack under the cursor"
+            "desc": "Gather loose cards into a neat stack."
           },
           {
             "keys": "M",
-            "desc": "Shuffle the stack under the cursor"
+            "desc": "Shuffle the stack under your cursor."
           }
         ]
       },
       {
-        "title": "View",
+        "title": "Perspective",
         "items": [
           {
             "keys": "V",
-            "desc": "View the table from your left-hand neighbour's side; press again to return to your own. This changes only your own view, nothing for anyone else. It is handy for bringing your own area square in front of you."
+            "desc": "Rotate your view of the table. Press it again to cycle through seats. This only changes what you see and is great for reading cards clearly."
           }
         ]
       },
       {
-        "title": "Your area",
+        "title": "Your Private Area",
         "items": [
           {
             "keys": "D",
-            "desc": "Tidy your own area. Every card you hold there settles into a neat, deck-like layout: matching cards stacked together, sorted by type and centred, never crossing into a neighbour's space. Only you hear it; everyone sees your cards slide into place."
+            "desc": "Tidy up your private hand. This action groups matching cards, sorts them by type, and centers them perfectly in your zone. Your opponents will just see your hidden cards slide neatly into place."
           }
         ]
       },
       {
-        "title": "Touch",
+        "title": "Touch Devices",
         "items": [
           {
             "keys": "Long-press",
-            "desc": "Opens the card's action bar: flip, turn, gather, shuffle, info, view and area tidy"
+            "desc": "Open the quick action menu for flipping, rotating, shuffling, or reading card details."
           },
           {
-            "keys": "Drag with a finger",
-            "desc": "Moves the card; it rests where you let go"
+            "keys": "Drag",
+            "desc": "Move a card across the table."
           }
         ]
       }
     ],
-    "mobileNote": "On touch there is no mouse or keyboard. Long-press a card to open its action bar: from there you can flip it, turn it sideways, gather or shuffle its stack, read its details, or turn your view of the table. Long-press one of your own cards and you can also tidy your whole area into a clean layout."
+    "mobileNote": "Since touchscreens do not have keyboards, simply long-press any card to access its controls. You can also long-press one of your private cards to tidy up your entire hand automatically."
   },
   "leaveConfirm": {
-    "title": "Exit room?",
-    "body": "You will leave this room and a fresh one opens with a new link, with you as its host. Any cards you owned here are released to the other players.",
-    "leave": "Exit"
+    "title": "Leave the Room?",
+    "body": "If you leave, you will be placed into a brand new room where you are the host. Any cards you leave behind will become public for the remaining players.",
+    "leave": "Leave Room"
   },
   "roomFull": {
-    "title": "This room is full",
-    "body": "All four seats are taken. Open your own room and invite friends to play with you there.",
-    "newRoom": "Open a new room"
+    "title": "Room is Full",
+    "body": "All four seats at this table are currently taken. You can create your own room and invite others to play.",
+    "newRoom": "Create New Room"
   },
   "joinByCode": {
-    "title": "Join a room",
-    "body": "Paste a room code or invite link below, then Join. You will leave your current table.",
-    "label": "Room code or invite link",
-    "placeholder": "e.g. P86B3T",
-    "confirm": "Join room"
+    "title": "Join a Room",
+    "body": "Enter a room code or paste an invite link below to join an existing game. This will remove you from your current table.",
+    "label": "Room Code or Link",
+    "placeholder": "For example: P86B3T",
+    "confirm": "Join Room"
   },
   "settings": {
     "title": "Settings",
-    "master": "Master",
+    "master": "Master Volume",
     "music": "Music",
-    "sfx": "Effects",
-    "audio": "Audio",
+    "sfx": "Sound Effects",
+    "audio": "Audio Options",
     "language": "Language",
-    "resetDefaults": "Restore defaults",
-    "resetDefaultsHint": "Return music, effects and master volume to their recommended levels."
+    "resetDefaults": "Restore Defaults",
+    "resetDefaultsHint": "Reset all audio sliders to their recommended default levels."
   },
   "support": {
     "title": "Support Vaerum",
-    "intro": "Vaerum is built by one independent designer. Your support funds the next steps:",
+    "intro": "Vaerum is passionately developed by a solo independent designer. Your support helps bring the following visions to life:",
     "lines": [
-      "<strong>The game and its ideas</strong>: new card cycles, sharper balance, and more depth and atmosphere.",
-      "<strong>This online table</strong>: new features, faster and smoother play, and more languages.",
-      "<strong>A 3D / Steam edition</strong>: a fully animated 3D table with rich effects and sound.",
-      "<strong>A physical card set</strong>: premium card stock, embossed sigils, and a proper boxed edition."
+      "Game Expansions: New card sets, better balancing, and deeper mechanics.",
+      "Table Upgrades: Smoother gameplay, exciting new features, and additional languages.",
+      "3D & Steam Release: A fully immersive 3D digital tabletop with stunning visuals and audio.",
+      "Physical Edition: A premium, boxed tabletop version with high-quality card stock and embossed artwork."
     ],
-    "cta": "Open support page",
-    "patreon": "Support on Patreon",
+    "cta": "Visit Support Page",
+    "patreon": "Support me on Patreon",
     "buymeacoffee": "Buy me a coffee",
-    "noUrl": "A support page is not set up yet. Please check back later.",
-    "supportersTitle": "Supporters",
-    "supportersHint": "Add #vaerum to your support message and your name joins this wall within a few days (usually 48-72 hours).",
-    "thanks": "Thank you for keeping the table alive."
+    "noUrl": "The support page is currently unavailable. Please check back later.",
+    "supportersTitle": "Wall of Supporters",
+    "supportersHint": "Include the tag #vaerum in your donation message, and your name will appear on this wall within a few days.",
+    "thanks": "Thank you for keeping the magic alive."
   },
   "updates": {
-    "title": "What's new",
+    "title": "Release Notes",
     "badge": "New",
-    "empty": "No updates yet.",
+    "empty": "No recent updates to show.",
     "entries": [
       {
         "v": "2026-06-14",
         "date": "June 14, 2026",
-        "title": "A clearer card, centred messages, and a settled rule",
+        "title": "Clearer Text and Smoother Notifications",
         "items": [
-          "Runic Warden's card now reads like every other one: a short bold line of what it does, with the details below, instead of a single solid block of bold text.",
-          "On-screen messages now stay centred at the bottom on every screen size: a long notice wraps neatly inside its pill instead of breaking apart or sliding to the left edge.",
-          "A few card and rule wordings are clearer in both languages: how Shadow Theft's random steal works, what Runic Warden shields, and why Mind Parasite needs a free Servant slot.",
-          "The rulebook now settles a tricky case: if you declare Ascension and then destroy a Glacial Aberration during the Trial, you still win the moment the turn returns to you, before the skipped turn could matter."
-        ]
-      },
-      {
-        "v": "2026-06-13",
-        "date": "June 13, 2026",
-        "title": "A kick that sticks, a menu that fits, and plainer wording",
-        "items": [
-          "When the host removes a player, that player no longer lingers as away on anyone's table; everyone sees the seat free up right away.",
-          "The menu now opens above the first-run welcome card instead of under it, and on small screens it fits the screen and scrolls so every row (including Exit) is reachable.",
-          "The Guide and the trickiest card texts are rewritten to be clearer and more natural, in both languages, with no rules changed.",
-          "The About and Privacy pages read more naturally too."
-        ]
-      },
-      {
-        "v": "2026-06-12",
-        "date": "June 12, 2026",
-        "title": "A warmer welcome, and fate worth fearing",
-        "items": [
-          "New players get a real welcome: on your first visit a small card teaches the core moves (drag, flip, gather, tidy; long-press on touch) and points at the Guide and the invite link. It shows once, stays out of the way and closes with one tap.",
-          "When the Guide hands the turn to you, its bar glows twice so you notice even if your eyes wandered. It is a gentle pulse, never a beep, local to you, and it respects your reduced-motion setting.",
-          "The rulebook now opens with The goal: how you win, what a turn buys you and why the Trial matters, before any numbered rule. The 18 edge-case questions sit under four themed headings, and the table of contents highlights where you are while you read.",
-          "Shortcuts are grouped into Basics, Piles, View, Your area and Touch, with real keycaps, so the list reads as a path from your first drag to the power moves.",
-          "Balance, rules V8.2: Twist of Fate goes from 2 copies to 4, paid for by one Ether Strike and one Shadow Theft (now 7 and 5). The deck stays at 72, and the hand-swap chaos now shows up in most games instead of almost never. A room dealt before this update keeps its old deck until you use Reset deck.",
-          "Feel: a shuffled or flipped pile frees up for the other players the moment it settles instead of a beat later, good-news messages carry a small green dot (errors a red one), and a card mid-flip no longer flashes the wrong face when you tidy your area with D.",
-          "The four hand areas now share one consistent glass tone; who sits where is carried by the name, its status light and the cursor. Turning the view with V no longer blanks the trays: the glass stays put and only the names and area washes softly change hands. An away player's area now quietly dims its wash instead of darkening the whole tray.",
-          "Easier to bring friends in: every card now says what it does in its first sentence, and the info panel shows that line up front with the fine print below. The rulebook gains Apprentice rules, an official simplified setup for a table's first game (no chains, no resonance sacrifice, no edge cases), and the Guide's intro now hands the host a three-sentence teach script.",
-          "Clearer for first-timers: the Guide's intro is now two short lines, and the whole rulebook (turn flow, zones, setup, the goal, card-type rules, resonance and more) is rewritten in plainer, shorter sentences. No rules changed, only the wording.",
-          "Always up to date: the app now loads its newest version on its own, so new text and fixes appear without a hard refresh."
-        ]
-      },
-      {
-        "v": "2026-06-09.2",
-        "date": "June 9, 2026",
-        "title": "Every name readable, and a cleaner camera turn",
-        "items": [
-          "Every player's name is now clearly readable. The four seat tones used to run so dark that the third and fourth seats looked faded, as if those players had disconnected; the ladder is retuned so each seat keeps its own shade and every name stays bright on the dark table.",
-          "Seat colours now match everywhere: a player's name, their hand area's tint and their cursor all carry the exact same tone, so you always know whose is whose at a glance.",
-          "Turning the view with V no longer flashes mixed-up colours. The areas and names now swap behind a clean dip and return already showing the right seats, and the 'your area' glow follows your seat around the table instead of staying glued to the bottom edge while the view is turned.",
-          "Each hand area's soft wash now runs along its own table edge; the side and top areas used to borrow the bottom area's lighting, which made some areas look brighter than others."
-        ]
-      },
-      {
-        "v": "2026-06-09",
-        "date": "June 9, 2026",
-        "title": "Tidy your hand, and a stack counter",
-        "items": [
-          "Press D (or, on touch, long-press one of your own cards and tap Tidy your area) to lay your hidden area out as a clean deck: matching cards stacked together, sorted by type, centred, and turned face-up so you can read them at a glance. It works for any number of cards, even a single one, and never spills into a neighbour's space.",
-          "New: hover a stacked card (or tap Info on touch) and its info now shows, on its own line, how many cards are in that pile, counting any mix of card types correctly. A single card shows no line.",
-          "Only you hear your area settle; everyone else simply sees your cards slide into place, still hidden behind their backs.",
-          "Polish: dropping a deck now sounds just like dropping a single card, the play area no longer carries an extra frame on small phones, and Shortcuts lists D next to Gather and Shuffle."
-        ]
-      },
-      {
-        "v": "2026-06-08",
-        "date": "June 8, 2026",
-        "title": "Smoother view turns and tidier info",
-        "items": [
-          "Turning the table with V works from every angle now: you can drag cards into the left and right hand areas after a turn, and you can press V while holding a card so the table spins under it and you place it from the new side.",
-          "On touch, the turn-view button now lives in a card's action menu (long-press a card) instead of floating in the corner.",
-          "The guide's turn line, like \"Turn: Player (you)\", is no longer cut off.",
-          "In the rulebook, the info bubble for a highlighted term now sits centred just above it, matching the card info panel."
-        ]
-      },
-      {
-        "v": "2026-06-07",
-        "date": "June 7, 2026",
-        "title": "Privacy, presence and a more alive table",
-        "items": [
-          "Your hand stays private: an opponent's cards are never shown, not even for a moment while the table is loading.",
-          "Players who drop are no longer kicked automatically. Their seat is kept until they leave or the host removes them. If the host drops, hosting passes to someone present and comes back to them when they return.",
-          "Clearer connection status, with a brief note when live sync drops or comes back.",
-          "You now hear other players' flips and shuffles, not just see them, so the table feels alive. Moves inside a hidden hand stay private and silent.",
-          "Polish: a dragged card sits cleanly on its shadow, the first-player list always shows everyone seated, text is easier to read, there are more player names, and the music reshuffles fresh in each room."
-        ]
-      },
-      {
-        "v": "2026-06-06.2",
-        "date": "June 6, 2026",
-        "title": "A smoother, clearer table",
-        "items": [
-          "Player names and the green status light always stay clear above the hand areas, and a card you move past another player's area now stays on top of it.",
-          "The table appears fully drawn instead of popping its card art in. If you come back to the tab after a while, you'll see a brief loading only when something needs to reload.",
-          "Better fit on phones: the deck and discard piles no longer overlap, and the guide no longer covers the logo or the menu button.",
-          "Turning a pile over no longer rotates it upright on its own. It just turns over, the same as a single card. To square a pile up, use Gather."
-        ]
-      },
-      {
-        "v": "2026-06-06.1",
-        "date": "June 6, 2026",
-        "title": "Guide refinements",
-        "items": [
-          "Pressing Start now just begins the guide and leaves your cards exactly as they are. If you want a fresh shuffle first, use Reset deck.",
-          "Restart sits with the guide's own buttons. It resets only the guide, never your cards, and asks you to confirm first."
-        ]
-      },
-      {
-        "v": "2026-06-06",
-        "date": "June 6, 2026",
-        "title": "A built-in guide for new players",
-        "items": [
-          "There is now an optional Guide that walks the whole table through a game, one step at a time: setup, who goes first, and each player's turn. It only suggests what to do. You are still free to move, flip and shuffle cards however you like.",
-          "The host opens the Guide from the menu and it appears for everyone. The host runs the setup steps and starts or restarts the game from inside the panel. During play, the player whose turn it is taps the check to finish each phase.",
-          "The panel shows whose turn it is and the current phase in its top bar. You can collapse it to that bar to save space and expand it again at any time.",
-          "Reset deck and the Guide controls are now host only, so a game is never reset by accident."
-        ]
-      },
-      {
-        "v": "2026-06-05",
-        "date": "June 5, 2026",
-        "title": "A bigger, clearer table",
-        "items": [
-          "Cards are larger and sharper, and they now scale by the same proportion on every screen, from a small phone to a 4K TV, so the table feels substantial everywhere instead of a small island on big monitors.",
-          "Your private area is now much wider and more spacious: it reaches into the table corners, so every seat gets a large, identical hand area. A card reads as private the moment it enters your area and public as it leaves, the same for you and everyone watching.",
-          "Polish throughout: crisper card edges, premium frosted trays for the private zones, and a clearer shadow under a lifted card or pile.",
-          "Fixed: the header menu could not be closed with the keyboard from its own button (Space or Enter reopened it). It now closes as expected."
-        ]
-      },
-      {
-        "v": "2026-06-04.5",
-        "date": "June 4, 2026",
-        "title": "Reset deck works for everyone",
-        "items": [
-          "Reset deck now works for any player at the table, not just the host. Tapping it opens a confirmation, and confirming gathers every card and returns them to a freshly shuffled, face-down deck in the centre (the start-of-game setup) for all players. Before, only the host could do this and for everyone else the button did nothing.",
-          "When you gather, shuffle or turn a pile (including the deck), it again squares upright to YOUR own view, the same as the rest of the table. A pile you tidy reads straight to you; the other seats see it at their own angle."
-        ]
-      },
-      {
-        "v": "2026-06-04.4",
-        "date": "June 4, 2026",
-        "title": "One deck, one angle for everyone",
-        "items": [
-          "The shared deck and discard now rest at one steady angle for the whole table. Before, a player on the left or right squaring the deck could leave it lying sideways for everyone else and flip it around each time someone tidied it. Now it sits like a real deck on a table (the side seats just see it edge-on) and it looks the same to all players no matter who shuffles."
-        ]
-      },
-      {
-        "v": "2026-06-04.3",
-        "date": "June 4, 2026",
-        "title": "Shuffling always works",
-        "items": [
-          "Shuffling, flipping or grabbing a pile right after another player handled it now works straight away. A rare hiccup could leave the cards looking locked to the other player for a few seconds, so their shuffle seemed to do nothing; that hold is now released reliably.",
-          "The dashed \"someone is holding this\" outline no longer flickers on top of a card while you are the one picking it up or turning it."
-        ]
-      },
-      {
-        "v": "2026-06-04.2",
-        "date": "June 4, 2026",
-        "title": "Cleaner lifting",
-        "items": [
-          "Lifting a deck no longer casts a heavy shadow from every card at once, which used to bury whatever sat beneath the pile in darkness. The pile now floats with one clean shadow and the table stays readable underneath it."
-        ]
-      },
-      {
-        "v": "2026-06-04",
-        "date": "June 4, 2026",
-        "title": "A bigger, richer, quieter table",
-        "items": [
-          "Cards are bigger and clearer, especially on large screens, so the table feels like real cards in hand rather than a small island in the middle. The deck and discard spots grow with them. Nothing about who can see or group a card changed.",
-          "Cards look more like real printed cards: the deck back has more depth, a face-up card has a crisp framed edge, and a card you pick up casts a deeper shadow. Still calm and monochrome.",
-          "The table surface has a richer, more tactile feel, with a fine grain and a soft depth shadow toward the edges, so the felt looks deliberate and premium instead of flat, while keeping the dark, quiet mood.",
-          "Gathering a pile that is already neatly collected now does nothing, instead of re-collecting it and replaying the sound every time. A scattered or fanned pile still gathers as before, and shuffling or turning a pile over stay repeatable.",
-          "Dropping a whole pile now lands with a deeper, weightier thud that sounds different from the crisp tap of a single card, so the table sounds the way it looks.",
-          "If you turn on your device's 'reduce motion' setting, flipping and shuffling are now fully instant: no card stays briefly hidden or frozen afterwards, and the pile is never momentarily locked for the other players.",
-          "A face-down deck that had been turned a full circle now stays put on the deck spot when you resize the window, instead of slowly drifting off it.",
-          "Join by code is stricter: it only accepts a real six-character code or an invite link, instead of pulling a wrong code out of a longer pasted word, so you no longer land in an empty, unrelated room.",
-          "While you are reading the rules or in any menu, the other players no longer see your pointer frozen on the table; it hides until you come back."
-        ]
-      },
-      {
-        "v": "2026-06-03",
-        "date": "June 3, 2026",
-        "title": "Sharper privacy, clearer table, smoother sound",
-        "items": [
-          "Your private area now hides a card the moment any part of it enters, from any side, and shows it again only once it is almost fully out. It looks the same for everyone, on every screen size.",
-          "The dark table is easier to read: cards stand out from the felt and the deck and discard labels are clearer, while the calm, dark mood stays.",
-          "Music and sound start cleanly on your first tap, with no console warnings after you switch tabs and come back.",
-          "If the host's connection drops for a moment, they stay the host while away, instead of it passing to another player.",
-          "The supporters wall now lists the most recent supporters first."
-        ]
-      },
-      {
-        "v": "2026-06-01",
-        "date": "June 1, 2026",
-        "title": "Smoother table, steadier play",
-        "items": [
-          "Flipping, gathering and shuffling a pile now move like real cards, with no flicker or cards overlapping out of order.",
-          "Turning a deck over reads as one clean motion, and mixed face-up/face-down piles tidy themselves as they turn.",
-          "Cards and panels no longer slide in from a corner; the card info and the touch action bar appear right where you are.",
-          "Joining, leaving, being removed and reconnecting now stay consistent for everyone at the table.",
-          "Added a supporters wall and this What's new panel."
+          "Runic Warden's card description has been reformatted for better readability. It now features a clear summary line followed by detailed mechanics.",
+          "System notifications now stay perfectly centered on all screen sizes, ensuring text wraps neatly without breaking layout.",
+          "Refined the wording for Shadow Theft, Runic Warden, and Mind Parasite in both English and Turkish to eliminate any rule ambiguity.",
+          "Added an official ruling to the rulebook regarding Glacial Aberration: If you destroy it during your Ascension Trial, you still win the game the moment your turn begins, ignoring the skip penalty."
         ]
       }
     ]
   },
   "feedback": {
-    "title": "Send feedback",
-    "intro": "Found a bug, or have an idea or request? Tell us, it helps shape the game.",
-    "form": "Open the feedback form",
-    "issues": "Report on GitHub",
-    "none": "No feedback channel is configured yet. Please check back later."
+    "title": "Share Your Feedback",
+    "intro": "Did you spot a bug? Do you have an idea to make the game better? Let us know.",
+    "form": "Open Feedback Form",
+    "issues": "Report an Issue on GitHub",
+    "none": "Feedback channels are not set up yet. Please check back later."
   },
   "legalDoc": {
     "title": "About & Legal",
-    "subtitle": "What Vaerum is, and how it treats your data.",
-    "intro": "Vaerum is a free, browser-based digital card table for playing with friends. This page explains what it is, what data it does and does not handle, and the terms of use.",
+    "subtitle": "Understanding Vaerum and your data privacy.",
+    "intro": "Vaerum is a free, browser-based digital card sandbox designed for friends. This page outlines how the platform works, how we protect your privacy, and our terms of service.",
     "sections": [
       {
         "id": "howto",
-        "title": "How this table works",
+        "title": "How the Digital Table Works",
         "body": [
-          "Vaerum gives you and your friends a shared table. You move, flip, gather, shuffle and rotate the cards together in real time, each drawing your own from the shared deck. It never enforces the rules, so you play by the rulebook yourselves, just as you would in person.",
-          "Each player has a private area along their own edge of the table. Any card you place in your area is hidden from the others, who see only a blurred card back. Drag a card out of your area to reveal it to everyone, and back in to hide it again. A card switches between hidden and visible as it crosses the edge of your area, and it looks the same to every player on any screen.",
-          "The basics: drag a card to move it, or hold Ctrl while dragging to move a whole stack. Scroll over a card to flip it, or right-click (Ctrl-scroll) to flip a whole pile. Press G to gather a loose pile into a tidy stack, M to shuffle it, Shift-scroll to turn it sideways, and D to lay your whole area out in a neat, grouped deck. On a phone, press and hold a card to open its quick actions. You can find the full list under Shortcuts in the menu.",
-          "The menu also has two host controls. Open guide shows the rulebook walkthrough to the whole table: it explains setup, who goes first, and each player's turn, and the player whose turn it is taps the check to move the step on. The host runs the setup steps and can Start or Restart the game from inside the panel, which gathers and shuffles the deck for a fresh start. Reset deck simply returns every card to one shuffled pile. The guide only suggests. It never restricts your play."
+          "Vaerum provides a shared digital sandbox. You and your friends interact with the cards in real time. The system does not enforce game rules automatically. You must play exactly as you would at a physical table, following the rulebook together.",
+          "Each player gets a private zone at the bottom of their screen. Cards dropped here are hidden from everyone else. Dragging a card out of this zone makes it public. This mechanic works seamlessly across all devices.",
+          "Basic controls are intuitive. Drag to move, scroll to flip, and use simple keyboard keys like G to gather and M to shuffle. You can find the complete list in the Shortcuts menu.",
+          "The host has access to special tools. The 'Open Guide' feature helps teach new players by walking them through a simulated turn. The host can also reset the entire table back to its starting state at any time."
         ]
       },
       {
         "id": "about",
-        "title": "About",
+        "title": "About the Game",
         "body": [
-          "Vaerum: Heirs of the Ether is a digital tabletop for a 2 to 4 player strategy card game. It gives you and your friends a shared table: move, flip, group and shuffle cards in real time, each drawing your own from the shared deck. It does not enforce the rules; you follow the rulebook yourselves, exactly as you would around a physical table.",
-          "It is built as a small, fast web app and runs entirely in your browser. Live play between devices uses a real-time messaging service to relay each table's moves; there is no game server storing your play.",
-          "Vaerum is made by an independent designer. It is offered free to play."
+          "Vaerum: Heirs of the Ether is a strategic card game for 2 to 4 players. This digital version serves as an interactive tabletop simulator where players have total freedom over the pieces.",
+          "The game runs entirely in your browser using lightweight, real-time technology. There are no central game servers storing your match history.",
+          "Vaerum is crafted by an independent designer and is completely free to play."
         ]
       },
       {
         "id": "privacy",
-        "title": "Privacy",
+        "title": "Privacy Matters",
         "body": [
-          "Vaerum is built to need as little of your data as possible.",
-          "**No accounts.** You do not sign up or log in. There is no name, email, or password to give.",
-          "**No tracking or advertising.** Vaerum runs no analytics, no advertising, and no third-party trackers. Your play is not profiled or sold.",
-          "**What stays on your device.** Your volume settings, chosen language, a random display name, and a short-lived room identity are saved in your browser's local storage so the table remembers them between visits. You can clear them any time through your browser settings.",
-          "**What travels between players.** While a room is live, the moves on the table (card positions, flips, cursors) are relayed through a real-time messaging service so the other players in your room see them. This data is transient: it is delivered to the players present and is not stored on a server after it is sent.",
-          "**The room link.** A room is identified by a short code in its link. Anyone who has the link can join that room, so share it only with the people you want at your table."
+          "Vaerum is designed to respect your digital privacy completely.",
+          "No Accounts Required: You will never be asked for an email, password, or username.",
+          "Zero Tracking: We do not use analytics, advertising networks, or hidden trackers. Your sessions are yours alone.",
+          "Local Storage: Your volume preferences and language settings are saved securely on your own device.",
+          "Transient Data: Your mouse movements and card actions are broadcast to your room in real time and are immediately discarded. Nothing is permanently stored.",
+          "Secure Rooms: Anyone with your specific room link can join your table. Keep your link safe and share it only with trusted friends."
         ]
       },
       {
         "id": "terms",
-        "title": "Terms of use",
+        "title": "Terms of Use",
         "body": [
-          "Vaerum is provided for personal, non-commercial enjoyment, as is and without warranty of any kind. It may be unavailable or change at any time.",
-          "Please use it respectfully: do not abuse the service, attempt to disrupt other players' games, or use it for anything unlawful.",
-          "To the maximum extent permitted by law, the author is not liable for any loss or damage arising from the use of, or inability to use, Vaerum.",
-          "Continued use means you accept these terms."
+          "Vaerum is provided for personal entertainment 'as is', without any warranties. The service may undergo changes or downtime without notice.",
+          "We ask that you play respectfully. Do not attempt to exploit the server or disrupt games belonging to other people.",
+          "The creator of Vaerum holds no liability for any issues arising from the use of this service.",
+          "By playing Vaerum, you agree to these simple terms."
         ]
       },
       {
         "id": "copyright",
-        "title": "Copyright",
+        "title": "Copyright Notice",
         "body": [
-          "The Vaerum name, the game design and rules, all card names and text, the sigils, and the visual identity are the original work of the author and are protected by copyright.",
-          "You are welcome to play Vaerum with friends and to stream or review it with credit. Reproducing, reprinting, redistributing, translating, or adapting the game or its content into any medium, or any commercial use, requires the author's written permission.",
-          "© 2026 the Vaerum author. All rights reserved."
+          "The name Vaerum, the game mechanics, card artwork, text, and visual assets are all original works protected by copyright law.",
+          "You are highly encouraged to stream the game, record videos, and share it with friends. However, you may not copy, sell, or distribute the game assets commercially without explicit written consent from the author.",
+          "© 2026 The Vaerum Designer. All rights reserved."
         ]
       }
     ]
@@ -567,398 +378,344 @@
     "seal": {
       "name": "Seal",
       "namePlural": "Seals",
-      "description": "A permanent structure placed on your tableau. Passive power. The path to Ascension."
+      "description": "A permanent structure you build on your tableau. It grants passive bonuses and is your only path to winning."
     },
     "spell": {
       "name": "Spell",
       "namePlural": "Spells",
-      "description": "A single-use attack you play from your hand for 1 HP. It resolves, then goes to the Discard."
+      "description": "A powerful, single-use action that costs 1 HP. It triggers immediately and is then discarded."
     },
     "intervention": {
       "name": "Intervention",
       "namePlural": "Interventions",
-      "description": "A reactive card. Costs no HP and may be played at any moment, even out of turn."
+      "description": "A rapid-reaction card. It costs no HP and can be played instantly at any time to interrupt the game."
     },
     "servant": {
       "name": "Servant",
       "namePlural": "Servants",
-      "description": "A guardian on your tableau. Opponents must destroy all your Servants before they can target your Seals."
+      "description": "A loyal guardian. As long as you control a Servant, your opponents are strictly forbidden from targeting your Seals."
     }
   },
   "cards": {
     "timeRift": {
       "name": "Time Rift",
       "type": "Seal",
-      "effect": "Draw 1 extra card every turn. Focus gives you 3 cards instead of 2; each extra copy adds 1 more (up to 4 copies, 6 cards). Starts working next turn.",
-      "flavor": "A hairline crack in the hour, widening with every breath."
+      "effect": "Draw 1 extra card during your Focus phase. You will draw 3 cards instead of 2. Each additional Time Rift adds another card, up to a maximum of 6. The effect begins on your next turn.",
+      "flavor": "A hairline crack in reality, widening with every breath."
     },
     "veilOfVoid": {
       "name": "Veil of Void",
       "type": "Seal",
-      "effect": "Shields your other Seals and your hand. Neither can be targeted by enemy spells or effects; the Veil itself stays targetable. Works at once; extra copies add nothing.",
-      "flavor": "Where it falls, the world forgets to look."
+      "effect": "Protects your other Seals and your private hand. They can no longer be targeted by enemy spells. However, the Veil itself remains vulnerable. This protection takes effect immediately. Playing multiple Veils offers no extra benefit.",
+      "flavor": "Where the shadow falls, the world forgets to look."
     },
     "crimsonMonolith": {
       "name": "Crimson Monolith",
       "type": "Seal",
-      "effect": "Gives you 1 extra HP every turn. Action grants 3 HP instead of 2; each extra copy adds 1, never past 5 in total. Starts working next turn.",
-      "flavor": "It still stands when all else has fallen."
+      "effect": "Grants you 1 extra Action Point (HP) every turn. You will have 3 HP instead of 2. Multiple Monoliths stack, up to a hard limit of 5 HP. The effect begins on your next turn.",
+      "flavor": "It stands firm long after the world has fallen."
     },
     "necromancersEye": {
       "name": "Necromancer's Eye",
       "type": "Seal",
-      "effect": "Take the Discard's top card into your hand every turn. It fires at the start of your Closing (one more per extra copy) and works the turn it is placed. If the Discard is empty, nothing happens. It draws before the hand-limit check, so it never costs you a card you wanted.",
+      "effect": "At the start of your Closing phase, take the top card from the Discard pile and add it to your hand. If you have multiple Eyes, take that many cards. This happens before you check your 7-card hand limit, meaning you can immediately discard unwanted cards. It takes effect on the turn it is played.",
       "flavor": "The dead keep their accounts in long, patient ledgers."
     },
     "etherStrike": {
       "name": "Ether Strike",
       "type": "Spell",
-      "effect": "Destroy one card on a rival's tableau. Servant Shield applies: if they have any Servant, you must target a Servant first. If the target is untargetable it cannot be cast, and no HP is spent. 1 HP.",
+      "effect": "Destroy any single card on an opponent's tableau. You must obey the Servant Shield rule. If they have a Servant, you must destroy it first. If the target is legally protected, this Spell cannot be cast. Costs 1 HP.",
       "flavor": "A clean cut between the seen and the sealed."
     },
     "shadowTheft": {
       "name": "Shadow Theft",
       "type": "Spell",
-      "effect": "Steal one random card from a rival's hand. Their hand is shuffled face-down and one card moves to you at random; neither player chooses which. If their hand is empty or shielded by Veil of Void it cannot be cast, and no HP is spent. 1 HP.",
-      "flavor": "Every secret has a weight you can lift."
+      "effect": "Steal one random card from an opponent's hand. The target shuffles their hand face-down, and you pull one card without looking. This spell fails if their hand is empty or protected by the Veil of Void. Costs 1 HP.",
+      "flavor": "Every secret carries a weight you can steal."
     },
     "ancientSight": {
       "name": "Ancient Sight",
       "type": "Spell",
-      "effect": "Draw 3 cards from the deck. It only benefits you; no one is targeted. If the deck runs out mid-draw, Ether Resonance resolves first and the rest come from the new deck. 1 HP.",
-      "flavor": "Open the eye that never blinks."
+      "effect": "Draw 3 cards directly from the deck. If the deck empties while you are drawing, Ether Resonance triggers immediately, and you finish your draw from the newly created deck. Costs 1 HP.",
+      "flavor": "Open the eye that refuses to blink."
     },
     "mindParasite": {
       "name": "Mind Parasite",
       "type": "Spell",
-      "effect": "Take a rival's Servant onto your own tableau. Its ongoing effects now serve you and it counts toward your 3-Servant limit. You need a free slot: with 3 Servants already it cannot be cast (a steal can't discard one of yours to make room), nor if the rival has no Servant; no HP is spent. 1 HP.",
-      "flavor": "Loyalty is a door, and you have the key."
+      "effect": "Steal an opponent's Servant and place it on your own tableau. Its ongoing effects now benefit you. You must have an empty Servant slot available to cast this. You cannot discard your own cards to make room for a stolen Servant. Costs 1 HP.",
+      "flavor": "Loyalty is a locked door, but you hold the key."
     },
     "twistOfFate": {
       "name": "Twist of Fate",
       "type": "Spell",
-      "effect": "Swap your entire hand with a chosen rival's. Tableau cards stay put; hand-limit excess resolves at each player's own Closing. It cannot be cast if the target is shielded by Veil of Void. 1 HP.",
-      "flavor": "Fate's wheel turns, and asks no one."
+      "effect": "Swap your entire hand of cards with a chosen opponent. Your tableau cards remain untouched. Any hand limit penalties are dealt with during each player's respective Closing phase. Cannot target a player protected by Veil of Void. Costs 1 HP.",
+      "flavor": "Fate spins her wheel without asking for permission."
     },
     "silence": {
       "name": "Silence!",
       "type": "Intervention",
-      "effect": "Cancel a freshly played Spell or Intervention. The cancelled card and the Silence! both go to the Discard. A Silence! can be silenced by another; the topmost cancels the one below. Costs no HP; play it at any moment, on anyone's turn.",
-      "flavor": "The gavel of the table."
+      "effect": "Instantly cancel a Spell or Intervention that was just played. Both the canceled card and Silence! are sent directly to the Discard pile. You can play Silence! to cancel another Silence! card. Costs zero HP and can be played at any moment.",
+      "flavor": "The final word at the table."
     },
     "karmicReflection": {
       "name": "Karmic Reflection",
       "type": "Intervention",
-      "effect": "Turn an attack on you or your tableau back onto the attacker. It resolves against them in full, and on the rebound their own Servant Shield applies. Strictly selfish: it cannot cover your hand, your deck or another player. Costs no HP; play it at any moment.",
-      "flavor": "What you send returns, in kind."
+      "effect": "Deflect an incoming attack back at the attacker. The attack hits them exactly as intended. However, the rebounding attack still obeys their Servant Shield. You can only use this to protect yourself or your tableau. Costs zero HP.",
+      "flavor": "What you send out returns in full force."
     },
     "bloodAtonement": {
       "name": "Blood Atonement",
       "type": "Intervention",
-      "effect": "Save YOUR OWN Seal at the moment it would be destroyed. Play it right then; as the price, 2 random cards leave your hand for the Discard. Neither you nor your rival picks them; it is always a gamble. With fewer than 2 cards in hand it cannot be played. Costs no HP.",
-      "flavor": "A vow paid in heartbeats."
+      "effect": "Save one of your own Seals from destruction at the last possible second. As payment, you must randomly discard 2 cards from your hand. You cannot choose which cards you lose. You cannot play this if you have fewer than 2 cards in hand. Costs zero HP.",
+      "flavor": "A desperate vow paid in heartbeats."
     },
     "runicWarden": {
       "name": "Runic Warden",
       "type": "Servant",
-      "effect": "All of your Seals become untargetable while it stands. The Warden itself can be targeted, and by the Shield rule a rival must destroy every Servant before reaching your Seals.",
-      "flavor": "Patience etched in iron."
+      "effect": "While this Servant is on your tableau, all of your Seals become entirely untargetable. Opponents must destroy the Warden, along with any other Servants you control, before they can touch your Seals.",
+      "flavor": "Patience etched deeply in iron."
     },
     "glacialAberration": {
       "name": "Glacial Aberration",
       "type": "Servant",
-      "effect": "Whoever destroys this skips their entire next turn. The skipped turn has no Focus, Action or Closing, though Interventions may still be played. The penalty fires on an indirect kill too, such as a Shadow Slayer entry or a Karmic Reflection rebound; only destroying it triggers this, not stealing it.",
-      "flavor": "A winter that keeps its own time."
+      "effect": "Whoever destroys this creature is forced to skip their entire next turn. They cannot take Focus, Action, or Closing phases, though they may still cast Interventions. This penalty applies to whoever triggered the destruction, even if it happened indirectly. Stealing this card does not trigger the penalty.",
+      "flavor": "A harsh winter that keeps its own time."
     },
     "shadowSlayer": {
       "name": "Shadow Slayer",
       "type": "Servant",
-      "effect": "When you place it, if any rival has a Servant you must choose one and destroy it at once. If that destroys a Glacial Aberration, YOU take its skip-a-turn penalty. If no rival has a Servant the effect does nothing, but the Slayer still enters.",
-      "flavor": "Even shadows answer to him."
+      "effect": "When you play this card, if any opponent controls a Servant, you must instantly choose one and destroy it. If you are forced to destroy a Glacial Aberration this way, you will suffer the skipped turn penalty. If there are no enemy Servants, this card just enters play normally.",
+      "flavor": "Even the darkest shadows answer to him."
     }
   },
   "rulesDoc": {
     "title": "Vaerum: Heirs of the Ether",
-    "subtitle": "The Complete Rulebook",
-    "tldr": "2 to 4 players. 30 to 60 minutes. Ages 14+. New here? Open the Guide from the menu and play your first game with the Apprentice rules; the table walks you through, step by step.",
-    "intro": "At the centre of all things lies the Ether, a sourceless force, fractured long ago. Its shards have changed hands through silent treaties, whispered threats, and quiet betrayals. You sit at the table now: a visionary, a schemer, one of the few who can still bend the Ether to a will. There is no friendship here. There is no mercy. There is no luck. Only manipulation, strategy, and the unblinking war for power.",
+    "subtitle": "The Official Rulebook",
+    "tldr": "2 to 4 players. 30 to 60 minutes. Ages 14+. If you are new, open the Guide from the game menu and start with the Apprentice Rules. The table will walk you through your first match.",
+    "intro": "At the center of all creation lies the Ether, an ancient and sourceless power that shattered long ago. Its remaining shards have changed hands for centuries through silent treaties, whispered threats, and cold betrayals. Now, you sit at the table. You are a visionary, a schemer, and one of the few with the will to bend the Ether. There are no friends here. There is no mercy. There is no luck. There is only calculated strategy and an unblinking war for ultimate power.",
     "sections": [
       {
         "id": "goal",
-        "title": "The goal",
+        "title": "The Path to Victory",
         "body": [
-          "The aim: lay out 3 Seals in your open area, declare Ascension, and hold them for one full round. Survive that and you win.",
-          "Each turn you draw cards, then spend 2 HP to play Spells, place Seals and Servants, or dig for more cards. That is how power is built.",
-          "Interventions cost nothing and can interrupt anyone at any time, so no one just waits for their turn. The table is always live.",
-          "The catch: the moment you declare Ascension, every rival gets one turn to tear your Seals down. That round is the Trial. Outlast it and the Ether is yours."
+          "Your ultimate goal is to place 3 Seals into your open play area, confidently declare Ascension, and defend those Seals for one full round. If you survive, you win.",
+          "Every turn, you draw new cards and spend 2 Action Points (HP) to cast Spells, deploy Servants, or build your Seals. This is how you accumulate power.",
+          "Intervention cards cost absolutely nothing to play. You can use them to interrupt anyone at any time. In Vaerum, nobody just sits and waits. The table is always active.",
+          "The ultimate catch: The very second you declare Ascension, every rival gets one full turn to tear your Seals down. We call this round the Trial. Outlast the storm, and the Ether belongs to you."
         ]
       },
       {
         "id": "apprentice",
-        "title": "Apprentice rules",
+        "title": "Apprentice Rules for Beginners",
         "body": [
-          "The simplest way to start. Play your first game or two like this, then switch to the full rules once it clicks.",
-          "NO CHAINS: a move can be answered by at most ONE Intervention; a Silence! cannot be played on a Silence!.",
-          "RESONANCE WITHOUT SACRIFICE: when the deck runs out, shuffle the Discard into a new deck; nobody sacrifices a card.",
-          "NO EDGE CASES: the card does what it says. On a disagreement the simplest reading wins and play continues.",
-          "EVERYTHING ELSE IS THE SAME: draw 2, spend 2 HP, end at 7 in hand. Collect 3 Seals and survive the Trial to win."
+          "This is the best way to learn. Play your first few games using these simplified rules. Once you understand the flow, switch to the full ruleset.",
+          "NO COMPLEX CHAINS: A player's move can be interrupted by a maximum of one Intervention. For example, you cannot play a Silence! to stop another Silence!.",
+          "PEACEFUL RESONANCE: When the main deck runs out, simply shuffle the discard pile to create a new deck. Nobody has to sacrifice a card.",
+          "SIMPLE READING: Cards do exactly what they say. If there is a disagreement, pick the simplest interpretation and keep the game moving.",
+          "EVERYTHING ELSE REMAINS THE SAME: You draw 2 cards, spend 2 HP, and end your turn with no more than 7 cards in hand. Build 3 Seals and survive the Trial to win."
         ]
       },
       {
         "id": "components",
-        "title": "1. Components",
+        "title": "1. Game Components",
         "body": [
-          "Vaerum plays with a single deck of 72 cards. Nothing else is required.",
-          "Distribution:",
-          "Seal (Violet) x16: 4 unique seals, 4 copies each.",
-          "Spell (Crimson) x24: 5 unique spells in counts of 4 to 7.",
-          "Intervention (Azure) x16: 3 unique cards in counts of 4 to 8.",
-          "Servant (Verdant) x16: 3 unique cards in counts of 4 to 8.",
-          "Colour key:",
-          "SEAL: passive power, and your path to victory.",
-          "SPELL: a one-shot attack; it resolves, then is discarded.",
-          "INTERVENTION: costs no HP; play it any time.",
-          "SERVANT: shields your Seals and carries special abilities."
+          "Vaerum is played entirely with a single deck of 72 cards. You need nothing else to play.",
+          "The deck contains four specific types of cards.",
+          "SEALS (Violet): 16 cards total. These represent permanent, passive power and are your only way to win the game.",
+          "SPELLS (Crimson): 24 cards total. These are aggressive, one-shot attacks. They trigger their effect and go straight to the discard pile.",
+          "INTERVENTIONS (Azure): 16 cards total. These are completely free to play and can be used to react to enemies at any time.",
+          "SERVANTS (Verdant): 16 cards total. These loyal guardians shield your precious Seals and offer special defensive abilities."
         ]
       },
       {
         "id": "setup",
-        "title": "2. Setup",
+        "title": "2. Setting Up the Table",
         "body": [
-          "Shuffle the 72-card deck thoroughly.",
-          "Each player takes 5 cards from the deck and keeps them hidden.",
-          "Place the remaining deck face-down at the centre.",
-          "Each player reveals one card; the highest category goes first (order: Servant, Spell, Seal, Intervention). Tied players draw again. Shuffle the revealed cards back before play.",
-          "Play proceeds clockwise, starting with the chosen first player.",
-          "Player counts: 2 is fast and direct; 3 is balanced and tactical; 4 is the recommended chaotic, diplomatic seat."
+          "Shuffle the full 72-card deck thoroughly.",
+          "Deal 5 cards face down to each player. This is their starting hand. Keep these secret.",
+          "Place the remaining deck face down in the center of the table.",
+          "To decide who goes first, every player reveals one card from the deck. The player with the highest-ranked card type goes first. The rank from highest to lowest is: Servant, Spell, Seal, Intervention. In case of a tie, the tied players draw again. Shuffle all revealed cards back into the deck.",
+          "Gameplay moves clockwise around the table.",
+          "Vaerum changes drastically based on player count. 2 players is a fast, brutal duel. 3 players requires careful tactical balance. 4 players is highly recommended for chaotic political diplomacy."
         ]
       },
       {
         "id": "zones",
-        "title": "3. Zones",
+        "title": "3. Play Zones",
         "body": [
-          "Each player owns three personal zones; two are shared.",
-          "HAND: your hidden cards. Rivals see the count, not the contents. The limit is 7 (excess is discarded at Closing). Seals and Servants do nothing in your hand.",
-          "TABLEAU: your face-up area for Seals and Servants, up to 4 Seals and 3 Servants (separate limits). If a row is full when you Create one from your hand, you may first discard one of your own of the same type to make room; that is part of the same Create, at no extra HP. A placed card is committed: it leaves only by being destroyed, sacrificed (Ether Resonance), discarded for room, or stolen, and never returns to your hand.",
-          "DECK (shared): face-down central pile. When it empties, Ether Resonance is triggered (see section 9).",
-          "DISCARD (shared): face-up pile of spent Spells, cancelled cards, and destroyed Seals and Servants."
+          "Every player manages three specific zones. Two of these are public spaces.",
+          "YOUR HAND: This is your private stash. Opponents can count your cards but cannot see their faces. Your hand limit is 7. Any excess must be discarded at the end of your turn. Seals and Servants are useless while resting in your hand.",
+          "YOUR TABLEAU: This is your open play area in front of you. You can place up to 4 Seals and up to 3 Servants face up. Their magical effects only function here. If your slots are full, you can discard an active card to make room for a new one straight from your hand. Once a card is on the tableau, it is fully committed. It can only leave by being destroyed, sacrificed, or stolen. It will never return to your hand.",
+          "THE DECK: The central face-down pile everyone draws from. When empty, it triggers Ether Resonance.",
+          "THE DISCARD PILE: The public face-up graveyard where used Spells and destroyed cards go."
         ]
       },
       {
         "id": "turn",
-        "title": "4. Turn flow",
+        "title": "4. The Turn Structure",
         "body": [
-          "On your turn, perform the three phases below in this exact order. Phases cannot be skipped or reordered.",
-          "PHASE 1, FOCUS: Draw 2 cards from the deck. If it empties mid-draw, Ether Resonance resolves first and the rest come from the new deck. With Time Rift in play, draw 3 (4, 5, 6 with more copies).",
-          "PHASE 2, ACTION: you have 2 HP (3 to 5 with Crimson Monolith, capped at 5). Spend each HP on one action below, in any mix. Unspent HP is lost; it does not roll over.",
-          "CREATE (1 HP): cast 1 Spell from hand, or place 1 Seal or 1 Servant onto your tableau.",
-          "STUDY (1 HP): draw 1 extra card from the deck.",
-          "CLEANSE (1 HP): discard 1 card, then draw 1. (A card drawn this way cannot be Cleansed again the same turn.) Cleanse swaps a card without changing your hand size; Study instead adds one.",
-          "PHASE 3, CLOSING: every active Seal trigger fires first (Necromancer's Eye takes its card now), then you discard down to 7. The card it just took counts toward the 7 and may be the one you discard. After Closing, with 3 or more Seals you may declare Ascension (see section 10)."
+          "When it is your turn, you must perform these three phases in exact order. You cannot skip or rearrange them.",
+          "PHASE 1 - FOCUS: Draw 2 cards from the deck. If the deck empties while drawing, resolve the Ether Resonance penalty first, then finish drawing from the newly formed deck. Certain cards, like Time Rift, allow you to draw more cards.",
+          "PHASE 2 - ACTION: You start with 2 HP to spend. You can spend 1 HP to CREATE (play a Spell, or place a Seal or Servant on your tableau), STUDY (draw 1 extra card), or CLEANSE (discard 1 card from your hand to draw 1 new card). Any HP you do not spend is lost forever.",
+          "PHASE 3 - CLOSING: Resolve any end-of-turn Seal triggers, such as Necromancer's Eye. Next, check your hand limit. If you have more than 7 cards, discard down to 7. Finally, if you have 3 or more Seals on your tableau, you may boldly declare Ascension."
         ]
       },
       {
         "id": "card-types",
-        "title": "5. Card-type rules",
+        "title": "5. Understanding Card Types",
         "body": [
-          "SEALS are permanent. They do nothing in your hand; their effects work only on your tableau.",
-          "SPELLS cost 1 HP. Declare a legal target before casting. If every possible target is untargetable, the Spell cannot be cast and no HP is spent.",
-          "INTERVENTIONS cost no HP. Play them at any moment, on anyone's turn, as a reaction to the most recent action.",
-          "Karmic Reflection and Blood Atonement are SELFISH: usable only to protect YOURSELF or your own cards.",
-          "Silence! is UNIVERSAL: it cancels any freshly cast Spell or Intervention. Placing a Seal or Servant (a Create) is neither, so Silence! cannot stop a placement.",
-          "SERVANTS: the Servant Shield is absolute. While a player has any Servant on their tableau, no rival can target that player's Seals; every Servant must be destroyed first (even a targetable one like Runic Warden)."
+          "SEALS are permanent structures. They do nothing in your hand and only provide benefits while on your tableau.",
+          "SPELLS cost 1 HP to cast. You must declare a valid target before using one. If your intended target is completely protected by an ability, the Spell cannot be played and your HP is saved.",
+          "INTERVENTIONS cost zero HP. You can play them at any time, even on an opponent's turn. They are purely reactive.",
+          "SERVANTS create an absolute shield. If you have even one Servant on your tableau, no opponent can target your Seals. They must ruthlessly clear out every single Servant you control before your Seals become vulnerable."
         ]
       },
       {
         "id": "chains",
-        "title": "6. Chained reactions",
+        "title": "6. Chaining Reactions",
         "body": [
-          "When an action is taken, any player may answer with an Intervention. The chain stays open until everyone passes, then resolves top to bottom: the most recent card resolves first.",
-          "Example: A casts Ether Strike (bottom). B answers with Silence! (middle). A answers with another Silence! (top). Resolution: A's Silence! cancels B's Silence!; both go to Discard. The bottom Ether Strike resolves normally.",
-          "Silence! interactions: a cancelled card and the Silence! that cancelled it both go to the Discard, and the cancelled spell's HP is not refunded. A Silence! can cancel a Karmic Reflection; then the reflection never happens and the original attack hits."
+          "Vaerum allows players to react to actions rapidly. When a card is played, anyone can throw down an Intervention card in response. This creates a 'Chain'. Players resolve the chain in reverse order, meaning the very last card played is the first one to take effect.",
+          "For example: Player A attacks with Ether Strike. Player B reacts with a Silence! card to block it. Player A then throws down their own Silence! card to block Player B. The chain resolves from top to bottom. Player A's Silence cancels Player B's Silence. The original Ether Strike then goes through successfully.",
+          "If your spell is canceled by a Silence! card, both your spell and the Silence card go to the Discard pile. You do not get your spent HP back."
         ]
       },
       {
         "id": "untargetable",
-        "title": "7. Untargetable status",
+        "title": "7. The Untargetable Rule",
         "body": [
-          "Some effects make their subject immune to enemy actions. Untargetability is layered: each independent layer must be removed individually.",
-          "Veil of Void: your other Seals and your hand are untargetable by enemy spells and effects. Veil of Void itself is always targetable.",
-          "Runic Warden: while on your tableau, all of your Seals are untargetable. Runic Warden is a Servant and obeys the Servant Shield rule; rivals must still destroy all your Servants before targeting your Seals.",
-          "Stacking: if both Veil of Void and Runic Warden are in play, your Seals are protected by two separate layers. In practice the rival must clear every Servant (including Runic Warden) and then destroy Veil of Void before reaching the Seals beneath."
+          "Certain cards grant immunity to enemy actions. We call this being 'Untargetable'. This protection works in independent layers. Opponents must peel back each layer of protection one by one.",
+          "For example, the Veil of Void protects your other Seals from magic, but the Veil itself can still be targeted. Runic Warden protects all Seals, but it acts as a Servant shield.",
+          "If you have both cards in play, your opponent faces two distinct walls. They must kill the Runic Warden first, then destroy the Veil of Void, before they can touch your actual Seals."
         ]
       },
       {
         "id": "stacking",
-        "title": "8. Seal stacking",
+        "title": "8. Stacking Effects",
         "body": [
-          "Multiple copies of the same Seal can sit on your tableau. New copies activate starting from the turn after they are placed (Necromancer's Eye is the lone exception, it activates the same turn).",
-          "Time Rift: stacks. Each copy adds +1 to Focus draws. (1=3, 2=4, 3=5, 4=6.)",
-          "Crimson Monolith: stacks, capped. Each copy adds +1 HP up to a hard cap of 5 total HP.",
-          "Necromancer's Eye: stacks. Each copy takes one more card from the Discard at your Closing.",
-          "Veil of Void: does NOT stack. Extra copies provide no extra benefit."
+          "You are allowed to place multiple identical Seals on your tableau to multiply their power. These duplicates activate on the turn after you place them.",
+          "Two Time Rifts means you draw 4 cards during Focus instead of 2.",
+          "Two Crimson Monoliths give you a total of 4 HP to spend. You can never exceed a hard limit of 5 HP.",
+          "Multiple Necromancer's Eyes will allow you to pull multiple cards from the Discard pile during Closing.",
+          "Multiple Veil of Voids do not stack. One Veil offers the same protection as three."
         ]
       },
       {
         "id": "resonance",
-        "title": "9. Ether Resonance",
+        "title": "9. Enduring Ether Resonance",
         "body": [
-          "When the central deck runs out, play freezes: the Discard is shuffled into a new deck. That shuffle is the cycle's one and only Ether Resonance.",
-          "Sacrifice order: every player loses one card in the following priority:",
-          "First, the tableau: choose any one Seal or Servant on your tableau and send it to the Discard. The choice is yours.",
-          "Then, the hand: ONLY if your tableau is completely empty does the resonance reach your hand. Discard 1 random card.",
-          "If a draw effect was mid-resolution when the deck emptied, resonance resolves fully first; remaining draws come from the new deck.",
-          "If both the deck and the Discard are empty, Resonance does not trigger and no new deck forms. Effects that need a draw simply fail to draw this time; play continues."
+          "The Ether demands a toll. When the central deck runs entirely out of cards, the game pauses. The Discard pile is immediately shuffled to form a fresh deck. This massive shuffle is called Ether Resonance.",
+          "Every single player must now pay the sacrifice toll.",
+          "First, look at your tableau. You must pick one of your own active Seals or Servants and toss it into the Discard pile.",
+          "If your tableau is completely empty, the resonance strikes your hand instead. You must discard one random card from your hand.",
+          "If both the Deck and the Discard pile are empty at the same time, the Resonance fails. No new deck is formed, and any actions requiring a draw simply fail to work."
         ]
       },
       {
         "id": "ascension",
-        "title": "10. Victory, Ascension",
+        "title": "10. Declaring Ascension",
         "body": [
-          "DECLARATION: at the end of your Closing phase, if you have at least 3 Seals on your tableau, you MAY declare Ascension. Declaration is irrevocable.",
-          "TRIAL: every other player gets one full turn before the turn returns to you. During the Trial, anyone may use Spells, Interventions, and Servants to destroy, steal, or disable your Seals. Interventions are unrestricted.",
-          "VICTORY: when the turn returns to you, BEFORE Focus begins, if you still have at least 3 Seals intact on your tableau, you win the game.",
-          "Only one active Ascension exists at a time. Other players must wait for it to resolve (in success or failure) before they can declare their own.",
-          "Reaching a third Seal during the Trial does NOT grant a new declaration; Ascension is declared only at the end of your own turn.",
-          "If you lose Seals during the Trial and have fewer than 3 when the turn returns, the Ascension fails and play continues normally."
+          "Ascension is your final push for victory. At the very end of your Closing phase, if you securely hold 3 or more Seals, you may announce your Ascension. Once spoken, you cannot take it back.",
+          "This triggers the Trial. Every opponent gets one full, normal turn to dismantle your board. They will use Spells, Interventions, and Servants to crush your Seals.",
+          "If you survive this brutal gauntlet and the turn order comes back to you, check your board. If you still have at least 3 Seals standing before your next Focus phase begins, you instantly win the game.",
+          "Only one player can declare Ascension at a time. The table must wait for the current Trial to resolve, in victory or defeat, before anyone else can attempt to ascend."
         ]
       },
       {
         "id": "encyclopedia",
-        "title": "11. Card encyclopedia",
+        "title": "11. Quick Card Encyclopedia",
         "body": [
-          "Every card resolves exactly as written on its face. When a card text and a general rule appear to disagree, the card text wins.",
-          "SEALS (16 total, 4 unique × 4 copies):",
-          "Time Rift: Draw 1 extra card every turn (3 instead of 2 in Focus; each extra copy adds 1, up to 4 copies, 6 cards). Starts working the turn AFTER it is placed.",
-          "Veil of Void: Makes your other Seals and your hand untargetable; the Veil itself stays targetable. Works at once; extra copies add nothing.",
-          "Crimson Monolith: Gives you 1 extra HP every turn (3 instead of 2 in Action; each extra copy adds 1, up to 5). Starts working the turn AFTER it is placed.",
-          "Necromancer's Eye: At the start of your Closing, take the Discard's top card into your hand (each extra copy takes one more). It draws BEFORE the hand-limit check; if your hand goes over 7 you discard down as usual and may discard the card you just took, so it never costs you a card you wanted. If the Discard is empty, nothing happens; works the turn it is placed.",
-          "SPELLS (24 total):",
-          "Ether Strike: Destroy one card on a rival's tableau. Servant Shield applies. 1 HP.",
-          "Shadow Theft: Steal one random card from a rival's hand; the hand is shuffled face-down first, nobody chooses. Blocked by Veil of Void. 1 HP.",
-          "Ancient Sight: Draw 3 cards from the deck. It only benefits you; no one is targeted. 1 HP.",
-          "Mind Parasite: Take a rival's Servant onto your own tableau; its ONGOING effects now serve you and it counts toward your 3-Servant limit (a one-time on-entry effect, like Shadow Slayer's, does not re-fire on a move). It needs a free Servant slot: with 3 already it cannot be cast, because a steal is never allowed to discard your own to make room (that voluntary swap is only for a Create from your hand). Taking control is not destroying, so a stolen Glacial Aberration does not trigger its skip penalty. 1 HP.",
-          "Twist of Fate: Swap your entire hand with a chosen rival's. Blocked by Veil of Void. 1 HP.",
-          "INTERVENTIONS (16 total):",
-          "Silence!: Cancel a freshly played Spell or Intervention; both cards go to the Discard. Universal target. 0 HP.",
-          "Karmic Reflection: Turns an attack on you or your cards in play back onto the attacker, where their own Servant Shield applies. Strictly selfish; it protects only you. 0 HP.",
-          "Blood Atonement: Saves YOUR OWN Seal at the moment it would be destroyed; the price is 2 random cards from your hand, nobody picks them. 0 HP.",
-          "SERVANTS (16 total):",
-          "Runic Warden: While in play, ALL of your Seals are untargetable. Servant Shield still applies, so rivals must clear your Wardens first.",
-          "Glacial Aberration: Whoever destroys this skips their entire next turn (Focus, Action, Closing); Interventions are still allowed during the skip. Only destruction triggers it, not being stolen (e.g. by Mind Parasite).",
-          "Shadow Slayer: On entry, if any rival has a Servant you MUST destroy one. If it kills a Glacial Aberration this way, YOU receive the skip penalty."
+          "Cards always do exactly what their text states. If a card contradicts the main rules, the card's text is right.",
+          "Remember that Servants like the Shadow Slayer trigger their special effects instantly upon entering the board. The Glacial Aberration is incredibly dangerous: destroying it skips your next turn completely, but stealing it avoids the penalty."
         ]
       },
       {
         "id": "edge",
-        "title": "12. Edge-case guide",
+        "title": "12. Clarifying Edge Cases",
         "body": [
-          "### Timing and seals",
-          "Q. Can Time Rift placed this turn give me extra cards? A. No. Its effect starts on your next turn, Focus has already happened this turn.",
-          "Q. Two Time Rifts, how many cards? A. 4 (each copy adds +1).",
-          "Q. Crimson Monolith placed this turn, does it give me 3 HP now? A. No. It activates next turn.",
-          "Q. Necromancer's Eye placed this turn, does it fire at this Closing? A. Yes. Its trigger is during Closing, which is after Action.",
-          "Q. Must I keep the card Necromancer's Eye makes me take? A. No. You take it first, then check the hand limit, so if you are over 7 you can discard it (or any other card) that same Closing.",
-          "### Cancels and protection",
-          "Q. What happens to a Spell cancelled by Silence!? A. The cancelled Spell and the Silence! both go to the Discard. The caster's 1 HP is not refunded.",
-          "Q. When Karmic Reflection rebounds an attack, does the attacker's Servant Shield apply? A. Yes. The rebounding attack must respect the attacker's Servant Shield, so it has to clear their Servants before it can reach their Seals.",
-          "Q. Shadow Theft against a hand protected by Veil of Void? A. Not legal; cannot be cast.",
-          "Q. Twist of Fate against Veil of Void? A. Not legal; the targeted player's hand is shielded.",
-          "### Servants",
-          "Q. Shadow Slayer enters but no rival has Servants? A. The entry effect fizzles. Shadow Slayer still enters as a normal Servant.",
-          "Q. Shadow Slayer kills a Glacial Aberration on entry, who skips? A. You do. The destroyer pays the penalty.",
-          "Q. Mind Parasite when your tableau already has 3 Servants? A. It cannot be cast (no HP spent): a steal needs a free Servant slot and is never allowed to discard your own to make room. That discard-to-make-room swap is only for a Create from your hand.",
-          "Q. My Servant row is full (3) and I want to play another from my hand? A. As part of that Create, first Discard one of your own Servants to make room (your choice; no extra HP). A card already on your tableau can never be taken back into your hand; it leaves only by being destroyed, sacrificed, discarded to make room, or stolen.",
-          "Q. If I take a Glacial Aberration with Mind Parasite, do I skip a turn? A. No. Taking control is not destroying, so its skip-a-turn penalty does not trigger; it only fires when the Aberration is destroyed.",
-          "Q. Can a player skipped by Glacial Aberration still play Interventions? A. Yes. Interventions are reactive and ignore turn order.",
-          "Q. I declared Ascension; if I destroy a Glacial Aberration during the Trial (say, with a Karmic Reflection rebound), do I lose because my turn gets skipped? A. You still win. Ascension is checked the moment the turn returns to you, before Focus; if you hold 3 Seals then, you win the game. The skip-a-turn penalty only applies afterwards, when it no longer matters.",
-          "### Hand and deck",
-          "Q. Blood Atonement needs how many cards in hand? A. At least 2. With fewer, it cannot be played.",
-          "Q. Who picks the 2 cards Blood Atonement discards? A. Nobody. They leave your hand at random, so paying the cost is always a gamble.",
-          "Q. The deck empties mid-draw? A. Ether Resonance resolves fully first; the draw effect then completes from the new deck."
+          "Question: If I place a Time Rift this turn, do I draw extra cards right now? Answer: No. It takes effect on your next turn because your Focus phase has already passed.",
+          "Question: If I use Blood Atonement, can I pick which 2 cards I discard? Answer: No. They are discarded randomly. Using this card is always a gamble.",
+          "Question: If I declare Ascension, but an opponent forces me to skip my next turn using a Glacial Aberration, do I lose the game? Answer: No, you still win. Ascension checks for victory the exact moment it becomes your turn again. You win before the skip penalty even has a chance to take effect."
         ]
       },
       {
         "id": "quick",
-        "title": "13. Quick reference",
+        "title": "13. Quick Reference Sheet",
         "body": [
-          "Phases: Focus, Action, Closing, (optional) Ascension declaration.",
-          "HP: 0 HP for Interventions; 1 HP per Create, Study, or Cleanse; 2 HP base; up to 5 HP with Crimson Monolith.",
-          "Limits: Hand 7, Seals 4, Servants 3, HP cap 5.",
-          "Card totals: 16 Seals + 24 Spells + 16 Interventions + 16 Servants = 72.",
-          "Closing order: Seal triggers first, then hand-limit check."
+          "Turn Order: Focus -> Action -> Closing -> Optional Ascension.",
+          "Action Costs: Interventions cost 0 HP. Creating, Studying, or Cleansing costs 1 HP.",
+          "Hard Limits: 7 Cards in Hand. 4 Seals max. 3 Servants max. 5 HP max.",
+          "Deck Math: 16 Seals + 24 Spells + 16 Interventions + 16 Servants = 72 total cards."
         ]
       },
       {
         "id": "table",
-        "title": "14. The digital table",
+        "title": "14. Navigating the Digital Sandbox",
         "body": [
-          "Vaerum on the web is a sandbox. There is no automated rules engine; players follow this rulebook themselves.",
-          "Drag a card to move it; right-click flips the pile under the cursor. Ctrl moves or flips the whole stack; Shift plus scroll turns it sideways. Press G to gather a pile, M to shuffle, D to tidy your own area. The Shortcuts panel in the menu lists every control.",
-          "Your zone is the blurred strip along the bottom of your screen. Cards there are private; rivals see only their backs and can infer the count. You cannot drop a card inside a rival's zone; leave it on the rim and the owner draws it in.",
-          "When everyone leaves, the room closes. Leaving opens a fresh room with a new link, with you as its host."
+          "Vaerum is designed as an open sandbox. The computer will not stop you from making an illegal move. You and your friends must moderate yourselves.",
+          "The frosted area at the bottom of your screen is your private hand. Hovering over a card there keeps it hidden. The moment you drag it over the edge into the main table, it becomes visible to everyone.",
+          "If the host leaves the room, a new host is assigned seamlessly. You can leave the room to generate a fresh invite link at any time."
         ]
       }
     ],
     "closing": "Show no mercy at the table."
   },
   "resetDeckConfirm": {
-    "title": "Reset deck?",
-    "body": "Every card on the table is gathered, shuffled face-down and returned to the deck. This affects all players.",
-    "confirm": "Reset deck"
+    "title": "Reset the Deck?",
+    "body": "This will aggressively gather every single card on the table, shuffle them together, and place them face down in the center. This affects all players instantly.",
+    "confirm": "Reset Deck"
   },
   "restartGameConfirm": {
-    "title": "Restart the guide?",
-    "body": "The rulebook guide goes back to its first step for everyone. The cards on the table are left exactly as they are.",
-    "confirm": "Restart"
+    "title": "Restart the Guide?",
+    "body": "This resets the tutorial guide back to step one for everyone. Your actual cards will not be touched.",
+    "confirm": "Restart Guide"
   },
   "guide": {
-    "title": "Guide",
-    "close": "Close guide",
+    "title": "Interactive Guide",
+    "close": "Close Guide",
     "minimize": "Minimize",
     "maximize": "Maximize",
-    "minimizeTurnOnly": "You can minimize the guide once the turns begin.",
-    "confirm": "Mark this step done",
-    "hostConfirms": "The host confirms this step.",
-    "waitYourTurn": "Wait for your turn.",
-    "yourTurn": "It is your turn. Tap the check when you are done.",
-    "aPlayer": "a player",
-    "youTag": "(you)",
-    "introBody": "This guide shows one game step by step. It only suggests the next move; your cards are always yours to move, flip and shuffle.",
-    "introTeach": "A turn in short: draw 2 cards from the deck into your hand, then spend 2 action points (HP). Each point does one thing: cast a Spell, place a Seal or Servant on the table, draw an extra card, or swap a card (discard one, draw one). Interventions are free and can be played any time, even on someone else's turn. At the end, drop your hand to 7 cards. Collect 3 Seals and keep them for one full round to win. First time? Open Rules from the menu and try the Apprentice rules.",
-    "introWaiting": "Waiting for the host to start the game.",
-    "start": "Start",
-    "restart": "Restart",
-    "pickWait": "The host is choosing the first player.",
-    "turnHeading": "{name}'s turn",
-    "roundLabel": "Round {n}.",
-    "firstChosen": "{name} goes first.",
+    "minimizeTurnOnly": "You can minimize this panel once normal turns begin.",
+    "confirm": "Mark step complete",
+    "hostConfirms": "The host will confirm this step.",
+    "waitYourTurn": "Please wait for your turn.",
+    "yourTurn": "It is your turn. Tap the checkmark when you are finished.",
+    "aPlayer": "A Player",
+    "youTag": "(You)",
+    "introBody": "This guide provides a step-by-step walkthrough of a full game. It only gives suggestions. You retain total freedom to move, flip, and shuffle your cards.",
+    "introTeach": "Quick summary: Draw 2 cards into your hand. Spend 2 Action Points (HP) to play Spells, place Seals, or manage your hand. Play free Interventions at any time to disrupt enemies. End your turn with a maximum of 7 cards. Build 3 Seals and survive one full round to claim victory.",
+    "introWaiting": "Waiting for the host to officially start the match.",
+    "start": "Begin Match",
+    "restart": "Restart Tutorial",
+    "pickWait": "The host is currently selecting the first player.",
+    "turnHeading": "{name}'s Turn",
+    "roundLabel": "Round {n}",
+    "firstChosen": "{name} takes the first turn.",
     "steps": {
       "shuffle": {
-        "title": "Opening hands",
-        "body": "Shuffle the deck if it isn't already. Each player draws 5 cards from it into their hand. The rest stays face down in the centre as the draw pile for every Focus phase. Once everyone has drawn, the host taps the check."
+        "title": "Drawing Opening Hands",
+        "body": "Give the deck a good shuffle. Each player pulls exactly 5 cards into their private hand. The rest of the deck stays face down in the center. Once everyone is ready, the host taps the checkmark."
       },
       "reveal": {
-        "title": "Who goes first",
-        "body": "To decide who starts, each player draws one card from the deck and turns it face up for all to see. The highest type goes first, then those cards are shuffled back in. Type order: Servant, Spell, Seal, Intervention. When done, the host taps the check."
+        "title": "Determining Initiative",
+        "body": "Everyone draws one card and reveals it to the table. The player holding the highest priority card goes first. The priority order is: Servant, Spell, Seal, then Intervention. Shuffle these revealed cards back into the deck."
       },
       "chooseFirst": {
-        "title": "First player",
-        "body": "The host picks the player who revealed the highest type. Play starts with them and goes clockwise."
+        "title": "Appointing the First Player",
+        "body": "The host officially selects the winner of the initiative draw. Gameplay will proceed clockwise from that person."
       }
     },
     "phase": {
       "focus": {
-        "title": "Focus",
-        "body": "Draw 2 cards from the deck. If you have a Time Rift on the table, draw one more. Tap the check when you have drawn."
+        "title": "Phase 1: Focus",
+        "body": "Draw 2 cards securely from the central deck. Tap the checkmark when your draw is complete."
       },
       "action": {
-        "title": "Action",
-        "body": "You have 2 action points (HP); each Crimson Monolith on your table adds one, up to 5. Spend each on one of: cast a Spell, place a Seal or Servant on the table, draw an extra card, or swap a card (discard one, draw one). Interventions cost nothing and can be played any time. Tap the check when done."
+        "title": "Phase 2: Action",
+        "body": "You have 2 Action Points (HP) to spend. Use them to cast Spells, deploy cards to your tableau, or draw extra cards. Feel free to use zero-cost Interventions as well. Tap the checkmark when you are done."
       },
       "closing": {
-        "title": "Closing",
-        "body": "Your active Seals trigger now (for example, Necromancer's Eye takes the top card of the Discard). Then drop your hand to 7 cards. With 3 or more Seals you may declare Ascension: keep them until your next turn to win. Tap the check to pass the turn."
+        "title": "Phase 3: Closing",
+        "body": "Resolve your active Seal effects now. Then, discard down to exactly 7 cards in your hand. If you hold 3 or more Seals, you may announce Ascension. Otherwise, tap the checkmark to pass the turn."
       }
     }
   }
