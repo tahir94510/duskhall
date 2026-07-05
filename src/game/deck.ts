@@ -1,4 +1,4 @@
-import { buildDeck, type CardInstance } from "./cards.js";
+import { buildDeck, type CardInstance, type CardDef } from "./cards.js";
 
 export function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
@@ -31,7 +31,10 @@ export function shuffle<T>(arr: T[], rng: () => number): T[] {
   return out;
 }
 
-export function seededDeck(seed: string): CardInstance[] {
+// Deterministic shuffle of a deck from a string seed (the room slug, plus a nonce on reset)
+// so every peer that recomputes it agrees before the first snapshot. Defaults to the active
+// mode's deck; pass an explicit deck to seed a specific mode.
+export function seededDeck(seed: string, deck?: CardDef[]): CardInstance[] {
   const rng = mulberry32(hashStringToSeed(seed));
-  return shuffle(buildDeck(), rng);
+  return shuffle(buildDeck(deck), rng);
 }

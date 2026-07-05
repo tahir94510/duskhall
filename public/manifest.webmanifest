@@ -1,7 +1,7 @@
 {
-  "name": "Vaerum: Heirs of the Ether",
-  "short_name": "Vaerum",
-  "description": "A digital card table for friends.",
+  "name": "Duskhall",
+  "short_name": "Duskhall",
+  "description": "A shared digital card table for friends. Pick a game, gather round, play by the rulebook.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

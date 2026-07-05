@@ -38,7 +38,7 @@ for a small focal highlight.
 
 ---
 
-## Card art (`public/cards/`)
+## Card art (`public/modes/vaerum/cards/`)
 
 **Spec**
 
@@ -49,7 +49,7 @@ for a small focal highlight.
 - **Bleed:** design to the edges; the runtime clips to an 8 px corner radius.
 - **No transparency needed:** a solid, type-tinted ground is ideal.
 
-**Manifest**: `public/cards/manifest.json`. The runtime only fetches what the
+**Manifest**: `public/modes/vaerum/cards/manifest.json`. The runtime only fetches what the
 manifest lists, so add a card's file there to enable it:
 
 ```json
@@ -101,7 +101,7 @@ adding a file.
 
 ---
 
-## Table background (`public/background/`)
+## Table background (`public/modes/vaerum/background/`)
 
 **Spec**
 
@@ -113,7 +113,7 @@ adding a file.
   scrim already darkens the edges. Avoid bright centres, busy detail or hard focal
   points under the play area.
 
-**Manifest**: `public/background/manifest.json`; only the first entry is used:
+**Manifest**: `public/modes/vaerum/background/manifest.json`; only the first entry is used:
 
 ```json
 { "available": [{ "id": "tableSurface", "ext": "webp" }] }

@@ -1,7 +1,7 @@
 {
-  "name": "vaerum-heirs-of-the-ether",
+  "name": "duskhall",
   "private": true,
-  "version": "0.9.25",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

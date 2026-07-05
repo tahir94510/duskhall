@@ -1,6 +1,8 @@
-import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EXIT, ICON_FEEDBACK, ICON_INFO, ICON_SPARK, ICON_GUIDE } from "./icons.js";
+import { ICON_MORE, ICON_RULES, ICON_SUPPORT, ICON_RESET_DECK, ICON_SETTINGS, ICON_SHORTCUTS, ICON_TIMER, ICON_ROOM, ICON_COPY, ICON_PASTE, ICON_EXIT, ICON_FEEDBACK, ICON_INFO, ICON_SPARK, ICON_GUIDE, ICON_MODES } from "./icons.js";
 import { t } from "../i18n/index.js";
 import { inviteUrl } from "../net/room.js";
+import { assetRoot } from "../modes/types.js";
+import { getMode } from "../modes/registry.js";
 import { flashConfirm } from "./feedback.js";
 import { toast } from "./Toast.js";
 
@@ -26,6 +28,8 @@ export interface HeaderHooks {
   onJoinByCode(): void;
   /** Run the Supabase connection self-test. */
   onDiagnose(): void;
+  /** Open the mode picker to switch games. */
+  onChangeMode(): void;
 }
 
 export class Header {
@@ -47,8 +51,8 @@ export class Header {
     this.el = document.createElement("header");
     this.el.className = "header";
     this.el.innerHTML = `
-      <span class="brand" data-role="brand" role="img" aria-label="Vaerum">
-        <img src="/assets/icon.svg" alt="" width="28" height="37"/>
+      <span class="brand" data-role="brand" role="img" aria-label="Duskhall">
+        <img src="/assets/icon.svg" alt="" width="28" height="37" data-role="brand-img"/>
       </span>
       <button type="button" class="icon-btn header__more" data-action="more" aria-label="${esc(t("ui.menu"))}" aria-haspopup="true" aria-expanded="false">
         ${ICON_MORE}
@@ -73,6 +77,10 @@ export class Header {
           <span class="header__code header__code--plain" data-role="conn">${esc(t("ui.connConnecting"))}</span>
         </button>
         <div class="header__menu-divider"></div>
+        <button type="button" class="header__menu-row header__menu-row--accent" data-action="change-mode" role="menuitem">
+          <span class="header__menu-icon">${ICON_MODES}</span>
+          <span class="header__menu-label" data-i18n="ui.changeMode">${esc(t("ui.changeMode"))}</span>
+        </button>
         <button type="button" class="header__menu-row" data-action="settings" role="menuitem">
           <span class="header__menu-icon">${ICON_SETTINGS}</span>
           <span class="header__menu-label" data-i18n="ui.settings">${esc(t("ui.settings"))}</span>
@@ -163,6 +171,7 @@ export class Header {
       this.closeMenu();
       cb();
     };
+    this.menu.querySelector<HTMLButtonElement>('[data-action="change-mode"]')?.addEventListener("click", wrap(this.hooks.onChangeMode));
     this.menu.querySelector<HTMLButtonElement>('[data-action="settings"]')?.addEventListener("click", wrap(this.hooks.onSettings));
     this.menu.querySelector<HTMLButtonElement>('[data-action="rules"]')?.addEventListener("click", wrap(this.hooks.onRules));
     this.menu.querySelector<HTMLButtonElement>('[data-action="support"]')?.addEventListener("click", wrap(this.hooks.onSupport));
@@ -253,6 +262,7 @@ export class Header {
     if (tLabel) tLabel.textContent = t("ui.timer");
     this.menu.querySelector<HTMLButtonElement>('[data-action="room-copy"]')?.setAttribute("title", t("ui.copyLink"));
     this.menu.querySelector<HTMLButtonElement>('[data-action="room-paste"]')?.setAttribute("title", t("ui.pasteJoin"));
+    this.refreshBrandLabel();
     this.setConnection(this.conn);
   }
 
@@ -270,6 +280,22 @@ export class Header {
     this.roomVal.textContent = slug || "------";
     this.roomStart = performance.now();
     this.tick();
+  }
+
+  /** Swap the top-left logo and its label to the active game's brand mark. The label is the
+   *  game's localized name; a missing brand image degrades to the browser's broken-image slot,
+   *  never a console error. */
+  setBrand(modeId: string): void {
+    const img = this.el.querySelector<HTMLImageElement>('[data-role="brand-img"]');
+    if (img) img.src = `${assetRoot(getMode(modeId))}/brand/icon.svg`;
+    this.refreshBrandLabel();
+  }
+
+  private refreshBrandLabel(): void {
+    const brand = this.el.querySelector<HTMLElement>('[data-role="brand"]');
+    // The mode's own localized title (meta.title) names the game; fall back to the platform.
+    const label = t("meta.title");
+    if (brand) brand.setAttribute("aria-label", label && label !== "meta.title" ? label : "Duskhall");
   }
 
   /** Show the Feedback row only when at least one feedback channel is configured. */

@@ -41,7 +41,7 @@ const NAMES = [
 // Build a de-duplicated, order-stable pool (some thematic words repeat above).
 const POOL: string[] = Array.from(new Set(NAMES));
 
-const LS_NAME = "vaerum:player-name";
+const LS_NAME = "duskhall:player-name";
 
 export function pickName(): string {
   const idx = Math.floor(Math.random() * POOL.length);

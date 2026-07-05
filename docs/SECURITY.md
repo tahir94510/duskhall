@@ -1,8 +1,8 @@
-# Vaerum: Security and Threat Notes
+# Duskhall: Security and Threat Notes
 
-## What Vaerum is and is not
+## What Duskhall is and is not
 
-Vaerum is a static client + a single Vercel Edge function (`/api/config`) + Supabase Realtime (Broadcast + Presence). There is no SQL table, no auth flow, no server-side game state. The threat surface is intentionally small.
+Duskhall is a static client + a single Vercel Edge function (`/api/config`) + Supabase Realtime (Broadcast + Presence). There is no SQL table, no auth flow, no server-side game state. The threat surface is intentionally small.
 
 Web clients can never be made 100% tamper-proof. The following layers reduce common risks; legal protection (trademark, copyright registration, design patents) remains the only real safeguard for the IP itself.
 
@@ -75,7 +75,7 @@ recording doesn't reveal the project ref. The `service_role` / `sb_secret_…` k
 
 ## Card privacy
 
-Cards owned by a seat other than the local one render `visibility: hidden` on the front face. Opponent UI never sees the front DOM. This is enforced client-side and is sufficient for friendly play; a determined opponent with devtools can always inspect their own client memory. Vaerum does not claim cryptographic secrecy.
+Cards owned by a seat other than the local one render `visibility: hidden` on the front face. Opponent UI never sees the front DOM. This is enforced client-side and is sufficient for friendly play; a determined opponent with devtools can always inspect their own client memory. Duskhall does not claim cryptographic secrecy.
 
 ## Room lifecycle
 

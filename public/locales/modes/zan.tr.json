@@ -1,0 +1,199 @@
+{
+  "meta": {
+    "title": "ZAN: Kusursuz Şüphe",
+    "tagline": "",
+    "description": "Dört kişilik bir blöf oyunu. Bir kartı kapalı sür, bir tür söyle; doğru ya da yalan. Ya sana inanırlar ya inanmazlar. Önünde 4 ceza birikirse kaybedersin."
+  },
+  "support": {
+    "title": "ZAN'ı Destekle",
+    "intro": "ZAN, bağımsız bir tasarımcı tarafından tek başına geliştiriliyor. Desteğin masayı büyütür:",
+    "lines": [
+      "Yeni Türler ve Varyantlar: Zihin oyununu derinleştiren yeni desteler ve isteğe bağlı kurallar.",
+      "Masa Cilası: Daha akıcı bir oynanış, daha net geri bildirim ve yeni diller.",
+      "Atmosfer: Moda özel özgün görseller ve karanlık ambiyans müzikleri.",
+      "Fiziksel Sürüm: İleride oyunun şık bir kutu versiyonu."
+    ],
+    "supportersHint": "Bağış mesajına #zan etiketini eklersen, ismin birkaç gün içinde bu duvardaki yerini alır."
+  },
+  "glossary": {
+    "claim": {
+      "term": "İddia",
+      "def": "Bir kartı kapalı sürerken yüksek sesle söylediğin tür: 'Bu bir Kuzgun.' İstersen doğruyu söyler, istersen yalan atarsın. Bir meydan okuma her zaman en son yapılan iddiayı yargılar."
+    },
+    "challenge": {
+      "term": "Meydan Okuma",
+      "def": "Paslamak yerine kartı açar ve iddiayı yargılarsın: doğru muydu, yalan mıydı? Doğru bilirsen kart, o iddiayı yapan oyuncuya ceza olur. Yanlış bilirsen kart senin cezan olur."
+    },
+    "pass": {
+      "term": "Pas",
+      "def": "Meydan okumak yerine karta gizlice bakarsın; artık gerçeği bilirsin. Sonra kartı, bu turda ona henüz dokunmamış bir oyuncuya kapalı sürer ve kendi iddianı sunarsın. Bir karta her oyuncu turda yalnızca bir kez dokunabilir."
+    },
+    "penalty": {
+      "term": "Ceza",
+      "def": "Üzerine kaldığın, herkesin görmesi için önünde açık duran kart. Bir daha geri gitmez. Türü ne olursa olsun 4 ceza biriktiren oyunu kaybeder."
+    },
+    "round": {
+      "term": "Tur",
+      "def": "Bir kartın yolculuğu. Turu açan kişi kartı sürdüğünde başlar, biri onu ceza olarak aldığı an biter. O cezayı alan, bir sonraki turu açar."
+    },
+    "bluff": {
+      "term": "Blöf",
+      "def": "Kartın olmadığı bir türü söylemek. Oyunun tamamı, söylediğin ile sürdüğün arasındaki boşlukta yaşar. Kartı değil, karşındaki yüzü oku."
+    }
+  },
+  "categories": {
+    "raven": {
+      "name": "Kuzgun",
+      "namePlural": "Kuzgunlar",
+      "description": "Kara dalın üzerindeki gözcü. Bu masada söylenen her yalanı gördü ve her birini hatırlıyor."
+    },
+    "skull": {
+      "name": "Kuru Kafa",
+      "namePlural": "Kuru Kafalar",
+      "description": "Blöf sonunda görüldüğünde geriye kalan. Herkesin şansının bir gün tükeneceğini sessizce hatırlatır."
+    },
+    "moon": {
+      "name": "Ay",
+      "namePlural": "Aylar",
+      "description": "Solgun ve sabırlı; masayı, karşındakinden şüphe edecek kadar aydınlatır."
+    },
+    "eye": {
+      "name": "Göz",
+      "namePlural": "Gözler",
+      "description": "Ne kırpılır ne de başka yana bakar. Ürperip ürpermeyeceğini gören biri her zaman vardır."
+    }
+  },
+  "cards": {
+    "raven": {
+      "name": "Kuzgun",
+      "flavor": "Kara dalın üstünde bekler, geçip giden yalanları sayar."
+    },
+    "skull": {
+      "name": "Kuru Kafa",
+      "flavor": "Yanlış iddiaya güvenen herkesten geriye kalan."
+    },
+    "moon": {
+      "name": "Ay",
+      "flavor": "Soğuk bir ışık; tam da şüpheye düşürecek kadar."
+    },
+    "eye": {
+      "name": "Göz",
+      "flavor": "Asla kırpılmaz ve seni ele veren o küçük işareti çoktan gördü."
+    }
+  },
+  "rulesDoc": {
+    "title": "ZAN: Kusursuz Şüphe",
+    "subtitle": "Kurallar",
+    "tldr": "4 oyuncu. 10 ila 15 dakika. Bir blöf oyunu. Bir kartı kapalı sür ve bir tür söyle; doğru ya da yalan. Kartın geldiği oyuncu ya iddiana meydan okur ya da gizlice bakıp başkasına paslar. Önünde 4 ceza kartı birikirse kaybedersin; diğer herkes kazanır.",
+    "intro": "ZAN'da kazanan yoktur, yalnızca bir kaybeden vardır. Sen kartları değil, masadaki yüzleri oynarsın. Çuhanın üstünde kayan her kartın yanında bir iddia gelir ve her iddia bir yalan olabilir. Az konuşursan kimse inanmaz; çok konuşursan seni açık bir kitap gibi okurlar. Masa sessiz. Birileri az sonra çözülecek.",
+    "sections": [
+      {
+        "id": "goal",
+        "title": "Amaç",
+        "body": [
+          "ZAN öne geçerek kazanılmaz. Çözülen taraf olmayarak kazanılır. Oyun, herhangi bir oyuncunun önünde 4 ceza kartı biriktiği an biter. O oyuncu kaybeder, diğer herkes birlikte kazanır.",
+          "Yani oyunun tamamı bir telkin düellosudur: kartları ve suçu herkesin üstüne yıkarken kendi tarafını temiz tutmaya çalışırsın."
+        ]
+      },
+      {
+        "id": "components",
+        "title": "Deste",
+        "body": [
+          "ZAN 40 kartla oynanır: her biri onarlık dört tür. Türler Kuzgun, Kuru Kafa, Ay ve Göz'dür. Oyunun tamamı budur; çekilecek deste yok, başka parça yok.",
+          "Türlerin sırası ve gücü yoktur. Bir kart yalnızca üstüne iliştirilen iddia kadar değerlidir."
+        ]
+      },
+      {
+        "id": "setup",
+        "title": "Kurulum",
+        "body": [
+          "40 kartın tamamını karıştır ve eşit dağıt; böylece dört oyuncunun her birinin elinde 10 kart olur. Masada hiç kart kalmaz.",
+          "İlk turu açacak oyuncuyu sistem rastgele seçer."
+        ]
+      },
+      {
+        "id": "round",
+        "title": "Bir Turun Oynanışı",
+        "body": [
+          "Turu açan, elinden bir kart alır ve başka bir oyuncunun önüne kapalı olarak sürer. Bunu yaparken yüksek sesle bir tür söyler; örneğin: 'Bu bir Kuzgun.' İddia doğru da olabilir, blöf de.",
+          "Kartı önüne gelen oyuncunun tam olarak iki seçeneği vardır: meydan okumak ya da paslamak. Başka bir şey yok."
+        ]
+      },
+      {
+        "id": "challenge",
+        "title": "Seçenek 1: Meydan Okumak",
+        "body": [
+          "İddianın doğru mu yoksa yalan mı olduğunu söylersin, ardından kartı açarsın. Meydan okuma her zaman en son yapılan iddiayı, yani kartın seninle geldiği iddiayı yargılar.",
+          "Doğru bildiysen, ister yalanı yakalamış ol ister doğruyu onaylamış, kart o iddiayı yapan oyuncuya ceza olur ve önünde açık durur.",
+          "Yanlış bildiysen, kart senin cezan olur ve senin önünde açık durur.",
+          "Her iki durumda da, kart alındığı an tur biter."
+        ]
+      },
+      {
+        "id": "pass",
+        "title": "Seçenek 2: Paslamak",
+        "body": [
+          "Meydan okumak istemezsen karta gizlice bakarsın; artık gerçeği bilirsin. Sonra kartı başka bir oyuncuya kapalı sürersin ve kendi iddianı yaparsın: türü aynen tekrarla ya da değiştir; doğru ya da yalan.",
+          "Bir karta her oyuncu turda yalnızca bir kez dokunabilir. Kart, biri ona meydan okuyana dek dolaşmaya devam eder.",
+          "Kart, ona henüz dokunmamış dördüncü ve son oyuncuya ulaştığında, o oyuncunun pas hakkı kalmaz. Meydan okumak zorundadır."
+        ]
+      },
+      {
+        "id": "losing",
+        "title": "Kaybetmek ve Sonraki Tur",
+        "body": [
+          "Ceza kartları oyunun sonuna kadar sahibinin önünde açık kalır. Asla ele geri dönmez.",
+          "Az önce ceza alan oyuncu, bir sonraki turu açar.",
+          "Türü ne olursa olsun ilk 4 ceza kartına ulaşan oyuncu anında kaybeder. Diğer herkes kazanır. Bu gerçekleşmeden eller asla tükenmez, bu yüzden oyun asla kilitlenmez."
+        ]
+      },
+      {
+        "id": "table",
+        "title": "Dijital Masada",
+        "body": [
+          "ZAN paylaşımlı bir oyun alanıdır: masa kartları dağıtır ve tutar ama kuralları dayatmaz. Turu, tıpkı yüz yüze oynuyormuş gibi, diğer üç oyuncuyla birlikte kendiniz yönetirsiniz.",
+          "İddia yapmak için kartı kapalı sür, meydan okumak için çevir, aldığın kartları kendi alanında açık tut. Ekranın altındaki buzlu şerit senin gizli elindir; hâlâ elinde tuttuğun kartları yalnızca sen görürsün."
+        ]
+      }
+    ],
+    "closing": "Hiçbir şeye güvenme. Herkesi oku."
+  },
+  "guide": {
+    "title": "Etkileşimli Rehber",
+    "close": "Rehberi Kapat",
+    "minimize": "Küçült",
+    "maximize": "Büyüt",
+    "minimizeTurnOnly": "Turlar başladığında bu paneli küçültebilirsin.",
+    "confirm": "Adımı tamamlandı olarak işaretle",
+    "hostConfirms": "Oda sahibi bu adımı onaylayacak.",
+    "waitYourTurn": "Lütfen kendi turunu bekle.",
+    "yourTurn": "Turu açma sırası sende. Kart yola çıktığında onay işaretine dokun.",
+    "aPlayer": "Bir Oyuncu",
+    "youTag": "(Sen)",
+    "introBody": "Bu rehber, bir ZAN oyununu adım adım gösterir. Sadece öneride bulunur. Kartları taşımakta, çevirmekte ve paslamakta her zaman özgürsün.",
+    "introTeach": "Kısa özet: Turunda bir kartı birine kapalı sür ve bir tür söyle; doğru ya da yalan. O ya meydan okur (kartı çevirip iddianı yargılar) ya da gizlice bakıp yeni bir iddiayla paslar. Meydan okuyan doğru bilirse kart iddiayı yapanın cezası olur; yanlış bilirse kendi cezası olur. Önünde 4 ceza birikirse kaybedersin.",
+    "introWaiting": "Oda sahibinin oyunu başlatması bekleniyor.",
+    "start": "Oyuna Başla",
+    "restart": "Eğitimi Yeniden Başlat",
+    "pickWait": "Oda sahibi ilk turu kimin açacağını seçiyor.",
+    "turnHeading": "{name} Adlı Oyuncunun Turu",
+    "roundLabel": "Tur {n}",
+    "firstChosen": "İlk turu {name} açıyor.",
+    "steps": {
+      "deal": {
+        "title": "Kartları Dağıt",
+        "body": "40 kartın tamamını karıştır ve dört oyuncunun her birine 10'ar kart dağıt. Çekilecek deste yok, ortada hiçbir şey kalmaz. Herkesin eli hazır olduğunda oda sahibi onay işaretine dokunur."
+      },
+      "chooseFirst": {
+        "title": "Turu Kimin Açacağını Seç",
+        "body": "Oda sahibi ilk turu açacak oyuncuyu rastgele seçer. Sonrasında ceza kartını kim alırsa bir sonraki turu o açar."
+      }
+    },
+    "phase": {
+      "round": {
+        "title": "Turu Aç",
+        "body": "Bir kartı başka bir oyuncuya kapalı sür ve yüksek sesle bir tür söyle; doğru ya da yalan. O oyuncu ya meydan okur ya da gizlice bakıp paslar; biri kartı ceza olarak alana dek bu böyle sürer. Kartın yola çıktığında onay işaretine dokun."
+      }
+    }
+  }
+}

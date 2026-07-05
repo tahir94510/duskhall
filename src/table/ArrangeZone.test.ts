@@ -1,8 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import type { CardState } from "./types.js";
 import { arrangeZone, isZoneArranged, type ArrangeOpts } from "./ArrangeZone.js";
 import { cardZoneOwner, CARD_CANON_W, CARD_CANON_H, ZONE_DEPTH } from "./SlotGrid.js";
 import { seatRotationDeg, type Seat } from "./rotation.js";
+import { setActiveMode } from "../modes/active.js";
+
+// These cases use Vaerum card ids (seal/spell/intervention/servant), so pin the active mode
+// to Vaerum: the tidy layout groups by the active mode's category order.
+beforeAll(() => { setActiveMode("vaerum"); });
 
 const W = CARD_CANON_W;
 const H = CARD_CANON_H;

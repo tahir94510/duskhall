@@ -1,33 +1,50 @@
-// Full-bleed table background art. Drop one image into public/background/ and
-// list it in public/background/manifest.json (the Vite plugin writes that file
-// for you from whatever is in the folder). The image is painted on a fixed,
-// viewport-filling layer behind everything, so it covers the whole screen at any
-// seat with no black bars and never clips. It is intentionally separate from the
-// card art (public/cards/) and the card back, so the two asset sets never mix.
+// Full-bleed table background art. Drop one image into public/modes/<mode>/background/ and the
+// Vite plugin writes that folder's manifest.json from whatever is there. The image is painted on a
+// fixed, viewport-filling layer behind everything, so it covers the whole screen at any seat with
+// no black bars and never clips. It is intentionally separate from the card art and card back, so
+// the asset sets never mix.
 //
-// When the folder is empty no request is made and an elegant built-in gradient
-// surface (defined in CSS) shows through, so a fresh checkout shows zero 404s.
+// When the folder is empty no request is made and an elegant built-in gradient surface (defined in
+// CSS) shows through, so a fresh checkout shows zero 404s. Cached per mode asset root so switching
+// games loads the new surface.
+
+import { getActiveMode } from "../modes/active.js";
+import { assetRoot } from "../modes/types.js";
 
 interface BackgroundManifest {
   available: Array<{ id: string; ext: string }> | string[];
 }
 
-let urlPromise: Promise<string | null> | null = null;
+const urlByRoot = new Map<string, Promise<string | null>>();
+
+function backgroundBase(): string {
+  return `${assetRoot(getActiveMode())}/background`;
+}
 
 function resolveBackgroundUrl(): Promise<string | null> {
-  if (urlPromise) return urlPromise;
-  urlPromise = fetch("/background/manifest.json", { cache: "no-cache" })
+  const base = backgroundBase();
+  const cached = urlByRoot.get(base);
+  if (cached) return cached;
+  const p = fetch(`${base}/manifest.json`, { cache: "no-cache" })
     .then((r) => (r.ok ? (r.json() as Promise<BackgroundManifest>) : { available: [] }))
     .catch(() => ({ available: [] } as BackgroundManifest))
     .then((data) => {
       const list = Array.isArray(data?.available) ? data.available : [];
       const first = list[0];
       if (!first) return null;
-      if (typeof first === "string") return `/background/${first}`;
+      if (typeof first === "string") return `${base}/${first}`;
       const ext = (first.ext || "webp").replace(/^\./, "");
-      return `/background/${first.id}.${ext}`;
+      return `${base}/${first.id}.${ext}`;
     });
-  return urlPromise;
+  urlByRoot.set(base, p);
+  return p;
+}
+
+// Clear the painted surface (used on a mode switch before the new one loads) so the previous
+// game's table never lingers behind the new deck.
+export function clearTableBackground(layer: HTMLElement): void {
+  layer.style.backgroundImage = "";
+  layer.classList.remove("is-loaded");
 }
 
 // Resolve, preload and paint the background onto the given layer. The returned

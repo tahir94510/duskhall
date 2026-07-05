@@ -1,12 +1,18 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import {
-  SETUP_STEPS, TURN_PHASES, initialGuide, setOpen, startGuide, stopGuide, clockwiseOrder,
+  initialGuide, setOpen, startGuide, stopGuide, clockwiseOrder,
   viewOf, confirmerOf, canAdvance, advance, chooseFirst, adoptGuide, type GuideState
 } from "./guide.js";
+import { setActiveMode } from "../modes/active.js";
+import { vaerumMode } from "../modes/vaerum.js";
 
-// The Guide reducer is host-authoritative and pure. These tests pin the exact
-// advancement maths so every device walks the same step/turn/phase, and the right
-// person (host in setup, the active player in a turn) is the only one who can advance.
+// The Guide reducer is host-authoritative and pure. These tests pin the exact advancement maths
+// so every device walks the same step/turn/phase, and the right person (host in setup, the active
+// player in a turn) is the only one who can advance. Setup steps and phases come from the active
+// mode, so pin Vaerum (3 setup steps, focus/action/closing phases) for these cases.
+beforeAll(() => { setActiveMode("vaerum"); });
+const SETUP_STEPS = vaerumMode.guide.setupSteps;
+const TURN_PHASES = vaerumMode.guide.turnPhases;
 
 const seats = (s: number[]) => s;
 

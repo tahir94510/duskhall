@@ -1,21 +1,20 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-// Guard rail: every locale must expose the EXACT same set of keys (and the same array
-// shapes). t() returns the raw key on a miss, so a key present in one language but not
-// another shows up as "ui.foo" (or, worse, the wrong language) to real players. This test
-// fails the build the moment a translator adds/removes a key in one file only — so the UI
-// is always fully bilingual with no English bleeding into Turkish or vice-versa.
+// Guard rail: every language of a file must expose the EXACT same set of keys (and the same array
+// shapes) as its English counterpart. t() returns the raw key on a miss, so a key present in one
+// language but not another shows up as "ui.foo" (or, worse, the wrong language) to real players.
+// Parity is checked per file PAIR: the shared en/tr, and each game's en/tr under modes/. A game
+// has its own key set, so games are only compared against their own other language, never across
+// games or against the shared file.
 const LOCALES_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../public/locales");
+const MODES_DIR = join(LOCALES_DIR, "modes");
 
 function structuralKeys(value: unknown, prefix = ""): Set<string> {
   const out = new Set<string>();
   if (Array.isArray(value)) {
-    // Record array length AND recurse into each element's shape (so a changelog entry
-    // with {v,date,title,items} must match across locales, but plain string lists only
-    // need the same length).
     out.add(`${prefix}[]=${value.length}`);
     value.forEach((v, i) => structuralKeys(v, `${prefix}[${i}]`).forEach((k) => out.add(k)));
   } else if (value && typeof value === "object") {
@@ -28,58 +27,77 @@ function structuralKeys(value: unknown, prefix = ""): Set<string> {
   return out;
 }
 
-function loadLocale(name: string): unknown {
-  return JSON.parse(readFileSync(join(LOCALES_DIR, name), "utf8"));
+function load(path: string): unknown {
+  return JSON.parse(readFileSync(path, "utf8"));
 }
 
-describe("i18n locale parity (EN ↔ TR ↔ every locale)", () => {
-  const files = readdirSync(LOCALES_DIR).filter((f) => f.endsWith(".json")).sort();
+function emptyStrings(value: unknown, p = ""): string[] {
+  const out: string[] = [];
+  const walk = (v: unknown, path: string): void => {
+    if (typeof v === "string") { if (v.trim() === "") out.push(path); }
+    else if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${path}[${i}]`));
+    else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) walk(x, path ? `${path}.${k}` : k);
+  };
+  walk(value, p);
+  return out;
+}
 
-  it("ships at least the en and tr locales", () => {
-    expect(files).toContain("en.json");
-    expect(files).toContain("tr.json");
+// Build the list of (en, tr) file pairs to check: the shared locale, plus every game's locale.
+function localePairs(): Array<{ label: string; en: string; tr: string }> {
+  const pairs: Array<{ label: string; en: string; tr: string }> = [
+    { label: "shared", en: join(LOCALES_DIR, "en.json"), tr: join(LOCALES_DIR, "tr.json") }
+  ];
+  if (existsSync(MODES_DIR)) {
+    const ids = new Set<string>();
+    for (const f of readdirSync(MODES_DIR)) {
+      const m = f.match(/^(.+)\.(en|tr)\.json$/);
+      if (m) ids.add(m[1]!);
+    }
+    for (const id of [...ids].sort()) {
+      pairs.push({ label: `mode:${id}`, en: join(MODES_DIR, `${id}.en.json`), tr: join(MODES_DIR, `${id}.tr.json`) });
+    }
+  }
+  return pairs;
+}
+
+describe("i18n locale parity (per file pair)", () => {
+  const pairs = localePairs();
+
+  it("ships the shared en/tr and at least one game (zan)", () => {
+    expect(pairs.some((p) => p.label === "shared")).toBe(true);
+    expect(pairs.some((p) => p.label === "mode:zan")).toBe(true);
+    expect(pairs.some((p) => p.label === "mode:vaerum")).toBe(true);
   });
 
-  it("every locale has the identical key + array shape as en.json", () => {
-    const base = structuralKeys(loadLocale("en.json"));
-    for (const f of files) {
-      if (f === "en.json") continue;
-      const other = structuralKeys(loadLocale(f));
+  for (const { label, en, tr } of pairs) {
+    it(`${label}: en and tr have identical key + array shapes`, () => {
+      expect(existsSync(en)).toBe(true);
+      expect(existsSync(tr)).toBe(true);
+      const base = structuralKeys(load(en));
+      const other = structuralKeys(load(tr));
       const missing = [...base].filter((k) => !other.has(k));
       const extra = [...other].filter((k) => !base.has(k));
-      expect({ locale: f, missing, extra }).toEqual({ locale: f, missing: [], extra: [] });
-    }
-  });
+      expect({ label, missing, extra }).toEqual({ label, missing: [], extra: [] });
+    });
 
-  it("no value is an empty string (a blank translation reads as a gap to players)", () => {
-    for (const f of files) {
-      const flatEmpty: string[] = [];
-      const walk = (v: unknown, p: string): void => {
-        if (typeof v === "string") { if (v.trim() === "") flatEmpty.push(p); }
-        else if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${p}[${i}]`));
-        else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) walk(x, p ? `${p}.${k}` : k);
-      };
-      walk(loadLocale(f), "");
-      // meta.tagline is intentionally blank in both locales; allow only that.
-      expect({ locale: f, empty: flatEmpty.filter((k) => k !== "meta.tagline") })
-        .toEqual({ locale: f, empty: [] });
-    }
-  });
+    it(`${label}: no value is an empty string (meta.tagline may be blank)`, () => {
+      for (const file of [en, tr]) {
+        const empty = emptyStrings(load(file)).filter((k) => k !== "meta.tagline");
+        expect({ file, empty }).toEqual({ file, empty: [] });
+      }
+    });
+  }
+});
 
-  it("updates entry version ids are unique and identical across locales", () => {
-    // The "New" badge keys off entries[0].v, so the v values must line up across
-    // languages (else switching locale re-fires the badge) and never repeat within a
-    // locale. The visible `date` is free to differ per language.
+describe("updates changelog (shared)", () => {
+  it("version ids are unique within en and identical in tr", () => {
     const versions = (file: string): string[] => {
-      const u = (loadLocale(file) as { updates?: { entries?: Array<{ v?: string }> } }).updates;
+      const u = (load(file) as { updates?: { entries?: Array<{ v?: string }> } }).updates;
       return (u?.entries ?? []).map((e) => String(e.v ?? ""));
     };
-    const en = versions("en.json");
-    expect(new Set(en).size).toBe(en.length); // unique within en
+    const en = versions(join(LOCALES_DIR, "en.json"));
+    expect(new Set(en).size).toBe(en.length);
     expect(en.every((v) => v.length > 0)).toBe(true);
-    for (const f of files) {
-      if (f === "en.json") continue;
-      expect({ locale: f, versions: versions(f) }).toEqual({ locale: f, versions: en });
-    }
+    expect(versions(join(LOCALES_DIR, "tr.json"))).toEqual(en);
   });
 });

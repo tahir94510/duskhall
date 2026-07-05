@@ -12,7 +12,7 @@ import type { CardState } from "./types.js";
 import type { Seat } from "./rotation.js";
 import { nearestCongruentRot } from "./StackOps.js";
 import { CARD_CANON_W, CARD_CANON_H, ZONE_DEPTH } from "./SlotGrid.js";
-import { CARD_DEFS, type CardCategory } from "../game/cards.js";
+import { getActiveMode } from "../modes/active.js";
 
 export interface ArrangeTarget {
   id: string;
@@ -33,22 +33,25 @@ export interface ArrangeOpts {
   cardH?: number;
 }
 
-// Category display order: Seals first, then Spells, Interventions, Servants — the order the
-// design lists them (and CARD_DEFS is authored in). Stacks are grouped by this so same-type
-// piles sit together and read as a tidy hand.
-const CATEGORY_RANK: Record<CardCategory, number> = {
-  seal: 0,
-  spell: 1,
-  intervention: 2,
-  servant: 3
-};
-
-// defId -> category and -> authoring index, derived once from the catalogue. The authoring
-// index gives a stable, designer-meaningful order WITHIN a category (not alphabetical), so the
-// layout is deterministic and reads the same every time.
-const DEF_CATEGORY = new Map<string, CardCategory>();
-const DEF_INDEX = new Map<string, number>();
-CARD_DEFS.forEach((d, i) => { DEF_CATEGORY.set(d.id, d.category); DEF_INDEX.set(d.id, i); });
+// Grouping maps for the tidy layout, derived from the ACTIVE mode's catalogue each time a
+// tidy runs (cheap for a hand-sized set). Category rank follows the mode's categoryOrder so
+// same-type stacks sit together; the authoring index gives a stable, designer-meaningful order
+// WITHIN a category (not alphabetical), so the layout reads the same every time. Reading live
+// keeps the tidy correct after a mode switch, whose deck and categories differ.
+interface CatMaps {
+  rank: Map<string, number>;   // category -> display rank
+  defCategory: Map<string, string>;
+  defIndex: Map<string, number>;
+}
+function catMaps(): CatMaps {
+  const mode = getActiveMode();
+  const rank = new Map<string, number>();
+  mode.categoryOrder.forEach((c, i) => rank.set(c, i));
+  const defCategory = new Map<string, string>();
+  const defIndex = new Map<string, number>();
+  mode.deck.forEach((d, i) => { defCategory.set(d.id, d.category); defIndex.set(d.id, i); });
+  return { rank, defCategory, defIndex };
+}
 
 // Layout tuning, all in canonical board units. Kept here as named constants so the geometry is
 // easy to reason about and re-tune without hunting through the math.
@@ -85,7 +88,7 @@ interface Pile { defId: string; ids: string[]; }
 // Collect identical cards (same defId) into one stack, then order the stacks by category and
 // authoring index. Within a stack, members keep their relative depth (current z, then id) so a
 // tidy never needlessly reshuffles which copy sits on top.
-function buildPiles(cards: CardState[]): Pile[] {
+function buildPiles(cards: CardState[], maps: CatMaps): Pile[] {
   const groups = new Map<string, CardState[]>();
   for (const c of cards) {
     const arr = groups.get(c.defId);
@@ -97,10 +100,11 @@ function buildPiles(cards: CardState[]): Pile[] {
     piles.push({ defId, ids: members.map((m) => m.id) });
   }
   const rank = (defId: string): number => {
-    const cat = DEF_CATEGORY.get(defId);
-    return cat ? CATEGORY_RANK[cat] : 99; // unknown defs sort to the end, deterministically
+    const cat = maps.defCategory.get(defId);
+    const r = cat !== undefined ? maps.rank.get(cat) : undefined;
+    return r ?? 99; // unknown defs/categories sort to the end, deterministically
   };
-  const idx = (defId: string): number => DEF_INDEX.get(defId) ?? Number.MAX_SAFE_INTEGER;
+  const idx = (defId: string): number => maps.defIndex.get(defId) ?? Number.MAX_SAFE_INTEGER;
   piles.sort((a, b) =>
     (rank(a.defId) - rank(b.defId)) ||
     (idx(a.defId) - idx(b.defId)) ||
@@ -111,14 +115,14 @@ function buildPiles(cards: CardState[]): Pile[] {
 // Even-ish along-edge offsets for one row of stacks: a slightly wider gap where the category
 // changes (so groups read), the whole row centred on u=0, then uniformly compressed if it would
 // otherwise overshoot uMax — so any count fits inside the zone, fanning tighter as it grows.
-function rowOffsets(piles: Pile[], uMax: number, w: number): number[] {
+function rowOffsets(piles: Pile[], uMax: number, w: number, maps: CatMaps): number[] {
   const n = piles.length;
   if (n === 0) return [];
   if (n === 1) return [0];
   // Cumulative centres from a left anchor at 0, with a category-change bonus between stacks.
   const centres: number[] = [0];
   for (let i = 1; i < n; i++) {
-    const changed = DEF_CATEGORY.get(piles[i]!.defId) !== DEF_CATEGORY.get(piles[i - 1]!.defId);
+    const changed = maps.defCategory.get(piles[i]!.defId) !== maps.defCategory.get(piles[i - 1]!.defId);
     centres.push(centres[i - 1]! + w + PILE_GAP + (changed ? CATEGORY_GAP : 0));
   }
   // Centre the row about u=0.
@@ -144,9 +148,10 @@ function placeRow(
   uprightRot: number,
   byId: Map<string, CardState>,
   zCounter: { z: number },
-  out: ArrangeTarget[]
+  out: ArrangeTarget[],
+  maps: CatMaps
 ): void {
-  const offs = rowOffsets(piles, uMaxAtDepth(d, w, h), w);
+  const offs = rowOffsets(piles, uMaxAtDepth(d, w, h), w, maps);
   piles.forEach((pile, i) => {
     const { nx, ny } = localToCanonical(seat, offs[i]!, d);
     for (const id of pile.ids) {
@@ -166,13 +171,14 @@ export function arrangeZone(cards: CardState[], seat: Seat, opts: ArrangeOpts): 
   if (cards.length < 1) return [];
   const w = opts.cardW ?? CARD_CANON_W;
   const h = opts.cardH ?? CARD_CANON_H;
-  const piles = buildPiles(cards);
+  const maps = catMaps();
+  const piles = buildPiles(cards, maps);
   const byId = new Map(cards.map((c) => [c.id, c] as const));
   const out: ArrangeTarget[] = [];
   const zCounter = { z: 0 };
   if (piles.length <= TWO_ROW_THRESHOLD) {
     // One row, centred in the depth band: the card (height H) sits centred in the 0.28-deep zone.
-    placeRow(piles, seat, ZONE_DEPTH / 2, w, h, opts.uprightRot, byId, zCounter, out);
+    placeRow(piles, seat, ZONE_DEPTH / 2, w, h, opts.uprightRot, byId, zCounter, out, maps);
   } else {
     // Two depth-staggered rows (two upright rows can't fit stacked, so they overlap in depth like a
     // real two-row fan). The back row sits nearer the board edge (nearer the player), the front row
@@ -185,8 +191,8 @@ export function arrangeZone(cards: CardState[], seat: Seat, opts: ArrangeOpts): 
     const front = piles.slice(half);     // nearer the centre (deeper)
     const dBack = ZONE_DEPTH / 2 - 0.025;
     const dFront = ZONE_DEPTH / 2 + 0.025;
-    placeRow(front, seat, dFront, w, h, opts.uprightRot, byId, zCounter, out); // behind (lower z)
-    placeRow(back, seat, dBack, w, h, opts.uprightRot, byId, zCounter, out);   // on top (higher z)
+    placeRow(front, seat, dFront, w, h, opts.uprightRot, byId, zCounter, out, maps); // behind (lower z)
+    placeRow(back, seat, dBack, w, h, opts.uprightRot, byId, zCounter, out, maps);   // on top (higher z)
   }
   return out;
 }

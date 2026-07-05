@@ -1,5 +1,39 @@
 # Changelog
 
+## 1.0.0: Duskhall, a platform of games
+
+Vaerum becomes Duskhall: one table engine that hosts several games ("modes"), switchable at
+runtime. Vaerum is now one game; ZAN: Perfect Doubt is the new default. 305 tests green,
+production build clean, verified end to end (default ZAN 40 cards, switch to Vaerum 72 cards,
+last-mode memory, zero 404s).
+
+- **Mode system (`src/modes/`).** A game is described entirely by a `ModeDef` (deck, categories,
+  balance, difficulty, seat count, card-back flag, tooltip fields, guide steps/phases). `registry.ts`
+  lists the games and the default; `active.ts` holds the current game and remembers the last one,
+  mirroring how i18n holds the current locale. `cards.ts`, `deck.ts`, and `guide.ts` are now
+  parameterized over the active mode; `balance.ts` folded into each `ModeDef`. Engine code never
+  names a game.
+- **ZAN: Perfect Doubt.** A four-player bluffing game, 40 cards across four suits (Raven, Skull,
+  Moon, Eye). Slide a card face down and claim a suit, truth or lie; the target challenges or
+  peeks and passes it on. Collect four penalties and you lose. Opens by default for new visitors;
+  full rulebook, guide, glossary, and card art support shipped, in English and Turkish.
+- **URL + rooms.** New scheme `/{mode}/{slug}` (e.g. `/zan/P86B3T`). Realtime channels and
+  room-scoped storage are namespaced by mode, so two players in different games can share a slug
+  without crossing decks. Legacy bare `/{SLUG}` links redirect to `/vaerum/{SLUG}`.
+- **Per-mode branding + SEO.** The build emits a per-game HTML shell (`dist/{mode}/index.html`)
+  with that game's title, description, OG image, and favicon for crawlers; at runtime, switching
+  games re-patches the tab, favicon, and share meta. A switch that changed language used to
+  clobber the title back to a raw key; fixed (`src/ui/branding.ts`).
+- **Assets + content split.** Each game owns `public/modes/{id}/{cards,background,audio/music,brand}/`
+  plus `supporters.json`; sound effects stay shared with an optional per-mode override. Card backs
+  can now be an image (ZAN) or the built-in CSS back (Vaerum). Locale text is split into shared
+  `public/locales/{en,tr}.json` and per-game `public/locales/modes/{id}.{en,tr}.json`, deep-merged
+  at load. About/Legal now describes the Duskhall platform, not one game.
+- **Housekeeping.** Storage namespace migrated `vaerum:` to `duskhall:` (preferences preserved).
+  Removed the stale `*-eski.json` locale backups that had been breaking i18n parity. Docs moved to
+  `docs/modes/{id}/`, with a "how to add a game" runbook in MAINTAINING. Renamed to `duskhall`,
+  version 1.0.0.
+
 ## 0.9.25: A clearer card, centred messages, and a settled rule
 
 A render-bug, responsive and content pass. No rules or numbers changed; 278 tests green.
