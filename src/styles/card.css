@@ -233,6 +233,14 @@
   opacity: 0.14;
 }
 
+/* A mode that ships its own card-back image (Card.applyCardBack sets --card-back-image and this
+   root class) paints it over the whole back face and hides the built-in CSS sigil, so the back
+   is entirely that game's art. Modes without a back image keep the CSS back above. */
+.has-card-back .card__face--back {
+  background: var(--card-back-image) center / cover no-repeat, #0e0e12;
+}
+.has-card-back .card__face--back::after { display: none; }
+
 .card__face--front {
   /* Rotated away from the camera until is-faceup flips, and pushed 1px along its own depth
      axis so the two faces never share the exact same plane. The camera-facing face is always

@@ -13,23 +13,22 @@
 // every device. Since the guide is informational, a bad actor can at worst nudge the
 // shared narration, never the card state.
 
-export type SetupStepKind = "confirm" | "chooseFirst";
-export interface SetupStepDef {
-  id: string;
-  kind: SetupStepKind;
+import { getActiveMode } from "../modes/active.js";
+import type { GuideSetupStep, GuideStepKind } from "../modes/types.js";
+
+export type SetupStepKind = GuideStepKind;
+export type SetupStepDef = GuideSetupStep;
+export type TurnPhase = string;
+
+// The setup walkthrough and turn phases come from the ACTIVE mode (see ModeDef.guide): each game
+// defines its own steps and phase names. Text for each id/phase lives in the mode's locale under
+// guide.steps.<id> and guide.phase.<phase>; only the flow structure lives in the mode data.
+function setupSteps(): readonly SetupStepDef[] {
+  return getActiveMode().guide.setupSteps;
 }
-
-/** The fixed setup walkthrough that runs before the turn loop. Text for each id lives
- *  in i18n under `guide.steps.<id>`; only the flow structure lives here. */
-export const SETUP_STEPS: readonly SetupStepDef[] = [
-  { id: "shuffle", kind: "confirm" },
-  { id: "reveal", kind: "confirm" },
-  { id: "chooseFirst", kind: "chooseFirst" }
-];
-
-/** The three turn phases of the rulebook, cycled per player once setup is done. */
-export const TURN_PHASES = ["focus", "action", "closing"] as const;
-export type TurnPhase = (typeof TURN_PHASES)[number];
+function turnPhases(): readonly string[] {
+  return getActiveMode().guide.turnPhases;
+}
 
 export interface GuideState {
   /** Whether the panel is shown to the table. Host controls this for everyone. */
@@ -103,18 +102,21 @@ export interface GuideView {
 
 /** Derive everything the panel needs from the raw state. Pure projection. */
 export function viewOf(state: GuideState, seatedSeats: number[]): GuideView {
+  const steps = setupSteps();
   if (!state.started) return { phase: "intro", turnSeat: -1, turnPhase: null, round: 0 };
-  if (state.progress < SETUP_STEPS.length) {
-    return { phase: "setup", step: SETUP_STEPS[state.progress], turnSeat: -1, turnPhase: null, round: 0 };
+  if (state.progress < steps.length) {
+    return { phase: "setup", step: steps[state.progress], turnSeat: -1, turnPhase: null, round: 0 };
   }
   const order = clockwiseOrder(state.firstSeat, seatedSeats);
   if (order.length === 0) return { phase: "turn", turnSeat: -1, turnPhase: null, round: 1 };
-  const loopN = state.progress - SETUP_STEPS.length;
-  const phaseIndex = ((loopN % 3) + 3) % 3;
-  const turnCount = Math.floor(loopN / 3);
+  const phases = turnPhases();
+  const nPhases = Math.max(1, phases.length);
+  const loopN = state.progress - steps.length;
+  const phaseIndex = ((loopN % nPhases) + nPhases) % nPhases;
+  const turnCount = Math.floor(loopN / nPhases);
   const turnSeat = order[turnCount % order.length]!;
   const round = Math.floor(turnCount / order.length) + 1;
-  return { phase: "turn", turnSeat, turnPhase: TURN_PHASES[phaseIndex]!, round };
+  return { phase: "turn", turnSeat, turnPhase: phases[phaseIndex]!, round };
 }
 
 /** Who may complete the current step:
@@ -150,7 +152,7 @@ export function advance(state: GuideState, actorSeat: number, seatedSeats: numbe
  *  Ignored unless the walkthrough is on the chooseFirst step. Host only. */
 export function chooseFirst(prev: GuideState, seat: number): GuideState {
   if (!prev.started) return prev;
-  const step = SETUP_STEPS[prev.progress];
+  const step = setupSteps()[prev.progress];
   if (!step || step.kind !== "chooseFirst") return prev;
   if (seat < 0 || seat > 3) return prev;
   return { ...prev, firstSeat: seat, progress: prev.progress + 1, v: prev.v + 1 };

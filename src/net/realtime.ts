@@ -1,6 +1,7 @@
 import { createClient, type RealtimeChannel, type SupabaseClient } from "@supabase/supabase-js";
 import { TokenBucket, withinByteCap, safeNumber, safeStamp, safeInt, safeString } from "../security/inputGuard.js";
 import { LocalBus } from "./localBus.js";
+import { getActiveModeId } from "../modes/active.js";
 import type { RuntimeConfig } from "./config.js";
 
 export interface PresencePlayer {
@@ -348,6 +349,11 @@ export class RealtimeBus {
   // trying to reach it with exponential backoff until disconnect() is called.
   private desiredRoom: string | null = null;
   private desiredMe: PresencePlayer | null = null;
+  // The active mode id, captured at connect() so the channel topic is namespaced by game.
+  // Two players in different modes who happen to share a 6-char room slug land on different
+  // topics and never cross-contaminate each other's board (their decks differ). Captured at
+  // connect time so a later mode switch (which disconnects first) can't rename a live channel.
+  private desiredMode = getActiveModeId();
   private wantConnected = false;
   private reconnectTimer = 0;
   private reconnectAttempt = 0;
@@ -465,10 +471,10 @@ export class RealtimeBus {
     let probeClient: SupabaseClient | null = null;
     try {
       probeClient = createClient(url, key, {
-        auth: { persistSession: false, autoRefreshToken: false, storageKey: "vaerum-diag" },
+        auth: { persistSession: false, autoRefreshToken: false, storageKey: "duskhall-diag" },
         realtime: { params: { eventsPerSecond: 1 } }
       });
-      const ch = probeClient.channel(`vaerum-diag:${Math.random().toString(36).slice(2, 8)}`);
+      const ch = probeClient.channel(`duskhall-diag:${Math.random().toString(36).slice(2, 8)}`);
       const ok = await new Promise<boolean>((resolve) => {
         let settled = false;
         const done = (v: boolean) => { if (!settled) { settled = true; resolve(v); } };
@@ -502,12 +508,13 @@ export class RealtimeBus {
   async connect(roomSlug: string, me: PresencePlayer): Promise<void> {
     this.desiredRoom = roomSlug;
     this.desiredMe = me;
+    this.desiredMode = getActiveModeId();
     this.wantConnected = true;
     this.reconnectAttempt = 0;
     this.bindConnectivity();
     // Always bring up the same-device channel so two local tabs sync immediately,
     // independent of whether Supabase is configured/reachable.
-    this.local.connect(roomSlug, me);
+    this.local.connect(roomSlug, me, this.desiredMode);
     if (!this.isAvailable()) {
       this.setStatus("offline");
       return;
@@ -551,12 +558,12 @@ export class RealtimeBus {
       // "Multiple GoTrueClient instances" warnings.
       if (!this.client) {
         this.client = createClient(this.config.supabaseUrl, this.config.supabaseAnonKey, {
-          auth: { persistSession: false, autoRefreshToken: false, storageKey: "vaerum-rt" },
+          auth: { persistSession: false, autoRefreshToken: false, storageKey: "duskhall-rt" },
           realtime: { params: { eventsPerSecond: 60 } }
         });
       }
       this.teardownChannel();
-      const ch = this.client.channel(`vaerum:${room}`, {
+      const ch = this.client.channel(`duskhall:${this.desiredMode}:${room}`, {
         config: { presence: { key: me.id }, broadcast: { ack: false, self: false } }
       });
       this.channel = ch;

@@ -1,0 +1,199 @@
+{
+  "meta": {
+    "title": "ZAN: Perfect Doubt",
+    "tagline": "",
+    "description": "A four-player bluffing game. Slide a card face down, name a suit, truth or lie. They believe you, or they don't. Collect four penalties and you lose."
+  },
+  "support": {
+    "title": "Support ZAN",
+    "intro": "ZAN is made by a solo independent designer. Your support keeps the table growing:",
+    "lines": [
+      "New Suits & Variants: Fresh decks and optional rules that deepen the mind game.",
+      "Table Polish: Smoother play, sharper feedback, and more languages.",
+      "Atmosphere: Original art and dark-ambient music tailored to the mode.",
+      "A Physical Edition: A premium boxed version of the game one day."
+    ],
+    "supportersHint": "Include the tag #zan in your donation message, and your name will appear on this wall within a few days."
+  },
+  "glossary": {
+    "claim": {
+      "term": "Claim",
+      "def": "The suit you name out loud when you slide a card face down to someone: 'This is a Raven.' You may tell the truth or lie freely. A challenge always judges the most recent claim."
+    },
+    "challenge": {
+      "term": "Challenge",
+      "def": "Instead of passing, you flip the card and judge the claim: was it true or a lie? Guess right and the card becomes a penalty for the player who made the claim. Guess wrong and it becomes your penalty."
+    },
+    "pass": {
+      "term": "Pass",
+      "def": "Instead of challenging, you secretly peek at the card, then slide it face down to a player who has not touched it this round, with a new claim of your own. Each player may touch a card only once per round."
+    },
+    "penalty": {
+      "term": "Penalty",
+      "def": "A card you are stuck with, kept face up in front of you for everyone to see. It never leaves. Collect four penalties of any suits and you lose the game."
+    },
+    "round": {
+      "term": "Round",
+      "def": "One card's journey. It starts when the opener slides a card and ends the moment someone takes it as a penalty. Whoever takes that penalty opens the next round."
+    },
+    "bluff": {
+      "term": "Bluff",
+      "def": "Naming a suit the card is not. The whole game lives in the space between what you say and what you slide. Read the face across the table, not the card."
+    }
+  },
+  "categories": {
+    "raven": {
+      "name": "Raven",
+      "namePlural": "Ravens",
+      "description": "The watcher on the black branch. It has seen every lie told at this table, and remembers each one."
+    },
+    "skull": {
+      "name": "Skull",
+      "namePlural": "Skulls",
+      "description": "What remains when the bluff is finally called. A quiet reminder that everyone runs out of luck."
+    },
+    "moon": {
+      "name": "Moon",
+      "namePlural": "Moons",
+      "description": "Pale and patient, it lights the table just enough to doubt the face across from you."
+    },
+    "eye": {
+      "name": "Eye",
+      "namePlural": "Eyes",
+      "description": "It never blinks and never looks away. Somebody is always watching to see if you flinch."
+    }
+  },
+  "cards": {
+    "raven": {
+      "name": "Raven",
+      "flavor": "It waits on the black branch, counting the lies as they pass."
+    },
+    "skull": {
+      "name": "Skull",
+      "flavor": "What is left of everyone who trusted the wrong claim."
+    },
+    "moon": {
+      "name": "Moon",
+      "flavor": "Cold light, just bright enough to make you doubt."
+    },
+    "eye": {
+      "name": "Eye",
+      "flavor": "It never blinks, and it has already seen your tell."
+    }
+  },
+  "rulesDoc": {
+    "title": "ZAN: Perfect Doubt",
+    "subtitle": "The Rules",
+    "tldr": "4 players. 10 to 15 minutes. A bluffing game. Slide a card face down and name a suit, truth or lie. The player it lands on either challenges your claim or peeks and passes it on. Collect four penalty cards and you lose; everyone else wins.",
+    "intro": "There is no winner in ZAN, only a loser. You do not play the cards; you play the faces around the table. Every card slid across the felt comes with a claim, and every claim might be a lie. Say too little and no one believes you. Say too much and they read you like an open book. The table is quiet. Someone is about to break.",
+    "sections": [
+      {
+        "id": "goal",
+        "title": "The Goal",
+        "body": [
+          "Nobody wins ZAN by getting ahead. You win by not being the one who breaks. The game ends the instant a single player collects 4 penalty cards. That player loses, and every other player wins together.",
+          "So the whole game is a knife-fight of suggestion: push cards, and blame, onto everyone else while keeping your own side of the table clean."
+        ]
+      },
+      {
+        "id": "components",
+        "title": "The Deck",
+        "body": [
+          "ZAN uses 40 cards: four suits of ten. The suits are Raven, Skull, Moon, and Eye. That is the whole game, no draw pile, no extra pieces.",
+          "The suits have no ranks and no powers. A card is only ever worth the claim attached to it."
+        ]
+      },
+      {
+        "id": "setup",
+        "title": "Setup",
+        "body": [
+          "Shuffle all 40 cards and deal them out evenly, so each of the four players holds 10 cards. No cards are left on the table.",
+          "The game picks one player at random to open the first round."
+        ]
+      },
+      {
+        "id": "round",
+        "title": "Playing a Round",
+        "body": [
+          "The opener takes one card from their hand and slides it face down in front of any other player. As they do, they claim a suit out loud, for example: 'This is a Raven.' The claim can be the truth or a bluff.",
+          "The player who receives the card now has exactly two options: challenge it, or pass it on. Nothing else."
+        ]
+      },
+      {
+        "id": "challenge",
+        "title": "Option 1: Challenge",
+        "body": [
+          "You say whether you think the claim is true or a lie, and then you flip the card face up. The challenge always judges the most recent claim, the one the card arrived with.",
+          "If you guessed right, whether you caught a lie or confirmed a truth, the card becomes a penalty for the player who made that claim. It sits face up in front of them.",
+          "If you guessed wrong, the card becomes your own penalty, face up in front of you.",
+          "Either way, the round ends the moment the card is taken."
+        ]
+      },
+      {
+        "id": "pass",
+        "title": "Option 2: Pass",
+        "body": [
+          "If you would rather not challenge, you secretly peek at the card. Now you know the truth. Then you slide it face down to another player, and make a claim of your own, repeating the suit or changing it, truth or lie.",
+          "A card can be touched by each player only once per round. It keeps travelling until someone challenges it.",
+          "When the card reaches the fourth and last player who has not yet touched it, that player has no pass left. They must challenge."
+        ]
+      },
+      {
+        "id": "losing",
+        "title": "Losing, and the Next Round",
+        "body": [
+          "Penalty cards stay face up in front of their owner for the rest of the game. They are never returned to a hand.",
+          "The player who just took a penalty opens the next round.",
+          "The first player to hold 4 penalty cards, of any suits, loses immediately. Everyone else wins. Hands never run out before that happens, so the game can never stall."
+        ]
+      },
+      {
+        "id": "table",
+        "title": "At the Digital Table",
+        "body": [
+          "ZAN is a shared sandbox: the table deals and holds the cards, but it does not enforce the rules. You and the other three players run the round yourselves, exactly as you would in person.",
+          "Slide a card face down to make a claim, flip it to challenge, and keep taken cards face up in your own area. The frosted strip at the bottom of your screen is your private hand, so only you can see the cards you are still holding."
+        ]
+      }
+    ],
+    "closing": "Trust nothing. Read everyone."
+  },
+  "guide": {
+    "title": "Interactive Guide",
+    "close": "Close Guide",
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "minimizeTurnOnly": "You can minimize this panel once the rounds begin.",
+    "confirm": "Mark step complete",
+    "hostConfirms": "The host will confirm this step.",
+    "waitYourTurn": "Please wait for your round.",
+    "yourTurn": "It is your round to open. Tap the checkmark when the card is on its way.",
+    "aPlayer": "A Player",
+    "youTag": "(You)",
+    "introBody": "This guide walks through a game of ZAN one step at a time. It only makes suggestions. You stay free to move, flip, and pass cards however you like.",
+    "introTeach": "Quick summary: on your round, slide a card face down to someone and name a suit, truth or lie. They either challenge, flipping it to judge your claim, or peek and pass it on with a new claim. If the challenger guesses right, the claimer keeps the card as a penalty; if they guess wrong, they keep it themselves. Collect four penalties and you lose.",
+    "introWaiting": "Waiting for the host to start the game.",
+    "start": "Begin Game",
+    "restart": "Restart Tutorial",
+    "pickWait": "The host is choosing who opens the first round.",
+    "turnHeading": "{name}'s Round",
+    "roundLabel": "Round {n}",
+    "firstChosen": "{name} opens the first round.",
+    "steps": {
+      "deal": {
+        "title": "Deal the Cards",
+        "body": "Shuffle all 40 cards and deal 10 to each of the four players. There is no draw pile and nothing is left in the center. When everyone has their hand, the host taps the checkmark."
+      },
+      "chooseFirst": {
+        "title": "Choose Who Opens",
+        "body": "The host picks one player at random to open the first round. After that, whoever takes a penalty card opens the next one."
+      }
+    },
+    "phase": {
+      "round": {
+        "title": "Open the Round",
+        "body": "Slide one card face down to any other player and name a suit out loud, truth or lie. They will challenge it or peek and pass it on until someone takes it as a penalty. Tap the checkmark once your card is on its way."
+      }
+    }
+  }
+}

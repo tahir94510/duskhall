@@ -1,8 +1,12 @@
-# Vaerum: Heirs of the Ether · Design Notes
+# Duskhall · Design Notes
 
-## Balance constants
+This file documents the shared table engine and the Vaerum game's balance. Each game (mode) is
+described by a `ModeDef` in `src/modes/`; see `docs/MAINTAINING.md` for the mode system and the
+"how to add a game" runbook, and `docs/modes/<id>/` for a game's own rules, cards, and asset specs.
 
-The canonical balance numbers live in `src/game/balance.ts`. The rulebook copy is hand-written prose (not interpolated), so a test (`src/game/balance.test.ts`) enforces that the deck composition and the quick-reference numbers in both locales stay consistent with these constants and with the actual card set in `cards.ts`. If you change a number here, update the rulebook text to match or the test fails.
+## Balance constants (Vaerum)
+
+Each game's canonical balance numbers live in its `ModeDef.balance` (`src/modes/<id>.ts`). The deck composition is verified against `balance.totalCards` by `src/modes/registry.test.ts`, and every game's en/tr text parity by `src/i18n/parity.test.ts`. The numbers below describe the Vaerum game.
 
 | Constant | Value | Rationale |
 | --- | --- | --- |
@@ -111,9 +115,17 @@ Empty seats render dim grey; once a player presence arrives the seat gains its a
 
 ## Asset systems
 
-### Card art (`public/cards/`)
+Asset roots are PER GAME: `public/modes/<id>/{cards,background,audio/music,brand}/`. Sound effects
+are shared (`public/audio/sfx/`) with an optional per-mode override. The runtime resolves the
+active game's root via `assetRoot(getActiveMode())`, caches each manifest per root, and re-resolves
+on a game switch. The examples below use Vaerum's paths.
 
-The runtime reads `public/cards/manifest.json` once on first card render. Only entries listed in `available` produce an HTTP request, so a fresh checkout shows zero 404s in the browser console.
+### Card art (`public/modes/<id>/cards/`)
+
+The runtime reads the active game's `cards/manifest.json` once on first card render (cached per
+game). Only entries listed in `available` produce an HTTP request, so a fresh checkout shows zero
+404s. A `back.<ext>` in the same folder becomes the card-back image for a game that declares
+`hasCardBackImage`; otherwise the built-in CSS card back shows.
 
 ```json
 {
@@ -132,22 +144,22 @@ Or, for a single extension across the board:
 
 Recommended file: 640 × 928 px WebP (`object-fit: cover` covers the 8 px corner radius). Solid backgrounds; no transparency required.
 
-### Table background (`public/background/`)
+### Table background (`public/modes/<id>/background/`)
 
-A single image dropped here becomes the backdrop. The Vite plugin scans the
-folder and writes `public/background/manifest.json`; `src/table/Background.ts`
+A single image dropped in the active game's folder becomes the backdrop. The Vite plugin scans the
+folder and writes its `manifest.json`; `src/table/Background.ts`
 reads it once, preloads the first image, and fades it onto the `.app-bg` layer.
 That layer is `position: fixed`, full-bleed, and behind everything (`--z-bg`), so
 it covers the whole screen at every seat with no black bars and does NOT rotate
 with the board. A thin `.app-scrim` (`--z-scrim`) sits just above it to steady
 contrast for card legibility without hiding the deck/discard. The folder is kept
-separate from `public/cards/` so card art and the backdrop never collide. An
+separate from the card art so card art and the backdrop never collide. An
 empty folder makes no request and an elegant built-in gradient (in `board.css`)
 shows through, so there are zero 404s.
 
 ### Loading screen & first-sync gate
 
-`index.html` paints a logo splash (`#vaerum-loader`) on the first frame from
+`index.html` paints a logo splash (`#app-loader`) on the first frame from
 inline critical CSS. `Game.mount()` preloads the on-table card art and the
 background, then connects and waits (capped at ~1.8s) for the first sync: our
 seat (so the board is already rotated) and the authoritative snapshot (so cards
@@ -164,17 +176,21 @@ uses this to set each slot's colour, occupant name (`Name (you)` for self) and
 hit-test rect, and `pointInZone` resolves ownership through the same map. This is
 what keeps drag/drop, ownership, concealment and cursors correct for all seats.
 
-### Audio (`public/audio/`)
+### Audio (shared effects + per-game music)
 
-Effects and music live in separate folders so the asset set stays tidy:
+Effects are shared across games; music is per game:
 
 ```
-public/audio/
-  sfx/     effect sounds (file name must match a SfxName: flip, pickup, …)
-  music/   music tracks (any file name; played in natural-sort order, looped)
+public/audio/sfx/                effect sounds (file name must match a SfxName: flip, pickup, …)
+public/modes/<id>/audio/music/   the game's music tracks (any file name; natural-sort order, looped)
+public/modes/<id>/audio/sfx/     optional per-game effect overrides (same file names)
 ```
 
-The Vite plugin scans both folders (and, for backwards compatibility, any flat files in `public/audio/`) and writes `manifest.json`. Effects map a sound name to a concrete file path; music is an ordered path list. Anything missing falls back to a procedural Web Audio tone synthesised at runtime, so a fresh checkout shows zero 404s. Volumes live in `localStorage` (`vaerum:vol:master|music|sfx`).
+The Vite plugin writes a shared `public/audio/manifest.json` (effects) and a per-game
+`public/modes/<id>/audio/manifest.json` (music, plus any effect overrides). The runtime merges
+them: shared effects, overridden by the game's own, and the game's music. Anything missing falls
+back to a procedural Web Audio tone, so a fresh checkout shows zero 404s. Volumes live in
+`localStorage` (`duskhall:vol:master|music|sfx`).
 
 ```json
 {
@@ -203,7 +219,7 @@ The runtime (`src/audio/Audio.ts`) routes every voice through a per-effect gain 
 - Explicit "Necromancer's Eye fizzles if Discard empty" line.
 - Ascension declaration restricted to end-of-own-turn explicitly.
 - Blood Atonement randomiser: digital table auto-shuffles and auto-discards two hand cards; physical play follows the same rule.
-- Rulebook §13 quick reference now sources its limits and totals from `balance.ts`.
+- Rulebook §13 quick reference limits and totals are kept in step with the mode's `balance` by the mode registry test.
 
 ## Balance retune (V8.1 -> V8.2)
 

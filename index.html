@@ -5,30 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
     <meta name="theme-color" content="#000000" />
     <meta name="color-scheme" content="dark" />
-    <title>Vaerum: Heirs of the Ether</title>
-    <!-- Localise the tab title AND the static boot-failure card BEFORE the bundle loads,
-         using the same priority as i18n.detectLocale (?lang= → localStorage "vaerum:lang"
-         → navigator language). Without this, a Turkish visitor briefly sees English (the
-         title flash, or — if the bundle fails — an English error card). Keep these
-         strings in sync with public/locales/*.json. -->
+    <meta name="duskhall-mode" content="zan" />
+    <!-- DUSKHALL:BRAND:START -->
+    <title>Duskhall</title>
+    <meta name="description" content="Duskhall: a shared digital card table for friends. Pick a game, gather round, play by the rulebook. No servers, no accounts." />
+    <link rel="icon" type="image/svg+xml" href="/assets/icon-dark.svg" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="/assets/icon-light.svg" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/svg+xml" href="/assets/icon.svg" />
+    <link rel="apple-touch-icon" href="/assets/icon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Duskhall" />
+    <meta property="og:title" content="Duskhall" />
+    <meta property="og:description" content="A shared digital card table for friends. Pick a game, gather round, play by the rulebook." />
+    <meta property="og:image" content="/assets/og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Duskhall" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="/assets/og.png" />
+    <script>
+      /* Per-mode tab titles for the pre-boot localiser below. The Vite plugin rewrites this for
+         each mode shell; this default is the platform (root) title. */
+      window.__DUSKHALL_TITLES__ = { en: "Duskhall", tr: "Duskhall" };
+    </script>
+    <!-- DUSKHALL:BRAND:END -->
+    <!-- Localise the tab title AND the static boot-failure card BEFORE the bundle loads, using the
+         same priority as i18n.detectLocale (?lang= -> localStorage "duskhall:lang" -> navigator
+         language). Without this, a Turkish visitor briefly sees English. The title source is the
+         per-mode window.__DUSKHALL_TITLES__ set above. -->
     <script>
       (function () {
         try {
-          var titles = { en: "Vaerum: Heirs of the Ether", tr: "Vaerum: Eterin Vârisleri" };
+          var titles = window.__DUSKHALL_TITLES__ || { en: "Duskhall", tr: "Duskhall" };
           var fail = {
-            en: { h: "Something went wrong.", p: "Vaerum could not start. Try reloading the page.", b: "Reload" },
-            tr: { h: "Bir şeyler ters gitti.", p: "Vaerum başlatılamadı. Sayfayı yeniden yüklemeyi dene.", b: "Yeniden yükle" }
+            en: { h: "Something went wrong.", p: "The game could not start. Try reloading the page.", b: "Reload" },
+            tr: { h: "Bir şeyler ters gitti.", p: "Oyun başlatılamadı. Sayfayı yeniden yüklemeyi dene.", b: "Yeniden yükle" }
           };
           var q = new URLSearchParams(location.search).get("lang");
           var stored = null;
-          try { stored = localStorage.getItem("vaerum:lang"); } catch (e) {}
+          try { stored = localStorage.getItem("duskhall:lang") || localStorage.getItem("vaerum:lang"); } catch (e) {}
           var nav = (navigator.language || "en").toLowerCase();
           var loc = (q && titles[q]) ? q
                   : (stored && titles[stored]) ? stored
                   : nav.indexOf("tr") === 0 ? "tr" : "en";
-          document.title = titles[loc];
+          if (titles[loc]) document.title = titles[loc];
           document.documentElement.setAttribute("lang", loc);
-          var f = fail[loc];
+          var f = fail[loc] || fail.en;
           document.addEventListener("DOMContentLoaded", function () {
             var h = document.getElementById("boot-fail-title");
             var p = document.getElementById("boot-fail-text");
@@ -40,38 +63,19 @@
         } catch (e) {}
       })();
     </script>
-    <meta name="description" content="Vaerum: Heirs of the Ether. A digital card table for friends. Move and flip cards freely, follow the official rulebook." />
-    <link rel="icon" type="image/svg+xml" href="/assets/icon-dark.svg" media="(prefers-color-scheme: dark)" />
-    <link rel="icon" type="image/svg+xml" href="/assets/icon-light.svg" media="(prefers-color-scheme: light)" />
-    <link rel="icon" type="image/svg+xml" href="/assets/icon.svg" />
-    <link rel="apple-touch-icon" href="/assets/icon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="alternate" hreflang="en" href="/?lang=en" />
     <link rel="alternate" hreflang="tr" href="/?lang=tr" />
     <link rel="alternate" hreflang="x-default" href="/" />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Vaerum: Heirs of the Ether" />
-    <meta property="og:description" content="A digital card table for friends. No forced rules; follow the rulebook yourselves." />
-    <meta property="og:image" content="/assets/og.png" />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Vaerum: Heirs of the Ether" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="/assets/og.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
     <script type="module" src="/src/main.ts"></script>
     <style>
-      /* Critical loading-screen styles, inline so the splash paints on the very
-         first frame, before the bundle CSS arrives. Kept tiny and self-contained.
-         The board is hidden until body.is-ready so the rotation / card positions
-         settle behind the splash and never visibly snap into place. */
+      /* Critical loading-screen styles, inline so the splash paints on the very first frame,
+         before the bundle CSS arrives. The board is hidden until body.is-ready so the rotation
+         and card positions settle behind the splash and never visibly snap into place. */
       html, body { margin: 0; background: #050507; }
-      /* Baseline atmosphere painted on the body so the translucent, blurred
-         loader always has the table's mood behind it — even on the very first
-         load before #app has painted anything. */
       body {
         background-color: #07060b;
         background-image:
@@ -81,15 +85,10 @@
         background-repeat: no-repeat;
         background-size: cover;
       }
-      /* #app (the real table) stays visible at all times. The loader is a
-         blurred veil ON TOP of it, so during a room switch the live table is
-         what shows — blurred — behind the logo, never a flat black panel.
-         Only a gentle fade is kept for the very first reveal. */
       #app { opacity: 1; }
-      /* The loader is a translucent, blurred veil so the table's atmosphere
-         (background art / gradient + any live cards) shows through behind it
-         instead of a flat opaque colour. Just the logo and its gentle pulse. */
-      #vaerum-loader {
+      /* The loader is a translucent, blurred veil so the table's atmosphere shows through behind
+         it instead of a flat opaque colour. Just the logo and its gentle pulse. */
+      #app-loader {
         position: fixed; inset: 0; z-index: 100000;
         display: grid; place-items: center;
         background: rgba(8, 7, 12, 0.28);
@@ -97,24 +96,24 @@
         backdrop-filter: blur(26px) saturate(118%);
         opacity: 1; transition: opacity 360ms cubic-bezier(0.2, 0.65, 0.18, 0.99);
       }
-      body.is-ready #vaerum-loader { opacity: 0; pointer-events: none; }
-      body.is-ready #vaerum-loader * { animation-play-state: paused; }
-      .vaerum-loader__mark { position: relative; width: 64px; height: 86px; }
-      .vaerum-loader__mark svg { width: 100%; height: 100%; display: block; color: #f3efe5; animation: vaerum-pulse 1.8s ease-in-out infinite; filter: drop-shadow(0 2px 12px rgba(0,0,0,0.5)); }
-      @keyframes vaerum-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+      body.is-ready #app-loader { opacity: 0; pointer-events: none; }
+      body.is-ready #app-loader * { animation-play-state: paused; }
+      .app-loader__mark { position: relative; width: 64px; height: 86px; }
+      .app-loader__mark svg { width: 100%; height: 100%; display: block; color: #f3efe5; animation: app-pulse 1.8s ease-in-out infinite; filter: drop-shadow(0 2px 12px rgba(0,0,0,0.5)); }
+      @keyframes app-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
       @media (prefers-reduced-motion: reduce) {
-        .vaerum-loader__mark svg { animation: none; }
+        .app-loader__mark svg { animation: none; }
       }
     </style>
   </head>
   <body>
-    <div id="vaerum-loader" aria-hidden="true">
-      <div class="vaerum-loader__mark">
+    <div id="app-loader" aria-hidden="true">
+      <div class="app-loader__mark">
         <svg viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
           <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M24 4 L40 32 L24 60 L8 32 Z" />
-            <path d="M24 4 L24 60" stroke-width="1.4" />
-            <circle cx="24" cy="32" r="3.4" fill="currentColor" stroke="none" />
+            <path d="M12 58 V28 A12 12 0 0 1 36 28 V58" />
+            <path d="M6 58 H42" />
+            <circle cx="24" cy="14" r="2.6" fill="currentColor" stroke="none" />
           </g>
         </svg>
       </div>
@@ -125,20 +124,20 @@
         <span class="boot-fail__sigil" aria-hidden="true">
           <svg viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
             <g fill="none" stroke="#f3efe5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M24 4 L40 32 L24 60 L8 32 Z" />
-              <path d="M24 4 L24 60" />
-              <circle cx="24" cy="32" r="3.5" fill="#f3efe5" stroke="none" />
+              <path d="M12 58 V28 A12 12 0 0 1 36 28 V58" />
+              <path d="M6 58 H42" />
+              <circle cx="24" cy="14" r="2.6" fill="#f3efe5" stroke="none" />
             </g>
           </svg>
         </span>
         <h1 id="boot-fail-title">Something went wrong.</h1>
-        <p id="boot-fail-text">Vaerum could not start. Try reloading the page.</p>
+        <p id="boot-fail-text">The game could not start. Try reloading the page.</p>
         <button type="button" data-reload>Reload</button>
       </div>
     </div>
     <noscript>
       <div class="boot-fail__noscript">
-        Vaerum requires JavaScript. Please enable it to play. · Vaerum oynamak için JavaScript gerektirir; lütfen etkinleştir.
+        Duskhall requires JavaScript. Please enable it to play. · Duskhall oynamak için JavaScript gerektirir; lütfen etkinleştir.
       </div>
     </noscript>
   </body>

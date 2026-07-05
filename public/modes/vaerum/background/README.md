@@ -6,7 +6,7 @@ by hand. The image is painted full-bleed and fixed behind everything, so it
 covers the whole screen at every seat with no black bars. It does not rotate with
 the board; a thin scrim above it keeps cards legible.
 
-This folder is intentionally separate from `public/cards/` (the card front art)
+This folder is intentionally separate from `public/modes/vaerum/cards/` (the card front art)
 and from the card back, so the backdrop never gets mixed up with a card image.
 When this folder is empty an elegant built-in gradient backdrop is used and no
 request is made, so a fresh checkout shows zero 404s.

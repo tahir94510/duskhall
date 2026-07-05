@@ -18,7 +18,7 @@ export class DebugHud {
   static enabled(): boolean {
     try {
       if (new URLSearchParams(location.search).get("debug") === "1") return true;
-      return localStorage.getItem("vaerum:debug") === "1";
+      return localStorage.getItem("duskhall:debug") === "1";
     } catch {
       return false;
     }

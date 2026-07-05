@@ -1,19 +1,29 @@
 import { t } from "../i18n/index.js";
+import { getActiveMode } from "../modes/active.js";
+import { assetRoot } from "../modes/types.js";
 
-// Card art convention: drop files into public/cards/ and list them in
-// public/cards/manifest.json. The loader fetches the manifest once and only
-// requests files that actually exist, so a fresh repo produces zero 404s in
-// the browser console.
+// Card art convention: drop files into public/modes/<mode>/cards/ and the Vite plugin lists them
+// in that folder's manifest.json. The loader fetches the active mode's manifest once (cached per
+// mode) and only requests files that actually exist, so a fresh repo produces zero 404s. An
+// optional back.<ext> in the same folder becomes the card-back image for modes that ship one.
 
 interface CardManifest { available: Array<{ id: string; ext: string }> | string[]; }
 
-let manifestPromise: Promise<Map<string, string>> | null = null;
+// One cached manifest promise per mode asset root, so switching games re-fetches the new deck's
+// art instead of serving the previous mode's paths.
+const manifestByRoot = new Map<string, Promise<Map<string, string>>>();
 
-// Exported so the card-info tooltip can show a slice of the same art the card
-// face uses, sharing this one cached manifest fetch (no second network call).
+function cardsBase(): string {
+  return `${assetRoot(getActiveMode())}/cards`;
+}
+
+// Exported so the card-info tooltip can show a slice of the same art the card face uses, sharing
+// this one cached manifest fetch (no second network call). Reads the ACTIVE mode's manifest.
 export function loadManifest(): Promise<Map<string, string>> {
-  if (manifestPromise) return manifestPromise;
-  manifestPromise = fetch("/cards/manifest.json", { cache: "no-cache" })
+  const base = cardsBase();
+  const cached = manifestByRoot.get(base);
+  if (cached) return cached;
+  const p = fetch(`${base}/manifest.json`, { cache: "no-cache" })
     .then((r) => (r.ok ? r.json() : { available: [] } as CardManifest))
     .catch(() => ({ available: [] } as CardManifest))
     .then((data: CardManifest) => {
@@ -21,22 +31,40 @@ export function loadManifest(): Promise<Map<string, string>> {
       const list = Array.isArray((data as { available?: unknown }).available) ? data.available : [];
       for (const entry of list as Array<string | { id: string; ext?: string }>) {
         if (typeof entry === "string") {
-          // assume default ext webp
-          map.set(entry, `/cards/${entry}.webp`);
+          map.set(entry, `${base}/${entry}.webp`);
         } else if (entry && typeof entry.id === "string") {
           const ext = (entry.ext || "webp").replace(/^\./, "");
-          map.set(entry.id, `/cards/${entry.id}.${ext}`);
+          map.set(entry.id, `${base}/${entry.id}.${ext}`);
         }
       }
       return map;
     });
-  return manifestPromise;
+  manifestByRoot.set(base, p);
+  return p;
 }
 
-// Preload the art for a set of card defs and resolve once they have all settled
-// (loaded or failed). Used by the loading screen so card faces never pop in
-// after the table is shown. A per-image and overall timeout keeps a slow or
-// missing asset from ever stalling the loader.
+// Apply (or clear) the active mode's card-back image. A mode that declares hasCardBackImage and
+// ships a back.<ext> paints it over the whole back face; otherwise the built-in CSS card back
+// shows. Sets a CSS custom property + a root class so card.css can switch cleanly. Never 404s:
+// only applied when the manifest actually lists a back.
+export function applyCardBack(): Promise<void> {
+  const mode = getActiveMode();
+  const root = document.documentElement;
+  return loadManifest().then((map) => {
+    const url = mode.hasCardBackImage ? map.get("back") : undefined;
+    if (url) {
+      root.style.setProperty("--card-back-image", `url("${encodeURI(url)}")`);
+      root.classList.add("has-card-back");
+    } else {
+      root.style.removeProperty("--card-back-image");
+      root.classList.remove("has-card-back");
+    }
+  });
+}
+
+// Preload the art for a set of card defs and resolve once they have all settled (loaded or
+// failed). Used by the loading screen so card faces never pop in after the table is shown. A
+// per-image and overall timeout keeps a slow or missing asset from ever stalling the loader.
 export function preloadCardArt(defIds: Iterable<string>, timeoutMs = 4000): Promise<void> {
   return loadManifest().then((map) => {
     const urls = new Set<string>();
@@ -44,6 +72,8 @@ export function preloadCardArt(defIds: Iterable<string>, timeoutMs = 4000): Prom
       const url = map.get(def);
       if (url) urls.add(url);
     }
+    const back = map.get("back");
+    if (back && getActiveMode().hasCardBackImage) urls.add(back);
     if (urls.size === 0) return;
     const jobs = Array.from(urls).map(
       (url) =>
@@ -51,9 +81,8 @@ export function preloadCardArt(defIds: Iterable<string>, timeoutMs = 4000): Prom
           const img = new Image();
           let settled = false;
           const done = () => { if (!settled) { settled = true; resolve(); } };
-          // Resolve only once the bitmap is DECODED, not merely downloaded, so a card
-          // face is paint-ready the instant the table is revealed (no decode pop-in on
-          // first show). decode() is guarded for older browsers and never rejects the job.
+          // Resolve only once the bitmap is DECODED, not merely downloaded, so a card face is
+          // paint-ready the instant the table is revealed (no decode pop-in on first show).
           const decodeThenDone = () => {
             if (typeof img.decode === "function") img.decode().then(done, done);
             else done();
@@ -83,7 +112,8 @@ export function createCardElement(instanceId: string, defId: string): { el: HTML
 
   const back = document.createElement("div");
   back.className = "card__face card__face--back";
-  // Empty interior; the entire visual identity lives on the card's border.
+  // Interior is empty by default; the visual identity lives on the card's border (CSS back) or on
+  // the mode's back image (applied via the --card-back-image custom property, see applyCardBack).
 
   const front = document.createElement("div");
   front.className = "card__face card__face--front";

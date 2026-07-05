@@ -1,19 +1,21 @@
-# Vaerum: Copyright Notice
+# Duskhall: Copyright Notice
 
-The Vaerum universe, including but not limited to:
+The Duskhall platform and its games, including but not limited to:
 
-- The names "Vaerum", "Heirs of the Ether" and "Eterin Vârisleri";
-- All card names (Time Rift, Veil of Void, Crimson Monolith, Necromancer's Eye, Ether Strike, Shadow Theft, Ancient Sight, Mind Parasite, Twist of Fate, Silence!, Karmic Reflection, Blood Atonement, Runic Warden, Glacial Aberration, Shadow Slayer);
-- All card effect text, flavour text and rulebook content;
+- The names "Duskhall", "ZAN", "Perfect Doubt", "Kusursuz Şüphe", "Vaerum", "Heirs of the Ether" and "Eterin Vârisleri";
+- All card names and suit names (Vaerum: Time Rift, Veil of Void, Crimson Monolith, Necromancer's Eye, Ether Strike, Shadow Theft, Ancient Sight, Mind Parasite, Twist of Fate, Silence!, Karmic Reflection, Blood Atonement, Runic Warden, Glacial Aberration, Shadow Slayer; ZAN: Raven, Skull, Moon, Eye);
+- All card effect text, flavour text and rulebook content, in every language;
 - The category sigils, name sigils and brand sigil designs;
 - The visual language, layout, palette and typography choices;
 
 are the original creative work of the project author and are protected as such. They may not be copied, redistributed, reprinted, translated, adapted into other media (digital, physical, audio, video, 3D printed), monetised, or sublicensed without prior written permission.
 
+Note on game mechanics: rules and mechanics are not themselves copyrightable; only their specific expression (text, names, and art) is. ZAN belongs to the well-known "reverse set-collection bluffing" family of games. Its rules are used freely; its name, theme, suits, wording, and art are original to this project and protected as above.
+
 ## Recommended legal steps for the author
 
-1. **Trademark** the name "Vaerum" and the standalone sigil in your home jurisdiction and any market you intend to sell in.
-2. **Copyright register** the rulebook and card list at your national copyright office where deposit is supported.
+1. **Trademark** the platform name "Duskhall" and each game name, plus the standalone sigils, in your home jurisdiction and any market you intend to sell in.
+2. **Copyright register** each game's rulebook and card list at your national copyright office where deposit is supported.
 3. **Design registration** for the physical card layouts once finalised.
 4. **NDA / IP assignment** with anyone contributing development, translation, illustration or playtest material.
 5. **Time-stamped backups** of every iteration (git tags + signed releases) act as supporting evidence of priority.
@@ -22,7 +24,7 @@ are the original creative work of the project author and are protected as such. 
 
 - Personal play between friends.
 - Reviews, video lets-plays, streaming with credit to the author.
-- Forking the source code for non-commercial study, provided the Vaerum name, card content and sigils are removed before redistribution.
+- Forking the source code for non-commercial study, provided the Duskhall and game names, card content and sigils are removed before redistribution.
 
 ## Disclaimer
 

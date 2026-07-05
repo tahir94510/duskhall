@@ -2,6 +2,8 @@ import { Modal, escape } from "./Modal.js";
 import { t, tArr } from "../i18n/index.js";
 import { ICON_PATREON, ICON_COFFEE, ICON_SUPPORT } from "./icons.js";
 import { nameKey } from "../util/names.js";
+import { getActiveMode } from "../modes/active.js";
+import { assetRoot } from "../modes/types.js";
 
 // Support lines contain inline <strong> markup intentionally; render raw but
 // keep dynamic text safe via a small allowlist.
@@ -25,12 +27,12 @@ function button(url: string, label: string, icon: string, primary: boolean): str
   return `<a class="${cls}" href="${escape(url)}" target="_blank" rel="noopener">${icon}<span>${escape(label)}</span></a>`;
 }
 
-// The supporters wall is sourced from public/supporters.json (an array of names,
-// editable on GitHub with no redeploy) merged with an optional build-time
-// VITE_SUPPORTERS env (comma-separated). The result is trimmed, de-duplicated
-// (case-insensitive), length-capped per name and total-capped, so a malformed or
-// oversized file can never break or bloat the panel. Cached after the first load.
-let supportersCache: Promise<string[]> | null = null;
+// The supporters wall is sourced from the ACTIVE mode's public/modes/<mode>/supporters.json (an
+// array of names, editable on GitHub with no redeploy) merged with an optional build-time
+// VITE_SUPPORTERS env (comma-separated, platform-wide). The result is trimmed, de-duplicated
+// (case-insensitive), length-capped per name and total-capped, so a malformed or oversized file
+// can never break or bloat the panel. Cached per mode after the first load.
+const supportersByMode = new Map<string, Promise<string[]>>();
 function envSupporters(): string[] {
   const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env || {};
   return (env.VITE_SUPPORTERS || "").split(",");
@@ -57,17 +59,20 @@ function cleanSupporters(raw: unknown, fromEnv: string[]): string[] {
   return out;
 }
 function loadSupporters(): Promise<string[]> {
-  if (supportersCache) return supportersCache;
-  supportersCache = (async () => {
+  const base = assetRoot(getActiveMode());
+  const cached = supportersByMode.get(base);
+  if (cached) return cached;
+  const p = (async () => {
     let json: unknown = [];
     try {
-      const res = await fetch("/supporters.json", { cache: "no-store" });
+      const res = await fetch(`${base}/supporters.json`, { cache: "no-store" });
       const ct = res.headers.get("content-type") || "";
       if (res.ok && ct.includes("json")) json = await res.json();
     } catch { /* no file / offline — fall back to env only */ }
     return cleanSupporters(json, envSupporters());
   })();
-  return supportersCache;
+  supportersByMode.set(base, p);
+  return p;
 }
 
 // Offers whichever support channels are configured — Patreon, Buy Me a Coffee

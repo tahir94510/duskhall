@@ -1,8 +1,23 @@
-# Vaerum: Heirs of the Ether
+# Duskhall
 
-A digital card table for friends, 2 to 4 players. Free movement, no enforced rules; players follow the official rulebook themselves. Built with Vite, TypeScript, and Supabase Realtime.
+A shared digital card table for friends, 2 to 4 players. One table engine, many games ("modes").
+Free movement, no enforced rules; players follow each game's rulebook themselves. Built with Vite,
+TypeScript, and Supabase Realtime.
 
-Vaerum'un arkadaşlarla oynanan dijital kart masası, 2 ila 4 oyuncu. Kartlar serbestçe oynanır, kural dayatması yoktur; oyuncular resmi kural kitabını kendileri uygular. Vite, TypeScript ve Supabase Realtime ile yazıldı.
+Duskhall arkadaşlarla oynanan dijital bir kart masasıdır, 2 ila 4 oyuncu. Tek bir masa motoru,
+birçok oyun ("mod"). Kartlar serbestçe oynanır, kural dayatması yoktur; oyuncular her oyunun kural
+kitabını kendileri uygular. Vite, TypeScript ve Supabase Realtime ile yazıldı.
+
+## Games (modes)
+
+| Mode | Game | Players | Time | Difficulty | Path |
+|------|------|---------|------|:----------:|------|
+| `zan` (default) | ZAN: Perfect Doubt, a fast bluffing game of claims and challenges | 4 | 10-15 min | 2 / 5 | `/zan` |
+| `vaerum` | Vaerum: Heirs of the Ether, a deep duel of seals, spells, and Ascension | 2-4 | 20-40 min | 4 / 5 | `/vaerum` |
+
+A first-time visitor opens **ZAN** by default. Whichever game you last played is remembered and
+reopened next time. Switch games any time from the menu (**Change Game**); the table reloads with
+the new deck, art, and rules behind a loading screen, while your language and audio settings stay.
 
 ## Stack
 
@@ -16,13 +31,42 @@ Vaerum'un arkadaşlarla oynanan dijital kart masası, 2 ila 4 oyuncu. Kartlar se
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm run build    # outputs dist/
+npm run build    # outputs dist/ (per-mode HTML shells included)
 npm run preview  # serves dist/
+npm test         # vitest
 ```
+
+## How the multi-mode system fits together
+
+- **Mode registry**: `src/modes/` is the single place a game is described. `types.ts` defines
+  `ModeDef` (deck, categories, balance, difficulty, seat count, card-back image flag, tooltip
+  fields, guide steps/phases). `registry.ts` lists the modes and the default. `active.ts` holds
+  the current mode (mirrors how i18n holds the current locale) and remembers the last mode in
+  `localStorage`. To add a game you add a `ModeDef` plus assets and a locale file, nothing else.
+- **URL**: `/{mode}/{SLUG}` (e.g. `/zan/P86B3T`). The mode segment is a lowercase mode id; the
+  slug is a 6-char room code. A legacy bare `/{SLUG}` link is a Vaerum room and redirects to
+  `/vaerum/{SLUG}`. `src/net/room.ts resolveLocation()` is the single entry point.
+- **Rooms**: realtime channels are namespaced `duskhall:{mode}:{room}`, and room-scoped
+  `localStorage` keys include the mode, so two players in different games can share a 6-char slug
+  without ever crossing decks.
+- **Branding / SEO**: the build emits a per-mode HTML shell (`dist/{mode}/index.html`) with that
+  game's title, description, Open Graph image, and favicon, so social crawlers (which don't run
+  JS) get the right preview. At runtime, switching games re-patches the tab title, favicon, and
+  share meta (`src/ui/branding.ts`).
+- **Assets**: each game owns `public/modes/{id}/{cards,background,audio/music,brand}/` plus
+  `supporters.json`. Sound effects are shared (`public/audio/sfx/`) with an optional per-mode
+  override. All asset paths are manifest-driven with graceful fallbacks, so a game with no art yet
+  still boots with zero 404s.
+- **Content**: shared UI text lives in `public/locales/{en,tr}.json`; each game's own text (meta,
+  cards, categories, glossary, rulebook, guide, support copy) lives in
+  `public/locales/modes/{id}.{en,tr}.json` and is deep-merged over the shared file at load.
+
+See **[docs/MAINTAINING.md](docs/MAINTAINING.md)** for the step-by-step "how to add a game" runbook.
 
 ## Environment variables
 
-Set these in Vercel (or `.env.local` for local). All are optional; missing ones use safe fallbacks.
+Set these in Vercel (or `.env.local` for local). All are optional; missing ones use safe
+fallbacks. They are **platform-level** (they describe Duskhall, not a single game).
 
 ```
 # Realtime (required for multiplayer)
@@ -30,49 +74,40 @@ SUPABASE_URL=https://<project>.supabase.co
 SUPABASE_ANON_KEY=<public anon key>
 
 # Branding (runtime-patched; lets you rename or move domains without a code change)
-APP_NAME=Vaerum
-SITE_URL=https://vaerum.example
-OG_IMAGE=https://vaerum.example/assets/og.svg
+APP_NAME=Duskhall
+SITE_URL=https://duskhall.example
+OG_IMAGE=https://duskhall.example/assets/og.png
 
 # Support buttons (each appears in the Support dialog only when its var is set)
 SUPPORT_URL=https://your-support-page
 PATREON_URL=https://patreon.com/your-page
 BUYMEACOFFEE_URL=https://buymeacoffee.com/your-page
-NEXT_PUBLIC_APP_URL=https://vaerum.example
+NEXT_PUBLIC_APP_URL=https://duskhall.example
 
 # Feedback channels (optional; the Feedback menu row appears if either is set)
-ISSUES_URL=https://github.com/<you>/vaerum/issues
+ISSUES_URL=https://github.com/<you>/duskhall/issues
 FEEDBACK_URL=https://forms.gle/your-anonymous-form
 ```
 
-`/api/config` is an Edge function that reads these env vars and serves them to the client at runtime. With this path, no keys are baked into the bundle.
+`/api/config` is an Edge function that reads these env vars and serves them to the client at
+runtime. With this path, no keys are baked into the bundle. The client resolves config from three
+layers (first with Supabase creds wins, branding merged across all): **Vite build-time env**
+(`VITE_*` in `.env.local`), **`/api/config`** (the production path, plain names above), and
+**`public/config.local.json`** (a gitignored local fallback).
 
-The client resolves config from three layers, first one with Supabase creds wins, branding merged across all:
-
-1. **Vite build-time env** (`VITE_*`): for local dev or any static host. Put them in `.env.local`:
-   ```
-   VITE_SUPABASE_URL=https://<project>.supabase.co
-   VITE_SUPABASE_ANON_KEY=<public anon key>
-   # optional: VITE_APP_NAME, VITE_SITE_URL, VITE_OG_IMAGE, VITE_SUPPORT_URL,
-   #           VITE_PATREON_URL, VITE_BUYMEACOFFEE_URL
-   ```
-   These are inlined at build, so they work in `vite dev` and on hosts without the edge function.
-2. **`/api/config`**: Vercel runtime env (the **non‑prefixed** `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `APP_NAME` / … names above). No rebuild needed to change them. **This is the production path.**
-3. **`public/config.local.json`**: a gitignored local fallback. Copy `public/config.local.json.example`, fill in your URL and public anon key, and never commit it.
-
-**Why some names have `VITE_` and some don't (intentional, not a bug).** Vite only exposes variables that start with `VITE_` to browser code, so those are the *local‑dev* names you put in `.env.local`. In production the browser never reads env directly; it fetches `/api/config`, an Edge function that reads the **plain** names (`SUPABASE_URL`, etc.) on the server and returns them. Same settings, two delivery paths. For your Vercel deployment, use the plain names: exactly the ones you already set.
-
-**Which Supabase key?** Either browser key works: the legacy **anon** key (a JWT starting `eyJ…`) or the newer **publishable** key (`sb_publishable_…`). The anon key is the simplest with the standard setup. **Never** use the `service_role` / `sb_secret_…` keys in the browser; the in‑app connection self‑test warns if you do. No SQL, tables, RLS, or auth setup is needed; the game uses only Realtime Broadcast + Presence, which are on by default.
+**Which Supabase key?** Either browser key works: the legacy **anon** key (a JWT starting `eyJ…`)
+or the newer **publishable** key (`sb_publishable_…`). **Never** use the `service_role` /
+`sb_secret_…` keys in the browser. No SQL, tables, RLS, or auth setup is needed; the app uses only
+Realtime Broadcast + Presence.
 
 ### Troubleshooting: cards don't sync between players
 
-If actions never reach other players and the menu's **Connection** row reads **Offline**, the client could not reach Supabase Realtime. Check, in order:
-
-1. **Env vars are set in Vercel** (`SUPABASE_URL` and `SUPABASE_ANON_KEY`) and the project was redeployed after setting them. Open `/api/config` in the browser; both values must be present.
-2. **Realtime is enabled** for the Supabase project (Project settings → Realtime). No tables or auth are needed; the app uses only Broadcast + Presence.
-3. **CSP allows the socket**: `vercel.json` already permits `wss://*.supabase.co`; keep that entry if you fork the CSP.
-
-Two browser tabs on the **same machine** always sync, even while offline, via a local `BroadcastChannel` fallback. So if same-machine tabs sync but two separate devices do not, the cause is the Supabase connection above. The `Cookie "__cf_bm" has been rejected` console message is a harmless Cloudflare bot-management notice and does not affect the websocket.
+If actions never reach other players and the menu's **Connection** row reads **Offline**, the
+client could not reach Supabase Realtime. Check, in order: (1) env vars are set in Vercel and the
+project was redeployed (open `/api/config` to verify), (2) Realtime is enabled for the project,
+(3) `vercel.json` CSP still permits `wss://*.supabase.co`. Two tabs on the same machine always
+sync via a local `BroadcastChannel` fallback, so if same-machine tabs sync but two devices don't,
+the cause is the Supabase connection.
 
 ## Vercel deployment
 
@@ -82,87 +117,27 @@ Build Command:    npm run build
 Output Directory: dist
 ```
 
-`vercel.json` sets CSP, HSTS, X-Frame-Options DENY, Referrer-Policy and Permissions-Policy headers. Assets and locales have explicit cache headers. The slug rewrite `/<6-char>` routes to the SPA.
-
-## Game
-
-- **Player count:** 4 seats (you + 3 opponents). Empty seats stay dim.
-- **Cards:** 72-card deck (16 Seals, 24 Spells, 16 Interventions, 16 Servants).
-- **Interaction:**
-  - Left-press + drag: move the card under the cursor
-  - Ctrl + left-press + drag: move the whole stack
-  - Right-click: flip the stack under the cursor (a single card flips alone)
-  - Scroll: flip the single card under the cursor
-  - Ctrl + scroll: flip the whole stack under the cursor
-  - Shift + scroll: rotate 90° sideways; over a pile it turns and squares up the whole stack
-  - G: gather the stack under the cursor; M: shuffle it
-  - D: tidy your own hand area into a neat, grouped, deck-like layout (matching cards stacked, sorted by type and centred, never crossing into a neighbour's space). You hear it; everyone sees your cards settle.
-  - V: turn the table to view it from your left-hand neighbour's side; press again to return. Local view only, nothing changes for anyone else.
-  - Long-press on touch: open an action bar (flip, turn sideways, gather, shuffle, tidy your area, info, turn the view). Flip turns the whole pile under your finger, or a lone card if that is all there is. Tidy your area shows only on your own cards.
-- **Privacy:** cards you drop into your own zone are private; opponents see their backs and can infer the count, not the contents.
-- **URL:** `https://vaerum.example/P86B3T` (6-char path slug per room).
-- **Leave room:** opens a fresh room with a new link, with you as host; the others stay in the old room.
-- **Localisation:** English-primary with full Turkish parity. Auto-detected on first visit, remembered after.
+`vercel.json` sets CSP, HSTS, X-Frame-Options DENY, and cache headers, and rewrites `/{mode}` and
+`/{mode}/{slug}` to the per-mode shell while everything else falls back to the SPA.
 
 ## Assets
 
-### Card art (`public/cards/`)
-
-Drop your own card front images and list them in `public/cards/manifest.json`. The runtime only fetches what the manifest declares, so a fresh checkout produces zero 404s.
-
-```json
-{ "available": ["timeRift", "etherStrike", "silence"] }
-```
-
-or per-card extensions:
-
-```json
-{ "available": [{ "id": "timeRift", "ext": "webp" }, { "id": "etherStrike", "ext": "png" }] }
-```
-
-Recommended: 640 × 928 px WebP under ~100 KB. See `public/cards/README.md`.
-
-### Table background (`public/background/`)
-
-Drop a single image to set the backdrop. It is painted full-bleed and fixed
-behind everything, so it covers the whole screen at every seat with no black bars
-(it does not rotate with the board). It is kept separate from the card art and
-card backs so the sets never mix. Only the first image is used; when the folder
-is empty an elegant built-in gradient backdrop is used and nothing is fetched.
-
-```json
-{ "available": [{ "id": "backdrop", "ext": "webp" }] }
-```
-
-Recommended: a large image, 1600 px or wider, calm and mid-to-dark so cards stay
-legible (a scrim already darkens the edges). See `public/background/README.md`.
-
-### Audio (`public/audio/`)
-
-Effects and music live in separate folders. Just drop files in and the manifest regenerates on build/dev:
-
-```
-public/audio/
-  sfx/     flip.mp3, pickup.mp3, place.mp3, shuffle.mp3, gather.mp3, snap.mp3, ui-*.mp3
-  music/   any file names; played in order, then looped
-```
-
-Missing sounds fall back to procedural Web Audio tones, so a fresh checkout produces zero 404s. The runtime debounces rapid repeats, caps overlapping voices, and ducks music under effects for clean, click-free playback. See `public/audio/README.md`.
-
-In-game **Settings** (Master / Music / Effects) sliders persist to `localStorage`.
+Drop art, audio, and brand files into `public/modes/{id}/…` and shared sound effects into
+`public/audio/sfx/`. The Vite plugin regenerates every manifest on build/dev, so you only ever
+drop a file. See each game's `docs/modes/{id}/ASSETS.md` for exact specs and generation prompts.
+Missing assets fall back cleanly (placeholder card faces, the built-in CSS card back, a gradient
+table surface, procedural sound effects), so a fresh checkout produces zero 404s.
 
 ## Docs
 
-- `docs/RULES.en.md`: complete English V8.2 rulebook
-- `docs/RULES.tr.md`: Türkçe V8.2 kural kitabı
-- `docs/CARDS.en.md`: card encyclopedia, every card's effect and flavor (English)
-- `docs/CARDS.tr.md`: kart ansiklopedisi, her kartın etkisi ve hikâyesi (Türkçe)
-- `docs/DESIGN.md`: balance numbers, palette, coordinate system, asset systems
-- `docs/ASSETS.md`: exact art/audio specs and world-consistent prompts for creating or updating assets
-- `docs/SECURITY.md`: security model, rate-limits, threat notes, Cloudflare guidance
-- `docs/COPYRIGHT.md`: copyright notice and recommended legal steps
-- `docs/MAINTAINING.md`: developer directives (changelog/updates convention, supporters, i18n parity, content style, architecture map)
+- `docs/MAINTAINING.md`: developer directives + the "how to add a game" runbook
+- `docs/DESIGN.md`: engine architecture, coordinate system, asset systems
+- `docs/SECURITY.md`: security model, rate-limits, threat notes
+- `docs/COPYRIGHT.md`: copyright notice for the platform and its games
+- `docs/modes/{id}/`: each game's rulebook, card reference, and asset specs
 
 ## License
 
-See `LICENSE`. All Vaerum game design, card names, effects, sigils, rulebook text and visual identity are copyright © 2026 the project author. Personal play permitted; commercial use, reprint, derivatives and source redistribution require written permission.
+See `LICENSE`. All Duskhall game designs, names, card art, rulebook text, and visual identity are
+copyright © 2026 the project author. Personal play permitted; commercial use, reprint, derivatives,
+and source redistribution require written permission.

@@ -1,6 +1,11 @@
+import { getActiveModeId } from "../modes/active.js";
+
 export type Locale = "en" | "tr";
 const SUPPORTED: Locale[] = ["en", "tr"];
-const STORAGE_KEY = "vaerum:lang";
+const STORAGE_KEY = "duskhall:lang";
+// The previous single-game key, read as a fallback so a returning player's language survives the
+// upgrade even before the storage migration has copied it over.
+const LEGACY_STORAGE_KEY = "vaerum:lang";
 
 export type LocaleData = Record<string, unknown>;
 
@@ -18,22 +23,50 @@ export function detectLocale(): Locale {
   // the boot-fail card instead of just falling back to the browser language. The
   // write side is already guarded the same way.
   let stored: string | null = null;
-  try { stored = localStorage.getItem(STORAGE_KEY); } catch {}
+  try { stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY); } catch {}
   if (stored && SUPPORTED.includes(stored as Locale)) return stored as Locale;
   const nav = (navigator.language || "en").toLowerCase();
   if (nav.startsWith("tr")) return "tr";
   return "en";
 }
 
-export async function loadLocale(loc: Locale): Promise<void> {
-  // Always revalidate the locale against the server (a conditional request, cheap 304
-  // when unchanged). The translations ship WITH each release, so a stale cached copy
-  // meeting a newer bundle is what showed raw keys like "guide.introTeach"; this plus
-  // the no-cache response header (vercel.json) keeps the text in step with the code
-  // without the player ever needing a hard refresh.
-  const res = await fetch(`/locales/${loc}.json`, { cache: "no-cache" });
-  if (!res.ok) throw new Error(`locale ${loc} failed`);
-  data = await res.json();
+// Deep-merge the per-mode locale over the shared one: mode keys win, nested objects merge,
+// arrays and primitives replace. Shared UI text lives once while each game supplies its own
+// cards, rules, guide and meta under the key paths the UI already reads.
+function deepMerge(base: LocaleData, over: LocaleData): LocaleData {
+  const out: LocaleData = { ...base };
+  for (const [k, v] of Object.entries(over)) {
+    const cur = out[k];
+    if (v && typeof v === "object" && !Array.isArray(v) && cur && typeof cur === "object" && !Array.isArray(cur)) {
+      out[k] = deepMerge(cur as LocaleData, v as LocaleData);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
+async function fetchLocaleFile(path: string): Promise<LocaleData | null> {
+  // Always revalidate against the server (a cheap conditional request). Translations ship WITH
+  // each release; the no-cache response header (vercel.json) keeps text in step with the bundle
+  // without the player needing a hard refresh.
+  try {
+    const res = await fetch(path, { cache: "no-cache" });
+    if (!res.ok) return null;
+    return (await res.json()) as LocaleData;
+  } catch {
+    return null;
+  }
+}
+
+// Load a language: the shared system strings merged with the active mode's own strings. A
+// missing mode file degrades to shared-only (the shared file may still carry a mode's text
+// during a transition), so the app never shows raw keys for a mode whose file is absent.
+export async function loadLocale(loc: Locale, modeId: string = getActiveModeId()): Promise<void> {
+  const shared = await fetchLocaleFile(`/locales/${loc}.json`);
+  if (!shared) throw new Error(`locale ${loc} failed`);
+  const mode = await fetchLocaleFile(`/locales/modes/${modeId}.${loc}.json`);
+  data = mode ? deepMerge(shared, mode) : shared;
   current = loc;
   document.documentElement.setAttribute("lang", loc);
   try {

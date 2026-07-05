@@ -54,15 +54,17 @@ export class LocalBus {
   onCursor(cb: CursorCb): () => void { this.cursorCbs.add(cb); return () => this.cursorCbs.delete(cb); }
   onPresence(cb: PresenceCb): () => void { this.presenceCbs.add(cb); return () => this.presenceCbs.delete(cb); }
 
-  /** Join (or switch to) a room's local channel. Safe to call repeatedly. */
-  connect(room: string, me: PresencePlayer): void {
+  /** Join (or switch to) a room's local channel. Safe to call repeatedly. The mode namespaces
+   *  the channel so two same-machine tabs in different games never cross-sync on a shared slug. */
+  connect(room: string, me: PresencePlayer, mode = "zan"): void {
     if (!LocalBus.isSupported()) return;
-    if (this.room === room && this.channel) { this.me = me; this.announce(); return; }
+    const key = `${mode}:${room}`;
+    if (this.room === key && this.channel) { this.me = me; this.announce(); return; }
     this.teardown();
-    this.room = room;
+    this.room = key;
     this.me = me;
-    // One channel per room so two different rooms on the same machine stay apart.
-    this.channel = new BroadcastChannel(`vaerum-local:${room}`);
+    // One channel per (mode, room) so two different rooms/games on the same machine stay apart.
+    this.channel = new BroadcastChannel(`duskhall-local:${key}`);
     this.channel.onmessage = (e: MessageEvent) => this.onMessage(e.data as Envelope);
     this.peers.clear();
     this.touchSelf();

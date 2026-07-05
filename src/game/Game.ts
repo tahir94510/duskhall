@@ -1,6 +1,6 @@
 import { buildTable, repaintSlots, refreshDockLabels, type BoardRefs } from "../table/Board.js";
-import { createCardElement, refreshCardLabel, preloadCardArt } from "../table/Card.js";
-import { applyTableBackground } from "../table/Background.js";
+import { createCardElement, refreshCardLabel, preloadCardArt, applyCardBack } from "../table/Card.js";
+import { applyTableBackground, clearTableBackground } from "../table/Background.js";
 import type { BoardState, CardState, SelfPlayer } from "../table/types.js";
 import { DragController, type DragHooks } from "../table/DragController.js";
 import { Tooltip } from "../ui/Tooltip.js";
@@ -16,6 +16,7 @@ import { openLeaveConfirm } from "../ui/LeaveConfirm.js";
 import { openRoomFull } from "../ui/RoomFullModal.js";
 import { openConfirm } from "../ui/ConfirmModal.js";
 import { openJoinByCode } from "../ui/JoinByCodeModal.js";
+import { openModePicker } from "../ui/ModePickerModal.js";
 import { openShortcutsModal } from "../ui/ShortcutsPanel.js";
 import { openSettingsModal } from "../ui/SettingsModal.js";
 import { openDiagnosticsModal } from "../ui/DiagnosticsModal.js";
@@ -23,11 +24,13 @@ import { ContextBar } from "../ui/ContextBar.js";
 import { GuidePanel, type GuideVM, type GuideSeatInfo } from "../ui/GuidePanel.js";
 import { DebugHud } from "../ui/DebugHud.js";
 import { toast } from "../ui/Toast.js";
-import { t, onLocaleChange } from "../i18n/index.js";
-import { getOrCreateRoom, newRoom, setRoomSlug } from "../net/room.js";
+import { t, loadLocale, getLocale, onLocaleChange } from "../i18n/index.js";
+import { ensureRoom, newRoom, setRoomSlug } from "../net/room.js";
 import { showLoader, hideLoader } from "../ui/loader.js";
 import { seededDeck } from "./deck.js";
 import { buildDeck } from "./cards.js";
+import { getActiveModeId, setActiveMode, writeStoredModeId } from "../modes/active.js";
+import { applyBranding } from "../ui/branding.js";
 import { seatIsRival, cardIsRivalOwned, hostId, isHost, resolveSeating, shouldClearTombstone, shouldReTombstone, seniorityOnReturn, type Occupancy, type HostCandidate, type SeatClaimEntry } from "./occupancy.js";
 import {
   findStackOverlapping,
@@ -96,16 +99,16 @@ const STACK_TIDY_MS = 200 * MOTION;       // gather-into-one-pile phase
 // coordinate clamp (COORD_MIN = -3) unchanged, so a peer reliably hides the ghost.
 // -2 satisfies both without depending on the old -10→-3 clamp coincidence.
 const CURSOR_OFFBOARD = -2;
-const SS_SNAPSHOT_PREFIX = "vaerum:snap:";
-const SS_SEAT_PREFIX = "vaerum:seat:";
-const SS_CLIENT_ID = "vaerum:cid";
-const LIVE_CID_PREFIX = "vaerum:livecid:";
+const SS_SNAPSHOT_PREFIX = "duskhall:snap:";
+const SS_SEAT_PREFIX = "duskhall:seat:";
+const SS_CLIENT_ID = "duskhall:cid";
+const LIVE_CID_PREFIX = "duskhall:livecid:";
 // Room-scoped identity (id + name + seat) in localStorage. Unlike the
 // sessionStorage seat/cid (which only survive a same-tab reload), this lets a
 // player who fully CLOSED the browser, lost the network, or otherwise dropped
 // return to the SAME room with the same id and name and reclaim their "away"
 // seat — exactly the persistence the table promises. Kept fresh for 24h.
-const LS_IDENT_PREFIX = "vaerum:ident:";
+const LS_IDENT_PREFIX = "duskhall:ident:";
 const IDENT_TTL_MS = 24 * 60 * 60 * 1000;
 const SNAPSHOT_TTL_MS = 12 * 60 * 60 * 1000; // a saved board restores only within 12h
 // Returning to the tab after this long may mean the browser evicted decoded art / paused
@@ -117,25 +120,25 @@ const TAB_AWAY_RELOAD_MS = 20000;
 // the About panel auto-shows exactly once for a brand-new visitor and never again.
 // Not room-scoped and never swept by pruneStaleStorage / clearRoomStorage (it matches
 // none of their prefixes), so it persists across rooms, refreshes, leaves and kicks.
-const LS_SEEN_ABOUT = "vaerum:seen-about";
+const LS_SEEN_ABOUT = "duskhall:seen-about";
 // One-shot, per-device flag for the first-visit welcome hint (the small gesture
 // card shown after the About panel). Same lifetime rules as LS_SEEN_ABOUT.
-const LS_SEEN_WELCOME = "vaerum:seen-welcome";
+const LS_SEEN_WELCOME = "duskhall:seen-welcome";
 // One-shot, per-device flag for the first-touch "long-press a card" toast. Set by
 // the toast itself, or by the welcome hint when it shows the touch copy (which
 // already teaches the gesture), so the tip is taught exactly once either way.
-const LS_HINT_LONGPRESS = "vaerum:hint:longpress";
+const LS_HINT_LONGPRESS = "duskhall:hint:longpress";
 // Per-device record of the newest "What's new" version this browser has opened. The
 // Updates row shows a "New" badge while this differs from the latest entry; opening the
 // panel writes the latest here and clears the badge until the next update ships.
-const LS_SEEN_UPDATES = "vaerum:seen-updates";
+const LS_SEEN_UPDATES = "duskhall:seen-updates";
 // Per-ROOM record of the FULL rulebook Guide state (open/closed, started, chosen first
 // player and step progress). Saved on every change so a page refresh restores the exact
 // walkthrough where it left off, not just whether the panel was open. A brand-new room (no
 // record) opens the Guide by default so newcomers always meet it. The legacy open-only key
-// ("vaerum:guide-open:") is swept on boot.
-const LS_GUIDE_PREFIX = "vaerum:guide:";
-const LS_GUIDE_OPEN_LEGACY_PREFIX = "vaerum:guide-open:";
+// ("duskhall:guide-open:") is swept on boot.
+const LS_GUIDE_PREFIX = "duskhall:guide:";
+const LS_GUIDE_OPEN_LEGACY_PREFIX = "duskhall:guide-open:";
 
 // `joinedAt` is the player's PERSISTED seniority in this room (their original join
 // time). It survives a refresh/reconnect so the host keeps host and seating order
@@ -147,12 +150,15 @@ export interface GameDeps {
   host: HTMLElement;
   bus: RealtimeBus;
   config: RuntimeConfig;
+  /** The room slug resolved from the URL, or null to open a fresh room. */
+  slug: string | null;
 }
 
 export class Game {
   private host: HTMLElement;
   private bus: RealtimeBus;
   private config: RuntimeConfig;
+  private initialSlug: string | null = null;
   private refs!: BoardRefs;
   private state: BoardState = { cards: new Map(), topZ: 10 };
   private self: SelfPlayer;
@@ -282,6 +288,7 @@ export class Game {
     this.host = deps.host;
     this.bus = deps.bus;
     this.config = deps.config;
+    this.initialSlug = deps.slug;
     this.self = { id: getOrMakeClientId(), seat: 0, color: SEAT_COLORS[0]!, name: getOrAssignName() };
   }
 
@@ -328,7 +335,8 @@ export class Game {
       onUpdates: () => { void this.audio.play("ui-open"); this.markUpdatesSeen(); openUpdatesModal(this.modal); },
       onJoinRoom: (code) => { void this.joinRoom(code); },
       onJoinByCode: () => { void this.audio.play("ui-open"); openJoinByCode(this.modal, { currentRoom: this.room }, (code) => { void this.joinRoom(code); }); },
-      onDiagnose: () => { void this.audio.play("ui-open"); openDiagnosticsModal(this.modal, this.bus); }
+      onDiagnose: () => { void this.audio.play("ui-open"); openDiagnosticsModal(this.modal, this.bus); },
+      onChangeMode: () => { void this.audio.play("ui-open"); openModePicker(this.modal, getActiveModeId(), (id) => { void this.switchMode(id); }); }
     });
     document.body.appendChild(this.header.el);
 
@@ -351,11 +359,11 @@ export class Game {
 
     onLocaleChange(() => this.onLocale());
 
-    this.room = getOrCreateRoom();
-    // A broken room link returns "" and getOrCreateRoom has already redirected to the
-    // 404 page; stop here so we don't connect to an empty room while the page unloads.
-    if (!this.room) return;
+    // The mode + slug were resolved in boot (main.ts) and the active mode is already set. Here
+    // we only normalise the slug into the URL (or mint a fresh room) for the active mode.
+    this.room = ensureRoom(this.initialSlug);
     this.header.setRoom(this.room);
+    this.header.setBrand(getActiveModeId());
     this.installZoneActions();
     // Remove any leftover keys from the old `kabal:` namespace (pre-Vaerum rename),
     // then sweep abandoned/expired vaerum:* room data so storage never piles up.
@@ -569,6 +577,7 @@ export class Game {
     for (const c of this.state.cards.values()) defs.add(c.defId);
     await Promise.all([
       preloadCardArt(defs).catch(() => {}),
+      applyCardBack().catch(() => {}),
       applyTableBackground(this.refs.bgLayer).catch(() => {})
     ]);
   }
@@ -1179,7 +1188,9 @@ export class Game {
   }
 
   private initialDealLocal(): void {
-    const deck = seededDeck(this.room);
+    // Seed with the mode so the same room slug deals a distinct board per game (peers in a room
+    // always share a mode, so the seed stays consistent across them).
+    const deck = seededDeck(`${getActiveModeId()}:${this.room}`);
     // Pile centre is the fixed canonical (DECK_NX, DECK_NY); cardTransform turns
     // that centre into the right top-left pixel for this device's card size.
     const { w: cardW, h: cardH } = this.cardMetrics();
@@ -1567,24 +1578,29 @@ export class Game {
     window.setInterval(() => this.saveSnapshot(), 5000);
   }
 
-  private snapshotKey(): string { return SS_SNAPSHOT_PREFIX + this.room; }
+  // Room-scoped storage is keyed by (mode, room) so the same slug in two different games keeps
+  // separate identity/snapshot/seat/guide records and never restores one game's board into
+  // another. All room-scoped key builders route through here.
+  private roomKey(room: string): string { return `${getActiveModeId()}:${room}`; }
+
+  private snapshotKey(): string { return SS_SNAPSHOT_PREFIX + this.roomKey(this.room); }
 
   private readSeat(room: string): number {
     try {
-      const v = sessionStorage.getItem(SS_SEAT_PREFIX + room);
+      const v = sessionStorage.getItem(SS_SEAT_PREFIX + this.roomKey(room));
       const n = v == null ? -1 : parseInt(v, 10);
       return Number.isFinite(n) && n >= 0 && n < SEAT_COUNT ? n : 0;
     } catch { return 0; }
   }
   private writeSeat(): void {
     try {
-      if (!this.seated()) sessionStorage.removeItem(SS_SEAT_PREFIX + this.room);
-      else sessionStorage.setItem(SS_SEAT_PREFIX + this.room, String(this.self.seat));
+      if (!this.seated()) sessionStorage.removeItem(SS_SEAT_PREFIX + this.roomKey(this.room));
+      else sessionStorage.setItem(SS_SEAT_PREFIX + this.roomKey(this.room), String(this.self.seat));
     } catch {}
     this.writeIdentity();
   }
 
-  private identKey(room: string): string { return LS_IDENT_PREFIX + room; }
+  private identKey(room: string): string { return LS_IDENT_PREFIX + this.roomKey(room); }
 
   // Wipe every trace of THIS client in a room from browser storage — used on an
   // explicit leave and on a kick, so a returning player comes back clean (a brand
@@ -1592,10 +1608,10 @@ export class Game {
   // locale and other global prefs are never touched.
   private clearRoomStorage(room: string): void {
     try { localStorage.removeItem(this.identKey(room)); } catch {}
-    try { localStorage.removeItem(SS_SNAPSHOT_PREFIX + room); } catch {}
-    try { sessionStorage.removeItem(SS_SEAT_PREFIX + room); } catch {}
-    try { localStorage.removeItem(LS_GUIDE_PREFIX + room); } catch {}
-    try { localStorage.removeItem(LS_GUIDE_OPEN_LEGACY_PREFIX + room); } catch {}
+    try { localStorage.removeItem(SS_SNAPSHOT_PREFIX + this.roomKey(room)); } catch {}
+    try { sessionStorage.removeItem(SS_SEAT_PREFIX + this.roomKey(room)); } catch {}
+    try { localStorage.removeItem(LS_GUIDE_PREFIX + this.roomKey(room)); } catch {}
+    try { localStorage.removeItem(LS_GUIDE_OPEN_LEGACY_PREFIX + this.roomKey(room)); } catch {}
     // Note: the livecid heartbeat is keyed by client id (not room) and our id stays
     // live as we move to a fresh room, so it is intentionally left alone here.
   }
@@ -1847,7 +1863,7 @@ export class Game {
     this.applyGuideLocal(setGuideOpenState(this.guide, false), true);
   }
 
-  private guideKey(): string { return LS_GUIDE_PREFIX + this.room; }
+  private guideKey(): string { return LS_GUIDE_PREFIX + this.roomKey(this.room); }
 
   /** Persist the FULL guide state for this room, so a page refresh restores the exact
    *  walkthrough (open/closed, started, chosen first player and step progress) rather than
@@ -2783,7 +2799,7 @@ export class Game {
     const nonce = c && typeof c.getRandomValues === "function"
       ? c.getRandomValues(new Uint32Array(1))[0]!
       : Math.floor(Math.random() * 0x100000000);
-    const order = seededDeck(`${this.room}:${Date.now()}:${nonce}`);
+    const order = seededDeck(`${getActiveModeId()}:${this.room}:${Date.now()}:${nonce}`);
     const baseNx = this.deckBaseNx();
     const baseNy = DECK_NY;
     // Stamp every card with one fresh winning clock + our id so the reset
@@ -4314,7 +4330,69 @@ export class Game {
       const def = el.dataset.def;
       if (def) refreshCardLabel(el, def);
     }
-    document.title = t("meta.title");
+    // Re-apply the full branding for the active mode + new locale (title, share meta, favicon),
+    // so switching language never clobbers the platform/mode title back to a raw key.
+    applyBranding(this.config);
+  }
+
+  // Switch to another game (mode). Modeled on openOwnRoom: everything happens behind the loader,
+  // so the table, branding, guide and locale all change at once and the board is final and
+  // upright the instant the loader lifts. The active mode drives the deck, channel topic, asset
+  // roots, storage scope and branding, so no card ever crosses between games.
+  async switchMode(modeId: string): Promise<void> {
+    if (modeId === getActiveModeId()) return;
+    this.roomFullShown = false;
+    void this.audio.play("ui-close");
+    showLoader();
+    this.leaving = true; // suspend the periodic save during the switch (see joinRoom/openOwnRoom)
+    try {
+      // Leave the current room cleanly: wipe our data for it and free our seat before hopping.
+      this.clearRoomStorage(this.room);
+      if (this.claimSeat >= 0) await this.bus.sendLeftAndWait({ id: this.self.id, seat: this.claimSeat });
+      this.seatClaims.clear();
+      await this.bus.disconnect();
+      this.resetTable();
+      // Drop the previous game's table surface and forget its music so the new game's assets load
+      // fresh behind the loader.
+      clearTableBackground(this.refs.bgLayer);
+      this.audio.reloadForMode();
+
+      // Activate the new mode: this repoints the deck, categories, tooltip fields and asset roots.
+      setActiveMode(modeId);
+      writeStoredModeId(modeId);
+
+      // Fresh identity for the new game, opened as host of a new room.
+      resetName();
+      this.self.name = getOrAssignName();
+      this.selfJoinedAt = Date.now();
+      this.selfConnAt = Date.now();
+      this.self.seat = 0; this.claimSeat = 0; this.viewSeat = 0;
+      this.self.color = SEAT_COLORS[0]!;
+      this.room = newRoom(); // writes /{mode}/{slug} for the new active mode
+      this.writeIdentity();
+
+      // Re-brand the document and swap the logo for the new game, then reload the merged locale
+      // (shared + new mode) so all rules/guide/card text follows the mode.
+      applyBranding(this.config);
+      this.header.setBrand(modeId);
+      await loadLocale(getLocale(), modeId).catch(() => {});
+
+      this.applyBoardPerspective();
+      this.measureBoard();
+      this.header.setRoom(this.room);
+      this.header.resetTimer();
+      this.header.setUpdatesBadge(this.updatesUnseen());
+      this.initialDealLocal();
+      this.refreshZones();
+      this.refreshGuide();
+      await this.preloadAssets();
+      this.armFirstSync();
+      void this.bus.connect(this.room, this.presencePayload());
+      await Promise.race([this.firstSync, delay(1800)]);
+    } finally {
+      this.leaving = false;
+      hideLoader();
+    }
   }
 }
 

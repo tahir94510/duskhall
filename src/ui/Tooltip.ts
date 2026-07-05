@@ -1,5 +1,6 @@
 import { t } from "../i18n/index.js";
-import { CARD_DEFS } from "../game/cards.js";
+import { cardDefs } from "../game/cards.js";
+import { getActiveMode } from "../modes/active.js";
 import { loadManifest } from "../table/Card.js";
 
 const HOVER_DELAY = 320;
@@ -161,8 +162,14 @@ export class Tooltip {
   // clickable card names, so both read identically. Starts the panel hidden so the first
   // frame after innerHTML can never leak in at a stale position.
   private renderDef(defId: string, stackCount?: number): boolean {
-    const def = CARD_DEFS.find((d) => d.id === defId);
+    const def = cardDefs().find((d) => d.id === defId);
     if (!def) return false;
+    // Which info blocks this mode's cards carry. Vaerum shows type + effect + flavor; a
+    // simpler mode like ZAN shows only the name and a flavor line (its cards have no effect).
+    const fields = getActiveMode().tooltipFields;
+    const showType = fields.includes("type");
+    const showEffect = fields.includes("effect");
+    const showFlavor = fields.includes("flavor");
     this.el.classList.remove("is-visible");
     // The card's own art becomes the PANEL BACKGROUND (full-bleed), with a dark scrim
     // (.tooltip__scrim) over it so the text stays legible directly on the image. When a card
@@ -184,18 +191,26 @@ export class Tooltip {
     // structure here: a SHORT first sentence renders as a semibold lead, the rest as
     // the body. If the text has no early sentence break (a single long sentence), we
     // skip the lead and show it all as body, so a card never renders as a wall of bold.
-    const effect = t(`cards.${def.id}.effect`);
+    const effect = showEffect ? t(`cards.${def.id}.effect`) : "";
     const m = effect.match(/^(.+?[.!?])\s+([\s\S]+)$/);
     const hasLead = !!m && m[1]!.length <= 96;
     const lead = hasLead ? m![1]! : "";
     const rest = hasLead ? m![2]! : effect;
+    const typeHtml = showType
+      ? `<div class="tooltip__type">${escapeHtml(t(`categories.${def.category}.name`))}</div>`
+      : "";
+    const effectHtml = showEffect
+      ? `${lead ? `<div class="tooltip__lead">${escapeHtml(lead)}</div>` : ""}<div class="tooltip__body">${escapeHtml(rest)}</div>`
+      : "";
+    const flavorHtml = showFlavor
+      ? `<div class="tooltip__flavor">${escapeHtml(t(`cards.${def.id}.flavor`))}</div>`
+      : "";
     this.el.innerHTML = `
       <div class="tooltip__scrim" aria-hidden="true"></div>
       <div class="tooltip__title">${escapeHtml(t(`cards.${def.id}.name`))}</div>
-      <div class="tooltip__type">${escapeHtml(t(`categories.${def.category}.name`))}</div>
-      ${lead ? `<div class="tooltip__lead">${escapeHtml(lead)}</div>` : ""}
-      <div class="tooltip__body">${escapeHtml(rest)}</div>
-      <div class="tooltip__flavor">${escapeHtml(t(`cards.${def.id}.flavor`))}</div>${pileLine}
+      ${typeHtml}
+      ${effectHtml}
+      ${flavorHtml}${pileLine}
     `;
     return true;
   }

@@ -2,33 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Vaerum</title>
+    <title>Duskhall</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
     <script>
-      // Defensive SPA fallback. If the host ever serves this 404 page for a path that
-      // LOOKS like a real room code, bounce to it so the app can pick it up. Anything
-      // else is a genuinely broken link, so we stay here and show the card (no redirect
-      // loop on a malformed path).
+      // Defensive SPA fallback. If the host ever serves this 404 page for a path that LOOKS like a
+      // real /{mode}/{SLUG} link (or a legacy bare /{SLUG} room), bounce to the canonical URL so
+      // the app can pick it up. Anything else is a genuinely broken link, so we stay here and show
+      // the card (no redirect loop on a malformed path).
       (function () {
-        var p = (window.location.pathname || "/").replace(/^\/+/, "").replace(/\/+$/, "");
-        if (/^[A-Z0-9]{6}$/i.test(p)) {
-          window.location.replace("/" + p.toUpperCase());
+        var segs = (window.location.pathname || "/").split("/").filter(Boolean);
+        var slug = /^[A-Z0-9]{6}$/i;
+        if (segs.length >= 2 && /^[a-z][a-z0-9-]*$/.test(segs[0]) && slug.test(segs[1])) {
+          window.location.replace("/" + segs[0] + "/" + segs[1].toUpperCase());
+        } else if (segs.length === 1 && slug.test(segs[0])) {
+          // Legacy bare room link, from before games had their own path: it is a Vaerum room.
+          window.location.replace("/vaerum/" + segs[0].toUpperCase());
         }
       })();
     </script>
     <script>
       // Localise the page to TR/EN with the SAME priority as i18n.detectLocale
-      // (?lang= -> localStorage "vaerum:lang" -> navigator language), before paint.
+      // (?lang= -> localStorage "duskhall:lang" -> navigator language), before paint.
       (function () {
         try {
           var L = {
-            en: { t: "Vaerum", h: "Page not found.", p: "That link does not point to a known Vaerum room.", a: "Open a new room" },
-            tr: { t: "Vaerum", h: "Sayfa bulunamadı.", p: "Bu bağlantı bilinen bir Vaerum odasına gitmiyor.", a: "Yeni bir oda aç" }
+            en: { t: "Duskhall", h: "Page not found.", p: "That link does not point to a known room.", a: "Open a new room" },
+            tr: { t: "Duskhall", h: "Sayfa bulunamadı.", p: "Bu bağlantı bilinen bir odaya gitmiyor.", a: "Yeni bir oda aç" }
           };
           var q = new URLSearchParams(location.search).get("lang");
           var stored = null;
-          try { stored = localStorage.getItem("vaerum:lang"); } catch (e) {}
+          try { stored = localStorage.getItem("duskhall:lang") || localStorage.getItem("vaerum:lang"); } catch (e) {}
           var nav = (navigator.language || "en").toLowerCase();
           var loc = (q && L[q]) ? q : (stored && L[stored]) ? stored : nav.indexOf("tr") === 0 ? "tr" : "en";
           var s = L[loc];
@@ -96,13 +100,13 @@
       <div class="card">
         <svg viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
           <g fill="none" stroke="#f3efe5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M24 4 L40 32 L24 60 L8 32 Z" />
-            <path d="M24 4 L24 60" />
-            <circle cx="24" cy="32" r="3.5" fill="#f3efe5" stroke="none" />
+            <path d="M12 58 V28 A12 12 0 0 1 36 28 V58" />
+            <path d="M6 58 H42" />
+            <circle cx="24" cy="14" r="2.6" fill="#f3efe5" stroke="none" />
           </g>
         </svg>
         <h1 id="nf-title">Page not found.</h1>
-        <p id="nf-text">That link does not point to a known Vaerum room.</p>
+        <p id="nf-text">That link does not point to a known room.</p>
         <a id="nf-link" href="/">Open a new room</a>
       </div>
     </div>

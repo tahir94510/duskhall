@@ -1,0 +1,419 @@
+{
+  "meta": {
+    "title": "Vaerum: Eterin Vârisleri",
+    "tagline": "",
+    "description": "Arkadaşlarınla oynayabileceğin dijital bir kart masası. Kartları özgürce taşı ve çevir; kuralları tıpkı gerçek bir masada olduğu gibi kendiniz yönetin."
+  },
+  "support": {
+    "title": "Vaerum'u Destekle",
+    "intro": "Vaerum, bağımsız bir oyun tasarımcısı tarafından tek başına geliştiriliyor. Desteğin, oyunun şu adımları atmasını sağlar:",
+    "lines": [
+      "Oyun Genişlemeleri: Yeni kart setleri, daha sağlam bir denge ve daha derin taktiksel mekanikler.",
+      "Masa Geliştirmeleri: Pürüzsüz bir oynanış, harika yeni özellikler ve ek dil destekleri.",
+      "3D ve Steam Sürümü: Büyüleyici görsel efektlere ve kaliteli ses tasarımına sahip tam donanımlı bir 3D masa.",
+      "Fiziksel Kutu Oyunu: Yüksek kaliteli karton, kabartmalı mühürler ve şık tasarımıyla gerçek bir kutu oyunu sürümü."
+    ],
+    "supportersHint": "Bağış mesajına #vaerum etiketini eklersen, ismin birkaç gün içinde bu duvardaki yerini alır."
+  },
+  "glossary": {
+    "etherResonance": {
+      "term": "Eter Yankısı",
+      "def": "Ana çekme destesi tükendiğinde, Iskarta destesi karıştırılarak yepyeni bir deste oluşturulur. Bu olay her döngüde yalnızca bir kez gerçekleşir. Karıştırma işleminin hemen ardından, masadaki her oyuncu kendi oyun alanından bir Mühür veya Hizmetkârı feda etmek zorundadır. Eğer oyun alanın tamamen boşsa, elinden rastgele bir kartı feda etmelisin. Eğer hem deste hem de Iskarta tamamen boşsa, Eter Yankısı gerçekleşmez."
+    },
+    "ascension": {
+      "term": "Yükseliş",
+      "def": "Zafere giden tek yol. Kapanış aşamanın sonunda oyun alanında 3 veya daha fazla Mühür varsa Yükseliş ilan edebilirsin. Bu karar geri alınamaz. Yükseliş ilan ettiğinde, masadaki her rakip Mühürlerini parçalamak için bir tam tur oynama hakkı kazanır. Bu zorlu sürece Sınav denir. Eğer Sınavı atlatır ve sıra sana tekrar geldiğinde hâlâ en az 3 Mühre sahip olursan oyunu kazanırsın."
+    },
+    "servantShield": {
+      "term": "Hizmetkâr Kalkanı",
+      "def": "Aşılmaz bir savunma hattı. Oyun alanında en az bir Hizmetkâr olduğu sürece, rakiplerin hiçbir Mührünü hedef alamaz. Mühürlerine dokunabilmeleri için önce senin kontrol ettiğin tüm Hizmetkârları yok etmek zorundadırlar."
+    },
+    "hand": {
+      "term": "El",
+      "def": "Senin gizli silahların. Rakiplerin elinde kaç kart olduğunu görebilir ancak kartların ne olduğunu asla bilemez. Elinde en fazla 7 kart tutabilirsin, fazlasını Kapanış aşamasında atmak zorundasın. Mühürler ve Hizmetkârlar elinde dururken hiçbir işe yaramazlar."
+    },
+    "tableau": {
+      "term": "Oyun Alanı",
+      "def": "Kartlarını açık bir şekilde dizdiğin özel bölgen. Buraya en fazla 4 Mühür ve 3 Hizmetkâr yerleştirebilirsin. Kartların güçleri sadece buradayken çalışır. Oyun alanına inen bir kart oraya bağlanır; yalnızca yok edilerek, feda edilerek veya çalınarak oradan ayrılabilir. Asla eline geri dönmez."
+    },
+    "deck": {
+      "term": "Deste",
+      "def": "Masanın ortasında duran, herkesin kart çektiği kapalı ortak yığın. Bittiğinde Eter Yankısı tetiklenir ve Iskarta destesi karıştırılarak yeni bir deste oluşturulur."
+    },
+    "discard": {
+      "term": "Iskarta",
+      "def": "Kullanılmış Büyülerin, iptal edilen kartların ve yok edilen Mühür ile Hizmetkârların toplandığı açık yüzlü ortak alan."
+    },
+    "focus": {
+      "term": "Odak",
+      "def": "Turunun ilk aşaması. Ortak desteden eline 2 yeni kart çekersin. Oyun alanındaki Zaman Çatlağı gibi kartlar bu sayıyı artırabilir."
+    },
+    "action": {
+      "term": "Eylem",
+      "def": "Turunun ikinci aşaması. Harcayabileceğin 2 Eylem Puanın (HP) vardır. Bu puanları Yaratmak, Araştırmak veya Arındırmak için kullanabilirsin. Kullanmadığın puanlar tur sonunda tamamen silinir."
+    },
+    "closing": {
+      "term": "Kapanış",
+      "def": "Turunun son aşaması. Önce Mühürlerinin tur sonu özellikleri tetiklenir. Ardından elinde 7'den fazla kart varsa fazlalıkları Iskarta destesine atarsın. Gerekli şartları sağlıyorsan Yükseliş ilan etme anı tam olarak burasıdır."
+    },
+    "create": {
+      "term": "Yarat",
+      "def": "1 HP değerinde bir eylem. Elinden 1 Büyü kullanabilir ya da oyun alanına 1 Mühür veya Hizmetkâr yerleştirebilirsin. Oyun alanın doluysa, yeni bir kart koymak için sahadaki aynı türden bir kartı ücretsiz olarak atabilirsin."
+    },
+    "study": {
+      "term": "Araştır",
+      "def": "1 HP değerinde bir eylem. Desteden eline 1 ekstra kart çekersin."
+    },
+    "cleanse": {
+      "term": "Arındır",
+      "def": "1 HP değerinde bir eylem. Elinden 1 kartı atıp yerine desteden 1 yeni kart çekersin. Bu işlem elindeki kart sayısını değiştirmez, sadece elini tazeler."
+    },
+    "hp": {
+      "term": "HP",
+      "def": "Senin Eylem Puanların. Her tura varsayılan olarak 2 HP ile başlarsın ve bu değer en fazla 5'e çıkabilir. Yarat, Araştır ve Arındır eylemleri 1 HP harcar. Müdahaleler tamamen ücretsizdir. Kalan HP sonraki tura devretmez."
+    },
+    "trial": {
+      "term": "Sınav",
+      "def": "En büyük test. Sen Yükseliş ilan ettiğinde, diğer her oyuncu sırayla bir tam tur oynar. Tek amaçları senin Mühürlerini yok etmek veya çalmaktır. Bu fırtınayı atlatır ve sıranı tekrar alırsan oyunu kazanırsın."
+    },
+    "untargetable": {
+      "term": "Hedeflenemez",
+      "def": "Bir kartı düşman yeteneklerine karşı tamamen bağışık kılan özel bir durum. Eğer bir kart birden fazla koruma katmanına sahipse, rakipler asıl karta ulaşabilmek için bu katmanları tek tek kırmak zorundadır."
+    }
+  },
+  "categories": {
+    "seal": {
+      "name": "Mühür",
+      "namePlural": "Mühürler",
+      "description": "Oyun alanına inşa ettiğin kalıcı yapılardır. Sana pasif avantajlar sağlar ve zafere giden tek yolundur."
+    },
+    "spell": {
+      "name": "Büyü",
+      "namePlural": "Büyüler",
+      "description": "1 HP değerinde, güçlü ve tek seferlik eylemlerdir. Etkisini anında gösterir ve ardından Iskarta destesine gider."
+    },
+    "intervention": {
+      "name": "Müdahale",
+      "namePlural": "Müdahaleler",
+      "description": "Oyunun akışını bozan hızlı tepki kartlarıdır. Oynaması tamamen ücretsizdir ve oyunu bölmek için herhangi bir saniyede kullanılabilir."
+    },
+    "servant": {
+      "name": "Hizmetkâr",
+      "namePlural": "Hizmetkârlar",
+      "description": "Sadık koruyucularındır. Oyun alanında bir Hizmetkâr bulunduğu sürece, rakiplerinin senin Mühürlerini hedef alması kesinlikle yasaktır."
+    }
+  },
+  "cards": {
+    "timeRift": {
+      "name": "Zaman Çatlağı",
+      "type": "Mühür",
+      "effect": "Odak aşamasında fazladan 1 kart çekmeni sağlar. Artık 2 yerine toplam 3 kart çekersin. Oyun alanındaki her ekstra Zaman Çatlağı, en fazla 6 karta kadar, sana 1 ek kart daha verir. Etkisi bu kartı oynadıktan sonraki tur başlar.",
+      "flavor": "Gerçeklikte açılan incecik bir yarık; alınan her nefesle daha da büyüyor."
+    },
+    "veilOfVoid": {
+      "name": "Hiçlik Örtüsü",
+      "type": "Mühür",
+      "effect": "Oyun alanındaki diğer Mühürlerini ve gizli elini derin bir korumaya alır. Artık düşman büyüleri onları hedefleyemez. Ancak Örtünün kendisi savunmasız kalır. Koruma anında devreye girer. Birden fazla Örtü oynamak sana ek bir avantaj sağlamaz.",
+      "flavor": "Gölgenin düştüğü yerde, dünya bakmayı unutur."
+    },
+    "crimsonMonolith": {
+      "name": "Kızıl Monolit",
+      "type": "Mühür",
+      "effect": "Sana her tur 1 fazladan Eylem Puanı (HP) verir. Artık 2 yerine 3 HP harcayabilirsin. Birden fazla Monolit inşa ederek puanını artırabilirsin ancak toplam HP asla 5'i geçemez. Etkisi bir sonraki tur başlar.",
+      "flavor": "Dünya yıkılıp kül olduktan çok sonra bile dimdik ayakta duracak."
+    },
+    "necromancersEye": {
+      "name": "Ölüçağıranın Gözü",
+      "type": "Mühür",
+      "effect": "Kapanış aşamasının en başında, Iskarta destesinin en üstündeki kartı alıp eline eklersin. Birden fazla Gözün varsa, o kadar fazla kart alırsın. Bu işlem 7 kartlık el sınırını kontrol etmeden önce gerçekleşir; yani işine yaramayan kartları anında çöpe atabilirsin. Oynandığı tur hemen çalışır.",
+      "flavor": "Ölüler, hesaplarını uzun ve sabırlı defterlerde tutar."
+    },
+    "etherStrike": {
+      "name": "Eterik Çarpma",
+      "type": "Büyü",
+      "effect": "Rakibinin oyun alanındaki herhangi bir kartı parçala. Ancak Hizmetkâr Kalkanı kuralına uymak zorundasın. Eğer rakibin bir Hizmetkârı varsa, önce onu yok etmelisin. Hedef büyüye karşı korumalıysa, bu Büyü oynanamaz. Bedeli 1 HP.",
+      "flavor": "Görünen dünya ile mühürlenen güç arasındaki o temiz kesik."
+    },
+    "shadowTheft": {
+      "name": "Gölge Hırsızlığı",
+      "type": "Büyü",
+      "effect": "Rakibinin elinden rastgele bir kart çal. Rakip elini kapalı bir şekilde karıştırır ve sen bakmadan bir kart çekersin. Rakibin eli boşsa veya Hiçlik Örtüsü ile korunuyorsa bu büyü işe yaramaz. Bedeli 1 HP.",
+      "flavor": "Her sır, bir gün çalınabilecek kadar ağır bir yüktür."
+    },
+    "ancientSight": {
+      "name": "Kadim Görü",
+      "type": "Büyü",
+      "effect": "Desteden anında 3 yeni kart çek. Eğer kart çekerken deste biterse, Eter Yankısı kuralı hemen devreye girer ve kalan kartlarını yeni oluşan desteden çekersin. Bedeli 1 HP.",
+      "flavor": "Asla kırpılmayı kabul etmeyen o gözü aç."
+    },
+    "mindParasite": {
+      "name": "Zihin Paraziti",
+      "type": "Büyü",
+      "effect": "Rakibin bir Hizmetkârının zihnini ele geçirip onu kendi oyun alanına taşı. Hizmetkârın sağladığı tüm özellikler artık senin emrindedir. Bu büyüyü kullanabilmek için oyun alanında boş bir Hizmetkâr yuvası olmalıdır. Çaldığın karta yer açmak için kendi kartlarını çöpe atamazsın. Bedeli 1 HP.",
+      "flavor": "Sadakat kilitli bir kapıdır, ancak o kapının anahtarı senin elinde."
+    },
+    "twistOfFate": {
+      "name": "Kaderin Cilvesi",
+      "type": "Büyü",
+      "effect": "Elindeki tüm kartları seçtiğin bir rakibin eliyle tamamen takas et. Oyun alanındaki kartlara dokunulmaz. 7 kart sınırını aşma cezaları, her oyuncunun kendi Kapanış aşamasında uygulanır. Hiçlik Örtüsü ile korunan bir oyuncuya karşı kullanılamaz. Bedeli 1 HP.",
+      "flavor": "Kader, çarkını kimseden izin almadan çevirir."
+    },
+    "silence": {
+      "name": "Sustur!",
+      "type": "Müdahale",
+      "effect": "Yeni oynanmış bir Büyü veya Müdahale kartını anında iptal et. İptal edilen kart ve Sustur! kartı beraber Iskarta destesine atılır. Rakibinin oynadığı bir Sustur! kartını, kendi Sustur! kartınla iptal edebilirsin. Bedeli sıfırdır ve oyunun herhangi bir anında oynanabilir.",
+      "flavor": "Masadaki son ve kesin söz."
+    },
+    "karmicReflection": {
+      "name": "Karmik Yansıma",
+      "type": "Müdahale",
+      "effect": "Sana yöneltilen bir saldırıyı doğrudan saldırganın kendisine yansıt. Saldırı tüm şiddetiyle sahibini vurur. Ancak yansıyan bu saldırı, rakibin Hizmetkâr Kalkanı kuralına takılır. Bu kartı sadece kendini ve kendi oyun alanını korumak için kullanabilirsin. Bedeli sıfırdır.",
+      "flavor": "Dışarıya ne gönderirsen, aynısı sana geri döner."
+    },
+    "bloodAtonement": {
+      "name": "Kan Kefareti",
+      "type": "Müdahale",
+      "effect": "Kendi Mühürlerinden birini yok olmaktan son saniyede kurtar. Bu kurtuluşun bedeli olarak, elinden rastgele 2 kartı acımasızca Iskarta destesine atmalısın. Hangi kartların gideceğini seçemezsin. Elinde 2'den az kart varsa bu Müdahaleyi oynayamazsın. Bedeli sıfırdır.",
+      "flavor": "Kalp atışlarıyla ödenen umutsuz bir yemin."
+    },
+    "runicWarden": {
+      "name": "Rünik Bekçi",
+      "type": "Hizmetkâr",
+      "effect": "Bu kart oyun alanında durduğu sürece, sahip olduğun hiçbir Mühür rakipler tarafından hedeflenemez. Rakipler senin Mühürlerine dokunabilmek için önce bu Bekçiyi ve diğer tüm Hizmetkârlarını yok etmek zorundadır.",
+      "flavor": "Demirin üzerine derinlemesine kazınmış bir sabır."
+    },
+    "glacialAberration": {
+      "name": "Buzul Ucube",
+      "type": "Hizmetkâr",
+      "effect": "Bu yaratığı yok eden kişi bir sonraki tam turunu atlamak zorunda kalır. Odak, Eylem veya Kapanış yapamaz, ancak elindeki Müdahale kartlarını oynamaya devam edebilir. Bu ağır ceza, yaratığı dolaylı yoldan yok edenlere de uygulanır. Ancak yaratığı çalmak bu cezayı tetiklemez.",
+      "flavor": "Kendi kurallarını koyan amansız bir kış."
+    },
+    "shadowSlayer": {
+      "name": "Gölge Katili",
+      "type": "Hizmetkâr",
+      "effect": "Bu kartı oyuna soktuğun an, eğer rakiplerinden herhangi birinin Hizmetkârı varsa, anında birini seçip yok etmek zorundasın. Eğer bu zorunluluk yüzünden bir Buzul Ucube yok edersen, tur atlama cezasını sen çekersin. Rakiplerin Hizmetkârı yoksa, Katil normal bir şekilde oyuna dahil olur.",
+      "flavor": "En karanlık gölgeler bile sadece ona hesap verir."
+    }
+  },
+  "rulesDoc": {
+    "title": "Vaerum: Eterin Vârisleri",
+    "subtitle": "Resmi Kural Kitapçığı",
+    "tldr": "2 ile 4 oyuncu. 30 ile 60 dakika sürer. 14 yaş ve üzeri için uygundur. Oyuna yeniysen, oyun menüsünden Rehberi aç ve Çırak Kuralları ile başla. Sistem sana ilk maçında adım adım eşlik edecektir.",
+    "intro": "Tüm yaratılışın tam kalbinde Eter yatar. Kaynağı bilinmeyen, çok eski zamanlarda paramparça olmuş kadim bir güç. Geriye kalan parçalar yüzyıllar boyunca sessiz ittifaklarla, fısıltıyla edilen tehditlerle ve soğukkanlı ihanetlerle el değiştirdi. Ve şimdi o masada sen oturuyorsun. Sen bir vizyoner, bir kurnaz ve Eter'i kendi iradesine boyun eğdirebilecek az sayıdaki kişiden birisin. Burada arkadaşlık yok. Merhamet yok. Şansa yer yok. Burada sadece keskin bir strateji ve nihai güç için verilen göz kırpmadan edilen bir savaş var.",
+    "sections": [
+      {
+        "id": "goal",
+        "title": "Zafere Giden Yol",
+        "body": [
+          "Nihai hedefin, açık oyun alanına 3 adet Mühür yerleştirmek, korkusuzca Yükseliş ilan etmek ve bu Mühürleri tam bir tur boyunca hayatta tutmaktır. Eğer başarırsan, oyunu kazanırsın.",
+          "Her tur yeni kartlar çeker ve Büyü yapmak, Hizmetkâr çağırmak veya Mühür inşa etmek için 2 Eylem Puanı (HP) harcarsın. Gücünü bu şekilde biriktirirsin.",
+          "Müdahale kartlarını oynamak tamamen ücretsizdir. Onları dilediğin an, düşmanları engellemek için kullanabilirsin. Vaerum'da kimse sırasını beklemez. Masa her saniye hareketlidir.",
+          "İşin en tehlikeli kısmı: Yükseliş ilan ettiğin saniye, masadaki her rakibe senin Mühürlerini parçalaması için birer tam tur hakkı doğar. Bu sürece Sınav adını veriyoruz. Bu yıkıcı fırtınayı atlatırsan, Eter senin olur."
+        ]
+      },
+      {
+        "id": "apprentice",
+        "title": "Yeni Başlayanlar İçin Çırak Kuralları",
+        "body": [
+          "Oyunu öğrenmenin en iyi yolu budur. İlk birkaç maçınızı bu basitleştirilmiş kurallarla oynayın. Mantığı kavradığınızda tam kural setine geçiş yapabilirsiniz.",
+          "ZİNCİRLEME TEPKİ YOK: Bir oyuncunun hamlesi en fazla bir adet Müdahale kartı ile kesilebilir. Örneğin, oynanan bir Sustur! kartını durdurmak için başka bir Sustur! kartı oynayamazsınız.",
+          "BARIŞÇIL YANKI: Ana deste bittiğinde, Iskarta destesini karıştırıp yeni bir deste oluşturun. Kimsenin bir kart feda etmesine gerek yoktur.",
+          "BASİT OKUMA: Kartlar üzerinde tam olarak ne yazıyorsa onu yapar. Bir anlaşmazlık çıkarsa, en basit yorumu kabul edin ve oyuna devam edin.",
+          "DİĞER HER ŞEY AYNI: Tur başında 2 kart çeker, 2 HP harcar ve turu elinizde en fazla 7 kartla bitirirsiniz. 3 Mühür inşa edip Sınavdan sağ çıkarsanız kazanırsınız."
+        ]
+      },
+      {
+        "id": "components",
+        "title": "1. Oyun Parçaları",
+        "body": [
+          "Vaerum tamamen 72 kartlık tek bir deste ile oynanır. Oynamak için başka hiçbir şeye ihtiyacınız yoktur.",
+          "Bu deste dört farklı kart türünden oluşur.",
+          "MÜHÜRLER (Mor): Toplam 16 kart. Bunlar sana kalıcı güç veren ve zafere ulaşmanı sağlayan yegane yapılardır.",
+          "BÜYÜLER (Kızıl): Toplam 24 kart. Bunlar agresif, tek seferlik saldırılardır. Etkisini gösterir ve hemen Iskarta destesine atılırlar.",
+          "MÜDAHALELER (Mavi): Toplam 16 kart. Oynaması tamamen ücretsiz olan ve rakiplere her an karşılık vermeni sağlayan tepki kartlarıdır.",
+          "HİZMETKÂRLAR (Yeşil): Toplam 16 kart. Değerli Mühürlerini koruyan ve sana savunma avantajı sağlayan sadık korumalarındır."
+        ]
+      },
+      {
+        "id": "setup",
+        "title": "2. Masanın Kurulumu",
+        "body": [
+          "72 kartlık desteyi iyice karıştırın.",
+          "Her oyuncuya kapalı olarak 5'er kart dağıtın. Bu oyuncuların başlangıç elidir. Kartlarınızı gizli tutun.",
+          "Kalan desteyi kapalı bir şekilde masanın tam ortasına yerleştirin.",
+          "Oyuna kimin başlayacağını belirlemek için herkes desteden bir kart çeker ve masaya açar. En yüksek öncelikli kart türünü çeken oyuncu ilk sırayı alır. Öncelik sırası en yüksekten en düşüğe şöyledir: Hizmetkâr, Büyü, Mühür, Müdahale. Beraberlik durumunda, berabere kalanlar tekrar kart çeker. Açılan tüm kartları tekrar desteye karıştırın.",
+          "Oyun, ilk oyuncudan başlayarak saat yönünde ilerler.",
+          "Vaerum, oyuncu sayısına göre şekil değiştirir. 2 kişilik oyunlar hızlı ve acımasız düellolardır. 3 kişilik oyunlar hassas bir taktiksel denge gerektirir. 4 kişilik oyunlar ise kaos ve politik diplomasi için şiddetle tavsiye edilir."
+        ]
+      },
+      {
+        "id": "zones",
+        "title": "3. Oyun Bölgeleri",
+        "body": [
+          "Her oyuncu üç farklı bölgeyi yönetir. Bunlardan ikisi herkese açık alanlardır.",
+          "GİZLİ ELİN: Bu senin özel alanındır. Rakiplerin kaç kartın olduğunu sayabilir ama ne olduklarını bilemez. Elinde en fazla 7 kart tutabilirsin. Fazlalıkları tur sonunda atmak zorundasın. Mühürler ve Hizmetkârlar elinde dururken sana hiçbir fayda sağlamaz.",
+          "OYUN ALANIN: Önündeki açık oyun bölgesidir. Buraya yüzü açık şekilde 4 Mühür ve 3 Hizmetkâr yerleştirebilirsin. Büyülü güçleri sadece buradayken çalışır. Eğer alanın doluysa, yeni bir kart yerleştirmek için var olan bir kartı çöpe atabilirsin. Oyun alanına inen bir kart oraya mühürlenir. Yalnızca yok edilerek, feda edilerek veya çalınarak oradan çıkabilir. Asla eline geri dönmez.",
+          "DESTE: Masanın ortasında duran, herkesin kart çektiği kapalı yığındır. Bittiğinde Eter Yankısı kuralı devreye girer.",
+          "ISKARTA DESTESİ: Kullanılmış Büyülerin ve yok edilen kartların toplandığı açık çöplük alanıdır."
+        ]
+      },
+      {
+        "id": "turn",
+        "title": "4. Turun İşleyişi",
+        "body": [
+          "Sıra sana geldiğinde, aşağıdaki üç aşamayı kesin bir sırayla oynamalısın. Aşamaları atlayamaz veya sıralarını değiştiremezsin.",
+          "1. AŞAMA - ODAK: Desteden 2 kart çek. Eğer sen kart çekerken deste tamamen biterse, önce Eter Yankısı cezasını uygula, ardından yeni oluşan desteden kart çekmeye devam et. Zaman Çatlağı gibi bazı kartlar daha fazla kart çekmeni sağlar.",
+          "2. AŞAMA - EYLEM: Harcayabileceğin 2 HP ile tura başlarsın. 1 HP harcayarak YARAT (Büyü yap, Mühür veya Hizmetkâr yerleştir), ARAŞTIR (1 ekstra kart çek) veya ARINDIR (elinden 1 kart atıp yerine 1 yeni kart çek) eylemlerinden birini yapabilirsin. Harcamadığın HP sonsuza dek kaybolur.",
+          "3. AŞAMA - KAPANIŞ: Ölüçağıranın Gözü gibi tur sonu tetiklenen Mühür özelliklerini uygula. Ardından elindeki kart sayısını kontrol et. Eğer 7'den fazla kartın varsa, fazlalıkları Iskarta destesine at. Son olarak, oyun alanında 3 veya daha fazla Mührün varsa Yükseliş ilan edebilirsin."
+        ]
+      },
+      {
+        "id": "card-types",
+        "title": "5. Kart Türlerini Anlamak",
+        "body": [
+          "MÜHÜRLER kalıcı yapılardır. Elinde hiçbir işe yaramazlar, sadece oyun alanındayken sana fayda sağlarlar.",
+          "BÜYÜLER 1 HP harcanarak yapılır. Büyüyü kullanmadan önce geçerli bir hedef seçmek zorundasın. Eğer hedefin özel bir güç tarafından korunuyorsa, Büyü oynanamaz ve HP'n harcanmaz.",
+          "MÜDAHALELER sıfır HP harcar. Bunları rakiplerin turunda bile, dilediğin an oynayabilirsin. Tamamen reaksiyon amaçlıdırlar.",
+          "HİZMETKÂRLAR aşılmaz bir kalkan oluşturur. Oyun alanında tek bir Hizmetkârın bile varsa, hiçbir rakip senin Mühürlerini hedef alamaz. Senin Mühürlerine dokunabilmeleri için önce kontrol ettiğin her bir Hizmetkârı acımasızca yok etmek zorundadırlar."
+        ]
+      },
+      {
+        "id": "chains",
+        "title": "6. Zincirleme Reaksiyonlar",
+        "body": [
+          "Vaerum, oyuncuların hamlelere anında tepki vermesine olanak tanır. Bir kart oynandığında, herhangi bir oyuncu bir Müdahale kartı ile anında cevap verebilir. Bu duruma 'Zincir' denir. Zincir, sondan başa doğru çözülür; yani masaya en son atılan kart, ilk olarak etkisini gösterir.",
+          "Örnek: A oyuncusu Eterik Çarpma ile saldırır. B oyuncusu bunu engellemek için Sustur! kartını oynar. A oyuncusu da B'yi durdurmak için kendi Sustur! kartını oynar. Zincir en üstten çözülmeye başlar. A'nın Sustur kartı, B'nin Sustur kartını iptal eder. Böylece A'nın ilk oynadığı Eterik Çarpma saldırısı başarıyla gerçekleşir.",
+          "Eğer yaptığın büyü bir Sustur! kartı ile iptal edilirse, hem senin büyün hem de Sustur! kartı Iskarta destesine atılır. Büyü için harcadığın HP sana geri verilmez."
+        ]
+      },
+      {
+        "id": "untargetable",
+        "title": "7. Hedeflenemez Kuralı",
+        "body": [
+          "Bazı kartlar düşman eylemlerine karşı bağışıklık kazandırır. Buna 'Hedeflenemez' olmak diyoruz. Bu koruma, bağımsız katmanlar halinde çalışır. Rakipler, bu koruma katmanlarını tek tek soymak zorundadır.",
+          "Örneğin, Hiçlik Örtüsü diğer Mühürlerini büyülerden korur, ancak Örtünün kendisi hâlâ hedef alınabilir durumdadır. Rünik Bekçi ise tüm Mühürleri korur, ancak o bir Hizmetkâr kalkanıdır.",
+          "Eğer iki karta da aynı anda sahipsen, rakibin karşıya aşılması gereken iki ayrı duvar çıkar. Asıl Mühürlerine dokunabilmesi için önce Rünik Bekçiyi öldürmesi, ardından Hiçlik Örtüsünü parçalaması gerekir."
+        ]
+      },
+      {
+        "id": "stacking",
+        "title": "8. Güçleri Birleştirmek",
+        "body": [
+          "Güçlerini katlamak için oyun alanına aynı Mühürden birden fazla inşa edebilirsin. Bu kopyalar, yerleştirildikleri turdan bir sonraki tur aktif olurlar.",
+          "İki adet Zaman Çatlağı, Odak aşamasında 2 yerine toplam 4 kart çekmen demektir.",
+          "İki adet Kızıl Monolit, sana harcayabileceğin toplam 4 HP verir. Bu sayı asla 5'i geçemez.",
+          "Birden fazla Ölüçağıranın Gözü, Kapanış aşamasında Iskarta destesinden o kadar fazla kart almanı sağlar.",
+          "Hiçlik Örtüsü ise birikmez. Bir Örtü ile üç Örtü aynı korumayı sağlar."
+        ]
+      },
+      {
+        "id": "resonance",
+        "title": "9. Eter Yankısına Katlanmak",
+        "body": [
+          "Eter bedel ödemeni ister. Masanın ortasındaki deste tamamen bittiğinde oyun duraklar. Iskarta destesi hemen karıştırılarak yeni bir deste oluşturulur. Bu devasa karıştırma olayına Eter Yankısı diyoruz.",
+          "Yankı gerçekleştiğinde her oyuncu kurban bedelini ödemek zorundadır.",
+          "Önce oyun alanına bak. Kendi Mühürlerinden veya Hizmetkârlarından birini kendi ellerinle seçip Iskarta destesine atmalısın.",
+          "Eğer oyun alanın tamamen boşsa, yankı doğrudan elini vurur. Elindeki kartlardan birini rastgele çöpe atmak zorundasın.",
+          "Eğer hem Deste hem de Iskarta destesi aynı anda boşsa, Yankı başarısız olur. Yeni bir deste oluşmaz ve kart çekmeni gerektiren tüm eylemler karşılıksız kalır."
+        ]
+      },
+      {
+        "id": "ascension",
+        "title": "10. Yükseliş İlan Etmek",
+        "body": [
+          "Yükseliş, zafer için atılan son adımdır. Kapanış aşamanın en sonunda, oyun alanında 3 veya daha fazla Mührü güvenceye aldıysan, Yükselişini ilan edebilirsin. Bunu bir kez söylediğinde artık geri dönüş yoktur.",
+          "Bu ilan Sınavı tetikler. Masadaki her rakip senin düzenini yıkmak için sırayla birer tam tur oynar. Mühürlerini parçalamak için ellerindeki tüm Büyüleri, Müdahaleleri ve Hizmetkârları üzerinize salacaklar.",
+          "Bu acımasız fırtınayı atlatır ve sıra tekrar sana gelirse oyun alanını kontrol et. Bir sonraki Odak aşaman başlamadan önce hâlâ en az 3 Mührün ayaktaysa, oyunu o saniye kazanırsın.",
+          "Masada aynı anda sadece bir kişi Yükseliş ilan edebilir. Başka birinin Yükseliş ilan edebilmesi için, mevcut Sınavın zaferle veya yenilgiyle sonuçlanması beklenmelidir."
+        ]
+      },
+      {
+        "id": "encyclopedia",
+        "title": "11. Kart Ansiklopedisi",
+        "body": [
+          "Kartlar her zaman üzerinde yazan metni uygular. Eğer bir kart ile genel kurallar çelişirse, kartın üzerinde yazan kural geçerlidir.",
+          "Gölge Katili gibi Hizmetkârların, masaya indiklerinde anında tetiklenen özel güçleri olduğunu unutma. Buzul Ucube son derece tehlikelidir; onu yok etmek bir sonraki turunu tamamen kaybetmene neden olur, ancak onu çalmak bu cezadan kurtulmanı sağlar."
+        ]
+      },
+      {
+        "id": "edge",
+        "title": "12. Özel Durumların Çözümü",
+        "body": [
+          "Soru: Bu tur bir Zaman Çatlağı yerleştirirsem, hemen fazladan kart çeker miyim? Cevap: Hayır. Odak aşaması zaten geçtiği için etkisi bir sonraki tur başlar.",
+          "Soru: Kan Kefareti kullanırsam atılacak 2 kartı ben mi seçiyorum? Cevap: Hayır. Kartlar elinden rastgele atılır. Bu kartı kullanmak her zaman bir kumardır.",
+          "Soru: Yükseliş ilan ettim, ancak bir rakibim Buzul Ucube kullanarak benim sonraki turumu atlamama sebep oldu. Oyunu kaybeder miyim? Cevap: Hayır, yine sen kazanırsın. Yükseliş, sıranın sana geldiği ilk saniyede zaferi kontrol eder. Tur atlama cezası devreye girmeden önce sen oyunu zaten kazanmış olursun."
+        ]
+      },
+      {
+        "id": "quick",
+        "title": "13. Hızlı Başvuru Rehberi",
+        "body": [
+          "Tur Sıralaması: Odak -> Eylem -> Kapanış -> İsteğe Bağlı Yükseliş.",
+          "Eylem Bedelleri: Müdahaleler 0 HP'dir. Yaratmak, Araştırmak veya Arındırmak 1 HP harcar.",
+          "Kesin Sınırlar: Elde en fazla 7 Kart. En fazla 4 Mühür. En fazla 3 Hizmetkâr. En fazla 5 HP.",
+          "Deste Matematiği: 16 Mühür + 24 Büyü + 16 Müdahale + 16 Hizmetkâr = Toplam 72 kart."
+        ]
+      },
+      {
+        "id": "table",
+        "title": "14. Dijital Masada Gezinmek",
+        "body": [
+          "Vaerum açık bir oyun alanı olarak tasarlanmıştır. Bilgisayar kurallara uymayan hamle yapmanı engellemez. Sen ve arkadaşların kuralları kendi aranızda yönetmelisiniz.",
+          "Ekranın altındaki buzlu alan senin gizli elindir. Oradaki kartların üzerinde gezinmek onları gizli tutar. Kartı sürükleyip açık masaya bıraktığın an herkes tarafından görülür hale gelir.",
+          "Oda sahibi masadan ayrılırsa, sistem başka birini otomatik olarak oda sahibi yapar. İstediğin zaman odadan ayrılıp tamamen yeni bir davet bağlantısı oluşturabilirsin."
+        ]
+      }
+    ],
+    "closing": "Masada merhamete yer yok."
+  },
+  "guide": {
+    "title": "Etkileşimli Rehber",
+    "close": "Rehberi Kapat",
+    "minimize": "Küçült",
+    "maximize": "Büyüt",
+    "minimizeTurnOnly": "Normal oyun turları başladığında bu paneli küçültebilirsin.",
+    "confirm": "Adımı tamamlandı olarak işaretle",
+    "hostConfirms": "Oda sahibi bu adımı onaylayacak.",
+    "waitYourTurn": "Lütfen kendi sıranı bekle.",
+    "yourTurn": "Sıra sende. İşini bitirdiğinde onay işaretine dokun.",
+    "aPlayer": "Bir Oyuncu",
+    "youTag": "(Sen)",
+    "introBody": "Bu rehber, tam bir oyunun nasıl oynanacağını adım adım gösterir. Sadece sana önerilerde bulunur. Kartlarını taşımakta, çevirmekte ve karıştırmakta her zaman tamamen özgürsün.",
+    "introTeach": "Kısa özet: Eline 2 kart çek. Büyü yapmak, Mühür yerleştirmek veya elini yönetmek için 2 Eylem Puanı (HP) harca. Rakiplerini engellemek için dilediğin an ücretsiz Müdahaleler oyna. Turunu elinde en fazla 7 kartla bitir. 3 Mühür inşa et ve zaferini ilan etmek için bir tam tur hayatta kal.",
+    "introWaiting": "Oda sahibinin maçı resmi olarak başlatması bekleniyor.",
+    "start": "Maça Başla",
+    "restart": "Eğitimi Yeniden Başlat",
+    "pickWait": "Oda sahibi oyuna ilk başlayacak kişiyi seçiyor.",
+    "turnHeading": "{name} Adlı Oyuncunun Turu",
+    "roundLabel": "Tur {n}",
+    "firstChosen": "İlk sırayı {name} alıyor.",
+    "steps": {
+      "shuffle": {
+        "title": "Başlangıç Ellerini Çekmek",
+        "body": "Desteyi güzelce karıştır. Her oyuncu sadece kendine ait olacak şekilde 5'er kart çeker. Kalan deste masanın ortasında kapalı bir şekilde durur. Herkes hazır olduğunda oda sahibi onay işaretine tıklar."
+      },
+      "reveal": {
+        "title": "Öncelik Sırasını Belirlemek",
+        "body": "Herkes desteden bir kart çekip masaya açar. En öncelikli karta sahip olan oyuncu oyuna ilk başlar. Öncelik sırası şöyledir: Hizmetkâr, Büyü, Mühür, ardından Müdahale. Açılan bu kartları tekrar desteye karıştırın."
+      },
+      "chooseFirst": {
+        "title": "İlk Oyuncuyu Atamak",
+        "body": "Oda sahibi, en yüksek önceliğe sahip kartı çeken oyuncuyu seçer. Oyun, o kişiden başlayarak saat yönünde devam edecektir."
+      }
+    },
+    "phase": {
+      "focus": {
+        "title": "1. Aşama: Odak",
+        "body": "Masanın ortasındaki ortak desteden eline güvenli bir şekilde 2 kart çek. Kart çekme işlemini bitirdiğinde onay işaretine dokun."
+      },
+      "action": {
+        "title": "2. Aşama: Eylem",
+        "body": "Harcayabileceğin 2 Eylem Puanın (HP) var. Bunları Büyü yapmak, oyun alanına kart dizmek veya yeni kartlar çekmek için kullan. Sıfır bedelli Müdahalelerini de bu aşamada rahatça kullanabilirsin. İşin bittiğinde onay işaretine dokun."
+      },
+      "closing": {
+        "title": "3. Aşama: Kapanış",
+        "body": "Mühürlerinin tur sonu özelliklerini şimdi kullan. Ardından elindeki kart sayısını tam olarak 7'ye düşür. Eğer elinde 3 veya daha fazla Mühür varsa Yükseliş ilan edebilirsin. Aksi halde, sırayı devretmek için onay işaretine dokun."
+      }
+    }
+  }
+}

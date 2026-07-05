@@ -1,6 +1,7 @@
 import { Modal, escape } from "./Modal.js";
-import { t, tArr } from "../i18n/index.js";
-import { CARD_DEFS } from "../game/cards.js";
+import { t, tArr, tObj } from "../i18n/index.js";
+import { cardDefs } from "../game/cards.js";
+import { getActiveMode } from "../modes/active.js";
 import type { Tooltip } from "./Tooltip.js";
 
 // Localised card name -> def id, so the rulebook can turn a card name (e.g. an encyclopedia
@@ -8,32 +9,27 @@ import type { Tooltip } from "./Tooltip.js";
 // per open() because it depends on the active locale.
 function buildNameToId(): Map<string, string> {
   const m = new Map<string, string>();
-  for (const d of CARD_DEFS) m.set(t(`cards.${d.id}.name`), d.id);
+  for (const d of cardDefs()) m.set(t(`cards.${d.id}.name`), d.id);
   return m;
 }
 
 // Non-card rules concepts that get the SAME hover/tap info panel as a card name: glossary
-// entries AND the four card-type categories (Seal/Spell/Intervention/Servant). The map value
-// is a source-tagged key — "g:<glossaryKey>" or "c:<categoryKey>" — so a single linkify pass
-// and a single wiring path cover every term consistently. Localised term text -> tagged key.
-// Keep these lists in step with the `glossary` and `categories` blocks in the locales.
-const GLOSSARY_KEYS = [
-  "etherResonance", "ascension", "servantShield",
-  // Core vocabulary so EVERY rules term opens its info panel: the zones, the turn phases, the
-  // 1-HP actions, HP itself, the Ascension trial, and untargetable status.
-  "hand", "tableau", "deck", "discard",
-  "focus", "action", "closing",
-  "create", "study", "cleanse",
-  "hp", "trial", "untargetable"
-];
-const CATEGORY_KEYS = ["seal", "spell", "intervention", "servant"];
+// entries AND the mode's card-type categories. The map value is a source-tagged key —
+// "g:<glossaryKey>" or "c:<categoryKey>" — so a single linkify pass and a single wiring path
+// cover every term consistently. Localised term text -> tagged key. Both lists are derived
+// from live data (the loaded glossary block and the active mode's categories) so every mode's
+// own vocabulary is linked without editing this file.
+function glossaryKeys(): string[] {
+  const obj = tObj<Record<string, unknown>>("glossary");
+  return obj ? Object.keys(obj) : [];
+}
 function buildTermToKey(): Map<string, string> {
   const m = new Map<string, string>();
-  for (const key of GLOSSARY_KEYS) {
+  for (const key of glossaryKeys()) {
     const term = t(`glossary.${key}.term`);
     if (term && term !== `glossary.${key}.term`) m.set(term, `g:${key}`);
   }
-  for (const key of CATEGORY_KEYS) {
+  for (const key of getActiveMode().categoryOrder) {
     // Both singular and plural forms (Seal/Seals, Mühür/Mühürler) so a type name is hover-able
     // wherever it appears in the prose. Matching is case-insensitive (see linkify), so the
     // uppercase colour-key forms (SEAL, SPELL) are covered too.

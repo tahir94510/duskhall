@@ -1,9 +1,4 @@
 {
-  "meta": {
-    "title": "Vaerum: Heirs of the Ether",
-    "tagline": "",
-    "description": "A digital card table for you and your friends. Move and flip cards freely; follow the official rulebook yourselves."
-  },
   "ui": {
     "menu": "Menu",
     "rules": "Rules",
@@ -16,6 +11,7 @@
     "settings": "Settings",
     "shortcuts": "Shortcuts",
     "updates": "What's New",
+    "changeMode": "Change Game",
     "language": "Language",
     "close": "Close",
     "cancel": "Cancel",
@@ -69,78 +65,10 @@
   },
   "table": {
     "deck": "Deck",
-    "open": "Open",
     "discard": "Discard",
-    "tableau": "Seals & Servants",
     "youSuffix": " (You)",
     "droppedSuffix": " (Away)",
     "pile": "{count} cards in this stack"
-  },
-  "glossary": {
-    "etherResonance": {
-      "term": "Ether Resonance",
-      "def": "When the main deck runs out, the Discard pile is shuffled to form a new deck. This happens only once per game cycle. Right after the shuffle, every player must sacrifice one Seal or Servant from their tableau. If your tableau is empty, you must sacrifice a random card from your hand instead. If both the deck and Discard are empty, nothing happens."
-    },
-    "ascension": {
-      "term": "Ascension",
-      "def": "The path to winning. If you have 3 or more Seals on your tableau at the end of your turn, you may declare Ascension. You cannot take this back. Once declared, every opponent gets one full turn to destroy your Seals. This round is called the Trial. If you survive the Trial and still have at least 3 Seals when your next turn starts, you win the game."
-    },
-    "servantShield": {
-      "term": "Servant Shield",
-      "def": "A protective barrier. As long as you have at least one Servant on your tableau, opponents cannot target your Seals with anything. They must destroy every single Servant you control before they can touch your Seals."
-    },
-    "hand": {
-      "term": "Hand",
-      "def": "Your private cards. Opponents can see how many cards you hold, but not what they are. You can hold a maximum of 7 cards. Any extras must be discarded at the end of your turn. Seals and Servants have no effect while they are in your hand."
-    },
-    "tableau": {
-      "term": "Tableau",
-      "def": "Your public play area. This is where you place your Seals (up to 4) and Servants (up to 3) face up. Their powers only work while they are here. Once placed, a card is locked in. It can only be removed if it is destroyed, sacrificed, or stolen. It never goes back to your hand."
-    },
-    "deck": {
-      "term": "Deck",
-      "def": "The shared face-down pile in the center of the table. Everyone draws from it. When it runs out, Ether Resonance triggers and reshuffles the Discard pile into a new deck."
-    },
-    "discard": {
-      "term": "Discard",
-      "def": "The shared face-up pile for used Spells, canceled cards, and destroyed Seals or Servants."
-    },
-    "focus": {
-      "term": "Focus",
-      "def": "The first phase of your turn. You draw 2 cards from the deck. Certain cards like Time Rift can increase this number."
-    },
-    "action": {
-      "term": "Action",
-      "def": "The second phase of your turn. You start with 2 Action Points (HP). You can spend them to Create, Study, or Cleanse. Any unused points are lost at the end of your turn."
-    },
-    "closing": {
-      "term": "Closing",
-      "def": "The final phase of your turn. First, any active Seal effects trigger. Then, if you have more than 7 cards in your hand, you must discard the extras. Finally, you may declare Ascension if you meet the requirements."
-    },
-    "create": {
-      "term": "Create",
-      "def": "An action costing 1 HP. You play 1 Spell from your hand, or place 1 Seal or Servant onto your tableau. If your tableau is full, you can discard an existing card of the same type to make room without paying extra HP."
-    },
-    "study": {
-      "term": "Study",
-      "def": "An action costing 1 HP. You draw 1 extra card from the deck."
-    },
-    "cleanse": {
-      "term": "Cleanse",
-      "def": "An action costing 1 HP. You discard 1 card from your hand and then draw 1 new card. This helps you refresh your hand without changing its total size."
-    },
-    "hp": {
-      "term": "HP",
-      "def": "Your Action Points. You get 2 per turn by default, up to a maximum of 5. Create, Study, and Cleanse cost 1 HP each. Interventions cost zero HP. Unused points do not carry over to the next turn."
-    },
-    "trial": {
-      "term": "Trial",
-      "def": "The ultimate test. Once you declare Ascension, every opponent takes one normal turn. They will use everything they have to destroy or steal your Seals. If you survive until your next turn, you win."
-    },
-    "untargetable": {
-      "term": "Untargetable",
-      "def": "A status that makes a card immune to enemy actions. If a card has multiple layers of protection, opponents must break each layer one by one before they can reach the card underneath."
-    }
   },
   "kick": {
     "title": "Remove Player",
@@ -275,22 +203,32 @@
     "resetDefaults": "Restore Defaults",
     "resetDefaultsHint": "Reset all audio sliders to their recommended default levels."
   },
+  "modePicker": {
+    "title": "Choose a Game",
+    "subtitle": "Switch any time. The table reloads with the new game's deck, art, and rules; your language and audio settings stay.",
+    "active": "Playing now",
+    "difficulty": "Difficulty",
+    "playersExact": "{n} players",
+    "playersRange": "{min}-{max} players",
+    "duration": "{min}-{max} min",
+    "modes": {
+      "zan": {
+        "name": "ZAN: Perfect Doubt",
+        "desc": "A fast four-player bluffing game. Slide a card, name a suit, and hope they believe you. Easy to learn, all about reading faces."
+      },
+      "vaerum": {
+        "name": "Vaerum: Heirs of the Ether",
+        "desc": "A deep 2-4 player duel of seals, spells, and servants, racing to declare Ascension and survive the Trial."
+      }
+    }
+  },
   "support": {
-    "title": "Support Vaerum",
-    "intro": "Vaerum is passionately developed by a solo independent designer. Your support helps bring the following visions to life:",
-    "lines": [
-      "Game Expansions: New card sets, better balancing, and deeper mechanics.",
-      "Table Upgrades: Smoother gameplay, exciting new features, and additional languages.",
-      "3D & Steam Release: A fully immersive 3D digital tabletop with stunning visuals and audio.",
-      "Physical Edition: A premium, boxed tabletop version with high-quality card stock and embossed artwork."
-    ],
     "cta": "Visit Support Page",
     "patreon": "Support me on Patreon",
     "buymeacoffee": "Buy me a coffee",
     "noUrl": "The support page is currently unavailable. Please check back later.",
     "supportersTitle": "Wall of Supporters",
-    "supportersHint": "Include the tag #vaerum in your donation message, and your name will appear on this wall within a few days.",
-    "thanks": "Thank you for keeping the magic alive."
+    "thanks": "Thank you for keeping the table alive."
   },
   "updates": {
     "title": "Release Notes",
@@ -298,57 +236,57 @@
     "empty": "No recent updates to show.",
     "entries": [
       {
-        "v": "2026-06-14",
-        "date": "June 14, 2026",
-        "title": "Clearer Text and Smoother Notifications",
+        "v": "2026-07-05",
+        "date": "July 5, 2026",
+        "title": "Duskhall: One Table, Many Games",
         "items": [
-          "Runic Warden's card description has been reformatted for better readability. It now features a clear summary line followed by detailed mechanics.",
-          "System notifications now stay perfectly centered on all screen sizes, ensuring text wraps neatly without breaking layout.",
-          "Refined the wording for Shadow Theft, Runic Warden, and Mind Parasite in both English and Turkish to eliminate any rule ambiguity.",
-          "Added an official ruling to the rulebook regarding Glacial Aberration: If you destroy it during your Ascension Trial, you still win the game the moment your turn begins, ignoring the skip penalty."
+          "Duskhall is now a platform that hosts several games on the same table. Open the menu and choose Change Game to switch between them, with a loading screen while the new deck, art, and rules load.",
+          "Added ZAN: Perfect Doubt, a fast four-player bluffing game of claims and challenges. It opens by default for first-time visitors.",
+          "Vaerum: Heirs of the Ether is now one of the games in Duskhall, unchanged in its rules and deck.",
+          "Each game keeps its own logo, rulebook, guide, card art, and share preview. Your language and audio settings carry across every game."
         ]
       }
     ]
   },
   "feedback": {
     "title": "Share Your Feedback",
-    "intro": "Did you spot a bug? Do you have an idea to make the game better? Let us know.",
+    "intro": "Did you spot a bug? Do you have an idea to make the table better? Let us know.",
     "form": "Open Feedback Form",
     "issues": "Report an Issue on GitHub",
     "none": "Feedback channels are not set up yet. Please check back later."
   },
   "legalDoc": {
     "title": "About & Legal",
-    "subtitle": "Understanding Vaerum and your data privacy.",
-    "intro": "Vaerum is a free, browser-based digital card sandbox designed for friends. This page outlines how the platform works, how we protect your privacy, and our terms of service.",
+    "subtitle": "Understanding Duskhall and your data privacy.",
+    "intro": "Duskhall is a free, browser-based platform of digital card games for friends. It hosts several games on one shared table. This page explains how the table works, how your privacy is protected, and the terms of use, for the platform as a whole rather than any single game.",
     "sections": [
       {
         "id": "howto",
-        "title": "How the Digital Table Works",
+        "title": "How the Shared Table Works",
         "body": [
-          "Vaerum provides a shared digital sandbox. You and your friends interact with the cards in real time. The system does not enforce game rules automatically. You must play exactly as you would at a physical table, following the rulebook together.",
-          "Each player gets a private zone at the bottom of their screen. Cards dropped here are hidden from everyone else. Dragging a card out of this zone makes it public. This mechanic works seamlessly across all devices.",
-          "Basic controls are intuitive. Drag to move, scroll to flip, and use simple keyboard keys like G to gather and M to shuffle. You can find the complete list in the Shortcuts menu.",
-          "The host has access to special tools. The 'Open Guide' feature helps teach new players by walking them through a simulated turn. The host can also reset the entire table back to its starting state at any time."
+          "Duskhall provides a shared digital sandbox. You and your friends interact with the cards in real time. The system does not enforce game rules automatically. You play exactly as you would at a physical table, following each game's rulebook together.",
+          "Every game runs on the same table engine. Only the deck, the art, the branding, and the rulebook change from one game to another. You can switch games from the menu, and the table reloads with the new game while your language and audio settings stay.",
+          "Each player gets a private zone at the bottom of their screen. Cards dropped here are hidden from everyone else. Dragging a card out of this zone makes it public. This works seamlessly across all devices.",
+          "Basic controls are intuitive. Drag to move, scroll to flip, and use simple keyboard keys like G to gather and M to shuffle. You can find the complete list in the Shortcuts menu. The host can open the interactive Guide to walk new players through a game, and can reset the table at any time."
         ]
       },
       {
         "id": "about",
-        "title": "About the Game",
+        "title": "About Duskhall",
         "body": [
-          "Vaerum: Heirs of the Ether is a strategic card game for 2 to 4 players. This digital version serves as an interactive tabletop simulator where players have total freedom over the pieces.",
-          "The game runs entirely in your browser using lightweight, real-time technology. There are no central game servers storing your match history.",
-          "Vaerum is crafted by an independent designer and is completely free to play."
+          "Duskhall is a collection of card games played in your browser using lightweight, real-time technology. There are no central game servers storing your matches; the table simply relays moves between the people in a room.",
+          "Each game is designed for a small group of friends and runs entirely in the browser. New games can be added to the platform over time, each with its own deck, rules, and identity.",
+          "Duskhall is crafted by an independent designer and is completely free to play."
         ]
       },
       {
         "id": "privacy",
         "title": "Privacy Matters",
         "body": [
-          "Vaerum is designed to respect your digital privacy completely.",
+          "Duskhall is designed to respect your digital privacy completely.",
           "No Accounts Required: You will never be asked for an email, password, or username.",
-          "Zero Tracking: We do not use analytics, advertising networks, or hidden trackers. Your sessions are yours alone.",
-          "Local Storage: Your volume preferences and language settings are saved securely on your own device.",
+          "Zero Tracking: There are no analytics, advertising networks, or hidden trackers. Your sessions are yours alone.",
+          "Local Storage: Your volume preferences, language, and which game you last played are saved only on your own device.",
           "Transient Data: Your mouse movements and card actions are broadcast to your room in real time and are immediately discarded. Nothing is permanently stored.",
           "Secure Rooms: Anyone with your specific room link can join your table. Keep your link safe and share it only with trusted friends."
         ]
@@ -357,307 +295,22 @@
         "id": "terms",
         "title": "Terms of Use",
         "body": [
-          "Vaerum is provided for personal entertainment 'as is', without any warranties. The service may undergo changes or downtime without notice.",
-          "We ask that you play respectfully. Do not attempt to exploit the server or disrupt games belonging to other people.",
-          "The creator of Vaerum holds no liability for any issues arising from the use of this service.",
-          "By playing Vaerum, you agree to these simple terms."
+          "Duskhall is provided for personal entertainment 'as is', without any warranties. The service may undergo changes or downtime without notice.",
+          "Please play respectfully. Do not attempt to exploit the service or disrupt games belonging to other people.",
+          "The creator of Duskhall holds no liability for any issues arising from the use of this service.",
+          "By playing, you agree to these simple terms."
         ]
       },
       {
         "id": "copyright",
         "title": "Copyright Notice",
         "body": [
-          "The name Vaerum, the game mechanics, card artwork, text, and visual assets are all original works protected by copyright law.",
-          "You are highly encouraged to stream the game, record videos, and share it with friends. However, you may not copy, sell, or distribute the game assets commercially without explicit written consent from the author.",
-          "© 2026 The Vaerum Designer. All rights reserved."
+          "The name Duskhall, the names of its games, their card artwork, text, rulebooks, and visual assets are original works protected by copyright law.",
+          "You are highly encouraged to stream the games, record videos, and share them with friends. However, you may not copy, sell, or distribute the assets commercially without explicit written consent from the author.",
+          "© 2026 The Duskhall Designer. All rights reserved."
         ]
       }
     ]
-  },
-  "categories": {
-    "seal": {
-      "name": "Seal",
-      "namePlural": "Seals",
-      "description": "A permanent structure you build on your tableau. It grants passive bonuses and is your only path to winning."
-    },
-    "spell": {
-      "name": "Spell",
-      "namePlural": "Spells",
-      "description": "A powerful, single-use action that costs 1 HP. It triggers immediately and is then discarded."
-    },
-    "intervention": {
-      "name": "Intervention",
-      "namePlural": "Interventions",
-      "description": "A rapid-reaction card. It costs no HP and can be played instantly at any time to interrupt the game."
-    },
-    "servant": {
-      "name": "Servant",
-      "namePlural": "Servants",
-      "description": "A loyal guardian. As long as you control a Servant, your opponents are strictly forbidden from targeting your Seals."
-    }
-  },
-  "cards": {
-    "timeRift": {
-      "name": "Time Rift",
-      "type": "Seal",
-      "effect": "Draw 1 extra card during your Focus phase. You will draw 3 cards instead of 2. Each additional Time Rift adds another card, up to a maximum of 6. The effect begins on your next turn.",
-      "flavor": "A hairline crack in reality, widening with every breath."
-    },
-    "veilOfVoid": {
-      "name": "Veil of Void",
-      "type": "Seal",
-      "effect": "Protects your other Seals and your private hand. They can no longer be targeted by enemy spells. However, the Veil itself remains vulnerable. This protection takes effect immediately. Playing multiple Veils offers no extra benefit.",
-      "flavor": "Where the shadow falls, the world forgets to look."
-    },
-    "crimsonMonolith": {
-      "name": "Crimson Monolith",
-      "type": "Seal",
-      "effect": "Grants you 1 extra Action Point (HP) every turn. You will have 3 HP instead of 2. Multiple Monoliths stack, up to a hard limit of 5 HP. The effect begins on your next turn.",
-      "flavor": "It stands firm long after the world has fallen."
-    },
-    "necromancersEye": {
-      "name": "Necromancer's Eye",
-      "type": "Seal",
-      "effect": "At the start of your Closing phase, take the top card from the Discard pile and add it to your hand. If you have multiple Eyes, take that many cards. This happens before you check your 7-card hand limit, meaning you can immediately discard unwanted cards. It takes effect on the turn it is played.",
-      "flavor": "The dead keep their accounts in long, patient ledgers."
-    },
-    "etherStrike": {
-      "name": "Ether Strike",
-      "type": "Spell",
-      "effect": "Destroy any single card on an opponent's tableau. You must obey the Servant Shield rule. If they have a Servant, you must destroy it first. If the target is legally protected, this Spell cannot be cast. Costs 1 HP.",
-      "flavor": "A clean cut between the seen and the sealed."
-    },
-    "shadowTheft": {
-      "name": "Shadow Theft",
-      "type": "Spell",
-      "effect": "Steal one random card from an opponent's hand. The target shuffles their hand face-down, and you pull one card without looking. This spell fails if their hand is empty or protected by the Veil of Void. Costs 1 HP.",
-      "flavor": "Every secret carries a weight you can steal."
-    },
-    "ancientSight": {
-      "name": "Ancient Sight",
-      "type": "Spell",
-      "effect": "Draw 3 cards directly from the deck. If the deck empties while you are drawing, Ether Resonance triggers immediately, and you finish your draw from the newly created deck. Costs 1 HP.",
-      "flavor": "Open the eye that refuses to blink."
-    },
-    "mindParasite": {
-      "name": "Mind Parasite",
-      "type": "Spell",
-      "effect": "Steal an opponent's Servant and place it on your own tableau. Its ongoing effects now benefit you. You must have an empty Servant slot available to cast this. You cannot discard your own cards to make room for a stolen Servant. Costs 1 HP.",
-      "flavor": "Loyalty is a locked door, but you hold the key."
-    },
-    "twistOfFate": {
-      "name": "Twist of Fate",
-      "type": "Spell",
-      "effect": "Swap your entire hand of cards with a chosen opponent. Your tableau cards remain untouched. Any hand limit penalties are dealt with during each player's respective Closing phase. Cannot target a player protected by Veil of Void. Costs 1 HP.",
-      "flavor": "Fate spins her wheel without asking for permission."
-    },
-    "silence": {
-      "name": "Silence!",
-      "type": "Intervention",
-      "effect": "Instantly cancel a Spell or Intervention that was just played. Both the canceled card and Silence! are sent directly to the Discard pile. You can play Silence! to cancel another Silence! card. Costs zero HP and can be played at any moment.",
-      "flavor": "The final word at the table."
-    },
-    "karmicReflection": {
-      "name": "Karmic Reflection",
-      "type": "Intervention",
-      "effect": "Deflect an incoming attack back at the attacker. The attack hits them exactly as intended. However, the rebounding attack still obeys their Servant Shield. You can only use this to protect yourself or your tableau. Costs zero HP.",
-      "flavor": "What you send out returns in full force."
-    },
-    "bloodAtonement": {
-      "name": "Blood Atonement",
-      "type": "Intervention",
-      "effect": "Save one of your own Seals from destruction at the last possible second. As payment, you must randomly discard 2 cards from your hand. You cannot choose which cards you lose. You cannot play this if you have fewer than 2 cards in hand. Costs zero HP.",
-      "flavor": "A desperate vow paid in heartbeats."
-    },
-    "runicWarden": {
-      "name": "Runic Warden",
-      "type": "Servant",
-      "effect": "While this Servant is on your tableau, all of your Seals become entirely untargetable. Opponents must destroy the Warden, along with any other Servants you control, before they can touch your Seals.",
-      "flavor": "Patience etched deeply in iron."
-    },
-    "glacialAberration": {
-      "name": "Glacial Aberration",
-      "type": "Servant",
-      "effect": "Whoever destroys this creature is forced to skip their entire next turn. They cannot take Focus, Action, or Closing phases, though they may still cast Interventions. This penalty applies to whoever triggered the destruction, even if it happened indirectly. Stealing this card does not trigger the penalty.",
-      "flavor": "A harsh winter that keeps its own time."
-    },
-    "shadowSlayer": {
-      "name": "Shadow Slayer",
-      "type": "Servant",
-      "effect": "When you play this card, if any opponent controls a Servant, you must instantly choose one and destroy it. If you are forced to destroy a Glacial Aberration this way, you will suffer the skipped turn penalty. If there are no enemy Servants, this card just enters play normally.",
-      "flavor": "Even the darkest shadows answer to him."
-    }
-  },
-  "rulesDoc": {
-    "title": "Vaerum: Heirs of the Ether",
-    "subtitle": "The Official Rulebook",
-    "tldr": "2 to 4 players. 30 to 60 minutes. Ages 14+. If you are new, open the Guide from the game menu and start with the Apprentice Rules. The table will walk you through your first match.",
-    "intro": "At the center of all creation lies the Ether, an ancient and sourceless power that shattered long ago. Its remaining shards have changed hands for centuries through silent treaties, whispered threats, and cold betrayals. Now, you sit at the table. You are a visionary, a schemer, and one of the few with the will to bend the Ether. There are no friends here. There is no mercy. There is no luck. There is only calculated strategy and an unblinking war for ultimate power.",
-    "sections": [
-      {
-        "id": "goal",
-        "title": "The Path to Victory",
-        "body": [
-          "Your ultimate goal is to place 3 Seals into your open play area, confidently declare Ascension, and defend those Seals for one full round. If you survive, you win.",
-          "Every turn, you draw new cards and spend 2 Action Points (HP) to cast Spells, deploy Servants, or build your Seals. This is how you accumulate power.",
-          "Intervention cards cost absolutely nothing to play. You can use them to interrupt anyone at any time. In Vaerum, nobody just sits and waits. The table is always active.",
-          "The ultimate catch: The very second you declare Ascension, every rival gets one full turn to tear your Seals down. We call this round the Trial. Outlast the storm, and the Ether belongs to you."
-        ]
-      },
-      {
-        "id": "apprentice",
-        "title": "Apprentice Rules for Beginners",
-        "body": [
-          "This is the best way to learn. Play your first few games using these simplified rules. Once you understand the flow, switch to the full ruleset.",
-          "NO COMPLEX CHAINS: A player's move can be interrupted by a maximum of one Intervention. For example, you cannot play a Silence! to stop another Silence!.",
-          "PEACEFUL RESONANCE: When the main deck runs out, simply shuffle the discard pile to create a new deck. Nobody has to sacrifice a card.",
-          "SIMPLE READING: Cards do exactly what they say. If there is a disagreement, pick the simplest interpretation and keep the game moving.",
-          "EVERYTHING ELSE REMAINS THE SAME: You draw 2 cards, spend 2 HP, and end your turn with no more than 7 cards in hand. Build 3 Seals and survive the Trial to win."
-        ]
-      },
-      {
-        "id": "components",
-        "title": "1. Game Components",
-        "body": [
-          "Vaerum is played entirely with a single deck of 72 cards. You need nothing else to play.",
-          "The deck contains four specific types of cards.",
-          "SEALS (Violet): 16 cards total. These represent permanent, passive power and are your only way to win the game.",
-          "SPELLS (Crimson): 24 cards total. These are aggressive, one-shot attacks. They trigger their effect and go straight to the discard pile.",
-          "INTERVENTIONS (Azure): 16 cards total. These are completely free to play and can be used to react to enemies at any time.",
-          "SERVANTS (Verdant): 16 cards total. These loyal guardians shield your precious Seals and offer special defensive abilities."
-        ]
-      },
-      {
-        "id": "setup",
-        "title": "2. Setting Up the Table",
-        "body": [
-          "Shuffle the full 72-card deck thoroughly.",
-          "Deal 5 cards face down to each player. This is their starting hand. Keep these secret.",
-          "Place the remaining deck face down in the center of the table.",
-          "To decide who goes first, every player reveals one card from the deck. The player with the highest-ranked card type goes first. The rank from highest to lowest is: Servant, Spell, Seal, Intervention. In case of a tie, the tied players draw again. Shuffle all revealed cards back into the deck.",
-          "Gameplay moves clockwise around the table.",
-          "Vaerum changes drastically based on player count. 2 players is a fast, brutal duel. 3 players requires careful tactical balance. 4 players is highly recommended for chaotic political diplomacy."
-        ]
-      },
-      {
-        "id": "zones",
-        "title": "3. Play Zones",
-        "body": [
-          "Every player manages three specific zones. Two of these are public spaces.",
-          "YOUR HAND: This is your private stash. Opponents can count your cards but cannot see their faces. Your hand limit is 7. Any excess must be discarded at the end of your turn. Seals and Servants are useless while resting in your hand.",
-          "YOUR TABLEAU: This is your open play area in front of you. You can place up to 4 Seals and up to 3 Servants face up. Their magical effects only function here. If your slots are full, you can discard an active card to make room for a new one straight from your hand. Once a card is on the tableau, it is fully committed. It can only leave by being destroyed, sacrificed, or stolen. It will never return to your hand.",
-          "THE DECK: The central face-down pile everyone draws from. When empty, it triggers Ether Resonance.",
-          "THE DISCARD PILE: The public face-up graveyard where used Spells and destroyed cards go."
-        ]
-      },
-      {
-        "id": "turn",
-        "title": "4. The Turn Structure",
-        "body": [
-          "When it is your turn, you must perform these three phases in exact order. You cannot skip or rearrange them.",
-          "PHASE 1 - FOCUS: Draw 2 cards from the deck. If the deck empties while drawing, resolve the Ether Resonance penalty first, then finish drawing from the newly formed deck. Certain cards, like Time Rift, allow you to draw more cards.",
-          "PHASE 2 - ACTION: You start with 2 HP to spend. You can spend 1 HP to CREATE (play a Spell, or place a Seal or Servant on your tableau), STUDY (draw 1 extra card), or CLEANSE (discard 1 card from your hand to draw 1 new card). Any HP you do not spend is lost forever.",
-          "PHASE 3 - CLOSING: Resolve any end-of-turn Seal triggers, such as Necromancer's Eye. Next, check your hand limit. If you have more than 7 cards, discard down to 7. Finally, if you have 3 or more Seals on your tableau, you may boldly declare Ascension."
-        ]
-      },
-      {
-        "id": "card-types",
-        "title": "5. Understanding Card Types",
-        "body": [
-          "SEALS are permanent structures. They do nothing in your hand and only provide benefits while on your tableau.",
-          "SPELLS cost 1 HP to cast. You must declare a valid target before using one. If your intended target is completely protected by an ability, the Spell cannot be played and your HP is saved.",
-          "INTERVENTIONS cost zero HP. You can play them at any time, even on an opponent's turn. They are purely reactive.",
-          "SERVANTS create an absolute shield. If you have even one Servant on your tableau, no opponent can target your Seals. They must ruthlessly clear out every single Servant you control before your Seals become vulnerable."
-        ]
-      },
-      {
-        "id": "chains",
-        "title": "6. Chaining Reactions",
-        "body": [
-          "Vaerum allows players to react to actions rapidly. When a card is played, anyone can throw down an Intervention card in response. This creates a 'Chain'. Players resolve the chain in reverse order, meaning the very last card played is the first one to take effect.",
-          "For example: Player A attacks with Ether Strike. Player B reacts with a Silence! card to block it. Player A then throws down their own Silence! card to block Player B. The chain resolves from top to bottom. Player A's Silence cancels Player B's Silence. The original Ether Strike then goes through successfully.",
-          "If your spell is canceled by a Silence! card, both your spell and the Silence card go to the Discard pile. You do not get your spent HP back."
-        ]
-      },
-      {
-        "id": "untargetable",
-        "title": "7. The Untargetable Rule",
-        "body": [
-          "Certain cards grant immunity to enemy actions. We call this being 'Untargetable'. This protection works in independent layers. Opponents must peel back each layer of protection one by one.",
-          "For example, the Veil of Void protects your other Seals from magic, but the Veil itself can still be targeted. Runic Warden protects all Seals, but it acts as a Servant shield.",
-          "If you have both cards in play, your opponent faces two distinct walls. They must kill the Runic Warden first, then destroy the Veil of Void, before they can touch your actual Seals."
-        ]
-      },
-      {
-        "id": "stacking",
-        "title": "8. Stacking Effects",
-        "body": [
-          "You are allowed to place multiple identical Seals on your tableau to multiply their power. These duplicates activate on the turn after you place them.",
-          "Two Time Rifts means you draw 4 cards during Focus instead of 2.",
-          "Two Crimson Monoliths give you a total of 4 HP to spend. You can never exceed a hard limit of 5 HP.",
-          "Multiple Necromancer's Eyes will allow you to pull multiple cards from the Discard pile during Closing.",
-          "Multiple Veil of Voids do not stack. One Veil offers the same protection as three."
-        ]
-      },
-      {
-        "id": "resonance",
-        "title": "9. Enduring Ether Resonance",
-        "body": [
-          "The Ether demands a toll. When the central deck runs entirely out of cards, the game pauses. The Discard pile is immediately shuffled to form a fresh deck. This massive shuffle is called Ether Resonance.",
-          "Every single player must now pay the sacrifice toll.",
-          "First, look at your tableau. You must pick one of your own active Seals or Servants and toss it into the Discard pile.",
-          "If your tableau is completely empty, the resonance strikes your hand instead. You must discard one random card from your hand.",
-          "If both the Deck and the Discard pile are empty at the same time, the Resonance fails. No new deck is formed, and any actions requiring a draw simply fail to work."
-        ]
-      },
-      {
-        "id": "ascension",
-        "title": "10. Declaring Ascension",
-        "body": [
-          "Ascension is your final push for victory. At the very end of your Closing phase, if you securely hold 3 or more Seals, you may announce your Ascension. Once spoken, you cannot take it back.",
-          "This triggers the Trial. Every opponent gets one full, normal turn to dismantle your board. They will use Spells, Interventions, and Servants to crush your Seals.",
-          "If you survive this brutal gauntlet and the turn order comes back to you, check your board. If you still have at least 3 Seals standing before your next Focus phase begins, you instantly win the game.",
-          "Only one player can declare Ascension at a time. The table must wait for the current Trial to resolve, in victory or defeat, before anyone else can attempt to ascend."
-        ]
-      },
-      {
-        "id": "encyclopedia",
-        "title": "11. Quick Card Encyclopedia",
-        "body": [
-          "Cards always do exactly what their text states. If a card contradicts the main rules, the card's text is right.",
-          "Remember that Servants like the Shadow Slayer trigger their special effects instantly upon entering the board. The Glacial Aberration is incredibly dangerous: destroying it skips your next turn completely, but stealing it avoids the penalty."
-        ]
-      },
-      {
-        "id": "edge",
-        "title": "12. Clarifying Edge Cases",
-        "body": [
-          "Question: If I place a Time Rift this turn, do I draw extra cards right now? Answer: No. It takes effect on your next turn because your Focus phase has already passed.",
-          "Question: If I use Blood Atonement, can I pick which 2 cards I discard? Answer: No. They are discarded randomly. Using this card is always a gamble.",
-          "Question: If I declare Ascension, but an opponent forces me to skip my next turn using a Glacial Aberration, do I lose the game? Answer: No, you still win. Ascension checks for victory the exact moment it becomes your turn again. You win before the skip penalty even has a chance to take effect."
-        ]
-      },
-      {
-        "id": "quick",
-        "title": "13. Quick Reference Sheet",
-        "body": [
-          "Turn Order: Focus -> Action -> Closing -> Optional Ascension.",
-          "Action Costs: Interventions cost 0 HP. Creating, Studying, or Cleansing costs 1 HP.",
-          "Hard Limits: 7 Cards in Hand. 4 Seals max. 3 Servants max. 5 HP max.",
-          "Deck Math: 16 Seals + 24 Spells + 16 Interventions + 16 Servants = 72 total cards."
-        ]
-      },
-      {
-        "id": "table",
-        "title": "14. Navigating the Digital Sandbox",
-        "body": [
-          "Vaerum is designed as an open sandbox. The computer will not stop you from making an illegal move. You and your friends must moderate yourselves.",
-          "The frosted area at the bottom of your screen is your private hand. Hovering over a card there keeps it hidden. The moment you drag it over the edge into the main table, it becomes visible to everyone.",
-          "If the host leaves the room, a new host is assigned seamlessly. You can leave the room to generate a fresh invite link at any time."
-        ]
-      }
-    ],
-    "closing": "Show no mercy at the table."
   },
   "resetDeckConfirm": {
     "title": "Reset the Deck?",
@@ -668,55 +321,5 @@
     "title": "Restart the Guide?",
     "body": "This resets the tutorial guide back to step one for everyone. Your actual cards will not be touched.",
     "confirm": "Restart Guide"
-  },
-  "guide": {
-    "title": "Interactive Guide",
-    "close": "Close Guide",
-    "minimize": "Minimize",
-    "maximize": "Maximize",
-    "minimizeTurnOnly": "You can minimize this panel once normal turns begin.",
-    "confirm": "Mark step complete",
-    "hostConfirms": "The host will confirm this step.",
-    "waitYourTurn": "Please wait for your turn.",
-    "yourTurn": "It is your turn. Tap the checkmark when you are finished.",
-    "aPlayer": "A Player",
-    "youTag": "(You)",
-    "introBody": "This guide provides a step-by-step walkthrough of a full game. It only gives suggestions. You retain total freedom to move, flip, and shuffle your cards.",
-    "introTeach": "Quick summary: Draw 2 cards into your hand. Spend 2 Action Points (HP) to play Spells, place Seals, or manage your hand. Play free Interventions at any time to disrupt enemies. End your turn with a maximum of 7 cards. Build 3 Seals and survive one full round to claim victory.",
-    "introWaiting": "Waiting for the host to officially start the match.",
-    "start": "Begin Match",
-    "restart": "Restart Tutorial",
-    "pickWait": "The host is currently selecting the first player.",
-    "turnHeading": "{name}'s Turn",
-    "roundLabel": "Round {n}",
-    "firstChosen": "{name} takes the first turn.",
-    "steps": {
-      "shuffle": {
-        "title": "Drawing Opening Hands",
-        "body": "Give the deck a good shuffle. Each player pulls exactly 5 cards into their private hand. The rest of the deck stays face down in the center. Once everyone is ready, the host taps the checkmark."
-      },
-      "reveal": {
-        "title": "Determining Initiative",
-        "body": "Everyone draws one card and reveals it to the table. The player holding the highest priority card goes first. The priority order is: Servant, Spell, Seal, then Intervention. Shuffle these revealed cards back into the deck."
-      },
-      "chooseFirst": {
-        "title": "Appointing the First Player",
-        "body": "The host officially selects the winner of the initiative draw. Gameplay will proceed clockwise from that person."
-      }
-    },
-    "phase": {
-      "focus": {
-        "title": "Phase 1: Focus",
-        "body": "Draw 2 cards securely from the central deck. Tap the checkmark when your draw is complete."
-      },
-      "action": {
-        "title": "Phase 2: Action",
-        "body": "You have 2 Action Points (HP) to spend. Use them to cast Spells, deploy cards to your tableau, or draw extra cards. Feel free to use zero-cost Interventions as well. Tap the checkmark when you are done."
-      },
-      "closing": {
-        "title": "Phase 3: Closing",
-        "body": "Resolve your active Seal effects now. Then, discard down to exactly 7 cards in your hand. If you hold 3 or more Seals, you may announce Ascension. Otherwise, tap the checkmark to pass the turn."
-      }
-    }
   }
 }

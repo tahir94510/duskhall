@@ -42,6 +42,8 @@ export const ICON_FEEDBACK = svgEl(`<path d="M4 5 H20 A1.5 1.5 0 0 1 21.5 6.5 V1
 export const ICON_SPARK = svgEl(`<path d="M12 3 L13.7 9.3 L20 11 L13.7 12.7 L12 19 L10.3 12.7 L4 11 L10.3 9.3 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>`);
 // Guide / walkthrough: a guiding compass needle.
 export const ICON_GUIDE = svgEl(`<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 12 L15.5 8.5 L13.2 13 L8.5 15.5 L10.8 11 Z" fill="currentColor"/>`);
+// Change mode: a 2x2 grid of games, the top-right one accented as the active choice.
+export const ICON_MODES = svgEl(`<rect x="4" y="4" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="4" y="13" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/>`);
 // Patreon: the wordmark's circle + bar, drawn in the same single-weight style as
 // the rest of the set (a filled disc beside an upright bar).
 export const ICON_PATREON = svgEl(`<circle cx="15" cy="9" r="5" fill="currentColor"/><rect x="4" y="4" width="2.6" height="16" rx="0.4" fill="currentColor"/>`);
