@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.0.1: Audio, brand, and switcher polish
+
+A production-polish pass on the 1.0.0 platform: audio glitches, default brand assets, the game
+switcher, and asset documentation. 305 tests green, build clean, verified end to end at mobile,
+tablet, and desktop viewports (ZAN loads its full art, mode switch works, zero 404s, no horizontal
+overflow).
+
+- **Audio: silence over synthesis, and no more tail clicks.** Removed the synthesized ambient
+  "bed" that played when a game shipped no music, so a music-less game (e.g. ZAN before tracks are
+  added) is now truly silent, no drone or hiss. Sound effects gained a short tail fade-out
+  (`playBuffer`), so a sample that does not end on a zero crossing no longer clicks or crackles.
+- **Smooth music on a game switch.** `AudioEngine.transitionToActiveMode()` fades the previous
+  game's music out and starts the new game's music (or silence) from a clean bus, instead of an
+  abrupt cut. `Game.switchMode` now runs the audio transition after the mode is active and drops
+  the previous game's persisted track state so a switch never resumes into the old rotation.
+- **Default brand marks upgraded.** The Duskhall system mark and the ZAN mark were redrawn to fill
+  their 48x64 canvas like the Vaerum diamond, so they stay crisp and centered down to 16 px
+  favicons. The top-left logo falls back to the platform mark if a game's brand icon is missing.
+- **Game switcher polish.** The Change Game modal was restyled to match the app's premium dark
+  panels (layered ground, top catch-light, accent glow on the active game) and tightened for phones.
+- **Card placeholder.** A card with no art yet shows its name centered on the mode's dark ground,
+  so an art-less deck reads clearly instead of blank. Covered the instant real art loads.
+- **Vaerum reads as one game, not the platform.** Its meta description now describes the Vaerum
+  duel specifically and notes it is one of the games on the Duskhall table (both languages).
+- **Docs.** Added `docs/ASSETS.md`, a master asset guide (every logo, icon, card, background, and
+  audio asset: paths, formats, sizes, transparency, small-size legibility, and the default vs.
+  custom override model). Added `scripts/make-og.mjs` (optional SVG to OG-PNG renderer). Refined
+  the ZAN music prompts for Suno.
+
 ## 1.0.0: Duskhall, a platform of games
 
 Vaerum becomes Duskhall: one table engine that hosts several games ("modes"), switchable at

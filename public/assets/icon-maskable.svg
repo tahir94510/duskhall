@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Duskhall">
   <rect width="512" height="512" fill="#050505"/>
   <g transform="translate(256 268)" fill="none" stroke="#f3efe5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M-96 150 V-40 A96 96 0 0 1 96 -40 V150" stroke-width="16"/>
-    <path d="M-140 150 H140" stroke-width="16"/>
-    <circle cx="0" cy="-120" r="20" fill="#f3efe5" stroke="none"/>
+    <path d="M-104 150 V-40 A104 104 0 0 1 104 -40 V150" stroke-width="17"/>
+    <path d="M-150 150 H150" stroke-width="17"/>
+    <circle cx="0" cy="-64" r="33" fill="#f3efe5" stroke="none"/>
   </g>
 </svg>

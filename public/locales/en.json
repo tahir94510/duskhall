@@ -236,6 +236,17 @@
     "empty": "No recent updates to show.",
     "entries": [
       {
+        "v": "2026-07-05.2",
+        "date": "July 5, 2026",
+        "title": "Smoother Sound and a Polished Switcher",
+        "items": [
+          "Music now fades smoothly when you switch games instead of cutting, and a game that ships no music plays nothing at all, no hum or hiss.",
+          "Sound effects fade cleanly at their tail, so no click or crackle at the end of a flip, shuffle, or place.",
+          "Refined the Change Game panel to match the table's look, with crisper game logos that stay sharp even at tiny sizes.",
+          "Every game now shows a clean placeholder for any card whose art is not in yet, so a work-in-progress deck always reads clearly."
+        ]
+      },
+      {
         "v": "2026-07-05",
         "date": "July 5, 2026",
         "title": "Duskhall: One Table, Many Games",

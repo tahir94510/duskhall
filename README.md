@@ -131,10 +131,11 @@ table surface, procedural sound effects), so a fresh checkout produces zero 404s
 ## Docs
 
 - `docs/MAINTAINING.md`: developer directives + the "how to add a game" runbook
+- `docs/ASSETS.md`: master asset guide (every logo, icon, card, background, and audio asset: paths, formats, sizes, transparency, and the default vs. custom override model)
 - `docs/DESIGN.md`: engine architecture, coordinate system, asset systems
 - `docs/SECURITY.md`: security model, rate-limits, threat notes
 - `docs/COPYRIGHT.md`: copyright notice for the platform and its games
-- `docs/modes/{id}/`: each game's rulebook, card reference, and asset specs
+- `docs/modes/{id}/`: each game's rulebook, card reference, and asset generation prompts
 
 ## License
 

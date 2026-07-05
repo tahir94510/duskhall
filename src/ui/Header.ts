@@ -283,11 +283,14 @@ export class Header {
   }
 
   /** Swap the top-left logo and its label to the active game's brand mark. The label is the
-   *  game's localized name; a missing brand image degrades to the browser's broken-image slot,
-   *  never a console error. */
+   *  game's localized name. If a game's brand icon is missing (e.g. deleted, not replaced), the
+   *  logo falls back to the platform mark so a real logo always shows, never a broken image. */
   setBrand(modeId: string): void {
     const img = this.el.querySelector<HTMLImageElement>('[data-role="brand-img"]');
-    if (img) img.src = `${assetRoot(getMode(modeId))}/brand/icon.svg`;
+    if (img) {
+      img.onerror = () => { img.onerror = null; img.src = "/assets/icon.svg"; };
+      img.src = `${assetRoot(getMode(modeId))}/brand/icon.svg`;
+    }
     this.refreshBrandLabel();
   }
 

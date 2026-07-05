@@ -4352,14 +4352,16 @@ export class Game {
       this.seatClaims.clear();
       await this.bus.disconnect();
       this.resetTable();
-      // Drop the previous game's table surface and forget its music so the new game's assets load
-      // fresh behind the loader.
+      // Drop the previous game's table surface so the new game's backdrop loads fresh.
       clearTableBackground(this.refs.bgLayer);
-      this.audio.reloadForMode();
 
       // Activate the new mode: this repoints the deck, categories, tooltip fields and asset roots.
       setActiveMode(modeId);
       writeStoredModeId(modeId);
+      // Now that the new mode is active, fade the old game's music out and start the new game's
+      // music (silent if it ships none). Smooth, never an abrupt cut. Fire-and-forget so the
+      // loader is not held on the audio crossfade.
+      void this.audio.transitionToActiveMode();
 
       // Fresh identity for the new game, opened as host of a new room.
       resetName();
