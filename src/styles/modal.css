@@ -687,46 +687,67 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
 .diag__verdict--bad { color: #e8835c; border-color: rgba(210, 96, 63, 0.35); background: rgba(210, 96, 63, 0.08); }
 .diag__hint { margin: 10px 0 0; font-size: 12px; line-height: 1.55; color: var(--ivory-dim); }
 
-/* Mode picker: one selectable card per game Duskhall hosts. */
+/* Mode picker: one selectable card per game Duskhall hosts. Styled to match the app's premium
+   dark panels: layered ground, a fine top catch-light, ivory accents, and a soft glow on the
+   game currently in play. */
 .modepick { display: flex; flex-direction: column; gap: 12px; }
 .modepick__card {
+  position: relative;
   display: flex;
   gap: 14px;
-  align-items: flex-start;
+  align-items: center;
   text-align: left;
   width: 100%;
-  padding: 14px 16px;
-  border-radius: 12px;
+  padding: 15px 17px;
+  border-radius: 13px;
   border: 1px solid var(--line-2);
-  background: rgba(18, 18, 18, 0.6);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(243, 239, 229, 0.05) 0%, rgba(243, 239, 229, 0) 62%),
+    linear-gradient(180deg, rgba(24, 23, 30, 0.86) 0%, rgba(14, 13, 18, 0.9) 100%);
+  box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.06);
   color: var(--ivory);
   cursor: pointer;
-  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), transform var(--dur) var(--ease);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
 }
-.modepick__card:hover { border-color: var(--line-3); background: rgba(26, 26, 26, 0.82); }
-.modepick__card:active { transform: scale(0.995); }
-.modepick__card.is-active { border-color: var(--accent); background: rgba(243, 239, 229, 0.06); }
+.modepick__card:hover { border-color: var(--line-3); box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.09), 0 6px 20px rgba(0, 0, 0, 0.35); }
+.modepick__card:active { transform: scale(0.992); }
+.modepick__card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.modepick__card.is-active {
+  border-color: rgba(243, 239, 229, 0.4);
+  box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.1), 0 0 0 1px rgba(243, 239, 229, 0.12), 0 8px 26px rgba(0, 0, 0, 0.4);
+  cursor: default;
+}
 .modepick__brand {
   flex: 0 0 auto;
-  width: 44px; height: 58px;
+  width: 46px; height: 60px;
   display: grid; place-items: center;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: var(--ink-2);
+  border-radius: 9px;
+  border: 1px solid var(--line-2);
+  background: linear-gradient(180deg, #16151b 0%, #0c0b10 100%);
+  box-shadow: inset 0 1px 0 rgba(243, 239, 229, 0.05), inset 0 0 0 1px rgba(0, 0, 0, 0.3);
 }
-.modepick__brand img { width: 34px; height: 45px; object-fit: contain; }
-.modepick__main { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1 1 auto; }
+.modepick__brand img { width: 34px; height: 46px; object-fit: contain; filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5)); }
+.modepick__main { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1 1 auto; }
 .modepick__head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.modepick__name { font-family: var(--font-display); font-weight: 600; font-size: 15px; color: var(--ivory); }
+.modepick__name { font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: 0.01em; color: var(--ivory); }
 .modepick__active {
-  font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
   color: var(--ink); background: var(--accent);
-  padding: 2px 7px; border-radius: var(--r-pill);
+  padding: 2px 8px; border-radius: var(--r-pill);
 }
 .modepick__desc { font-size: 12.5px; line-height: 1.5; color: var(--ivory-dim); }
-.modepick__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin-top: 3px; font-size: 11.5px; color: var(--ivory-mute); }
-.modepick__stat { display: inline-flex; align-items: center; gap: 6px; }
+.modepick__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 16px; margin-top: 2px; font-size: 11.5px; color: var(--ivory-mute); }
+.modepick__stat { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .modepick__stat-label { color: var(--ivory-mute); }
 .modepick__dots { display: inline-flex; gap: 3px; }
 .modepick__dot { width: 7px; height: 7px; border-radius: var(--r-pill); border: 1px solid var(--line-3); }
-.modepick__dot.is-on { background: var(--accent); border-color: var(--accent); }
+.modepick__dot.is-on { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 5px rgba(243, 239, 229, 0.35); }
+
+/* Narrow screens: tighten the card so the brand tile and stats stay comfortable on phones. */
+@media (max-width: 480px) {
+  .modepick__card { padding: 12px 13px; gap: 11px; }
+  .modepick__brand { width: 40px; height: 52px; border-radius: 8px; }
+  .modepick__brand img { width: 29px; height: 40px; }
+  .modepick__name { font-size: 14px; }
+  .modepick__meta { gap: 4px 12px; }
+}

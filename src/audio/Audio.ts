@@ -71,7 +71,6 @@ export class AudioEngine {
   // musicGain (click-free ramps) instead of stepping el.volume directly.
   private musicSource: MediaElementAudioSourceNode | null = null;
   private musicRouted = false;
-  private musicProcedural: { osc: OscillatorNode; osc2: OscillatorNode; lfo: OscillatorNode; gain: GainNode } | null = null;
   private booted = false;
   // Music file paths. Playback order comes from a shuffle bag (below), not the
   // raw list order, so the rotation feels random yet fair.
@@ -202,8 +201,9 @@ export class AudioEngine {
     this.playProcedural(PROCEDURAL[name]);
   }
 
-  // Play a decoded sample with a click-free 4 ms fade-in, tracked by the voice
-  // cap so a flurry of effects can never pile up unbounded.
+  // Play a decoded sample with a click-free 4 ms fade-in AND a short fade-out over the sample's
+  // final few ms, so a recording that does not end exactly on a zero crossing never clicks or
+  // crackles as it stops. Tracked by the voice cap so a flurry of effects can never pile up.
   private playBuffer(buf: AudioBuffer): void {
     if (!this.ctx || !this.sfxGain) return;
     const ctx = this.ctx;
@@ -211,6 +211,14 @@ export class AudioEngine {
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.0001, now);
     gain.gain.exponentialRampToValueAtTime(1, now + 0.004);
+    // Tail fade: ramp down over the last ~14 ms (or less for a very short sample) so the sample
+    // ends in silence rather than snapping off at whatever amplitude the recording stops on.
+    const dur = buf.duration;
+    const fade = Math.min(0.014, dur * 0.5);
+    if (dur > 0.02) {
+      gain.gain.setValueAtTime(1, now + Math.max(0.004, dur - fade));
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    }
     const src = ctx.createBufferSource();
     src.buffer = buf;
     src.connect(gain);
@@ -249,9 +257,8 @@ export class AudioEngine {
   // so the bed stays smooth instead of pumping.
   private duckMusic(): void {
     if (this.musicVolume <= 0 || this.muted) return;
-    // Routed file music OR procedural bed: both live on musicGain, so one
-    // smooth code path covers them with click-free ramps.
-    if (this.ctx && this.musicGain && (this.musicRouted || this.musicProcedural)) {
+    // Routed file music lives on musicGain, so ducking is a click-free ramp there.
+    if (this.ctx && this.musicGain && this.musicRouted) {
       const g = this.musicGain.gain;
       const now = this.ctx.currentTime;
       g.cancelScheduledValues(now);
@@ -328,11 +335,19 @@ export class AudioEngine {
     return p;
   }
 
-  // Called on a game switch: forget the previous game's decoded effects and music so the new
-  // game's audio loads fresh. The manifest cache is keyed by mode, so the next play/queue reloads.
-  reloadForMode(): void {
+  // Called on a game switch: fade the previous game's music out, forget its state, and start the
+  // NEW game's music from scratch (silent if it ships none). The manifest cache is keyed by mode,
+  // so startMusic reads the now-active game's tracks. Music transitions smoothly, never cutting.
+  async transitionToActiveMode(): Promise<void> {
+    await this.fadeOutMusic(0.35);
+    // A game switch is a fresh start: drop the previous game's track index/position/bag so the
+    // new game never resumes into the old game's rotation.
     this.musicPlaylist = [];
-    this.resetMusicRotation();
+    this.musicBag = [];
+    this.musicIndex = 0;
+    this.resumePos = 0;
+    for (const k of [LS_MUSIC_IDX, LS_MUSIC_POS, LS_MUSIC_BAG]) { try { localStorage.removeItem(k); } catch {} }
+    if (this.booted && !this.muted) await this.startMusic();
   }
 
   private async fetchBuffer(url: string): Promise<AudioBuffer | null> {
@@ -482,7 +497,7 @@ export class AudioEngine {
   async startMusic(): Promise<void> {
     this.ensureContext();
     this.resumeIfSuspended();
-    if (this.musicElement || this.musicProcedural) return;
+    if (this.musicElement) return;
     const { music } = await this.loadManifest();
     if (music.length > 0) {
       // One <audio> element shared across tracks. A single track loops itself
@@ -533,32 +548,8 @@ export class AudioEngine {
       this.playMusicTrack(this.musicIndex);
       return;
     }
-    // No file: a gentle procedural ambient bed through the WebAudio master.
-    if (!this.ctx || !this.musicGain) return;
-    const osc = this.ctx.createOscillator();
-    osc.type = "sine";
-    osc.frequency.value = 110;
-    const osc2 = this.ctx.createOscillator();
-    osc2.type = "sine";
-    osc2.frequency.value = 164.81; // a soft fifth above for warmth
-    const lfo = this.ctx.createOscillator();
-    lfo.frequency.value = 0.07;
-    const lfoGain = this.ctx.createGain();
-    lfoGain.gain.value = 5;
-    lfo.connect(lfoGain);
-    lfoGain.connect(osc.frequency);
-    const gain = this.ctx.createGain();
-    // Fade the bed in from silence so it never clicks on start.
-    const now = this.ctx.currentTime;
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(0.16, now + 0.4); // audible but calm
-    osc.connect(gain);
-    osc2.connect(gain);
-    gain.connect(this.musicGain);
-    osc.start();
-    osc2.start();
-    lfo.start();
-    this.musicProcedural = { osc, osc2, lfo, gain };
+    // No music files for this game: stay SILENT. There is deliberately no synthesized
+    // fallback bed, so a game that ships no music simply plays nothing (no drone, no hiss).
   }
 
   // Build a shuffled bag of track indices (Fisher-Yates, crypto seed).
@@ -688,21 +679,30 @@ export class AudioEngine {
       this.musicSource = null;
     }
     this.musicRouted = false;
-    if (this.musicProcedural) {
-      const p = this.musicProcedural;
-      this.musicProcedural = null;
-      if (this.ctx) {
-        // Fade out before stopping so the bed never cuts with a click; stop all
-        // three oscillators (osc2 was previously left running).
-        const t = this.ctx.currentTime;
-        p.gain.gain.cancelScheduledValues(t);
-        p.gain.gain.setValueAtTime(p.gain.gain.value, t);
-        p.gain.gain.linearRampToValueAtTime(0.0001, t + 0.14);
-        try { p.osc.stop(t + 0.16); p.osc2.stop(t + 0.16); p.lfo.stop(t + 0.16); } catch {}
-      } else {
-        try { p.osc.stop(); p.osc2.stop(); p.lfo.stop(); } catch {}
+  }
+
+  // Smoothly fade the music out, then tear it down. Used on a game switch so music never cuts
+  // abruptly. Resolves after the fade completes (so the caller can start the next game's music
+  // into a clean, silent bus). Safe when nothing is playing.
+  async fadeOutMusic(seconds = 0.35): Promise<void> {
+    if (!this.musicElement && !this.musicSource) { this.stopMusic(); return; }
+    if (this.ctx && this.musicGain && this.musicRouted) {
+      const g = this.musicGain.gain;
+      const now = this.ctx.currentTime;
+      g.cancelScheduledValues(now);
+      g.setValueAtTime(Math.max(g.value, 0.0001), now);
+      g.linearRampToValueAtTime(0.0001, now + seconds);
+    } else if (this.musicElement) {
+      // Unrouted fallback: step the element volume down in a few frames.
+      const el = this.musicElement;
+      const from = el.volume;
+      const steps = 8;
+      for (let i = 1; i <= steps; i++) {
+        window.setTimeout(() => { try { el.volume = from * (1 - i / steps); } catch {} }, (seconds * 1000 * i) / steps);
       }
     }
+    await new Promise<void>((r) => window.setTimeout(r, seconds * 1000 + 20));
+    this.stopMusic();
   }
 
   private muteStopTimer = 0;

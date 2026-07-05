@@ -236,6 +236,17 @@
     "empty": "Şu an için gösterilecek yeni bir güncelleme yok.",
     "entries": [
       {
+        "v": "2026-07-05.2",
+        "date": "5 Temmuz 2026",
+        "title": "Daha Yumuşak Ses ve Cilalı Oyun Seçici",
+        "items": [
+          "Oyun değiştirdiğinde müzik artık kesilmeden yumuşakça kısılıyor; müziği olmayan bir oyunda ise hiç ses çıkmıyor, ne uğultu ne cızırtı.",
+          "Ses efektleri kuyruklarında temiz şekilde kısılıyor; çevirme, karıştırma ya da bırakma sonunda tık ya da cızırtı yok.",
+          "Oyun Değiştir bölmesi masanın görünümüyle uyumlu hale getirildi; oyun logoları en küçük boyutta bile keskin kalıyor.",
+          "Her oyun, görseli henüz eklenmemiş kartlar için temiz bir yer tutucu gösteriyor; yapım aşamasındaki deste bile net okunuyor."
+        ]
+      },
+      {
         "v": "2026-07-05",
         "date": "5 Temmuz 2026",
         "title": "Duskhall: Tek Masa, Birçok Oyun",

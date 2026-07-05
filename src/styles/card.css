@@ -279,6 +279,29 @@
   pointer-events: none;
 }
 
+/* Name placeholder shown until real art loads: the card's own name, centered on the dark ground,
+   so an art-less deck reads clearly instead of blank. Covered the instant art loads. */
+.card__ph {
+  position: absolute;
+  inset: 8px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 6%;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  color: rgba(243, 239, 229, 0.62);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  overflow: hidden;
+}
+.card__face--front[data-empty="false"] .card__ph { display: none; }
+
 .card__art {
   width: 100%;
   height: 100%;

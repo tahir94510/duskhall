@@ -126,9 +126,17 @@ export function createCardElement(instanceId: string, defId: string): { el: HTML
   img.draggable = false;
   img.dataset.loaded = "false";
 
+  // A quality placeholder for a card whose art is not dropped in yet: the card's own name,
+  // centered on the mode's dark ground, so an art-less deck reads clearly (never a blank or
+  // broken image). It is covered the instant real art loads.
+  const ph = document.createElement("span");
+  ph.className = "card__ph";
+  ph.setAttribute("aria-hidden", "true");
+  ph.textContent = t(`cards.${defId}.name`);
+
   void loadManifest().then((map) => {
     const url = map.get(defId);
-    if (!url) return; // silent, no art for this card yet
+    if (!url) return; // silent, no art for this card yet: the name placeholder stays
     img.onload = () => {
       front.dataset.empty = "false";
       img.dataset.loaded = "true";
@@ -140,6 +148,7 @@ export function createCardElement(instanceId: string, defId: string): { el: HTML
     img.src = url;
   });
 
+  front.appendChild(ph);
   front.appendChild(img);
 
   inner.appendChild(back);
@@ -152,4 +161,6 @@ export function createCardElement(instanceId: string, defId: string): { el: HTML
 
 export function refreshCardLabel(el: HTMLDivElement, defId: string): void {
   el.setAttribute("aria-label", t(`cards.${defId}.name`));
+  const ph = el.querySelector<HTMLElement>(".card__ph");
+  if (ph) ph.textContent = t(`cards.${defId}.name`);
 }
