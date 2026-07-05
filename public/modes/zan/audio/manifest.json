@@ -1,4 +1,45 @@
 {
   "sfx": [],
-  "music": []
+  "music": [
+    {
+      "id": "music",
+      "path": "/modes/vaerum/audio/music/music.mp3"
+    },
+    {
+      "id": "music1",
+      "path": "/modes/vaerum/audio/music/music1.mp3"
+    },
+    {
+      "id": "music2",
+      "path": "/modes/vaerum/audio/music/music2.mp3"
+    },
+    {
+      "id": "music3",
+      "path": "/modes/vaerum/audio/music/music3.mp3"
+    },
+    {
+      "id": "music4",
+      "path": "/modes/vaerum/audio/music/music4.mp3"
+    },
+    {
+      "id": "music5",
+      "path": "/modes/vaerum/audio/music/music5.mp3"
+    },
+    {
+      "id": "music6",
+      "path": "/modes/vaerum/audio/music/music6.mp3"
+    },
+    {
+      "id": "music7",
+      "path": "/modes/vaerum/audio/music/music7.mp3"
+    },
+    {
+      "id": "music8",
+      "path": "/modes/vaerum/audio/music/music8.mp3"
+    },
+    {
+      "id": "music9",
+      "path": "/modes/vaerum/audio/music/music9.mp3"
+    }
+  ]
 }
