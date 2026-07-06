@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.0.3: Bolder logos, tighter shadows, smoother table
+
+A follow-up polish pass on 1.0.2 targeting logo legibility, the lifted-card shadow, and table
+smoothness. Build clean, tests green, verified in a real browser including fullscreen.
+
+- **Logos redrawn for small sizes.** The tab favicon and in-app marks used thin 2.6px strokes that
+  washed out to a faint smudge at 16 to 20px. Every mark (the Duskhall arch, the ZAN eye, the Vaerum
+  diamond) was redrawn bold, with ~5px strokes and solid accents, so it stays crisp and clearly
+  readable down to a 16px favicon on both light and dark tab bars. The splash, boot, and 404 marks
+  and the PWA maskable icon were bolded to match.
+- **Lifted-card shadow tightened further.** The shadow a picked-up card casts was capped to a small
+  blur so it physically cannot spill across the table onto the seat opposite, in any browser
+  (Firefox renders large shadow blur on moving cards heavier than Chromium, which is why the earlier
+  reduction was not enough there). A held card still reads as lifted through its raised z-order and
+  brighten.
+- **Smoother table under load.** Cards no longer each hold a permanent GPU compositor layer at rest.
+  A card is promoted to its own layer only while it is actually moving (dragged or animating) and
+  drops the hint the moment it settles, so a full 40 to 72 card table is far lighter on the
+  compositor and stutters less, most noticeably in Firefox.
+
 ## 1.0.2: Interaction and visual bug-fix pass
 
 A focused pass on issues surfaced while playing ZAN: the loading logo, a spurious connection
