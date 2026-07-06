@@ -7,6 +7,7 @@
 import { t } from "../i18n/index.js";
 import { getActiveMode } from "../modes/active.js";
 import { assetRoot } from "../modes/types.js";
+import { setLoaderMark } from "./loader.js";
 import type { RuntimeConfig } from "../net/config.js";
 
 function setMeta(name: string, content: string, attr: "name" | "property" = "name"): void {
@@ -85,4 +86,8 @@ export function applyBranding(config: RuntimeConfig): void {
   setLink("icon", `${root}/brand/icon-light.svg`, { media: "(prefers-color-scheme: light)", type: "image/svg+xml" });
   setLink("icon", `${root}/brand/icon.svg`, { type: "image/svg+xml" });
   setLink("apple-touch-icon", `${root}/brand/icon.svg`);
+
+  // The loading veil carries the active game's logo (falls back to the platform sigil if the
+  // mode has no icon dropped in yet), so a boot or mode switch never shows a generic mark.
+  setLoaderMark(`${root}/brand/icon.svg`);
 }

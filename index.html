@@ -99,10 +99,11 @@
       body.is-ready #app-loader { opacity: 0; pointer-events: none; }
       body.is-ready #app-loader * { animation-play-state: paused; }
       .app-loader__mark { position: relative; width: 64px; height: 86px; }
-      .app-loader__mark svg { width: 100%; height: 100%; display: block; color: #f3efe5; animation: app-pulse 1.8s ease-in-out infinite; filter: drop-shadow(0 2px 12px rgba(0,0,0,0.5)); }
+      .app-loader__mark svg, .app-loader__mark img { width: 100%; height: 100%; display: block; color: #f3efe5; animation: app-pulse 1.8s ease-in-out infinite; filter: drop-shadow(0 2px 12px rgba(0,0,0,0.5)); }
+      .app-loader__mark img { object-fit: contain; }
       @keyframes app-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
       @media (prefers-reduced-motion: reduce) {
-        .app-loader__mark svg { animation: none; }
+        .app-loader__mark svg, .app-loader__mark img { animation: none; }
       }
     </style>
   </head>
@@ -110,10 +111,10 @@
     <div id="app-loader" aria-hidden="true">
       <div class="app-loader__mark">
         <svg viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
-          <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 58 V28 A12 12 0 0 1 36 28 V58" />
-            <path d="M6 58 H42" />
-            <circle cx="24" cy="14" r="2.6" fill="currentColor" stroke="none" />
+          <g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 58 V24 A16 16 0 0 1 40 24 V58" />
+            <path d="M3 58 H45" />
+            <circle cx="24" cy="21" r="5" fill="currentColor" stroke="none" />
           </g>
         </svg>
       </div>
@@ -123,10 +124,10 @@
       <div class="boot-fail__card">
         <span class="boot-fail__sigil" aria-hidden="true">
           <svg viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
-            <g fill="none" stroke="#f3efe5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 58 V28 A12 12 0 0 1 36 28 V58" />
-              <path d="M6 58 H42" />
-              <circle cx="24" cy="14" r="2.6" fill="#f3efe5" stroke="none" />
+            <g fill="none" stroke="#f3efe5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 58 V24 A16 16 0 0 1 40 24 V58" />
+              <path d="M3 58 H45" />
+              <circle cx="24" cy="21" r="5" fill="#f3efe5" stroke="none" />
             </g>
           </svg>
         </span>

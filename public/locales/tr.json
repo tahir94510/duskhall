@@ -236,6 +236,19 @@
     "empty": "Şu an için gösterilecek yeni bir güncelleme yok.",
     "entries": [
       {
+        "v": "2026-07-05.3",
+        "date": "5 Temmuz 2026",
+        "title": "Etkileşim ve Görsel Düzeltmeler",
+        "items": [
+          "Yükleme ekranı artık açtığın oyunun logosunu gösteriyor ve açılış işareti daha keskin görünecek şekilde yeniden çizildi.",
+          "Sayfayı yenilerken kısa süre görünebilen yanlış bağlantı uyarısı düzeltildi; bağlantının koptuğu ancak gerçekten kaybolduktan sonra bildiriliyor ve uyarı, menüyle çakışmayan derli toplu bir baloncuğa dönüştürüldü.",
+          "Kart bilgi bölmesi kartın ortadaki simgesini yeniden net gösteriyor; görseli henüz olmayan bir kartın arkasında oyunun amblemi beliriyor.",
+          "Ayarlardaki varsayılana döndür düğmesi, her şey zaten varsayılandayken soluk kalıyor ve bir kaydırıcıyı değiştirdiğin an etkinleşiyor.",
+          "Yapıştır düğmesi artık tarayıcının kendi yapıştırma menüsünü açmıyor; katılma alanı odaklanıyor, böylece doğrudan yapıştırabiliyorsun.",
+          "Tam ekranda, aldığın bir kart artık masanın karşısındaki alanın üzerine tuhaf bir gölge düşürmüyor."
+        ]
+      },
+      {
         "v": "2026-07-05.2",
         "date": "5 Temmuz 2026",
         "title": "Daha Yumuşak Ses ve Cilalı Oyun Seçici",

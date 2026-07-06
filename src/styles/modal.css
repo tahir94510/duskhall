@@ -593,10 +593,12 @@ a.btn--primary:hover { color: var(--ink); text-decoration: none; }
   font-weight: 600;
   letter-spacing: 0.04em;
   cursor: pointer;
-  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), opacity var(--dur) var(--ease);
 }
 .settings__balance:hover,
-.settings__reset:hover { border-color: var(--line-3); background: rgba(30, 30, 30, 0.7); }
+.settings__reset:hover:not(:disabled) { border-color: var(--line-3); background: rgba(30, 30, 30, 0.7); }
+/* Disabled while the mix is already at defaults: dimmed and inert, a clear "nothing to restore". */
+.settings__reset:disabled { opacity: 0.42; cursor: default; }
 .settings__hint {
   margin: 8px 2px 0;
   font-size: 11px;

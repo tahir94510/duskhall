@@ -54,6 +54,18 @@ and it shows the project URL **masked** (`unizx….supabase.co`) so a shared scr
 recording doesn't reveal the project ref. The `service_role` / `sb_secret_…` keys must
 **never** be used in the browser; the self‑test warns if one is detected.
 
+### Known benign console notice: the `__cf_bm` cookie
+
+Firefox may log `The cookie "__cf_bm" has been rejected …` (in Turkish: *"Alan adı
+geçersiz olduğu için '__cf_bm' çerezi reddedildi"*). This is **not** a Duskhall bug and
+nothing in this codebase sets or reads it. `__cf_bm` is Cloudflare's bot-management
+cookie, set by **Supabase's** edge on the Realtime response; Firefox's cross-site cookie
+policy then rejects it because it comes from a third-party domain. Realtime runs over the
+authenticated WebSocket (`wss://…`), not that cookie, so the rejection has **no effect** on
+gameplay or sync, it is purely informational. It cannot be suppressed from the client (the
+cookie is set by another origin's response headers); self-hosting the Realtime endpoint on
+the same domain would remove it.
+
 ## State sync & resilience
 
 - **Auto-reconnect:** a dropped channel (network blip, `CHANNEL_ERROR`/`TIMED_OUT`/

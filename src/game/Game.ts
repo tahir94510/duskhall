@@ -233,6 +233,14 @@ export class Game {
   // warning if the link is still down after the grace, so a genuine sustained drop still reports.
   private connLostTimer = 0;
   private static readonly CONN_LOST_GRACE_MS = 2500;
+  // When the CURRENT online streak began (0 = not currently online). A connection that came up and
+  // then dropped again inside CONN_STABLE_MS never had a working session — that is the initial-sync
+  // flap on a fresh page load (Supabase connects, its edge resets the socket, it reconnects). We do
+  // NOT surface "connection lost" for such a blip: it only ever alarmed players who never actually
+  // had cross-device sync. A genuine mid-game drop clears this window long before it ends, so it is
+  // still reported in full.
+  private stableOnlineSince = 0;
+  private static readonly CONN_STABLE_MS = 6000;
   // A persistent on-screen offline banner element (lazily created). Unlike a toast it STAYS up the
   // whole time the link is down, so the player always knows live sync is off — yet it is only ever
   // shown once realtimeDown is set (after the debounce grace), so a refresh flap never flashes it.
@@ -3395,6 +3403,9 @@ export class Game {
           if (this.realtimeDown) toast(t("ui.connRestored"), { kind: "success" });
         }
         this.hasBeenOnline = true;
+        // Start (or restart) the "this streak has been up since" clock, so a drop can tell a
+        // sustained session from a connect-then-reset blip on load.
+        this.stableOnlineSince = Date.now();
         // Cross-device sync is back: clear the "unreachable" hint on rival seats and drop the banner.
         if (this.realtimeDown) { this.realtimeDown = false; this.refreshZones(); }
         this.setOfflineBanner(false);
@@ -3413,7 +3424,15 @@ export class Game {
         // refresh/initial sync that recovers right away never surfaces a "connection lost". Never
         // fires on the initial offline/solo state (hasBeenOnline gates it). If online returns
         // first, the timer above is cancelled.
-        if (this.hasBeenOnline && !this.realtimeDown && !this.connLostTimer) {
+        //
+        // Also require the streak to have been up for CONN_STABLE_MS before we treat this as a
+        // "loss": a connection that came up and dropped again within that window never gave the
+        // player a working session (it is the Supabase edge resetting the socket right after the
+        // first subscribe on a fresh load), so warning about a lost connection there is a false
+        // alarm. A real mid-game drop is always well past this window and still reports normally.
+        const wasStable = this.stableOnlineSince > 0 && Date.now() - this.stableOnlineSince >= Game.CONN_STABLE_MS;
+        this.stableOnlineSince = 0;
+        if (wasStable && this.hasBeenOnline && !this.realtimeDown && !this.connLostTimer) {
           this.connLostTimer = window.setTimeout(() => {
             this.connLostTimer = 0;
             // Reaching here means we never went back online during the grace (online clears it).

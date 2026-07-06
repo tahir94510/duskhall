@@ -1,6 +1,7 @@
 import { t } from "../i18n/index.js";
 import { cardDefs } from "../game/cards.js";
 import { getActiveMode } from "../modes/active.js";
+import { assetRoot } from "../modes/types.js";
 import { loadManifest } from "../table/Card.js";
 
 const HOVER_DELAY = 320;
@@ -177,6 +178,13 @@ export class Tooltip {
     const artUrl = this.artUrls?.get(def.id);
     this.el.classList.toggle("has-art", !!artUrl);
     this.el.style.backgroundImage = artUrl ? `url('${encodeURI(artUrl)}')` : "";
+    // When the card has no art yet, the panel would otherwise be a flat dark rectangle. Show the
+    // active game's emblem as a faint CENTRED watermark instead, so the info panel keeps a centred
+    // symbol (mirroring the card face placeholder) rather than reading as empty.
+    this.el.style.setProperty(
+      "--tip-emblem",
+      artUrl ? "none" : `url('${encodeURI(`${assetRoot(getActiveMode())}/brand/icon.svg`)}')`
+    );
     // When this card sits on a pile (≥2 at-or-below it), add a divider and a quiet line stating
     // how many cards are in it. Omitted entirely for a single, un-stacked card, so a lone card's
     // panel reads exactly as before. The count is the card's own at-or-below total (top card =
@@ -248,6 +256,8 @@ export class Tooltip {
     window.clearTimeout(this.showTimer);
     this.el.classList.remove("is-visible", "has-art");
     this.el.style.backgroundImage = "";
+    // A glossary term is pure text, so no emblem watermark (clear any left from a card panel).
+    this.el.style.setProperty("--tip-emblem", "none");
     this.el.innerHTML = `
       <div class="tooltip__scrim" aria-hidden="true"></div>
       <div class="tooltip__title">${escapeHtml(title)}</div>

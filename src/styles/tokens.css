@@ -65,7 +65,12 @@
      raised above the felt yet far lighter than a held card, so one card reads as
      elevated without the pile-smear risk a heavy resting shadow would compound. */
   --shadow-card-raised: 0 10px 22px rgba(0, 0, 0, 0.40), 0 4px 9px rgba(0, 0, 0, 0.30), 0 1px 2px rgba(0, 0, 0, 0.24);
-  --shadow-card-held: 0 30px 58px rgba(0, 0, 0, 0.55), 0 12px 24px rgba(0, 0, 0, 0.40), 0 3px 7px rgba(0, 0, 0, 0.30);
+  /* Held/lifted card: clearly raised above the felt, but deliberately CONTAINED. The old value
+     (30px offset / 58px blur / 0.55) cast a card-shaped dark blob so large it spilled across the
+     table onto the opposite seat's zone when a lifted card was dragged toward centre (very visible
+     at fullscreen scale). This softer, tighter cast still reads as floating well above a hovered
+     card (raised) without bleeding a stray shadow over the opponent area. */
+  --shadow-card-held: 0 16px 30px rgba(0, 0, 0, 0.44), 0 7px 14px rgba(0, 0, 0, 0.32), 0 2px 5px rgba(0, 0, 0, 0.26);
   --shadow-panel: 0 16px 40px rgba(0, 0, 0, 0.5);
 
   /* Card sizing. This :root value is only a FALLBACK; the real, field-relative

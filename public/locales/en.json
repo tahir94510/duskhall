@@ -236,6 +236,19 @@
     "empty": "No recent updates to show.",
     "entries": [
       {
+        "v": "2026-07-05.3",
+        "date": "July 5, 2026",
+        "title": "Interaction and Visual Fixes",
+        "items": [
+          "The loading screen now shows the logo of the game you are opening, and the splash mark was redrawn to stay crisp.",
+          "Fixed a false connection warning that could flash on a page refresh; you are only told the connection dropped after it was genuinely lost, and the notice was restyled into a tidy bubble that no longer overlaps the menu.",
+          "The card info panel shows the card's centred symbol clearly again, and a card with no art yet shows the game's emblem behind it.",
+          "The Settings restore-defaults button is now greyed out when everything is already at its default and lights up the moment you change a slider.",
+          "The paste button no longer pops the browser's own paste menu; the join field is focused so you can paste straight away.",
+          "In fullscreen, a card you pick up no longer casts a stray shadow over the seat across the table."
+        ]
+      },
+      {
         "v": "2026-07-05.2",
         "date": "July 5, 2026",
         "title": "Smoother Sound and a Polished Switcher",
