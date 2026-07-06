@@ -17,8 +17,19 @@
   /* Smooth programmatic moves (gather settle, remote sync, flip). Held cards
      opt out below so dragging stays 1:1 with the pointer. */
   transition: transform var(--dur) var(--ease), filter var(--dur) var(--ease);
-  will-change: transform;
+  /* NOTE: will-change is deliberately NOT set on resting cards. A permanent
+     will-change:transform on every card forces the compositor to hold a separate GPU
+     layer for all 40-72 of them at once, which bloats memory and stutters the whole
+     table (very visible in Firefox, which is sensitive to layer count). We promote a
+     card to its own layer ONLY while it is actually in motion (held or animating,
+     below) and drop the hint the instant it settles, so at rest the table is flat and
+     cheap. A remote/settle move still transitions smoothly — the browser auto-promotes
+     an element while its transform is transitioning. */
 }
+/* Promote to a compositor layer only during real motion (a drag or a flip/gather/
+   shuffle/tidy). Cleared automatically when the class drops at settle. */
+.card.is-held,
+.card.is-animating { will-change: transform; }
 
 /* The drop shadow lives on a FLAT underlay (::before), a sibling of the 3D
    .card__inner rather than its ancestor. A box-shadow on the perspective root

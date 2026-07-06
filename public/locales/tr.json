@@ -236,6 +236,16 @@
     "empty": "Şu an için gösterilecek yeni bir güncelleme yok.",
     "entries": [
       {
+        "v": "2026-07-06",
+        "date": "6 Temmuz 2026",
+        "title": "Daha Belirgin Logolar ve Daha Akıcı Masa",
+        "items": [
+          "Tüm logolar daha kalın yeniden çizildi; tarayıcı sekmesi simgesi ve uygulama içi işaretler en küçük boyutlarda bile net ve okunaklı kalıyor.",
+          "Alınan bir kartın düşürdüğü gölge daraltıldı; artık hiçbir tarayıcıda masanın karşısındaki alanın üzerine taşmıyor.",
+          "Masa yük altında daha hafif ve akıcı: kartlar yalnızca gerçekten hareket ederken kendi katmanına yükseltiliyor, böylece dolu bir masa daha az takılıyor."
+        ]
+      },
+      {
         "v": "2026-07-05.3",
         "date": "5 Temmuz 2026",
         "title": "Etkileşim ve Görsel Düzeltmeler",

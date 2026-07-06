@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64" role="img" aria-label="Duskhall">
   <g fill="none" stroke="#141018" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M8 58 V24 A16 16 0 0 1 40 24 V58" stroke-width="2.6"/>
-    <path d="M3 58 H45" stroke-width="2.6"/>
-    <circle cx="24" cy="21" r="5" fill="#141018" stroke="none"/>
+    <path d="M9 59 V25 A15 15 0 0 1 39 25 V59" stroke-width="5"/>
+    <path d="M4 59 H44" stroke-width="5"/>
+    <circle cx="24" cy="23" r="6.5" fill="#141018" stroke="none"/>
   </g>
 </svg>

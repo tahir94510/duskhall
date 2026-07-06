@@ -236,6 +236,16 @@
     "empty": "No recent updates to show.",
     "entries": [
       {
+        "v": "2026-07-06",
+        "date": "July 6, 2026",
+        "title": "Bolder Logos and a Smoother Table",
+        "items": [
+          "Redrew every logo bolder so the browser tab icon and in-app marks stay crisp and readable even at tiny sizes.",
+          "Tightened the shadow a picked-up card casts so it never spills across the table onto the seat opposite, in any browser.",
+          "Made the table lighter and smoother under load: cards are only promoted to their own layer while actually moving, so a full table stutters less."
+        ]
+      },
+      {
         "v": "2026-07-05.3",
         "date": "July 5, 2026",
         "title": "Interaction and Visual Fixes",
