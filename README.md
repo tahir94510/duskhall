@@ -109,6 +109,14 @@ project was redeployed (open `/api/config` to verify), (2) Realtime is enabled f
 sync via a local `BroadcastChannel` fallback, so if same-machine tabs sync but two devices don't,
 the cause is the Supabase connection.
 
+### Harmless console notice: `__cf_bm` cookie rejected
+
+Firefox may log that the `__cf_bm` cookie was rejected (`Alan adı geçersiz olduğu için
+'__cf_bm' çerezi reddedildi`). This is **not** a Duskhall bug: `__cf_bm` is Cloudflare's
+bot-management cookie set by Supabase's edge, and Firefox rejects it under its third-party
+cookie policy. Realtime runs over the WebSocket, not that cookie, so gameplay and sync are
+unaffected. It cannot be suppressed from the client. See `docs/SECURITY.md` for detail.
+
 ## Vercel deployment
 
 ```

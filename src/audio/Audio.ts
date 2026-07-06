@@ -488,6 +488,18 @@ export class AudioEngine {
     this.setSfxVolume(BALANCED_SFX);
   }
 
+  // True when the mix already equals the recommended defaults (and is unmuted), so the Settings
+  // "restore defaults" button can disable itself: there is nothing to restore. Compared on the
+  // slider-rounded integer percents the UI actually shows, so a value that DISPLAYS as the default
+  // counts as "at defaults" even if a raw float differs in the far decimals.
+  isAtDefaults(): boolean {
+    const asPct = (v: number) => Math.round(v * 100);
+    return !this.muted
+      && asPct(this.masterVolume) === asPct(BALANCED_MASTER)
+      && asPct(this.musicVolume) === asPct(BALANCED_MUSIC)
+      && asPct(this.sfxVolume) === asPct(BALANCED_SFX);
+  }
+
   // Effective music level for the file element (which is NOT routed through
   // the WebAudio master, so master is folded in here manually).
   private effectiveMusic(duck = 1): number {

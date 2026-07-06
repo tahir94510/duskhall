@@ -397,24 +397,27 @@
   .welcome-hint { transition: none; transform: translate(-50%, 0); }
 }
 
-/* Persistent offline banner: pinned at the top centre, it stays up the whole time live sync is down
-   (set only after the dropped-connection grace, so a refresh flap never flashes it). A small amber
-   dot + ivory text on a dark pill — clear without being alarming, and inert to pointer input. */
+/* Persistent offline banner: a compact bubble centred just BELOW the header row (so it never
+   overlaps the brand mark or the menu button in either corner), up the whole time live sync is
+   down (set only after the dropped-connection grace, so a refresh flap never flashes it). An amber
+   status dot + ivory text on a dark pill — clear without being alarming, and inert to pointer input.
+   Content-sized (width:max-content) so a short message is a small pill, not a full-width bar, while
+   a longer/wrapped one is capped and stays centred (the dot is an inline marker, matching .toast). */
 .conn-banner {
   position: fixed;
   left: 50%;
-  top: max(env(safe-area-inset-top), 10px);
-  transform: translate(-50%, -10px);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: min(92vw, 460px);
+  top: calc(max(env(safe-area-inset-top), 12px) + 46px);
+  transform: translate(-50%, -8px);
+  width: max-content;
+  max-width: min(88vw, 380px);
+  box-sizing: border-box;
   background: rgba(18, 18, 18, 0.94);
   border: 1px solid rgba(210, 96, 63, 0.5);
   color: var(--ivory);
-  padding: 9px 16px;
+  padding: 8px 15px;
   border-radius: var(--r-pill);
   font-size: 12px;
+  font-weight: 500;
   line-height: 1.35;
   text-align: center;
   z-index: var(--z-toast);
@@ -427,9 +430,11 @@
 }
 .conn-banner::before {
   content: "";
-  flex: none;
-  width: 8px;
-  height: 8px;
+  display: inline-block;
+  vertical-align: middle;
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
   border-radius: 50%;
   background: #d2603f;
   box-shadow: 0 0 6px rgba(210, 96, 63, 0.6);
@@ -534,19 +539,25 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* Denser, more EVEN scrim with a high alpha floor (no thin dip): bright card art
-     used to show through the old 0.60 mid-stop and drop the dim text to ~1.35:1
-     contrast (eye strain). These stops keep the art faintly visible while every
-     text line sits on a near-uniform dark ground that clears WCAG comfortably. */
+  /* Dense at the TOP and BOTTOM (where the title and flavour/effect lines sit) but with a clearer
+     WINDOW through the middle, so the card's own CENTRED symbol reads through the panel instead of
+     being drowned by a flat dark tint. Text stays legible over the lighter middle because every
+     line carries its own tight dark halo (see below) that guarantees glyph contrast independent of
+     the background. */
   background: linear-gradient(180deg,
     rgba(6, 6, 8, 0.90) 0%,
-    rgba(6, 6, 8, 0.82) 30%,
-    rgba(6, 6, 8, 0.86) 70%,
-    rgba(6, 6, 8, 0.96) 100%);
+    rgba(6, 6, 8, 0.72) 20%,
+    rgba(6, 6, 8, 0.52) 48%,
+    rgba(6, 6, 8, 0.74) 76%,
+    rgba(6, 6, 8, 0.95) 100%);
 }
-/* No art: just a flat dark ground, no gradient needed. */
+/* No art: a flat dark ground with the active game's emblem as a faint centred watermark (set via
+   --tip-emblem by renderDef), so a card with no art yet still shows a centred symbol. */
 .tooltip:not(.has-art) { background-image: none; }
-.tooltip:not(.has-art) .tooltip__scrim { background: none; }
+.tooltip:not(.has-art) .tooltip__scrim {
+  background: var(--tip-emblem, none) center / 44% auto no-repeat;
+  opacity: 0.14;
+}
 
 /* All text rides above the scrim, with a soft shadow so it stays crisp over any
    artwork. */

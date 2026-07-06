@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.0.2: Interaction and visual bug-fix pass
+
+A focused pass on issues surfaced while playing ZAN: the loading logo, a spurious connection
+warning, the card info panel, the settings reset, the paste button, and a fullscreen shadow bug.
+Build clean, tests green, verified end to end at mobile, tablet, desktop, and fullscreen viewports.
+
+- **Loading screen carries the game's logo.** The pre-boot splash mark was still the old, low-detail
+  archway; it was redrawn to the crisp platform sigil, and the loading veil now swaps in the ACTIVE
+  game's brand logo (falling back to the platform sigil), so a boot or a game switch shows that
+  game's identity, not a generic mark. The boot-fail and 404 marks were updated to match.
+- **No more false "connection lost" on refresh.** On a fresh load Supabase can connect and then have
+  its socket reset immediately (the edge flap), which used to trip a scary "Bağlantı koptu" banner
+  for a session the player never actually had. The client now only warns about a lost connection once
+  the link has been stable for a few seconds, so a load-time blip stays silent while a genuine
+  mid-game drop still reports in full. The banner itself was restyled into a compact bubble that sits
+  clear of the header instead of overlapping it.
+- **Card info panel shows the card's centred symbol again.** The hover/info panel's art scrim was
+  lightened through the middle so the card's own centred symbol reads through the panel instead of
+  being drowned by a flat dark tint, while the title and flavour lines stay fully legible. A card
+  with no art yet now shows the game's emblem as a faint centred watermark.
+- **Settings "restore defaults" is now reactive.** The button is disabled while the mix already sits
+  at the recommended values and enables the instant any one slider differs, so it always reflects
+  whether there is anything to restore.
+- **Paste no longer pops a stray browser menu.** In Firefox the join-by-code dialog used to trigger
+  the browser's own native "Paste" popup on open (its clipboard-read affordance). That auto-read is
+  now skipped in Firefox; the field is focused so a normal Ctrl+V works, and Chromium keeps its
+  silent auto-fill.
+- **Fullscreen: no stray card shadow across the table.** A lifted card dragged toward centre cast an
+  oversized, card-shaped shadow that spilled onto the opposite seat's zone (very visible at
+  fullscreen scale). The held-card shadow was tightened so a picked-up card still reads as floating
+  without bleeding a shadow over the opponent area.
+- **Docs.** Documented the harmless `__cf_bm` cookie console notice (a third-party Cloudflare cookie
+  set by Supabase, rejected by Firefox, with no effect on gameplay) in `docs/SECURITY.md` and the
+  README troubleshooting section.
+
 ## 1.0.1: Audio, brand, and switcher polish
 
 A production-polish pass on the 1.0.0 platform: audio glitches, default brand assets, the game

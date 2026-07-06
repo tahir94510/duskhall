@@ -98,9 +98,17 @@ export function openJoinByCode(
     joinBtn.disabled = false;
     input.select();
   };
+  // Focus the field so a Ctrl+V (or the OS paste gesture) lands immediately, in every browser.
+  input.focus();
+
   if (opts.prefill) {
     prefill(opts.prefill);
-  } else {
+  } else if (!/firefox/i.test(navigator.userAgent)) {
+    // Best-effort silent pre-fill from the clipboard where the read is SILENT (Chromium). We skip
+    // it in Firefox on purpose: there readText() pops Firefox's own native "Paste" affordance (a
+    // one-item context menu) right on open, which reads as a stray browser menu the app triggered.
+    // Firefox users simply paste into the focused field with Ctrl+V — the flow never depends on the
+    // auto-read.
     try {
       void navigator.clipboard?.readText().then((txt) => prefill(txt || "")).catch(() => {});
     } catch { /* clipboard unavailable — user pastes manually */ }

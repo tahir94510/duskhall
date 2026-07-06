@@ -58,24 +58,35 @@ export function openSettingsModal(
   const masterVal = body.querySelector<HTMLElement>('[data-role="master-val"]')!;
   const musicVal = body.querySelector<HTMLElement>('[data-role="music-val"]')!;
   const sfxVal = body.querySelector<HTMLElement>('[data-role="sfx-val"]')!;
+  const resetBtn = body.querySelector<HTMLButtonElement>('[data-role="reset-audio"]');
+
+  // The reset button only makes sense when the mix is OFF the defaults: disabled while everything
+  // already sits at the recommended values, enabled the instant any one slider differs. Called on
+  // open, after every slider move, and after a reset.
+  const refreshReset = (): void => {
+    if (resetBtn) resetBtn.disabled = audio.isAtDefaults();
+  };
 
   masterInput.addEventListener("input", () => {
     const n = parseInt(masterInput.value, 10);
     audio.setMasterVolume(n / 100);
     masterVal.textContent = String(n);
     setFill(masterInput);
+    refreshReset();
   });
   musicInput.addEventListener("input", () => {
     const n = parseInt(musicInput.value, 10);
     audio.setMusicVolume(n / 100);
     musicVal.textContent = String(n);
     setFill(musicInput);
+    refreshReset();
   });
   sfxInput.addEventListener("input", () => {
     const n = parseInt(sfxInput.value, 10);
     audio.setSfxVolume(n / 100);
     sfxVal.textContent = String(n);
     setFill(sfxInput);
+    refreshReset();
   });
 
   const syncSliders = () => {
@@ -87,11 +98,15 @@ export function openSettingsModal(
     sfxInput.value = String(s); sfxVal.textContent = String(s); setFill(sfxInput);
   };
 
-  body.querySelector<HTMLButtonElement>('[data-role="reset-audio"]')?.addEventListener("click", (e) => {
+  resetBtn?.addEventListener("click", (e) => {
     e.preventDefault();
     audio.restoreDefaults();
     syncSliders();
+    refreshReset();
   });
+
+  // Reflect the current mix on open (disabled when already at defaults).
+  refreshReset();
 
   body.querySelectorAll<HTMLButtonElement>(".lang-pill").forEach((pill) => {
     const code = pill.dataset.lang as Locale;
